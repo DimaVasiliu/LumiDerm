@@ -797,10 +797,8 @@ p {
 }
 
 .offer-carousel-viewport {
-  overflow: hidden;
-  padding-block: 26px;
-  margin-block: -26px;
-  background: transparent;
+  overflow: clip;
+  overflow-clip-margin: 28px;
 }
 
 .offer-track {
@@ -815,130 +813,139 @@ p {
   display: flex;
   flex-direction: column;
   flex: 0 0 82%;
-  gap: 0.55rem;
-  min-height: 290px;
-  padding: 1.25rem 1.2rem 1.3rem;
   overflow: hidden;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
-  background:
-    radial-gradient(circle at 88% 10%, rgba(219, 234, 240, 0.6), transparent 7rem),
-    radial-gradient(circle at 6% 94%, rgba(242, 216, 217, 0.45), transparent 8rem),
-    rgba(255, 255, 255, 0.82);
-  box-shadow: var(--shadow-card);
-  backdrop-filter: blur(16px);
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  background: #fff;
+  box-shadow: none;
+  transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
 }
 
 .offer-slide:hover {
-  transform: translateY(-5px);
-  border-color: rgba(169, 111, 104, 0.3);
-  box-shadow: 0 24px 50px rgba(61, 45, 47, 0.16);
+  transform: translateY(-6px);
+  border-color: rgba(169, 111, 104, 0.32);
 }
 
-.offer-slide::after {
-  content: "";
+.offer-media {
+  position: relative;
+  overflow: hidden;
+}
+
+.offer-media img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.offer-slide:hover .offer-media img {
+  transform: scale(1.05);
+}
+
+.offer-badge {
   position: absolute;
-  right: -2.6rem;
-  bottom: -2.6rem;
-  width: 7.5rem;
-  height: 7.5rem;
-  border: 1px solid rgba(169, 111, 104, 0.16);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.6), rgba(219, 234, 240, 0.24)),
-    repeating-linear-gradient(135deg, rgba(169, 111, 104, 0.07) 0 1px, transparent 1px 7px);
-  pointer-events: none;
+  top: 0.7rem;
+  left: 0.7rem;
+  padding: 0.34rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 253, 249, 0.92);
+  color: var(--color-rose-deep);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(61, 45, 47, 0.12);
+  backdrop-filter: blur(6px);
 }
 
-.featured-offer {
-  background:
-    linear-gradient(135deg, rgba(169, 111, 104, 0.88), rgba(201, 143, 134, 0.72)),
-    radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.38), transparent 10rem);
+.offer-badge-hot {
+  background: linear-gradient(135deg, var(--color-rose-deep), var(--color-rose));
   color: #fff;
 }
 
-.featured-offer h3,
-.featured-offer p,
-.featured-offer strong,
-.featured-offer .offer-meta span {
-  color: #fff;
-}
-
-.featured-offer .offer-tag {
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.featured-offer .btn-primary {
-  color: var(--color-charcoal);
-  background: #fff;
-  box-shadow: 0 16px 36px rgba(41, 36, 38, 0.18);
+.offer-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1.05rem 1.1rem 1.2rem;
 }
 
 .offer-tag {
   width: fit-content;
-  padding: 0.35rem 0.65rem;
-  border: 1px solid rgba(169, 111, 104, 0.22);
-  border-radius: 999px;
   color: var(--color-rose-deep);
-  background: rgba(255, 255, 255, 0.62);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 900;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .offer-slide h3 {
-  font-size: 1.32rem;
-  line-height: 1.15;
+  font-size: 1.2rem;
+  line-height: 1.18;
 }
 
 .offer-slide p {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.5;
 }
 
-.offer-slide strong {
+.offer-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.55rem;
+}
+
+.offer-price strong {
   color: var(--color-charcoal);
   font-family: var(--font-heading);
-  font-size: 1.55rem;
-  line-height: 1.1;
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
-.offer-meta {
-  display: grid;
-  gap: 0.15rem;
-  margin-top: auto;
-  padding-top: 0.5rem;
-}
-
-.offer-meta span {
+.offer-price span {
   color: var(--color-muted);
-  font-size: 0.78rem;
-  font-weight: 800;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
-.offer-slide .btn {
+.offer-cta {
   width: 100%;
   margin-top: 0.85rem;
-  min-height: 42px;
-  padding-block: 0.6rem;
+  min-height: 44px;
+  padding-block: 0.65rem;
+}
+
+.offer-slide.is-featured {
+  border-color: rgba(169, 111, 104, 0.4);
+}
+
+.offers-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.6rem;
+}
+
+.offers-header .section-header {
+  margin-bottom: 0;
+}
+
+.offers-nav {
+  display: flex;
+  gap: 0.6rem;
+  flex-shrink: 0;
 }
 
 .offer-controls {
-  margin-top: 1.1rem;
-}
-
-.offer-slide .btn,
-.offer-slide h3,
-.offer-slide p,
-.offer-slide strong,
-.offer-slide .offer-tag,
-.offer-meta {
-  position: relative;
-  z-index: 1;
+  display: flex;
+  justify-content: center;
+  margin-top: 1.2rem;
 }
 
 .treatment-card .btn-ghost {
@@ -1179,22 +1186,35 @@ p {
 
 .faq-list {
   display: grid;
-  gap: 0.85rem;
+  gap: 0.9rem;
+  align-items: start;
 }
 
 .faq-item {
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.66);
   overflow: hidden;
+  transition: border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.faq-item:hover {
+  border-color: rgba(169, 111, 104, 0.3);
+}
+
+.faq-item:has([aria-expanded="true"]) {
+  border-color: rgba(169, 111, 104, 0.42);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 16px 40px rgba(61, 45, 47, 0.08);
 }
 
 .faq-question {
   display: flex;
   align-items: center;
+  gap: 1rem;
   justify-content: space-between;
   width: 100%;
-  padding: 1rem;
+  padding: 1.15rem 1.25rem;
   border: 0;
   background: transparent;
   color: var(--color-charcoal);
@@ -1204,12 +1224,25 @@ p {
 
 .faq-question::after {
   content: "+";
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(169, 111, 104, 0.32);
+  border-radius: 50%;
   color: var(--color-rose-deep);
-  font-size: 1.4rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: background 200ms ease, color 200ms ease, border-color 200ms ease, transform 200ms ease;
 }
 
 .faq-question[aria-expanded="true"]::after {
-  content: "-";
+  content: "\2013";
+  color: #fff;
+  background: var(--color-rose-deep);
+  border-color: var(--color-rose-deep);
+  transform: rotate(180deg);
 }
 
 .faq-answer {

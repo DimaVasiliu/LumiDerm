@@ -220,9 +220,9 @@ function initOffersCarousel() {
   if (!carousel) return;
   const track = carousel.querySelector("[data-offers-track]");
   const slides = Array.from(carousel.querySelectorAll(".offer-slide"));
-  const prev = carousel.querySelector("[data-offers-prev]");
-  const next = carousel.querySelector("[data-offers-next]");
-  const dotsWrap = carousel.querySelector("[data-offers-dots]");
+  const prev = document.querySelector("[data-offers-prev]");
+  const next = document.querySelector("[data-offers-next]");
+  const dotsWrap = document.querySelector("[data-offers-dots]");
   if (!track || slides.length < 2) return;
 
   let index = 0;

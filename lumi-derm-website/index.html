@@ -214,90 +214,154 @@
 
         <section class="section section-tight offers-section" id="offers">
           <div class="container">
-            <div class="section-header reveal" data-reveal data-animate="fade-up">
-              <p class="eyebrow">Current offers</p>
-              <h2>Clinic offers for your next glow step</h2>
-              <p>Draft offer concepts inspired by premium clinic campaign layouts. Final treatment eligibility and terms can be confirmed before launch.</p>
+            <div class="offers-header reveal" data-reveal data-animate="fade-up">
+              <div class="section-header">
+                <p class="eyebrow">Current offers</p>
+                <h2>Clinic offers for your next glow step</h2>
+                <p>Draft offer concepts inspired by premium clinic campaign layouts. Final treatment eligibility and terms can be confirmed before launch.</p>
+              </div>
+              <div class="offers-nav" aria-label="Offer carousel controls">
+                <button class="carousel-button" type="button" data-offers-prev aria-label="Previous offers">‹</button>
+                <button class="carousel-button" type="button" data-offers-next aria-label="Next offers">›</button>
+              </div>
             </div>
             <div class="offer-carousel reveal" data-offers-carousel data-reveal data-animate="fade-up">
               <div class="offer-carousel-viewport">
                 <div class="offer-track" data-offers-track>
                   <article class="offer-slide">
-                    <span class="offer-tag">New client</span>
-                    <h3>Consultation + glow facial</h3>
-                    <p>A first-visit skin check with a targeted facial refresh.</p>
-                    <div class="offer-meta"><strong>Intro from £65</strong><span>Starter offer</span></div>
-                    <a class="btn btn-secondary" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    <div class="offer-media">
+                      <img src="assets/images/iulia-clinic-treatment-consultation.webp" alt="Consultation and glow facial at Lumi Derm" loading="lazy">
+                      <span class="offer-badge">New client</span>
+                    </div>
+                    <div class="offer-body">
+                      <span class="offer-tag">First visit</span>
+                      <h3>Consultation + glow facial</h3>
+                      <p>A first-visit skin check with a targeted facial refresh.</p>
+                      <div class="offer-price"><strong>Intro from £65</strong></div>
+                      <a class="btn btn-primary offer-cta" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    </div>
                   </article>
-                  <article class="offer-slide featured-offer">
-                    <span class="offer-tag">Course saving</span>
-                    <h3>Laser hair removal course</h3>
-                    <p>A technology-led course for smoother skin confidence.</p>
-                    <div class="offer-meta"><strong>Save 15% on 6</strong><span>Most popular</span></div>
-                    <a class="btn btn-primary" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book now</a>
-                  </article>
-                  <article class="offer-slide">
-                    <span class="offer-tag">Body sculpt</span>
-                    <h3>Endospheres trial</h3>
-                    <p>Lymphatic drainage and body-sculpting at a trial rate.</p>
-                    <div class="offer-meta"><strong>From £42.50</strong><span>Save up to 15%</span></div>
-                    <a class="btn btn-secondary" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
-                  </article>
-                  <article class="offer-slide">
-                    <span class="offer-tag">Glow facial</span>
-                    <h3>Endospheres face lift</h3>
-                    <p>A sculpting drainage facial for lifted, brighter skin.</p>
-                    <div class="offer-meta"><strong>From £46.75</strong><span>Save up to 15%</span></div>
-                    <a class="btn btn-secondary" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                  <article class="offer-slide is-featured">
+                    <div class="offer-media">
+                      <img src="assets/images/treatment-iulia-laser-hair-removal.webp" alt="Laser hair removal course at Lumi Derm" loading="lazy">
+                      <span class="offer-badge offer-badge-hot">Most popular</span>
+                    </div>
+                    <div class="offer-body">
+                      <span class="offer-tag">Course saving</span>
+                      <h3>Laser hair removal course</h3>
+                      <p>A technology-led course for smoother skin confidence.</p>
+                      <div class="offer-price"><strong>Save 15%</strong><span>on a 6-session course</span></div>
+                      <a class="btn btn-primary offer-cta" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book now</a>
+                    </div>
                   </article>
                   <article class="offer-slide">
-                    <span class="offer-tag">Precision</span>
-                    <h3>Apilus electrolysis</h3>
-                    <p>Permanent hair removal for smaller areas with care.</p>
-                    <div class="offer-meta"><strong>From £27</strong><span>Save up to 10%</span></div>
-                    <a class="btn btn-secondary" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    <div class="offer-media">
+                      <img src="assets/images/treatment-iulia-body-skin-therapy.webp" alt="Endospheres body therapy at Lumi Derm" loading="lazy">
+                      <span class="offer-badge">Save 15%</span>
+                    </div>
+                    <div class="offer-body">
+                      <span class="offer-tag">Body sculpt</span>
+                      <h3>Endospheres trial</h3>
+                      <p>Lymphatic drainage and body-sculpting at a trial rate.</p>
+                      <div class="offer-price"><strong>From £42.50</strong></div>
+                      <a class="btn btn-primary offer-cta" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    </div>
                   </article>
                   <article class="offer-slide">
-                    <span class="offer-tag">Advanced skin</span>
-                    <h3>PRP skin plan</h3>
-                    <p>Regenerative planning with consultation and aftercare.</p>
-                    <div class="offer-meta"><strong>From £192</strong><span>Suitability-led</span></div>
-                    <a class="btn btn-secondary" href="pages/services.html">View treatment</a>
+                    <div class="offer-media">
+                      <img src="assets/images/treatment-iulia-facials.webp" alt="Endospheres face lift facial at Lumi Derm" loading="lazy">
+                      <span class="offer-badge">Save 15%</span>
+                    </div>
+                    <div class="offer-body">
+                      <span class="offer-tag">Glow facial</span>
+                      <h3>Endospheres face lift</h3>
+                      <p>A sculpting drainage facial for lifted, brighter skin.</p>
+                      <div class="offer-price"><strong>From £46.75</strong></div>
+                      <a class="btn btn-primary offer-cta" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    </div>
                   </article>
                   <article class="offer-slide">
-                    <span class="offer-tag">Skin booster</span>
-                    <h3>Profhilo bio-remodel</h3>
-                    <p>A two-step plan for hydration, bounce, and glow.</p>
-                    <div class="offer-meta"><strong>From £238.50</strong><span>2-session plan</span></div>
-                    <a class="btn btn-secondary" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    <div class="offer-media">
+                      <img src="assets/images/treatment-iulia-electrolysis.webp" alt="Apilus electrolysis at Lumi Derm" loading="lazy">
+                      <span class="offer-badge">Save 10%</span>
+                    </div>
+                    <div class="offer-body">
+                      <span class="offer-tag">Precision</span>
+                      <h3>Apilus electrolysis</h3>
+                      <p>Permanent hair removal for smaller areas with care.</p>
+                      <div class="offer-price"><strong>From £27</strong></div>
+                      <a class="btn btn-primary offer-cta" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    </div>
                   </article>
                   <article class="offer-slide">
-                    <span class="offer-tag">Glow boost</span>
-                    <h3>Mesotherapy</h3>
-                    <p>Hydration-led micro-infusion for fresher-looking skin.</p>
-                    <div class="offer-meta"><strong>From £72</strong><span>Course available</span></div>
-                    <a class="btn btn-secondary" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    <div class="offer-media">
+                      <img src="assets/images/treatment-iulia-prp.webp" alt="PRP skin treatment at Lumi Derm" loading="lazy">
+                      <span class="offer-badge">Advanced</span>
+                    </div>
+                    <div class="offer-body">
+                      <span class="offer-tag">Advanced skin</span>
+                      <h3>PRP skin plan</h3>
+                      <p>Regenerative planning with consultation and aftercare.</p>
+                      <div class="offer-price"><strong>From £192</strong></div>
+                      <a class="btn btn-primary offer-cta" href="pages/services.html">View treatment</a>
+                    </div>
                   </article>
                   <article class="offer-slide">
-                    <span class="offer-tag">Skin renewal</span>
-                    <h3>Microneedling</h3>
-                    <p>Collagen-focused treatment for texture and tone.</p>
-                    <div class="offer-meta"><strong>From £110.50</strong><span>Course available</span></div>
-                    <a class="btn btn-secondary" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    <div class="offer-media">
+                      <img src="assets/images/treatment-iulia-skin-boosters.webp" alt="Profhilo skin booster at Lumi Derm" loading="lazy">
+                      <span class="offer-badge">Bio-remodel</span>
+                    </div>
+                    <div class="offer-body">
+                      <span class="offer-tag">Skin booster</span>
+                      <h3>Profhilo bio-remodel</h3>
+                      <p>A two-step plan for hydration, bounce, and glow.</p>
+                      <div class="offer-price"><strong>From £238.50</strong></div>
+                      <a class="btn btn-primary offer-cta" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    </div>
                   </article>
                   <article class="offer-slide">
-                    <span class="offer-tag">Radiance</span>
-                    <h3>Facial peel</h3>
-                    <p>Brightening, resurfacing peel for a smoother glow.</p>
-                    <div class="offer-meta"><strong>From £63</strong><span>Consultation-led</span></div>
-                    <a class="btn btn-secondary" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    <div class="offer-media">
+                      <img src="assets/images/treatment-skin-boosters.webp" alt="Mesotherapy at Lumi Derm" loading="lazy">
+                      <span class="offer-badge">Glow boost</span>
+                    </div>
+                    <div class="offer-body">
+                      <span class="offer-tag">Glow boost</span>
+                      <h3>Mesotherapy</h3>
+                      <p>Hydration-led micro-infusion for fresher-looking skin.</p>
+                      <div class="offer-price"><strong>From £72</strong></div>
+                      <a class="btn btn-primary offer-cta" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    </div>
+                  </article>
+                  <article class="offer-slide">
+                    <div class="offer-media">
+                      <img src="assets/images/treatment-facials.webp" alt="Microneedling at Lumi Derm" loading="lazy">
+                      <span class="offer-badge">Skin renewal</span>
+                    </div>
+                    <div class="offer-body">
+                      <span class="offer-tag">Skin renewal</span>
+                      <h3>Microneedling</h3>
+                      <p>Collagen-focused treatment for texture and tone.</p>
+                      <div class="offer-price"><strong>From £110.50</strong></div>
+                      <a class="btn btn-primary offer-cta" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    </div>
+                  </article>
+                  <article class="offer-slide">
+                    <div class="offer-media">
+                      <img src="assets/images/iulia-treatment-closeup.webp" alt="Facial peel at Lumi Derm" loading="lazy">
+                      <span class="offer-badge">Radiance</span>
+                    </div>
+                    <div class="offer-body">
+                      <span class="offer-tag">Radiance</span>
+                      <h3>Facial peel</h3>
+                      <p>Brightening, resurfacing peel for a smoother glow.</p>
+                      <div class="offer-price"><strong>From £63</strong></div>
+                      <a class="btn btn-primary offer-cta" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener">Book offer</a>
+                    </div>
                   </article>
                 </div>
               </div>
-              <div class="carousel-controls offer-controls" aria-label="Offer carousel controls">
-                <button class="carousel-button" type="button" data-offers-prev aria-label="Previous offers">‹</button>
+              <div class="offer-controls">
                 <div class="carousel-dots" data-offers-dots aria-label="Offer pagination"></div>
-                <button class="carousel-button" type="button" data-offers-next aria-label="Next offers">›</button>
               </div>
             </div>
           </div>
