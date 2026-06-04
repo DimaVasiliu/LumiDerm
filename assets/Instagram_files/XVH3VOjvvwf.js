@@ -1,0 +1,3 @@
+;/*FB_PKG_DELIM*/
+
+__d("polarisAIGMMediaDisclosureSource",[],(function(t,n,r,o,a,i){"use strict";function e(e){switch(e){case"C2PA_METADATA":return"c2pa_metadata";case"C2PA_METADATA_EDITED":return"c2pa_metadata_edited";case"IPTC_METADATA":return"iptc_metadata";case"IPTC_METADATA_EDITED":return"iptc_metadata_edited";case"SELF_DISCLOSURE_FLOW":return"self_disclosure_flow";case"META_INVISIBLE_WATERMARK":return"meta_invisible_watermark";case"MANUAL_OVERRIDE_LABEL_ON":return"manual_override_label_on";case"PAIGM":case"CLASSIFIER_SCORE_HIGH":case"CLASSIFIER_SCORE_LOW":case"AI_CREATED":case"AI_EDITED":return"detected";default:return null}}i.default=e}),66);
