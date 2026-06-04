@@ -33,6 +33,10 @@
     left: auto;
     width: min(76%, 260px);
   }
+
+  .offer-slide {
+    flex: 0 0 calc((100% - 2rem) / 3);
+  }
 }
 
 @media (min-width: 820px) {
@@ -149,6 +153,10 @@
   .footer-links {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .reviews-grid-expanded {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 1040px) {
@@ -183,6 +191,14 @@
   .reviews-grid,
   .contact-preview {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .reviews-grid-expanded {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .offer-slide {
+    flex: 0 0 calc((100% - 4rem) / 5);
   }
 
   .page-grid {
