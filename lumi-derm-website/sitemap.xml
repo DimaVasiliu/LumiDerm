@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://www.lumidermaesthetics.co.uk/</loc>
+    <image:image>
+      <image:loc>https://www.lumidermaesthetics.co.uk/assets/icons/lumi-derm-logo.png</image:loc>
+      <image:title>Lumi Derm Aesthetics logo</image:title>
+    </image:image>
+  </url>
+  <url><loc>https://www.lumidermaesthetics.co.uk/pages/services.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.co.uk/pages/treatment.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.co.uk/pages/booking.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.co.uk/pages/gallery.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.co.uk/pages/about.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.co.uk/pages/contact.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.co.uk/pages/policies.html</loc></url>
+</urlset>

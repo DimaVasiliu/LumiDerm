@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Lumi Derm Aesthetic monogram</title>
+  <defs>
+    <linearGradient id="g" x1="20" x2="108" y1="18" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fffdf9"/>
+      <stop offset=".52" stop-color="#f2d8d9"/>
+      <stop offset="1" stop-color="#c98f86"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="58" fill="url(#g)" stroke="#a96f68" stroke-opacity=".34" stroke-width="2"/>
+  <path fill="#292426" fill-opacity=".82" d="M35 88V39h9v41h22v8H35Zm39 0V39h15c8 0 14 2 19 7 5 4 7 10 7 17 0 8-2 14-7 18-5 5-11 7-19 7H74Zm9-8h6c5 0 9-1 12-4s4-7 4-13c0-5-1-9-4-12s-7-4-12-4h-6v33Z"/>
+</svg>
