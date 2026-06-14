@@ -34,6 +34,15 @@
     width: min(76%, 260px);
   }
 
+  .hero-proof-bar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hero-proof-bar span {
+    display: grid;
+    justify-content: start;
+  }
+
   .offer-slide {
     flex: 0 0 calc((100% - 2rem) / 3);
   }
@@ -98,6 +107,28 @@
     content: " ";
   }
 
+  .hero-banner {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.74fr);
+    align-items: stretch;
+  }
+
+  .hero-banner h1 span {
+    display: block;
+  }
+
+  .hero-banner h1 {
+    font-size: clamp(3.4rem, 6vw, 5.8rem);
+    line-height: 0.96;
+  }
+
+  .hero-banner h1 span:not(:last-child)::after {
+    content: "";
+  }
+
+  .hero-proof-bar {
+    grid-column: 1 / -1;
+  }
+
   .carousel-slide,
   .carousel-slide > div {
     min-height: 430px;
@@ -158,6 +189,14 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .contact-layout {
+    grid-template-columns: 0.9fr 0.72fr;
+  }
+
+  .contact-layout .map-panel {
+    grid-column: 1 / -1;
+  }
+
   .faq-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 1.1rem;
@@ -171,6 +210,19 @@
 
   .hero {
     padding-top: 8.5rem;
+  }
+
+  .simple-hero {
+    padding-top: 8rem;
+  }
+
+  .hero-banner {
+    grid-template-columns: minmax(0, 0.95fr) minmax(360px, 0.68fr);
+  }
+
+  .hero-proof-bar {
+    grid-column: 1 / -1;
+    align-self: end;
   }
 
   .card-grid {
@@ -203,7 +255,15 @@
   }
 
   .offer-slide {
-    flex: 0 0 calc((100% - 4rem) / 5);
+    flex: 0 0 calc((100% - 4rem) / 4.35);
+  }
+
+  .contact-layout {
+    grid-template-columns: 0.78fr 0.58fr 1.1fr;
+  }
+
+  .contact-layout .map-panel {
+    grid-column: auto;
   }
 
   .page-grid {
