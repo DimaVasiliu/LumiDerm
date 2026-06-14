@@ -34,15 +34,6 @@
     width: min(76%, 260px);
   }
 
-  .hero-proof-bar {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .hero-proof-bar span {
-    display: grid;
-    justify-content: start;
-  }
-
   .offer-slide {
     flex: 0 0 calc((100% - 2rem) / 3);
   }
@@ -123,10 +114,6 @@
 
   .hero-banner h1 span:not(:last-child)::after {
     content: "";
-  }
-
-  .hero-proof-bar {
-    grid-column: 1 / -1;
   }
 
   .carousel-slide,
@@ -213,16 +200,11 @@
   }
 
   .simple-hero {
-    padding-top: 8rem;
+    padding-top: 6rem;
   }
 
   .hero-banner {
     grid-template-columns: minmax(0, 0.95fr) minmax(360px, 0.68fr);
-  }
-
-  .hero-proof-bar {
-    grid-column: 1 / -1;
-    align-self: end;
   }
 
   .card-grid {
