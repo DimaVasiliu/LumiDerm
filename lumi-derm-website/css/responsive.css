@@ -99,7 +99,6 @@
   }
 
   .hero-banner {
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.74fr);
     align-items: stretch;
   }
 
@@ -108,8 +107,8 @@
   }
 
   .hero-banner h1 {
-    font-size: clamp(3.4rem, 6vw, 5.8rem);
-    line-height: 0.96;
+    font-size: clamp(3rem, 6vw, 5.4rem);
+    line-height: 0.98;
   }
 
   .hero-banner h1 span:not(:last-child)::after {
@@ -200,11 +199,17 @@
   }
 
   .simple-hero {
-    padding-top: 6rem;
+    padding-top: 5.8rem;
   }
 
-  .hero-banner {
-    grid-template-columns: minmax(0, 0.95fr) minmax(360px, 0.68fr);
+  .hero-message {
+    grid-template-columns: minmax(0, 0.98fr) minmax(280px, 0.42fr);
+    align-items: end;
+  }
+
+  .hero-side-copy {
+    justify-self: end;
+    margin-bottom: 1rem;
   }
 
   .card-grid {
