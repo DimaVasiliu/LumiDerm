@@ -1900,6 +1900,32 @@ p {
   padding: 1.2rem;
 }
 
+.service-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 1rem 0 1.2rem;
+  padding: 0;
+  list-style: none;
+}
+
+.service-list li {
+  position: relative;
+  padding-left: 1.05rem;
+  color: var(--muted);
+}
+
+.service-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--rose), var(--lavender));
+  box-shadow: 0 0 0 0.22rem rgba(185, 125, 117, 0.11);
+}
+
 .booking-form {
   display: grid;
   gap: 1rem;
