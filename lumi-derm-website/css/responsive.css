@@ -529,3 +529,44 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+@media (min-width: 1200px) {
+  .price-bundles {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: clamp(0.7rem, 1vw, 1rem);
+  }
+
+  .price-bundle {
+    align-content: start;
+    padding: clamp(1rem, 1.25vw, 1.25rem);
+  }
+
+  .price-bundle .bundle-heading h3 {
+    font-size: clamp(1.28rem, 1.75vw, 1.7rem);
+  }
+
+  .price-bundle ul {
+    gap: 0.34rem;
+  }
+
+  .price-bundle li {
+    grid-template-columns: 1fr;
+    gap: 0.16rem;
+    padding-top: 0.42rem;
+  }
+
+  .price-bundle li span {
+    font-size: 0.86rem;
+    line-height: 1.28;
+  }
+
+  .price-bundle li strong {
+    font-size: 0.78rem;
+    text-align: left;
+    white-space: normal;
+  }
+
+  .prices-section .section-header {
+    max-width: 780px;
+  }
+}
