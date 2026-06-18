@@ -23,6 +23,7 @@ if (navToggle && navMenu) {
     navToggle.setAttribute("aria-expanded", "false");
     navMenu.setAttribute("aria-hidden", "true");
     navMenu.classList.remove("is-open");
+    navMenu.style.zIndex = "";
     header?.classList.remove("menu-active");
     document.body.classList.remove("menu-open");
   }
@@ -32,6 +33,7 @@ if (navToggle && navMenu) {
     navToggle.setAttribute("aria-expanded", String(!isOpen));
     navMenu.setAttribute("aria-hidden", String(isOpen));
     navMenu.classList.toggle("is-open", !isOpen);
+    navMenu.style.zIndex = !isOpen ? "10010" : "";
     header?.classList.toggle("menu-active", !isOpen);
     document.body.classList.toggle("menu-open", !isOpen);
   });
@@ -363,10 +365,69 @@ function initReviewsToggle() {
   });
 }
 
-initGsapMotion();
-initCarousels();
-initOffersCarousel();
-initReviewsToggle();
+function escapeHtml(value = "") {
+  return String(value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  }[character]));
+}
+
+function renderReviewCard(review) {
+  const rating = Math.max(1, Math.min(5, Number(review.rating) || 5));
+  const stars = "★".repeat(rating);
+  const source = [review.treatment, review.source].filter(Boolean).join(" · ");
+
+  return `
+    <figure class="review-card reveal" data-reveal>
+      <p class="stars" aria-label="${rating} star client review">${stars}</p>
+      <blockquote><p>${escapeHtml(review.text)}</p></blockquote>
+      <cite>
+        <span class="review-avatar" aria-hidden="true">${escapeHtml(review.initial || review.name?.[0] || "L")}</span>
+        <span class="review-byline">${escapeHtml(review.name || "Client")}<span>${escapeHtml(source || "Verified client")}</span></span>
+      </cite>
+    </figure>
+  `;
+}
+
+async function initReviewsFeed() {
+  const grid = document.querySelector("[data-reviews-grid]");
+  if (!grid || !grid.dataset.reviewsSource) return;
+
+  try {
+    const response = await fetch(grid.dataset.reviewsSource, { cache: "no-cache" });
+    if (!response.ok) return;
+
+    const data = await response.json();
+    if (!Array.isArray(data.reviews) || !data.reviews.length) return;
+
+    grid.innerHTML = data.reviews.map(renderReviewCard).join("");
+
+    const summary = document.querySelector("[data-reviews-summary]");
+    if (summary && data.summary) {
+      const rating = escapeHtml(data.summary.rating || "5.0");
+      const count = Number(data.summary.count) || data.reviews.length;
+      summary.setAttribute("aria-label", `Rated ${rating} out of 5 from ${count} client reviews`);
+      summary.innerHTML = `
+        <span>${escapeHtml(data.summary.label || "Client rating")}</span>
+        <strong>${rating}</strong>
+        <p aria-hidden="true">★★★★★</p>
+        <small>${count} imported client reviews</small>
+      `;
+    }
+  } catch (error) {
+    // Static HTML reviews remain visible if JSON cannot load, such as from file://.
+  }
+}
+
+initReviewsFeed().finally(() => {
+  initGsapMotion();
+  initCarousels();
+  initOffersCarousel();
+  initReviewsToggle();
+});
 
 document.querySelectorAll("[data-nav-link]").forEach((link) => {
   const href = link.getAttribute("href") || "";

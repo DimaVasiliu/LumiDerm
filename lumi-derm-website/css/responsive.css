@@ -147,6 +147,11 @@
     grid-column: 1 / -1;
   }
 
+  .reviews-score-card,
+  .reviews-source-card {
+    min-height: auto;
+  }
+
   .contact-layout .map-panel {
     min-height: 260px;
   }
@@ -168,6 +173,15 @@
 
   .clinic-info-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reviews-hero {
+    grid-template-columns: 1fr 0.72fr;
+    align-items: stretch;
+  }
+
+  .reviews-hero .section-header {
+    grid-column: 1 / -1;
   }
 
   .gallery-grid {
@@ -275,6 +289,18 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .reviews-hero {
+    grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.45fr) minmax(240px, 0.65fr);
+  }
+
+  .reviews-hero .section-header {
+    grid-column: auto;
+  }
+
+  .reviews-grid-expanded .review-card:nth-child(1) {
+    grid-column: span 2;
+  }
+
   .contact-layout {
     grid-template-columns: 0.9fr 0.72fr;
   }
@@ -307,6 +333,7 @@
     gap: 1.25rem;
     padding: 0;
     background: transparent;
+    clip-path: none;
     backdrop-filter: none;
     opacity: 1;
     visibility: visible;
@@ -314,6 +341,11 @@
     pointer-events: auto;
     transition: none;
     overflow: visible;
+  }
+
+  .nav-menu::before,
+  .nav-menu::after {
+    content: none;
   }
 
   .nav-link {
@@ -326,6 +358,7 @@
 
   .nav-menu .nav-link {
     display: inline-flex;
+    width: auto;
     min-height: auto;
     padding: 0;
     border: 0;
@@ -335,6 +368,10 @@
     opacity: 1;
     transform: none;
     transition: color 180ms ease;
+  }
+
+  .nav-menu .nav-link::before {
+    content: none;
   }
 
   .nav-link::after {
@@ -432,6 +469,20 @@
 
   .reviews-grid-expanded {
     grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .reviews-grid-expanded .review-card:nth-child(1) {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+
+  .reviews-grid-expanded .review-card:nth-child(2) {
+    grid-column: span 2;
+  }
+
+  .reviews-grid-expanded .review-card:nth-child(1) blockquote p {
+    -webkit-line-clamp: 10;
+    font-size: 1.04rem;
   }
 
   .offer-slide {

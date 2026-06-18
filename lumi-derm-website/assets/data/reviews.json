@@ -1,0 +1,90 @@
+{
+  "summary": {
+    "rating": "5.0",
+    "count": 37,
+    "label": "Client reviews",
+    "note": "Feedback currently imported from verified client sources. Future Google reviews can be merged into this feed through the approved API."
+  },
+  "reviews": [
+    {
+      "name": "Elena",
+      "initial": "E",
+      "rating": 5,
+      "treatment": "Lymphatic Drainage",
+      "source": "Verified client",
+      "text": "Iulia is highly experienced and I have complete confidence in her expertise. The studio is clean, comfortable, and fully equipped to ensure a great experience and quality treatment. I would highly recommend her."
+    },
+    {
+      "name": "Tatjana",
+      "initial": "T",
+      "rating": 5,
+      "treatment": "Cellulite Treatment",
+      "source": "Verified client",
+      "text": "Iulia is love from the very first visit. Kind, attentive, with truly magical hands. After her treatments you feel light, happy, and full of energy. Her facial treatments are simply amazing, with a cozy space, calming atmosphere, and genuine care."
+    },
+    {
+      "name": "Natalia",
+      "initial": "N",
+      "rating": 5,
+      "treatment": "Lash Lift",
+      "source": "Verified client",
+      "text": "I was slightly late but Iulia was accommodating and efficient, so we finished the procedure on time. I love the result!"
+    },
+    {
+      "name": "Maria",
+      "initial": "M",
+      "rating": 5,
+      "treatment": "Beauty Treatments",
+      "source": "Verified client",
+      "text": "Yulia is a really professional and caring beauty therapist. She always gives good advice based on your needs. I have been going to her for many years now and can definitely recommend her services."
+    },
+    {
+      "name": "Alice",
+      "initial": "A",
+      "rating": 5,
+      "treatment": "Laser Hair Removal",
+      "source": "Verified client",
+      "text": "Lovely and clean, and the treatment went really well."
+    },
+    {
+      "name": "Fatemeh",
+      "initial": "F",
+      "rating": 5,
+      "treatment": "Electrolysis",
+      "source": "Verified client",
+      "text": "Iulia is highly professional, skilled, and very friendly."
+    },
+    {
+      "name": "Anatolii",
+      "initial": "A",
+      "rating": 5,
+      "treatment": "Electrolysis",
+      "source": "Verified client",
+      "text": "Professional, friendly therapist. Nice atmosphere."
+    },
+    {
+      "name": "Natalie",
+      "initial": "N",
+      "rating": 5,
+      "treatment": "Cellulite Treatment",
+      "source": "Verified client",
+      "text": "Exceptional service, thank you!"
+    },
+    {
+      "name": "Amelia",
+      "initial": "A",
+      "rating": 5,
+      "treatment": "Laser Hair Removal",
+      "source": "Verified client",
+      "text": "Fantastic experience with Iulia."
+    },
+    {
+      "name": "Alice",
+      "initial": "A",
+      "rating": 5,
+      "treatment": "Electrolysis",
+      "source": "Verified client",
+      "text": "Brilliant."
+    }
+  ]
+}

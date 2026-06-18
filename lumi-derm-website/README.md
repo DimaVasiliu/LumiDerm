@@ -9,6 +9,7 @@ lumi-derm-website/
   assets/
     images/      Local WebP placeholder visuals
     icons/       Local brand/icon assets
+    data/        Local JSON feeds, including reviews
   css/
     style.css    Mobile-first global styles and components
     responsive.css
@@ -45,8 +46,9 @@ Then visit `http://localhost:8080`.
 - Sticky transparent header with mobile menu
 - Local generated WebP image placeholders
 - Featured services, brand story, process timeline, gallery preview, reviews, FAQ, and contact preview
+- Reviews render from `assets/data/reviews.json` when served over HTTP, with crawlable HTML fallback
 - Starter internal pages with SEO titles and meta descriptions
-- Treatwell-first booking landing page and external booking CTAs
+- Internal consultation landing page and controlled booking CTAs
 - Accessible FAQ accordion and keyboard focus states
 - Reduced-motion support
 - JSON-LD BeautySalon schema placeholder
@@ -55,6 +57,10 @@ Then visit `http://localhost:8080`.
 ## Future Features
 
 - Deploy on Cloudflare Pages
-- Paste an official Treatwell Connect widget embed if the client provides one
+- Add an approved booking widget or Cloudflare Worker booking flow later
+- Add a Cloudflare Worker scheduled reviews sync:
+  - Google reviews: use the official Google Business Profile API for the verified Lumi Derm location.
+  - Booking-platform reviews: use an approved partner export, feed, or widget if provided. Do not scrape pages.
+  - Store normalized reviews in D1 or KV, then publish a cached JSON file/API consumed by the homepage.
 - Add CMS/admin editing later for treatments, pricing, gallery, reviews, and policies
 - Replace placeholders with final photography, approved before-and-after images, and verified clinic details
