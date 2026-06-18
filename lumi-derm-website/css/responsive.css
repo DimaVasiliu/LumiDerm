@@ -308,15 +308,20 @@
     padding: 0;
     background: transparent;
     backdrop-filter: none;
+    opacity: 1;
+    visibility: visible;
     transform: none;
+    pointer-events: auto;
     transition: none;
     overflow: visible;
   }
 
   .nav-link {
     position: relative;
+    font-family: var(--font-body);
     font-size: 0.9rem;
     font-weight: 800;
+    line-height: 1.2;
   }
 
   .nav-menu .nav-link {
@@ -327,6 +332,9 @@
     border-radius: 0;
     background: transparent;
     box-shadow: none;
+    opacity: 1;
+    transform: none;
+    transition: color 180ms ease;
   }
 
   .nav-link::after {
@@ -351,6 +359,8 @@
     width: fit-content;
     min-height: auto;
     margin-top: 0;
+    opacity: 1;
+    transform: none;
   }
 
   .offer-slide {

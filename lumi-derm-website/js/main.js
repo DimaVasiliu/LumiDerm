@@ -17,8 +17,11 @@ setHeaderState();
 window.addEventListener("scroll", setHeaderState, { passive: true });
 
 if (navToggle && navMenu) {
+  navMenu.setAttribute("aria-hidden", "true");
+
   function closeMobileMenu() {
     navToggle.setAttribute("aria-expanded", "false");
+    navMenu.setAttribute("aria-hidden", "true");
     navMenu.classList.remove("is-open");
     header?.classList.remove("menu-active");
     document.body.classList.remove("menu-open");
@@ -27,6 +30,7 @@ if (navToggle && navMenu) {
   navToggle.addEventListener("click", () => {
     const isOpen = navToggle.getAttribute("aria-expanded") === "true";
     navToggle.setAttribute("aria-expanded", String(!isOpen));
+    navMenu.setAttribute("aria-hidden", String(isOpen));
     navMenu.classList.toggle("is-open", !isOpen);
     header?.classList.toggle("menu-active", !isOpen);
     document.body.classList.toggle("menu-open", !isOpen);
