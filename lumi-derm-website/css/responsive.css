@@ -315,10 +315,6 @@
     grid-column: auto;
   }
 
-  .reviews-grid-expanded .review-card:nth-child(1) {
-    grid-column: span 2;
-  }
-
   .contact-layout {
     grid-template-columns: 0.9fr 0.72fr;
   }
@@ -496,21 +492,7 @@
   }
 
   .reviews-grid-expanded {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
-  .reviews-grid-expanded .review-card:nth-child(1) {
-    grid-column: span 2;
-    grid-row: span 2;
-  }
-
-  .reviews-grid-expanded .review-card:nth-child(2) {
-    grid-column: span 2;
-  }
-
-  .reviews-grid-expanded .review-card:nth-child(1) blockquote p {
-    -webkit-line-clamp: 10;
-    font-size: 1.04rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .offer-slide {
@@ -531,6 +513,14 @@
 }
 
 @media (min-width: 1200px) {
+  .reviews-grid-expanded {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .reviews-grid-expanded.is-collapsed {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .price-bundles {
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: clamp(0.7rem, 1vw, 1rem);

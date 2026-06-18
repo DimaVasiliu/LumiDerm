@@ -332,30 +332,32 @@ function initReviewsToggle() {
   const cards = Array.from(grid.querySelectorAll(".review-card"));
   let expanded = false;
 
+  function collapsedLimit() {
+    if (window.innerWidth >= 640) return 4;
+    return 3;
+  }
+
   function applyCollapse() {
-    if (expanded) {
-      cards.forEach((card) => card.classList.remove("is-hidden"));
-      return;
-    }
-    cards.forEach((card) => card.classList.remove("is-hidden"));
-    const firstTop = cards[0]?.offsetTop ?? 0;
-    cards.forEach((card) => {
-      if (card.offsetTop > firstTop + 4) card.classList.add("is-hidden");
+    const limit = collapsedLimit();
+    cards.forEach((card, index) => {
+      card.classList.toggle("is-hidden", !expanded && index >= limit);
     });
   }
 
-  const hiddenCount = () => cards.filter((c) => c.classList.contains("is-hidden")).length;
+  function updateToggleLabel() {
+    toggle.textContent = expanded ? "Show fewer reviews" : `Show all ${cards.length} reviews`;
+  }
 
   toggle.addEventListener("click", () => {
     expanded = !expanded;
     grid.classList.toggle("is-collapsed", !expanded);
     applyCollapse();
     toggle.setAttribute("aria-expanded", String(expanded));
-    toggle.textContent = expanded ? "Show fewer reviews" : "Show all reviews";
+    updateToggleLabel();
   });
 
   applyCollapse();
-  if (!expanded) toggle.textContent = `Show all ${cards.length} reviews`;
+  updateToggleLabel();
 
   let resizeTimer;
   window.addEventListener("resize", () => {

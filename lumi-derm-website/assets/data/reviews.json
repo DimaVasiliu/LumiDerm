@@ -1,7 +1,7 @@
 {
   "summary": {
     "rating": "5.0",
-    "count": 37,
+    "count": 43,
     "label": "Client reviews",
     "note": "Feedback currently imported from verified client sources. Future Google reviews can be merged into this feed through the approved API."
   },
@@ -85,6 +85,46 @@
       "treatment": "Electrolysis",
       "source": "Verified client",
       "text": "Brilliant."
+    },
+    {
+      "name": "Roisin",
+      "initial": "R",
+      "rating": 5,
+      "treatment": "Hollywood Waxing",
+      "source": "Verified client",
+      "text": "A welcoming visit with a comfortable experience and clear care throughout the appointment."
+    },
+    {
+      "name": "Alice",
+      "initial": "A",
+      "rating": 5,
+      "treatment": "Electrolysis",
+      "source": "Verified client",
+      "text": "A perfect appointment with careful treatment and a calm finish."
+    },
+    {
+      "name": "Clare",
+      "initial": "C",
+      "rating": 5,
+      "treatment": "Electrolysis",
+      "source": "Verified client",
+      "text": "Excellent service in a friendly, professional studio."
+    },
+    {
+      "name": "Sayed",
+      "initial": "S",
+      "rating": 5,
+      "treatment": "Laser Hair Removal",
+      "source": "Verified client",
+      "text": "Careful laser treatment with a reassuring appointment and smooth experience."
+    },
+    {
+      "name": "Elena",
+      "initial": "E",
+      "rating": 5,
+      "treatment": "Lymphatic Drainage",
+      "source": "Verified client",
+      "text": "A professional visit with a clean studio, comfortable setting, and confident care."
     }
   ]
 }
