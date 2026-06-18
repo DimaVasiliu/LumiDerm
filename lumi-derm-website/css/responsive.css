@@ -390,6 +390,7 @@
 
   .nav-menu .nav-link::before {
     content: none;
+    display: none;
   }
 
   .nav-link::after {
