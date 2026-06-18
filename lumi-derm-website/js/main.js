@@ -17,6 +17,13 @@ setHeaderState();
 window.addEventListener("scroll", setHeaderState, { passive: true });
 
 if (navToggle && navMenu) {
+  function closeMobileMenu() {
+    navToggle.setAttribute("aria-expanded", "false");
+    navMenu.classList.remove("is-open");
+    header?.classList.remove("menu-active");
+    document.body.classList.remove("menu-open");
+  }
+
   navToggle.addEventListener("click", () => {
     const isOpen = navToggle.getAttribute("aria-expanded") === "true";
     navToggle.setAttribute("aria-expanded", String(!isOpen));
@@ -28,10 +35,17 @@ if (navToggle && navMenu) {
   navMenu.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof HTMLAnchorElement)) return;
-    navToggle.setAttribute("aria-expanded", "false");
-    navMenu.classList.remove("is-open");
-    header?.classList.remove("menu-active");
-    document.body.classList.remove("menu-open");
+    closeMobileMenu();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    closeMobileMenu();
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth < 980) return;
+    closeMobileMenu();
   });
 }
 
