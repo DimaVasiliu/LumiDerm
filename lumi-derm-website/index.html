@@ -16,8 +16,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260618-menu-bottom">
-    <link rel="stylesheet" href="css/responsive.css?v=20260618-menu-bottom">
+    <link rel="stylesheet" href="css/style.css?v=20260618-price-bundles">
+    <link rel="stylesheet" href="css/responsive.css?v=20260618-price-bundles">
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -315,20 +315,48 @@
               <h2>Services &amp; prices</h2>
               <p>Indicative starter pricing. Final treatment prices can be adjusted to match clinic policies and consultation recommendations.</p>
             </div>
-            <div class="price-grid">
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£45</strong><h3>Laser treatments</h3><p>Cynosure Elite hair removal, rejuvenation and vascular options.</p></article>
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£35</strong><h3>Electrolysis</h3><p>Apilus permanent hair removal for precise areas.</p></article>
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£50</strong><h3>Endospheres therapy</h3><p>Body and facial lymphatic drainage support.</p></article>
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£150</strong><h3>PRP</h3><p>Regenerative skin and hair-loss treatment planning.</p></article>
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£120</strong><h3>Skin boosters</h3><p>Profhilo and Polynucleotides for skin quality.</p></article>
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£120</strong><h3>Lip boosters</h3><p>Hydration-focused lip booster treatment.</p></article>
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£75</strong><h3>Mesotherapy</h3><p>Micro-infusion support for glow and hydration.</p></article>
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£130</strong><h3>Hair loss treatment</h3><p>Hair mesotherapy and PRP for hair loss.</p></article>
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£55</strong><h3>Facials</h3><p>Bespoke cleanse, Dermaplaning and Fire &amp; Ice options.</p></article>
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£110</strong><h3>Microneedling</h3><p>Texture, tone and collagen-focused treatment.</p></article>
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£65</strong><h3>Peels</h3><p>PRX-T33, Glycolic, Azelaic and Salicylic options.</p></article>
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£180</strong><h3>Exosomes</h3><p>Advanced skin-support treatment planning.</p></article>
-              <article class="price-card reveal" data-reveal><span>from</span><strong>£25</strong><h3>Lashes &amp; brows</h3><p>Polished finishing treatments.</p></article>
+            <div class="price-grid price-bundles">
+              <article class="price-card price-bundle reveal" data-reveal>
+                <div class="bundle-heading"><span>from £35</span><h3>Laser &amp; permanent hair removal</h3></div>
+                <ul>
+                  <li><span>Laser hair removal</span><strong>from £45</strong></li>
+                  <li><span>Laser rejuvenation / vascular</span><strong>consultation</strong></li>
+                  <li><span>Apilus electrolysis</span><strong>from £35</strong></li>
+                </ul>
+              </article>
+              <article class="price-card price-bundle reveal" data-reveal>
+                <div class="bundle-heading"><span>from £75</span><h3>Skin injectables &amp; regenerative</h3></div>
+                <ul>
+                  <li><span>PRP</span><strong>from £150</strong></li>
+                  <li><span>Skin boosters / Profhilo</span><strong>from £120</strong></li>
+                  <li><span>Lip boosters / mesotherapy</span><strong>from £75</strong></li>
+                  <li><span>Exosomes</span><strong>from £180</strong></li>
+                </ul>
+              </article>
+              <article class="price-card price-bundle reveal" data-reveal>
+                <div class="bundle-heading"><span>from £55</span><h3>Facials, peels &amp; texture</h3></div>
+                <ul>
+                  <li><span>Bespoke facials</span><strong>from £55</strong></li>
+                  <li><span>Microneedling</span><strong>from £110</strong></li>
+                  <li><span>PRX-T33 / glycolic / azelaic / salicylic peels</span><strong>from £65</strong></li>
+                </ul>
+              </article>
+              <article class="price-card price-bundle reveal" data-reveal>
+                <div class="bundle-heading"><span>from £50</span><h3>Body &amp; hair support</h3></div>
+                <ul>
+                  <li><span>Endospheres therapy</span><strong>from £50</strong></li>
+                  <li><span>Hair mesotherapy</span><strong>from £130</strong></li>
+                  <li><span>PRP for hair loss</span><strong>consultation</strong></li>
+                </ul>
+              </article>
+              <article class="price-card price-bundle reveal" data-reveal>
+                <div class="bundle-heading"><span>from £25</span><h3>Beauty finishing</h3></div>
+                <ul>
+                  <li><span>Lashes &amp; brows</span><strong>from £25</strong></li>
+                  <li><span>Dermaplaning add-on</span><strong>consultation</strong></li>
+                  <li><span>Combination plans</span><strong>bespoke</strong></li>
+                </ul>
+              </article>
             </div>
             <p class="price-note">Prices are draft placeholders and can be updated before launch. Final suitability and pricing are confirmed during consultation.</p>
           </div>
@@ -444,6 +472,6 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-    <script src="js/main.js?v=20260618-menu-bottom"></script>
+    <script src="js/main.js?v=20260618-price-bundles"></script>
   </body>
 </html>

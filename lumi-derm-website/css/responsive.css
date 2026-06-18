@@ -132,8 +132,22 @@
     padding: 1rem;
   }
 
+  .price-bundle {
+    min-height: auto;
+  }
+
   .price-card strong {
     font-size: clamp(2.25rem, 13vw, 3.1rem);
+  }
+
+  .price-bundle li {
+    grid-template-columns: 1fr;
+    gap: 0.18rem;
+  }
+
+  .price-bundle li strong {
+    text-align: left;
+    white-space: normal;
   }
 
   .reviews-rating {
@@ -168,6 +182,10 @@
   .price-grid,
   .offers-grid,
   .page-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .price-bundles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -448,6 +466,15 @@
 
   .price-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .price-bundles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .price-bundle:nth-child(2),
+  .price-bundle:nth-child(3) {
+    grid-column: span 1;
   }
 
   .offers-grid {
