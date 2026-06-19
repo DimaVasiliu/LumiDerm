@@ -79,6 +79,8 @@ faqButtons.forEach((button) => {
 
 function initPriceAccordions() {
   const priceButtons = document.querySelectorAll("[data-price-toggle]");
+  const priceFilters = document.querySelectorAll("[data-price-filter]");
+  const priceCards = document.querySelectorAll("[data-price-group]");
   if (!priceButtons.length) return;
 
   function setPanel(button, expanded) {
@@ -90,6 +92,25 @@ function initPriceAccordions() {
     panel.style.maxHeight = expanded ? `${panel.scrollHeight}px` : "0px";
   }
 
+  function applyPriceFilter(filter = "popular") {
+    priceFilters.forEach((button) => {
+      const isActive = button.dataset.priceFilter === filter;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+
+    priceCards.forEach((card) => {
+      const groups = (card.dataset.priceGroup || "").split(" ");
+      const isVisible = filter === "all" || groups.includes(filter);
+      card.classList.toggle("is-hidden", !isVisible);
+
+      if (!isVisible) {
+        const button = card.querySelector("[data-price-toggle]");
+        if (button) setPanel(button, false);
+      }
+    });
+  }
+
   priceButtons.forEach((button) => {
     setPanel(button, button.getAttribute("aria-expanded") === "true");
     button.addEventListener("click", () => {
@@ -97,6 +118,14 @@ function initPriceAccordions() {
       setPanel(button, !isExpanded);
     });
   });
+
+  priceFilters.forEach((button) => {
+    button.addEventListener("click", () => {
+      applyPriceFilter(button.dataset.priceFilter || "popular");
+    });
+  });
+
+  applyPriceFilter("popular");
 
   window.addEventListener("resize", () => {
     priceButtons.forEach((button) => {
