@@ -16,8 +16,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260619-price-filter">
-    <link rel="stylesheet" href="css/responsive.css?v=20260619-price-filter">
+    <link rel="stylesheet" href="css/style.css?v=20260619-carousel-loop">
+    <link rel="stylesheet" href="css/responsive.css?v=20260619-carousel-loop">
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -64,16 +64,11 @@
 
       <main>
         <section class="hero simple-hero" id="home">
-          <div class="hero-orb one" aria-hidden="true"></div>
-          <div class="hero-orb two" aria-hidden="true"></div>
-          <div class="particles" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
           <div class="container">
-            <div class="hero-banner reveal is-visible" data-reveal>
+            <div class="hero-banner">
               <div class="hero-banner-media" aria-hidden="true">
                 <img src="assets/images/hero-lumi-derm-editorial-skin.webp" alt="">
               </div>
-              <span class="hero-banner-sheen" aria-hidden="true"></span>
-              <span class="hero-banner-grain" aria-hidden="true"></span>
               <div class="hero-banner-copy">
                 <div class="hero-kicker">
                   <span>Lumi Derm Aesthetics</span>
@@ -315,209 +310,388 @@
               <h2>Services &amp; prices</h2>
               <p>Guide prices supplied by Lumi Derm Aesthetics. Choose a treatment area, then open a service group to view sessions, packages and instalment options.</p>
             </div>
-            <div class="price-filter-bar" aria-label="Price categories">
-              <button class="price-filter is-active" type="button" aria-pressed="true" data-price-filter="popular">Popular</button>
-              <button class="price-filter" type="button" aria-pressed="false" data-price-filter="laser">Laser &amp; hair</button>
-              <button class="price-filter" type="button" aria-pressed="false" data-price-filter="injectables">Injectables</button>
-              <button class="price-filter" type="button" aria-pressed="false" data-price-filter="skin">Facials &amp; skin</button>
-              <button class="price-filter" type="button" aria-pressed="false" data-price-filter="body">Body &amp; beauty</button>
-              <button class="price-filter" type="button" aria-pressed="false" data-price-filter="all">All prices</button>
-            </div>
-            <div class="price-accordion-grid">
-              <article class="price-card price-accordion reveal" data-price-group="popular laser" data-reveal>
-                <button class="price-toggle" type="button" aria-expanded="false" aria-controls="prices-laser" data-price-toggle>
-                  <span class="price-kicker">Cynosure Elite</span><span class="price-title">Laser treatments</span><span class="price-from">from £10</span><span class="price-icon" aria-hidden="true"></span>
-                </button>
-                <div class="price-panel" id="prices-laser" data-price-panel>
-                  <ul>
-                    <li><span>Laser hair removal patch test 24h</span><strong>£10</strong></li>
-                    <li><span>Laser hair removal treatment</span><strong>price confirmed during consultation</strong></li>
-                    <li><span>Laser skin rejuvenation patch test 24h</span><strong>£10</strong></li>
-                    <li><span>Laser skin rejuvenation Face + Neck</span><strong>£100 / 1 session</strong></li>
-                    <li><span>Face + Neck package</span><strong>£270 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>Face + Neck + Decollete</span><strong>£130 / 1 session</strong></li>
-                    <li><span>Face + Neck + Decollete package</span><strong>£330 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>Vascular treatment patch test 24h</span><strong>£10</strong></li>
-                    <li><span>Vascular treatment small area, e.g. nose</span><strong>£45</strong></li>
-                    <li><span>Vascular treatment medium area, e.g. face</span><strong>£80</strong></li>
-                    <li><span>Vascular treatment large area, e.g. leg</span><strong>£125</strong></li>
-                    <li><span>Vascular treatment XLarge area, e.g. both legs</span><strong>£180</strong></li>
-                  </ul>
+              <div class="price-board">
+                <input class="pf-input" type="radio" name="price-filter" id="pf-popular" checked>
+                <input class="pf-input" type="radio" name="price-filter" id="pf-laser">
+                <input class="pf-input" type="radio" name="price-filter" id="pf-injectables">
+                <input class="pf-input" type="radio" name="price-filter" id="pf-skin">
+                <input class="pf-input" type="radio" name="price-filter" id="pf-body">
+                <input class="pf-input" type="radio" name="price-filter" id="pf-all">
+                <div class="price-filter-bar" aria-label="Price categories">
+                  <label class="price-filter" for="pf-popular">Popular</label>
+                  <label class="price-filter" for="pf-laser">Laser &amp; hair</label>
+                  <label class="price-filter" for="pf-injectables">Injectables</label>
+                  <label class="price-filter" for="pf-skin">Facials &amp; skin</label>
+                  <label class="price-filter" for="pf-body">Body &amp; beauty</label>
+                  <label class="price-filter" for="pf-all">All prices</label>
                 </div>
-              </article>
-              <article class="price-card price-accordion reveal" data-price-group="popular laser" data-reveal>
-                <button class="price-toggle" type="button" aria-expanded="false" aria-controls="prices-electrolysis" data-price-toggle>
-                  <span class="price-kicker">Apilus</span><span class="price-title">Electrolysis permanent hair removal</span><span class="price-from">from £10</span><span class="price-icon" aria-hidden="true"></span>
-                </button>
-                <div class="price-panel" id="prices-electrolysis" data-price-panel>
-                  <ul>
-                    <li><span>Patch test 24h</span><strong>£10</strong></li>
-                    <li><span>15 minutes</span><strong>£30</strong></li>
-                    <li><span>30 minutes</span><strong>£50</strong></li>
-                    <li><span>45 minutes</span><strong>£70</strong></li>
-                    <li><span>1 hour</span><strong>£100</strong></li>
-                  </ul>
+                <div class="price-grid">
+                  <label class="price-card cat-popular cat-laser" for="t-laser" tabindex="0" role="button">
+                    <span class="price-kicker">Cynosure Elite</span>
+                    <span class="price-title">Laser treatments</span>
+                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+                  </label>
+                  <label class="price-card cat-popular cat-laser" for="t-electrolysis" tabindex="0" role="button">
+                    <span class="price-kicker">Apilus</span>
+                    <span class="price-title">Electrolysis permanent hair removal</span>
+                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+                  </label>
+                  <label class="price-card cat-injectables" for="t-prp" tabindex="0" role="button">
+                    <span class="price-kicker">Regenerative</span>
+                    <span class="price-title">PRP treatments</span>
+                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+                  </label>
+                  <label class="price-card cat-injectables" for="t-mesotherapy" tabindex="0" role="button">
+                    <span class="price-kicker">Skin &amp; hair</span>
+                    <span class="price-title">Mesotherapy</span>
+                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+                  </label>
+                  <label class="price-card cat-injectables" for="t-boosters" tabindex="0" role="button">
+                    <span class="price-kicker">Injectable skin support</span>
+                    <span class="price-title">Skin boosters</span>
+                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+                  </label>
+                  <label class="price-card cat-injectables" for="t-lips" tabindex="0" role="button">
+                    <span class="price-kicker">Hydration</span>
+                    <span class="price-title">Lip boosters</span>
+                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+                  </label>
+                  <label class="price-card cat-skin" for="t-peels" tabindex="0" role="button">
+                    <span class="price-kicker">Skin resurfacing</span>
+                    <span class="price-title">Peels</span>
+                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+                  </label>
+                  <label class="price-card cat-popular cat-skin" for="t-facials" tabindex="0" role="button">
+                    <span class="price-kicker">Facials</span>
+                    <span class="price-title">Facials &amp; skin polish</span>
+                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+                  </label>
+                  <label class="price-card cat-popular cat-body" for="t-endospheres" tabindex="0" role="button">
+                    <span class="price-kicker">Body therapy</span>
+                    <span class="price-title">Endospheres therapy</span>
+                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+                  </label>
+                  <label class="price-card cat-skin" for="t-exosomes" tabindex="0" role="button">
+                    <span class="price-kicker">Advanced skin</span>
+                    <span class="price-title">Exosomes</span>
+                    <span class="price-card-foot"><span class="price-from">from £150</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+                  </label>
+                  <label class="price-card cat-skin" for="t-microneedling" tabindex="0" role="button">
+                    <span class="price-kicker">Texture</span>
+                    <span class="price-title">Microneedling</span>
+                    <span class="price-card-foot"><span class="price-from">from £130</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+                  </label>
+                  <label class="price-card cat-body" for="t-lashes" tabindex="0" role="button">
+                    <span class="price-kicker">Finishing</span>
+                    <span class="price-title">Lashes &amp; brows</span>
+                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+                  </label>
                 </div>
-              </article>
-              <article class="price-card price-accordion reveal" data-price-group="injectables" data-reveal>
-                <button class="price-toggle" type="button" aria-expanded="false" aria-controls="prices-prp" data-price-toggle>
-                  <span class="price-kicker">Regenerative</span><span class="price-title">PRP treatments</span><span class="price-from">from £10</span><span class="price-icon" aria-hidden="true"></span>
-                </button>
-                <div class="price-panel" id="prices-prp" data-price-panel>
-                  <ul>
-                    <li><span>PRP consultation</span><strong>£10</strong></li>
-                    <li><span>PRP face/body</span><strong>£240 / 1 session</strong></li>
-                    <li><span>PRP face/body package</span><strong>£650 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>PRP face/body package</span><strong>£950 / 5 sessions</strong><em>pay in 3 instalments</em></li>
-                    <li><span>PRP for hair loss</span><strong>£240 / 1 session</strong></li>
-                    <li><span>PRP for hair loss package</span><strong>£650 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>PRP for hair loss package</span><strong>£950 / 5 sessions</strong><em>pay in 3 instalments</em></li>
-                  </ul>
-                </div>
-              </article>
-              <article class="price-card price-accordion reveal" data-price-group="injectables" data-reveal>
-                <button class="price-toggle" type="button" aria-expanded="false" aria-controls="prices-mesotherapy" data-price-toggle>
-                  <span class="price-kicker">Skin &amp; hair</span><span class="price-title">Mesotherapy</span><span class="price-from">from £10</span><span class="price-icon" aria-hidden="true"></span>
-                </button>
-                <div class="price-panel" id="prices-mesotherapy" data-price-panel>
-                  <ul>
-                    <li><span>Mesotherapy consultation</span><strong>£10</strong></li>
-                    <li><span>Eye mesotherapy</span><strong>£80 / 1 session</strong></li>
-                    <li><span>Eye mesotherapy package</span><strong>£225 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>Face, neck and decollete</span><strong>£150 / 1 session</strong></li>
-                    <li><span>Face, neck and decollete package</span><strong>£390 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>Hair mesotherapy</span><strong>£140 / 1 session</strong></li>
-                    <li><span>Hair mesotherapy package</span><strong>£390 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                  </ul>
-                </div>
-              </article>
-              <article class="price-card price-accordion reveal" data-price-group="injectables" data-reveal>
-                <button class="price-toggle" type="button" aria-expanded="false" aria-controls="prices-boosters" data-price-toggle>
-                  <span class="price-kicker">Injectable skin support</span><span class="price-title">Skin boosters</span><span class="price-from">from £10</span><span class="price-icon" aria-hidden="true"></span>
-                </button>
-                <div class="price-panel" id="prices-boosters" data-price-panel>
-                  <ul>
-                    <li><span>Skin boosters consultation</span><strong>£10</strong></li>
-                    <li><span>Profhilo</span><strong>£265 / 1 session</strong></li>
-                    <li><span>Profhilo course</span><strong>£490 / 2 sessions</strong></li>
-                    <li><span>Polynucleotides eyes</span><strong>£220 / 1 session</strong></li>
-                    <li><span>Polynucleotides eyes package</span><strong>£600 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>Polynucleotides face/neck</span><strong>£230 / 1 session</strong></li>
-                    <li><span>Polynucleotides face/neck package</span><strong>£620 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                  </ul>
-                </div>
-              </article>
-              <article class="price-card price-accordion reveal" data-price-group="injectables" data-reveal>
-                <button class="price-toggle" type="button" aria-expanded="false" aria-controls="prices-lips" data-price-toggle>
-                  <span class="price-kicker">Hydration</span><span class="price-title">Lip boosters</span><span class="price-from">from £10</span><span class="price-icon" aria-hidden="true"></span>
-                </button>
-                <div class="price-panel" id="prices-lips" data-price-panel>
-                  <ul>
-                    <li><span>Lip booster consultation</span><strong>£10</strong></li>
-                    <li><span>Skinfill Bacio lip booster</span><strong>£220 / 1 session</strong></li>
-                    <li><span>Skinfill Bacio lip booster package</span><strong>£580 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                  </ul>
-                </div>
-              </article>
-              <article class="price-card price-accordion reveal" data-price-group="skin" data-reveal>
-                <button class="price-toggle" type="button" aria-expanded="false" aria-controls="prices-peels" data-price-toggle>
-                  <span class="price-kicker">Skin resurfacing</span><span class="price-title">Peels</span><span class="price-from">from £10</span><span class="price-icon" aria-hidden="true"></span>
-                </button>
-                <div class="price-panel" id="prices-peels" data-price-panel>
-                  <ul>
-                    <li><span>Peel consultation</span><strong>£10</strong></li>
-                    <li><span>Glycolic peel</span><strong>£70 / 1 session</strong></li>
-                    <li><span>Glycolic peel package</span><strong>£195 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>Salicylic peel</span><strong>£70 / 1 session</strong></li>
-                    <li><span>Salicylic peel package</span><strong>£195 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>Azelaic peel</span><strong>£70 / 1 session</strong></li>
-                    <li><span>Azelaic peel package</span><strong>£195 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>PRX-T33 peel</span><strong>£110 / 1 session</strong></li>
-                    <li><span>PRX-T33 peel package</span><strong>£310 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                  </ul>
-                </div>
-              </article>
-              <article class="price-card price-accordion reveal" data-price-group="popular skin" data-reveal>
-                <button class="price-toggle" type="button" aria-expanded="false" aria-controls="prices-facials" data-price-toggle>
-                  <span class="price-kicker">Facials</span><span class="price-title">Facials &amp; skin polish</span><span class="price-from">from £10</span><span class="price-icon" aria-hidden="true"></span>
-                </button>
-                <div class="price-panel" id="prices-facials" data-price-panel>
-                  <ul>
-                    <li><span>Facial consultation</span><strong>£10</strong></li>
-                    <li><span>Fire &amp; Ice by IS Clinical Facial + LED Therapy</span><strong>£90</strong></li>
-                    <li><span>Bespoke deep cleansing facial</span><strong>£100</strong></li>
-                    <li><span>Dermaplaning</span><strong>£90</strong></li>
-                    <li><span>Dermaplaning + LED Therapy</span><strong>£100</strong></li>
-                    <li><span>Microdermabrasion</span><strong>£70</strong></li>
-                    <li><span>Microdermabrasion + LED Therapy</span><strong>£80</strong></li>
-                  </ul>
-                </div>
-              </article>
-              <article class="price-card price-accordion reveal" data-price-group="popular body" data-reveal>
-                <button class="price-toggle" type="button" aria-expanded="false" aria-controls="prices-endospheres" data-price-toggle>
-                  <span class="price-kicker">Body therapy</span><span class="price-title">Endospheres therapy</span><span class="price-from">from £10</span><span class="price-icon" aria-hidden="true"></span>
-                </button>
-                <div class="price-panel" id="prices-endospheres" data-price-panel>
-                  <ul>
-                    <li><span>Consultation</span><strong>£10</strong></li>
-                    <li><span>Trial session</span><strong>£50</strong></li>
-                    <li><span>Face</span><strong>£55 / 1 session</strong></li>
-                    <li><span>Face package</span><strong>£300 / 6 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>Face package</span><strong>£540 / 12 sessions</strong><em>pay in 3 instalments</em></li>
-                    <li><span>Half body</span><strong>£80 / 1 session</strong></li>
-                    <li><span>Half body package</span><strong>£450 / 6 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>Half body package</span><strong>£800 / 12 sessions</strong><em>pay in 3 instalments</em></li>
-                    <li><span>Full body</span><strong>£105 / 1 session</strong></li>
-                    <li><span>Full body package</span><strong>£600 / 6 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>Full body package</span><strong>£1080 / 12 sessions</strong><em>pay in 3 instalments</em></li>
-                    <li><span>Full body + face</span><strong>£120 / 1 session</strong></li>
-                    <li><span>Full body + face package</span><strong>£690 / 6 sessions</strong><em>pay in 2 instalments</em></li>
-                    <li><span>Full body + face package</span><strong>£1260 / 12 sessions</strong><em>pay in 3 instalments</em></li>
-                  </ul>
-                </div>
-              </article>
-              <article class="price-card price-accordion reveal" data-price-group="skin" data-reveal>
-                <button class="price-toggle" type="button" aria-expanded="false" aria-controls="prices-exosomes" data-price-toggle>
-                  <span class="price-kicker">Advanced skin</span><span class="price-title">Exosomes</span><span class="price-from">from £150</span><span class="price-icon" aria-hidden="true"></span>
-                </button>
-                <div class="price-panel" id="prices-exosomes" data-price-panel>
-                  <ul>
-                    <li><span>Exosomes face</span><strong>£150</strong></li>
-                    <li><span>Exosomes face + neck + decollete</span><strong>£200</strong></li>
-                  </ul>
-                </div>
-              </article>
-              <article class="price-card price-accordion reveal" data-price-group="skin" data-reveal>
-                <button class="price-toggle" type="button" aria-expanded="false" aria-controls="prices-microneedling" data-price-toggle>
-                  <span class="price-kicker">Texture</span><span class="price-title">Microneedling</span><span class="price-from">from £130</span><span class="price-icon" aria-hidden="true"></span>
-                </button>
-                <div class="price-panel" id="prices-microneedling" data-price-panel>
-                  <ul>
-                    <li><span>Microneedling face</span><strong>£130</strong></li>
-                    <li><span>Microneedling face + neck + decollete</span><strong>£200</strong></li>
-                    <li><span>Microneedling + PRX-T33 peel face</span><strong>£150</strong></li>
-                    <li><span>Microneedling + PRX-T33 peel face + neck + decollete</span><strong>£220</strong></li>
-                  </ul>
-                </div>
-              </article>
-              <article class="price-card price-accordion reveal" data-price-group="body" data-reveal>
-                <button class="price-toggle" type="button" aria-expanded="false" aria-controls="prices-lashes" data-price-toggle>
-                  <span class="price-kicker">Finishing</span><span class="price-title">Lashes &amp; brows</span><span class="price-from">from £10</span><span class="price-icon" aria-hidden="true"></span>
-                </button>
-                <div class="price-panel" id="prices-lashes" data-price-panel>
-                  <ul>
-                    <li><span>Lash/Brow lift + tint compulsory patch test 48h</span><strong>Free</strong></li>
-                    <li><span>Brow lamination, shape not included</span><strong>£45</strong></li>
-                    <li><span>Brow lamination &amp; tint, shape not included</span><strong>£50</strong></li>
-                    <li><span>Add-on brow waxing</span><strong>£10</strong></li>
-                    <li><span>Lash lift</span><strong>£50</strong></li>
-                    <li><span>Lash lift &amp; tint</span><strong>£55</strong></li>
-                  </ul>
-                </div>
-              </article>
-            </div>
+              </div>
             <p class="price-note">Prices are subject to consultation, treatment suitability and clinic policy. Instalment notes apply only where listed.</p>
-          </div>
+              <div class="price-modals">
+                <input type="radio" name="pricemodal" id="t-none" class="price-modal-toggle" checked hidden>
+                <input type="radio" name="pricemodal" id="t-laser" class="price-modal-toggle price-modal-open" hidden>
+                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-laser-title">
+                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
+                  <div class="price-modal-panel">
+                    <div class="price-modal-head">
+                      <div><span class="price-kicker">Cynosure Elite</span><h3 id="t-laser-title">Laser treatments</h3></div>
+                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
+                    </div>
+                    <div class="price-modal-body">
+                      <ul class="price-list">
+                        <li><span>Laser hair removal patch test 24h</span><strong>£10</strong></li>
+                        <li><span>Laser hair removal treatment</span><strong>price confirmed during consultation</strong></li>
+                        <li><span>Laser skin rejuvenation patch test 24h</span><strong>£10</strong></li>
+                        <li><span>Laser skin rejuvenation Face + Neck</span><strong>£100 / 1 session</strong></li>
+                        <li><span>Face + Neck package</span><strong>£270 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>Face + Neck + Decollete</span><strong>£130 / 1 session</strong></li>
+                        <li><span>Face + Neck + Decollete package</span><strong>£330 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>Vascular treatment patch test 24h</span><strong>£10</strong></li>
+                        <li><span>Vascular treatment small area, e.g. nose</span><strong>£45</strong></li>
+                        <li><span>Vascular treatment medium area, e.g. face</span><strong>£80</strong></li>
+                        <li><span>Vascular treatment large area, e.g. leg</span><strong>£125</strong></li>
+                        <li><span>Vascular treatment XLarge area, e.g. both legs</span><strong>£180</strong></li>
+                      </ul>
+                    </div>
+                    <div class="price-modal-foot">
+                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
+                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
+                    </div>
+                  </div>
+                </div>
+                <input type="radio" name="pricemodal" id="t-electrolysis" class="price-modal-toggle price-modal-open" hidden>
+                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-electrolysis-title">
+                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
+                  <div class="price-modal-panel">
+                    <div class="price-modal-head">
+                      <div><span class="price-kicker">Apilus</span><h3 id="t-electrolysis-title">Electrolysis permanent hair removal</h3></div>
+                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
+                    </div>
+                    <div class="price-modal-body">
+                      <ul class="price-list">
+                        <li><span>Patch test 24h</span><strong>£10</strong></li>
+                        <li><span>15 minutes</span><strong>£30</strong></li>
+                        <li><span>30 minutes</span><strong>£50</strong></li>
+                        <li><span>45 minutes</span><strong>£70</strong></li>
+                        <li><span>1 hour</span><strong>£100</strong></li>
+                      </ul>
+                    </div>
+                    <div class="price-modal-foot">
+                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
+                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
+                    </div>
+                  </div>
+                </div>
+                <input type="radio" name="pricemodal" id="t-prp" class="price-modal-toggle price-modal-open" hidden>
+                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-prp-title">
+                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
+                  <div class="price-modal-panel">
+                    <div class="price-modal-head">
+                      <div><span class="price-kicker">Regenerative</span><h3 id="t-prp-title">PRP treatments</h3></div>
+                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
+                    </div>
+                    <div class="price-modal-body">
+                      <ul class="price-list">
+                        <li><span>PRP consultation</span><strong>£10</strong></li>
+                        <li><span>PRP face/body</span><strong>£240 / 1 session</strong></li>
+                        <li><span>PRP face/body package</span><strong>£650 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>PRP face/body package</span><strong>£950 / 5 sessions</strong><em>pay in 3 instalments</em></li>
+                        <li><span>PRP for hair loss</span><strong>£240 / 1 session</strong></li>
+                        <li><span>PRP for hair loss package</span><strong>£650 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>PRP for hair loss package</span><strong>£950 / 5 sessions</strong><em>pay in 3 instalments</em></li>
+                      </ul>
+                    </div>
+                    <div class="price-modal-foot">
+                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
+                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
+                    </div>
+                  </div>
+                </div>
+                <input type="radio" name="pricemodal" id="t-mesotherapy" class="price-modal-toggle price-modal-open" hidden>
+                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-mesotherapy-title">
+                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
+                  <div class="price-modal-panel">
+                    <div class="price-modal-head">
+                      <div><span class="price-kicker">Skin &amp; hair</span><h3 id="t-mesotherapy-title">Mesotherapy</h3></div>
+                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
+                    </div>
+                    <div class="price-modal-body">
+                      <ul class="price-list">
+                        <li><span>Mesotherapy consultation</span><strong>£10</strong></li>
+                        <li><span>Eye mesotherapy</span><strong>£80 / 1 session</strong></li>
+                        <li><span>Eye mesotherapy package</span><strong>£225 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>Face, neck and decollete</span><strong>£150 / 1 session</strong></li>
+                        <li><span>Face, neck and decollete package</span><strong>£390 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>Hair mesotherapy</span><strong>£140 / 1 session</strong></li>
+                        <li><span>Hair mesotherapy package</span><strong>£390 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                      </ul>
+                    </div>
+                    <div class="price-modal-foot">
+                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
+                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
+                    </div>
+                  </div>
+                </div>
+                <input type="radio" name="pricemodal" id="t-boosters" class="price-modal-toggle price-modal-open" hidden>
+                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-boosters-title">
+                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
+                  <div class="price-modal-panel">
+                    <div class="price-modal-head">
+                      <div><span class="price-kicker">Injectable skin support</span><h3 id="t-boosters-title">Skin boosters</h3></div>
+                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
+                    </div>
+                    <div class="price-modal-body">
+                      <ul class="price-list">
+                        <li><span>Skin boosters consultation</span><strong>£10</strong></li>
+                        <li><span>Profhilo</span><strong>£265 / 1 session</strong></li>
+                        <li><span>Profhilo course</span><strong>£490 / 2 sessions</strong></li>
+                        <li><span>Polynucleotides eyes</span><strong>£220 / 1 session</strong></li>
+                        <li><span>Polynucleotides eyes package</span><strong>£600 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>Polynucleotides face/neck</span><strong>£230 / 1 session</strong></li>
+                        <li><span>Polynucleotides face/neck package</span><strong>£620 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                      </ul>
+                    </div>
+                    <div class="price-modal-foot">
+                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
+                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
+                    </div>
+                  </div>
+                </div>
+                <input type="radio" name="pricemodal" id="t-lips" class="price-modal-toggle price-modal-open" hidden>
+                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-lips-title">
+                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
+                  <div class="price-modal-panel">
+                    <div class="price-modal-head">
+                      <div><span class="price-kicker">Hydration</span><h3 id="t-lips-title">Lip boosters</h3></div>
+                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
+                    </div>
+                    <div class="price-modal-body">
+                      <ul class="price-list">
+                        <li><span>Lip booster consultation</span><strong>£10</strong></li>
+                        <li><span>Skinfill Bacio lip booster</span><strong>£220 / 1 session</strong></li>
+                        <li><span>Skinfill Bacio lip booster package</span><strong>£580 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                      </ul>
+                    </div>
+                    <div class="price-modal-foot">
+                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
+                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
+                    </div>
+                  </div>
+                </div>
+                <input type="radio" name="pricemodal" id="t-peels" class="price-modal-toggle price-modal-open" hidden>
+                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-peels-title">
+                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
+                  <div class="price-modal-panel">
+                    <div class="price-modal-head">
+                      <div><span class="price-kicker">Skin resurfacing</span><h3 id="t-peels-title">Peels</h3></div>
+                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
+                    </div>
+                    <div class="price-modal-body">
+                      <ul class="price-list">
+                        <li><span>Peel consultation</span><strong>£10</strong></li>
+                        <li><span>Glycolic peel</span><strong>£70 / 1 session</strong></li>
+                        <li><span>Glycolic peel package</span><strong>£195 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>Salicylic peel</span><strong>£70 / 1 session</strong></li>
+                        <li><span>Salicylic peel package</span><strong>£195 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>Azelaic peel</span><strong>£70 / 1 session</strong></li>
+                        <li><span>Azelaic peel package</span><strong>£195 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>PRX-T33 peel</span><strong>£110 / 1 session</strong></li>
+                        <li><span>PRX-T33 peel package</span><strong>£310 / 3 sessions</strong><em>pay in 2 instalments</em></li>
+                      </ul>
+                    </div>
+                    <div class="price-modal-foot">
+                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
+                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
+                    </div>
+                  </div>
+                </div>
+                <input type="radio" name="pricemodal" id="t-facials" class="price-modal-toggle price-modal-open" hidden>
+                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-facials-title">
+                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
+                  <div class="price-modal-panel">
+                    <div class="price-modal-head">
+                      <div><span class="price-kicker">Facials</span><h3 id="t-facials-title">Facials &amp; skin polish</h3></div>
+                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
+                    </div>
+                    <div class="price-modal-body">
+                      <ul class="price-list">
+                        <li><span>Facial consultation</span><strong>£10</strong></li>
+                        <li><span>Fire &amp; Ice by IS Clinical Facial + LED Therapy</span><strong>£90</strong></li>
+                        <li><span>Bespoke deep cleansing facial</span><strong>£100</strong></li>
+                        <li><span>Dermaplaning</span><strong>£90</strong></li>
+                        <li><span>Dermaplaning + LED Therapy</span><strong>£100</strong></li>
+                        <li><span>Microdermabrasion</span><strong>£70</strong></li>
+                        <li><span>Microdermabrasion + LED Therapy</span><strong>£80</strong></li>
+                      </ul>
+                    </div>
+                    <div class="price-modal-foot">
+                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
+                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
+                    </div>
+                  </div>
+                </div>
+                <input type="radio" name="pricemodal" id="t-endospheres" class="price-modal-toggle price-modal-open" hidden>
+                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-endospheres-title">
+                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
+                  <div class="price-modal-panel">
+                    <div class="price-modal-head">
+                      <div><span class="price-kicker">Body therapy</span><h3 id="t-endospheres-title">Endospheres therapy</h3></div>
+                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
+                    </div>
+                    <div class="price-modal-body">
+                      <ul class="price-list">
+                        <li><span>Consultation</span><strong>£10</strong></li>
+                        <li><span>Trial session</span><strong>£50</strong></li>
+                        <li><span>Face</span><strong>£55 / 1 session</strong></li>
+                        <li><span>Face package</span><strong>£300 / 6 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>Face package</span><strong>£540 / 12 sessions</strong><em>pay in 3 instalments</em></li>
+                        <li><span>Half body</span><strong>£80 / 1 session</strong></li>
+                        <li><span>Half body package</span><strong>£450 / 6 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>Half body package</span><strong>£800 / 12 sessions</strong><em>pay in 3 instalments</em></li>
+                        <li><span>Full body</span><strong>£105 / 1 session</strong></li>
+                        <li><span>Full body package</span><strong>£600 / 6 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>Full body package</span><strong>£1080 / 12 sessions</strong><em>pay in 3 instalments</em></li>
+                        <li><span>Full body + face</span><strong>£120 / 1 session</strong></li>
+                        <li><span>Full body + face package</span><strong>£690 / 6 sessions</strong><em>pay in 2 instalments</em></li>
+                        <li><span>Full body + face package</span><strong>£1260 / 12 sessions</strong><em>pay in 3 instalments</em></li>
+                      </ul>
+                    </div>
+                    <div class="price-modal-foot">
+                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
+                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
+                    </div>
+                  </div>
+                </div>
+                <input type="radio" name="pricemodal" id="t-exosomes" class="price-modal-toggle price-modal-open" hidden>
+                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-exosomes-title">
+                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
+                  <div class="price-modal-panel">
+                    <div class="price-modal-head">
+                      <div><span class="price-kicker">Advanced skin</span><h3 id="t-exosomes-title">Exosomes</h3></div>
+                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
+                    </div>
+                    <div class="price-modal-body">
+                      <ul class="price-list">
+                        <li><span>Exosomes face</span><strong>£150</strong></li>
+                        <li><span>Exosomes face + neck + decollete</span><strong>£200</strong></li>
+                      </ul>
+                    </div>
+                    <div class="price-modal-foot">
+                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
+                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
+                    </div>
+                  </div>
+                </div>
+                <input type="radio" name="pricemodal" id="t-microneedling" class="price-modal-toggle price-modal-open" hidden>
+                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-microneedling-title">
+                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
+                  <div class="price-modal-panel">
+                    <div class="price-modal-head">
+                      <div><span class="price-kicker">Texture</span><h3 id="t-microneedling-title">Microneedling</h3></div>
+                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
+                    </div>
+                    <div class="price-modal-body">
+                      <ul class="price-list">
+                        <li><span>Microneedling face</span><strong>£130</strong></li>
+                        <li><span>Microneedling face + neck + decollete</span><strong>£200</strong></li>
+                        <li><span>Microneedling + PRX-T33 peel face</span><strong>£150</strong></li>
+                        <li><span>Microneedling + PRX-T33 peel face + neck + decollete</span><strong>£220</strong></li>
+                      </ul>
+                    </div>
+                    <div class="price-modal-foot">
+                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
+                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
+                    </div>
+                  </div>
+                </div>
+                <input type="radio" name="pricemodal" id="t-lashes" class="price-modal-toggle price-modal-open" hidden>
+                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-lashes-title">
+                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
+                  <div class="price-modal-panel">
+                    <div class="price-modal-head">
+                      <div><span class="price-kicker">Finishing</span><h3 id="t-lashes-title">Lashes &amp; brows</h3></div>
+                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
+                    </div>
+                    <div class="price-modal-body">
+                      <ul class="price-list">
+                        <li><span>Lash/Brow lift + tint compulsory patch test 48h</span><strong>Free</strong></li>
+                        <li><span>Brow lamination, shape not included</span><strong>£45</strong></li>
+                        <li><span>Brow lamination &amp; tint, shape not included</span><strong>£50</strong></li>
+                        <li><span>Add-on brow waxing</span><strong>£10</strong></li>
+                        <li><span>Lash lift</span><strong>£50</strong></li>
+                        <li><span>Lash lift &amp; tint</span><strong>£55</strong></li>
+                      </ul>
+                    </div>
+                    <div class="price-modal-foot">
+                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
+                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+                  </div>
         </section>
 
         <section class="section contact-section" id="contact">
@@ -564,48 +738,36 @@
           </div>
         </section>
 
-        <section class="section reviews-section" id="reviews">
+        <section class="section reviews-section reviews-section-compact" id="reviews">
           <div class="container">
-            <div class="reviews-hero reveal" data-reveal>
-              <div class="section-header">
+            <div class="review-strip reveal" data-reveal>
+              <div class="review-strip-copy">
                 <p class="eyebrow">Client feedback</p>
-                <h2>What clients say after visiting Lumi Derm</h2>
-                <p>Real appointment feedback, presented as a calm review wall now and ready to merge approved Google and booking-platform reviews automatically later.</p>
+                <h2>Trusted by Lumi Derm clients</h2>
               </div>
-              <div class="reviews-score-card" data-reviews-summary aria-label="Rated 5.0 out of 5 from 43 client reviews">
-                <span>Client rating</span>
+              <div class="review-strip-meta" data-reviews-summary aria-label="Rated 5.0 out of 5 from 43 client reviews">
                 <strong>5.0</strong>
-                <p aria-hidden="true">★★★★★</p>
-                <small>43 imported client reviews</small>
+                <span aria-hidden="true">★★★★★</span>
+                <small>43 client reviews</small>
               </div>
-              <div class="reviews-source-card">
-                <span>Future-ready feed</span>
-                <p>Google Business Profile reviews can sync through the official API. Booking-platform reviews can be added through an approved export, feed, or widget when available.</p>
-              </div>
-            </div>
-            <div class="reviews-grid reviews-grid-expanded is-collapsed" data-reviews-grid data-reviews-source="assets/data/reviews.json">
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>Iulia is highly experienced and I have complete confidence in her expertise. The studio is clean, comfortable, and fully equipped to ensure a great experience and quality treatment. I would highly recommend her.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">E</span><span class="review-byline">Elena<span>Lymphatic Drainage · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>Iulia is love from the very first visit. Kind, attentive, with truly magical hands. After her treatments you feel light, happy, and full of energy. Her facial treatments are simply amazing, with a cozy space, calming atmosphere, and genuine care.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">T</span><span class="review-byline">Tatjana<span>Cellulite Treatment · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>I was slightly late but Iulia was accommodating and efficient, so we finished the procedure on time. I love the result!</p></blockquote><cite><span class="review-avatar" aria-hidden="true">N</span><span class="review-byline">Natalia<span>Lash Lift · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>Yulia is a really professional and caring beauty therapist. She always gives good advice based on your needs. I have been going to her for many years now and can definitely recommend her services.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">M</span><span class="review-byline">Maria<span>Beauty Treatments · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>Lovely and clean, and the treatment went really well.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">A</span><span class="review-byline">Alice<span>Laser Hair Removal · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>Iulia is highly professional, skilled, and very friendly.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">F</span><span class="review-byline">Fatemeh<span>Electrolysis · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>Professional, friendly therapist. Nice atmosphere.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">A</span><span class="review-byline">Anatolii<span>Electrolysis · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>Exceptional service, thank you!</p></blockquote><cite><span class="review-avatar" aria-hidden="true">N</span><span class="review-byline">Natalie<span>Cellulite Treatment · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>Fantastic experience with Iulia.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">A</span><span class="review-byline">Amelia<span>Laser Hair Removal · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>Brilliant.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">A</span><span class="review-byline">Alice<span>Electrolysis · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>A welcoming visit with a comfortable experience and clear care throughout the appointment.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">R</span><span class="review-byline">Roisin<span>Hollywood Waxing · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>A perfect appointment with careful treatment and a calm finish.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">A</span><span class="review-byline">Alice<span>Electrolysis · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>Excellent service in a friendly, professional studio.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">C</span><span class="review-byline">Clare<span>Electrolysis · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>Careful laser treatment with a reassuring appointment and smooth experience.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">S</span><span class="review-byline">Sayed<span>Laser Hair Removal · Verified client</span></span></cite></figure>
-              <figure class="review-card reveal" data-reveal><p class="stars" aria-label="Five star client review">★★★★★</p><blockquote><p>A professional visit with a clean studio, comfortable setting, and confident care.</p></blockquote><cite><span class="review-avatar" aria-hidden="true">E</span><span class="review-byline">Elena<span>Lymphatic Drainage · Verified client</span></span></cite></figure>
-            </div>
-            <div class="reviews-toggle-wrap">
-              <button class="btn btn-secondary reviews-toggle" type="button" aria-expanded="false" data-reviews-toggle>Show all reviews</button>
-              <a class="btn btn-primary" href="pages/contact.html">Share feedback</a>
+              <p class="review-strip-quote">“Professional, friendly and calm care in a clean studio.”</p>
+              <button class="btn btn-secondary review-modal-open" type="button" data-review-modal-open>Read reviews</button>
             </div>
           </div>
         </section>
+
+        <div class="review-modal" role="dialog" aria-modal="true" aria-labelledby="review-modal-title" aria-hidden="true" data-review-modal>
+          <div class="review-modal-backdrop" data-review-modal-close></div>
+          <div class="review-modal-panel" role="document">
+            <button class="review-modal-close" type="button" aria-label="Close client reviews" data-review-modal-close></button>
+            <div class="review-modal-header">
+              <p class="eyebrow">Client feedback</p>
+              <h2 id="review-modal-title">Client reviews</h2>
+              <p>Real appointment feedback from Lumi Derm Aesthetics clients.</p>
+            </div>
+            <div class="reviews-grid reviews-grid-expanded" data-reviews-grid data-reviews-source="assets/data/reviews.json" aria-live="polite"></div>
+          </div>
+        </div>
       </main>
 
       <footer class="site-footer">
@@ -635,6 +797,6 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-    <script src="js/main.js?v=20260619-price-filter"></script>
+    <script src="js/main.js?v=20260619-carousel-loop"></script>
   </body>
 </html>

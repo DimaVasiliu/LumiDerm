@@ -176,23 +176,6 @@ function initGsapMotion() {
   gsap.registerPlugin(ScrollTrigger);
   revealItems.forEach((item) => item.classList.add("is-visible"));
 
-  gsap.from(".hero .eyebrow, .hero h1, .hero .lead, .hero-actions, .trust-badges", {
-    y: 28,
-    opacity: 0,
-    duration: 0.9,
-    ease: "power3.out",
-    stagger: 0.09
-  });
-
-  gsap.from(".hero-visual .visual-card", {
-    y: 36,
-    scale: 0.96,
-    opacity: 0,
-    duration: 1,
-    ease: "power3.out",
-    delay: 0.16
-  });
-
   gsap.utils.toArray("[data-animate='fade-up']").forEach((item) => {
     gsap.from(item, {
       scrollTrigger: {
@@ -224,16 +207,6 @@ function initGsapMotion() {
     });
   });
 
-  gsap.to(".hero-visual img", {
-    scrollTrigger: {
-      trigger: ".hero",
-      start: "top top",
-      end: "bottom top",
-      scrub: true
-    },
-    yPercent: 8,
-    ease: "none"
-  });
 }
 
 function initCarousels() {
@@ -298,56 +271,92 @@ function initOffersCarousel() {
   const carousel = document.querySelector("[data-offers-carousel]");
   if (!carousel) return;
   const track = carousel.querySelector("[data-offers-track]");
-  const slides = Array.from(carousel.querySelectorAll(".offer-slide"));
+  const originalSlides = Array.from(carousel.querySelectorAll(".offer-slide"));
   const prev = document.querySelector("[data-offers-prev]");
   const next = document.querySelector("[data-offers-next]");
   const dotsWrap = document.querySelector("[data-offers-dots]");
-  if (!track || slides.length < 2) return;
+  if (!track || originalSlides.length < 2) return;
 
-  let index = 0;
-  let maxIndex = 0;
+  originalSlides.forEach((slide) => {
+    const beforeClone = slide.cloneNode(true);
+    const afterClone = slide.cloneNode(true);
+    beforeClone.classList.add("is-clone");
+    afterClone.classList.add("is-clone");
+    beforeClone.setAttribute("aria-hidden", "true");
+    afterClone.setAttribute("aria-hidden", "true");
+    beforeClone.querySelectorAll("a, button").forEach((item) => item.setAttribute("tabindex", "-1"));
+    afterClone.querySelectorAll("a, button").forEach((item) => item.setAttribute("tabindex", "-1"));
+    track.insertBefore(beforeClone, track.firstChild);
+    track.appendChild(afterClone);
+  });
+
+  const slides = Array.from(track.querySelectorAll(".offer-slide"));
+  const loopStart = originalSlides.length;
+
+  let index = loopStart;
   let step = 0;
   let timer;
   let dots = [];
 
+  function normalizedIndex() {
+    return ((index - loopStart) % originalSlides.length + originalSlides.length) % originalSlides.length;
+  }
+
+  function setTrackPosition(withTransition = true) {
+    track.style.transition = withTransition ? "" : "none";
+    const inset = slides[0]?.offsetLeft || 0;
+    track.style.transform = `translateX(${inset - index * step}px)`;
+    if (!withTransition) {
+      track.offsetHeight;
+      track.style.transition = "";
+    }
+  }
+
   function measure() {
     step = slides[1].offsetLeft - slides[0].offsetLeft || slides[0].offsetWidth;
-    const viewport = track.parentElement.clientWidth;
-    const perView = Math.max(1, Math.round(viewport / step));
-    maxIndex = Math.max(0, slides.length - perView);
-    if (index > maxIndex) index = maxIndex;
   }
 
   function buildDots() {
     if (!dotsWrap) return;
     dotsWrap.innerHTML = "";
     dots = [];
-    for (let i = 0; i <= maxIndex; i += 1) {
+    originalSlides.forEach((_, i) => {
       const button = document.createElement("button");
       button.className = "carousel-dot";
       button.type = "button";
       button.setAttribute("aria-label", `Go to offers set ${i + 1}`);
-      button.addEventListener("click", () => goTo(i, true));
+      button.addEventListener("click", () => goTo(loopStart + i, true));
       dotsWrap.appendChild(button);
       dots.push(button);
-    }
+    });
   }
 
   function update() {
-    track.style.transform = `translateX(-${index * step}px)`;
-    dots.forEach((dot, dotIndex) => dot.classList.toggle("is-active", dotIndex === index));
+    setTrackPosition();
+    const active = normalizedIndex();
+    dots.forEach((dot, dotIndex) => dot.classList.toggle("is-active", dotIndex === active));
   }
 
   function goTo(target, userAction = false) {
-    if (target < 0) index = maxIndex;
-    else if (target > maxIndex) index = 0;
-    else index = target;
+    index = target;
     update();
     if (userAction) restart();
   }
 
+  function normalizeLoopPosition() {
+    if (index >= loopStart + originalSlides.length) {
+      index -= originalSlides.length;
+      setTrackPosition(false);
+    } else if (index < loopStart) {
+      index += originalSlides.length;
+      setTrackPosition(false);
+    }
+    const active = normalizedIndex();
+    dots.forEach((dot, dotIndex) => dot.classList.toggle("is-active", dotIndex === active));
+  }
+
   function start() {
-    if (prefersReducedMotion || maxIndex === 0) return;
+    if (prefersReducedMotion) return;
     timer = window.setInterval(() => goTo(index + 1), 3600);
   }
 
@@ -363,11 +372,14 @@ function initOffersCarousel() {
   function rebuild() {
     measure();
     buildDots();
-    update();
+    setTrackPosition(false);
+    const active = normalizedIndex();
+    dots.forEach((dot, dotIndex) => dot.classList.toggle("is-active", dotIndex === active));
   }
 
   prev?.addEventListener("click", () => goTo(index - 1, true));
   next?.addEventListener("click", () => goTo(index + 1, true));
+  track.addEventListener("transitionend", normalizeLoopPosition);
   carousel.addEventListener("mouseenter", stop);
   carousel.addEventListener("mouseleave", start);
   carousel.addEventListener("focusin", stop);
@@ -383,46 +395,33 @@ function initOffersCarousel() {
   start();
 }
 
-function initReviewsToggle() {
-  const grid = document.querySelector("[data-reviews-grid]");
-  const toggle = document.querySelector("[data-reviews-toggle]");
-  if (!grid || !toggle) return;
+function initReviewsModal() {
+  const modal = document.querySelector("[data-review-modal]");
+  const openButton = document.querySelector("[data-review-modal-open]");
+  const closeButtons = document.querySelectorAll("[data-review-modal-close]");
+  if (!modal || !openButton) return;
 
-  const cards = Array.from(grid.querySelectorAll(".review-card"));
-  let expanded = false;
-
-  function collapsedLimit() {
-    if (window.innerWidth >= 640) return 4;
-    return 3;
+  function openModal() {
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("reviews-modal-open");
+    modal.querySelector(".review-modal-close")?.focus();
   }
 
-  function applyCollapse() {
-    const limit = collapsedLimit();
-    cards.forEach((card, index) => {
-      card.classList.toggle("is-hidden", !expanded && index >= limit);
-    });
+  function closeModal() {
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("reviews-modal-open");
+    openButton.focus();
   }
 
-  function updateToggleLabel() {
-    toggle.textContent = expanded ? "Show fewer reviews" : `Show all ${cards.length} reviews`;
-  }
+  openButton.addEventListener("click", openModal);
+  closeButtons.forEach((button) => button.addEventListener("click", closeModal));
 
-  toggle.addEventListener("click", () => {
-    expanded = !expanded;
-    grid.classList.toggle("is-collapsed", !expanded);
-    applyCollapse();
-    toggle.setAttribute("aria-expanded", String(expanded));
-    updateToggleLabel();
-  });
-
-  applyCollapse();
-  updateToggleLabel();
-
-  let resizeTimer;
-  window.addEventListener("resize", () => {
-    if (expanded) return;
-    window.clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(applyCollapse, 150);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && modal.classList.contains("is-open")) {
+      closeModal();
+    }
   });
 }
 
@@ -442,7 +441,7 @@ function renderReviewCard(review) {
   const source = [review.treatment, review.source].filter(Boolean).join(" · ");
 
   return `
-    <figure class="review-card reveal" data-reveal>
+    <figure class="review-card">
       <p class="stars" aria-label="${rating} star client review">${stars}</p>
       <blockquote><p>${escapeHtml(review.text)}</p></blockquote>
       <cite>
@@ -472,10 +471,9 @@ async function initReviewsFeed() {
       const count = Number(data.summary.count) || data.reviews.length;
       summary.setAttribute("aria-label", `Rated ${rating} out of 5 from ${count} client reviews`);
       summary.innerHTML = `
-        <span>${escapeHtml(data.summary.label || "Client rating")}</span>
         <strong>${rating}</strong>
-        <p aria-hidden="true">★★★★★</p>
-        <small>${count} imported client reviews</small>
+        <span aria-hidden="true">★★★★★</span>
+        <small>${count} client reviews</small>
       `;
     }
   } catch (error) {
@@ -488,7 +486,7 @@ initReviewsFeed().finally(() => {
   initCarousels();
   initOffersCarousel();
   initPriceAccordions();
-  initReviewsToggle();
+  initReviewsModal();
 });
 
 document.querySelectorAll("[data-nav-link]").forEach((link) => {
