@@ -189,6 +189,20 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .price-accordion-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .price-panel li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.8rem;
+    align-items: baseline;
+  }
+
+  .price-panel li em {
+    grid-column: 1 / -1;
+  }
+
   .clinic-info-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -473,6 +487,10 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .price-accordion-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .price-bundle:nth-child(2),
   .price-bundle:nth-child(3) {
     grid-column: span 1;
@@ -538,6 +556,10 @@
   .price-bundles {
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: clamp(0.7rem, 1vw, 1rem);
+  }
+
+  .price-accordion-grid {
+    gap: 1rem;
   }
 
   .price-bundle {

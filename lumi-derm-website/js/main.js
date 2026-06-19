@@ -77,6 +77,36 @@ faqButtons.forEach((button) => {
   });
 });
 
+function initPriceAccordions() {
+  const priceButtons = document.querySelectorAll("[data-price-toggle]");
+  if (!priceButtons.length) return;
+
+  function setPanel(button, expanded) {
+    const card = button.closest(".price-accordion");
+    const panel = document.getElementById(button.getAttribute("aria-controls"));
+    if (!panel) return;
+    button.setAttribute("aria-expanded", String(expanded));
+    card?.classList.toggle("is-open", expanded);
+    panel.style.maxHeight = expanded ? `${panel.scrollHeight}px` : "0px";
+  }
+
+  priceButtons.forEach((button) => {
+    setPanel(button, button.getAttribute("aria-expanded") === "true");
+    button.addEventListener("click", () => {
+      const isExpanded = button.getAttribute("aria-expanded") === "true";
+      setPanel(button, !isExpanded);
+    });
+  });
+
+  window.addEventListener("resize", () => {
+    priceButtons.forEach((button) => {
+      if (button.getAttribute("aria-expanded") === "true") {
+        setPanel(button, true);
+      }
+    });
+  });
+}
+
 filterButtons.forEach((button) => {
   button.addEventListener("click", () => {
     const filter = button.dataset.filter || "all";
@@ -428,6 +458,7 @@ initReviewsFeed().finally(() => {
   initGsapMotion();
   initCarousels();
   initOffersCarousel();
+  initPriceAccordions();
   initReviewsToggle();
 });
 
