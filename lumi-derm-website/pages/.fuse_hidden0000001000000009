@@ -23,7 +23,7 @@
           <a class="nav-link" href="services.html" data-nav-link>Treatments</a>
           <a class="nav-link" href="../index.html#prices">Prices</a>
           <a class="nav-link" href="../index.html#offers">Offers</a>
-          <a class="nav-link" href="contact.html" data-nav-link>Contact</a>
+          <a class="nav-link" href="contact.html" data-nav-link>Contacts</a>
           <a class="nav-link active" href="policies.html" data-nav-link aria-current="page">T&amp;C</a>
           <a class="btn btn-primary nav-cta" href="booking.html">Book Now</a>
         </nav>

@@ -23,8 +23,8 @@
           <a class="nav-link" href="services.html" data-nav-link>Treatments</a>
           <a class="nav-link" href="../index.html#prices">Prices</a>
           <a class="nav-link" href="../index.html#offers">Offers</a>
-          <a class="nav-link" href="about.html" data-nav-link>About</a>
-          <a class="nav-link" href="contact.html" data-nav-link>Contact</a>
+          <a class="nav-link" href="about.html" data-nav-link>About Us</a>
+          <a class="nav-link" href="contact.html" data-nav-link>Contacts</a>
           <a class="btn btn-primary nav-cta" href="booking.html">Book Now</a>
         </nav>
       </div>

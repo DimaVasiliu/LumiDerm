@@ -55,8 +55,8 @@
             <a class="nav-link" href="pages/services.html" data-nav-link>Treatments</a>
             <a class="nav-link" href="#prices">Prices</a>
             <a class="nav-link" href="#offers">Offers</a>
-            <a class="nav-link" href="pages/about.html" data-nav-link>About</a>
-            <a class="nav-link" href="#contact">Contact</a>
+            <a class="nav-link" href="#contact">Contacts</a>
+            <a class="nav-link" href="pages/policies.html" data-nav-link>T&amp;C</a>
             <a class="btn btn-primary nav-cta" href="pages/booking.html">Book Now</a>
           </nav>
         </div>
