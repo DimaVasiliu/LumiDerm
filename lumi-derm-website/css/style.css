@@ -2109,7 +2109,7 @@ body.reviews-modal-open {
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: center right / cover no-repeat url("../assets/images/hero-cells.svg");
+  background: center right / cover no-repeat url("../assets/images/hero-cells.svg?v=20260620-cells");
   opacity: 0.55;
   mix-blend-mode: screen;
   pointer-events: none;
