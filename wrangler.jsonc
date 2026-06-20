@@ -1,0 +1,9 @@
+{
+  // Cloudflare Workers config for the Lumi Derm static site.
+  // Serves the contents of ./lumi-derm-website as static assets at the site root.
+  "name": "lumiderm",
+  "compatibility_date": "2026-06-20",
+  "assets": {
+    "directory": "./lumi-derm-website"
+  }
+}
