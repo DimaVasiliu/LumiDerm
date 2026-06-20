@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Book a Consultation | Lumi Derm Aesthetics</title>
-    <meta name="description" content="Book a Lumi Derm Aesthetics consultation. View contact details, address, opening hours, and appointment options.">
-    <link rel="canonical" href="https://www.lumidermaesthetics.co.uk/pages/booking.html"><link rel="icon" type="image/png" href="../assets/icons/favicon.png"><link rel="apple-touch-icon" href="../assets/icons/lumi-derm-logo.png">
+    <title>Book &amp; Pay Online | Lumi Derm Aesthetics</title>
+    <meta name="description" content="Book a Lumi Derm Aesthetics treatment online and pay securely with Square. Choose your treatment, pick a time with Iulia, and get instant confirmation.">
+    <link rel="canonical" href="https://www.lumidermaesthetics.com/pages/booking.html"><link rel="icon" type="image/png" href="../assets/icons/favicon.png"><link rel="apple-touch-icon" href="../assets/icons/lumi-derm-logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
@@ -27,52 +27,65 @@
       <section class="page-hero">
         <div class="container">
           <p class="eyebrow">Secure online booking</p>
-          <h1>Book a Lumi Derm consultation</h1>
-          <p class="lead">Send an appointment request or contact the studio directly so Iulia can confirm the right treatment plan and availability.</p>
+          <h1>Book &amp; pay for your treatment</h1>
+          <p class="lead">Choose your treatment, pick a time with Iulia, and pay securely online. Booking and payment are handled by Square &mdash; you'll get instant confirmation and a reminder before your visit.</p>
         </div>
       </section>
       <section class="page-content">
-        <div class="container split reverse">
-          <div class="page-card booking-panel">
-            <p class="eyebrow">Appointment request</p>
-            <h2>Reserve your consultation</h2>
-            <p>Use the contact options below while the final booking flow is being confirmed. This keeps website offers and treatment prices aligned with the clinic.</p>
-            <div class="booking-actions">
-              <a class="btn btn-primary" href="mailto:info@lumidermaesthetics.co.uk?subject=Lumi%20Derm%20appointment%20request">Email to book</a>
-              <a class="btn btn-secondary" href="tel:07832839298">Call 07832839298</a>
-              <a class="btn btn-secondary" href="services.html">View Treatments</a>
+        <div class="container booking-layout">
+          <div class="booking-main">
+            <!--
+              ========================  SQUARE APPOINTMENTS  ========================
+              GO-LIVE STEP: when Iulia's Square Appointments online-booking link is
+              ready, do two things:
+                1. Replace the whole .booking-embed-placeholder block below with:
+                     <iframe class="booking-frame" title="Book a Lumi Derm appointment"
+                             loading="lazy" src="PASTE_SQUARE_BOOKING_LINK_HERE"></iframe>
+                2. (Optional) keep the phone/email buttons as a fallback.
+              The Square link looks like https://book.squareup.com/.../start  or
+              https://<her-site>.square.site/appointments/...
+              =====================================================================
+            -->
+            <div class="booking-embed" data-square-booking>
+              <div class="booking-embed-placeholder">
+                <span class="booking-pill">Powered by Square</span>
+                <h2>Online booking &amp; secure payment</h2>
+                <p>Scheduling with full payment at booking is being switched on for Lumi Derm. In the meantime, reserve your appointment directly with the studio and Iulia will confirm your time.</p>
+                <div class="booking-actions">
+                  <a class="btn btn-primary" href="tel:07832839298">Call to book &mdash; 07832839298</a>
+                  <a class="btn btn-secondary" href="mailto:info@lumidermaesthetics.co.uk?subject=Lumi%20Derm%20appointment%20request">Email to book</a>
+                </div>
+              </div>
             </div>
-            <p class="booking-note">A secure online booking or payment widget can be added here later once the final booking provider is confirmed.</p>
+            <p class="booking-secure">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l7 3v6c0 5-3.4 8.3-7 9-3.6-.7-7-4-7-9V5l7-3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Payments are processed securely by Square. Lumi Derm never sees or stores your card details.
+            </p>
           </div>
-          <aside class="page-card booking-panel" aria-label="Lumi Derm booking details">
-            <div>
-              <h2>5.0 rating</h2>
-              <p class="lead">37 imported client reviews</p>
+          <aside class="booking-side">
+            <div class="page-card">
+              <h3>How it works</h3>
+              <ol class="booking-steps">
+                <li><strong>Choose</strong> your treatment and a time that suits you.</li>
+                <li><strong>Pay securely online</strong> &mdash; full payment is taken at booking via Square.</li>
+                <li><strong>Get instant confirmation</strong>, plus a reminder before your visit.</li>
+              </ol>
             </div>
-            <div>
-              <h3>Address</h3>
-              <p>Unit 41 Skylines Village, Limeharbour, London, E14 9TS</p>
-            </div>
-            <div>
-              <h3>Opening hours</h3>
+            <div class="page-card">
+              <h3>Studio</h3>
               <ul class="info-list">
-                <li><span>Monday - Friday</span>10:00 - 20:00</li>
+                <li><span>Address</span>Unit 41 Skylines Village, Limeharbour, London, E14 9TS</li>
+                <li><span>Phone</span><a href="tel:07832839298">07832839298</a></li>
+                <li><span>Email</span><a href="mailto:info@lumidermaesthetics.co.uk">info@lumidermaesthetics.co.uk</a></li>
+              </ul>
+              <h3 class="booking-side-sub">Opening hours</h3>
+              <ul class="info-list">
+                <li><span>Monday &ndash; Friday</span>10:00 - 20:00</li>
                 <li><span>Saturday</span>10:00 - 18:00</li>
                 <li><span>Sunday</span>Closed</li>
               </ul>
             </div>
           </aside>
-        </div>
-        <div class="container" style="margin-top: 1.2rem;">
-          <div class="booking-widget-placeholder">
-            <div>
-              <strong>Future booking widget placeholder</strong>
-              <p>When the final booking provider is confirmed, paste the approved embed code or connect a Cloudflare Worker booking endpoint in this block.</p>
-              <!-- Future booking integration:
-                   Add an approved booking widget or connect a Cloudflare Worker endpoint here.
-                   Keep payment, deposits, and appointment availability aligned with the final service and price list. -->
-            </div>
-          </div>
         </div>
       </section>
     </main>

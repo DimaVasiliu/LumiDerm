@@ -130,6 +130,74 @@
     padding: 1rem;
   }
 
+  .price-filter-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 24px;
+    scrollbar-width: none;
+  }
+
+  .price-filter-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .price-filter {
+    flex: 0 0 auto;
+  }
+
+  .price-modal {
+    align-items: flex-end;
+    padding: 0.55rem;
+  }
+
+  .price-modal-panel {
+    width: 100%;
+    max-height: calc(100dvh - 1.1rem);
+    border-radius: 24px;
+  }
+
+  .price-modal-head {
+    padding: 1rem 1rem 0.85rem;
+  }
+
+  .price-modal-head h3 {
+    font-size: clamp(1.55rem, 8vw, 2rem);
+  }
+
+  .price-modal-close {
+    width: 38px;
+    height: 38px;
+  }
+
+  .price-modal-body {
+    padding: 0.1rem 1rem;
+  }
+
+  .price-list li {
+    grid-template-columns: 1fr;
+    gap: 0.28rem;
+    padding: 0.78rem 0;
+  }
+
+  .price-list li strong {
+    text-align: left;
+  }
+
+  .price-list li em {
+    grid-column: auto;
+  }
+
+  .price-modal-foot {
+    padding: 0.9rem 1rem 1rem;
+  }
+
+  .price-modal-foot .btn {
+    width: 100%;
+  }
+
   .price-bundle {
     min-height: auto;
   }
@@ -199,6 +267,10 @@
 
   .price-panel li em {
     grid-column: 1 / -1;
+  }
+
+  .price-modal-panel {
+    width: min(100%, 680px);
   }
 
   .clinic-info-grid {
@@ -462,6 +534,10 @@
     content: " ";
   }
 
+  .price-modal-panel {
+    width: min(100%, 760px);
+  }
+
 }
 
 @media (min-width: 1040px) {
@@ -562,6 +638,10 @@
 }
 
 @media (min-width: 1200px) {
+  .price-modal-panel {
+    width: min(100%, 820px);
+  }
+
   .reviews-grid-expanded {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }

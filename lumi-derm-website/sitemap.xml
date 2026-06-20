@@ -2,20 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://www.lumidermaesthetics.co.uk/</loc>
+    <loc>https://www.lumidermaesthetics.com/</loc>
     <image:image>
-      <image:loc>https://www.lumidermaesthetics.co.uk/assets/icons/lumi-derm-logo.png</image:loc>
+      <image:loc>https://www.lumidermaesthetics.com/assets/icons/lumi-derm-logo.png</image:loc>
       <image:title>Lumi Derm Aesthetics logo</image:title>
     </image:image>
   </url>
-  <url><loc>https://www.lumidermaesthetics.co.uk/pages/services.html</loc></url>
-  <url><loc>https://www.lumidermaesthetics.co.uk/pages/treatment.html</loc></url>
-  <url><loc>https://www.lumidermaesthetics.co.uk/pages/booking.html</loc></url>
-  <url><loc>https://www.lumidermaesthetics.co.uk/pages/gallery.html</loc></url>
-  <url><loc>https://www.lumidermaesthetics.co.uk/pages/about.html</loc></url>
-  <url><loc>https://www.lumidermaesthetics.co.uk/pages/contact.html</loc></url>
-  <url><loc>https://www.lumidermaesthetics.co.uk/pages/policies.html</loc></url>
-  <url><loc>https://www.lumidermaesthetics.co.uk/pages/privacy.html</loc></url>
-  <url><loc>https://www.lumidermaesthetics.co.uk/pages/terms.html</loc></url>
-  <url><loc>https://www.lumidermaesthetics.co.uk/pages/cookies.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.com/pages/services.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.com/pages/treatment.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.com/pages/booking.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.com/pages/gallery.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.com/pages/about.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.com/pages/contact.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.com/pages/policies.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.com/pages/privacy.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.com/pages/terms.html</loc></url>
+  <url><loc>https://www.lumidermaesthetics.com/pages/cookies.html</loc></url>
 </urlset>

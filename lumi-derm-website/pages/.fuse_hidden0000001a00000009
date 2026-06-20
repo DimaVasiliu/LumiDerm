@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Website Terms | Lumi Derm Aesthetics</title>
-    <meta name="description" content="Website terms and client terms for Lumi Derm Aesthetics covering website information, offers, prices, bookings and limitations.">
-    <link rel="canonical" href="https://www.lumidermaesthetics.com/pages/terms.html">
+    <title>Cookie Policy | Lumi Derm Aesthetics</title>
+    <meta name="description" content="Cookie policy for Lumi Derm Aesthetics explaining essential cookies, future analytics, social media embeds and cookie control.">
+    <link rel="canonical" href="https://www.lumidermaesthetics.co.uk/pages/cookies.html">
     <link rel="icon" type="image/png" href="../assets/icons/favicon.png">
     <link rel="apple-touch-icon" href="../assets/icons/lumi-derm-logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,14 +18,12 @@
     <header class="site-header" data-header><div class="container nav-wrap"><a class="logo" href="../index.html"><span class="logo-mark"><img src="../assets/icons/lumi-derm-logo.png" alt="" aria-hidden="true"></span><span>Lumi Derm Aesthetics</span></a><button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="site-navigation" data-nav-toggle><span></span><span></span><span></span></button><nav class="nav-menu" id="site-navigation" data-nav-menu><a class="nav-link" href="services.html">Treatments</a><a class="nav-link" href="../index.html#prices">Prices</a><a class="nav-link" href="../index.html#offers">Offers</a><a class="nav-link" href="contact.html">Contacts</a><a class="nav-link active" href="policies.html">T&amp;C</a><a class="btn btn-primary nav-cta" href="booking.html">Book Now</a></nav></div></header>
 
     <main>
-      <section class="page-hero legal-hero"><div class="container"><p class="eyebrow">Legal</p><h1>Website Terms</h1><p class="lead">Terms for using the Lumi Derm Aesthetics website and reading treatment, price and offer information online.</p></div></section>
+      <section class="page-hero legal-hero"><div class="container"><p class="eyebrow">Legal</p><h1>Cookie Policy</h1><p class="lead">A clear starter cookie notice for essential website functions, future analytics and third-party embeds.</p></div></section>
       <section class="page-content legal-content"><div class="container legal-stack narrow">
-        <article class="legal-card"><h2>Website information</h2><p>The website provides general information about Lumi Derm Aesthetics treatments and services. It is not medical advice and does not replace an individual consultation.</p></article>
-        <article class="legal-card"><h2>Prices and offers</h2><p>Prices, offers and treatment details may change. Online guide prices are subject to consultation, treatment suitability, availability and final confirmation by the clinic or booking platform.</p></article>
-        <article class="legal-card"><h2>Treatment suitability</h2><p>Not every treatment is suitable for every client. Lumi Derm Aesthetics may refuse, postpone or adapt a treatment where contraindications, skin condition, medication, pregnancy, recent procedures or safety concerns apply.</p></article>
-        <article class="legal-card"><h2>External links and booking platforms</h2><p>The website may link to external platforms such as booking, maps, social media or review websites. Those platforms have their own terms, privacy notices and technical availability.</p></article>
-        <article class="legal-card"><h2>Intellectual property</h2><p>Website text, design, images, branding and visual assets belong to Lumi Derm Aesthetics or their respective licensors. They must not be copied or reused without permission.</p></article>
-        <article class="legal-card"><h2>Liability</h2><p>Lumi Derm Aesthetics aims to keep website information accurate, but no website can guarantee that all content is complete, current or suitable for every client. Nothing in these terms limits rights that cannot legally be limited.</p></article>
+        <article class="legal-card"><h2>What cookies are</h2><p>Cookies are small files stored on your device by websites. They can support essential website operation, remember preferences, measure traffic or connect third-party services.</p></article>
+        <article class="legal-card"><h2>Current website use</h2><p>This first static version of the website is designed to work without a marketing cookie banner. It may still load third-party resources such as fonts, maps, social links or booking links that are governed by those providers.</p></article>
+        <article class="legal-card"><h2>Future analytics and marketing</h2><p>If analytics, pixels, embedded booking widgets or advertising tools are added later, Lumi Derm Aesthetics should add a consent banner and list each cookie category before those tools are used for non-essential tracking.</p></article>
+        <article class="legal-card"><h2>Managing cookies</h2><p>You can block or delete cookies using your browser settings. Some third-party services, maps, videos, booking widgets or embedded content may not work fully if cookies are disabled.</p></article>
         <a class="btn btn-secondary" href="policies.html">Back to policies</a>
       </div></section>
     </main>

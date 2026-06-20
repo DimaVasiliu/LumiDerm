@@ -807,7 +807,8 @@ body.menu-open .nav-menu .nav-cta,
 }
 
 .treatment-card {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
   padding: 1rem;
   transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
@@ -845,6 +846,22 @@ body.menu-open .nav-menu .nav-cta,
 
 .price-board {
   position: relative;
+  max-width: 1120px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.prices-section .section-header {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.prices-section .section-header .eyebrow {
+  justify-content: center;
+}
+
+.prices-section .section-header p {
+  margin-inline: auto;
 }
 
 .pf-input {
@@ -856,30 +873,40 @@ body.menu-open .nav-menu .nav-cta,
 }
 
 .price-filter-bar {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-bottom: 1.5rem;
+  justify-content: center;
+  gap: 0.22rem;
+  max-width: 100%;
+  margin: 0 auto 1.55rem;
+  padding: 0.28rem;
+  border: 1px solid rgba(169, 111, 104, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.56);
+  box-shadow: 0 14px 34px rgba(61, 45, 47, 0.06);
+  backdrop-filter: blur(18px);
 }
 
 .price-filter {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0.55rem 1.1rem;
-  border: 1px solid var(--color-line);
+  justify-content: center;
+  min-height: 38px;
+  padding: 0.48rem 0.95rem;
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
+  background: transparent;
   color: var(--color-charcoal);
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   cursor: pointer;
-  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .price-filter:hover {
   transform: translateY(-1px);
-  border-color: rgba(169, 111, 104, 0.32);
+  background: rgba(255, 253, 249, 0.88);
+  border-color: rgba(169, 111, 104, 0.14);
 }
 
 #pf-popular:checked ~ .price-filter-bar label[for="pf-popular"],
@@ -891,6 +918,7 @@ body.menu-open .nav-menu .nav-cta,
   color: #fff;
   background: var(--color-rose-deep);
   border-color: var(--color-rose-deep);
+  box-shadow: 0 9px 22px rgba(169, 111, 104, 0.22);
 }
 
 #pf-popular:focus-visible ~ .price-filter-bar label[for="pf-popular"],
@@ -907,6 +935,7 @@ body.menu-open .nav-menu .nav-cta,
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
   gap: 1rem;
+  text-align: left;
 }
 
 #pf-popular:checked ~ .price-grid .price-card:not(.cat-popular),
@@ -915,6 +944,15 @@ body.menu-open .nav-menu .nav-cta,
 #pf-skin:checked ~ .price-grid .price-card:not(.cat-skin),
 #pf-body:checked ~ .price-grid .price-card:not(.cat-body) {
   display: none;
+}
+
+#pf-popular:checked ~ .price-grid,
+#pf-laser:checked ~ .price-grid,
+#pf-injectables:checked ~ .price-grid,
+#pf-skin:checked ~ .price-grid,
+#pf-body:checked ~ .price-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 307px));
+  justify-content: center;
 }
 
 .prices-section .price-card {
@@ -969,9 +1007,10 @@ body.menu-open .nav-menu .nav-cta,
 
 .price-card-foot {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.45rem;
   margin-top: auto;
   padding-top: 0.95rem;
 }
@@ -1036,7 +1075,7 @@ body.menu-open .nav-menu .nav-cta,
   z-index: 1;
   display: flex;
   flex-direction: column;
-  width: min(100%, 560px);
+  width: min(100%, 720px);
   max-height: min(86vh, 760px);
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: var(--radius-lg);
@@ -1111,7 +1150,7 @@ body.menu-open .nav-menu .nav-cta,
 
 .price-list li {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(max-content, 44%);
   gap: 0.35rem 1rem;
   align-items: baseline;
   padding: 0.85rem 0;
@@ -1132,6 +1171,7 @@ body.menu-open .nav-menu .nav-cta,
   color: var(--color-charcoal);
   font-weight: 800;
   text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .price-list li em {
@@ -1146,7 +1186,7 @@ body.menu-open .nav-menu .nav-cta,
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.8rem;
   padding: 1rem 1.4rem 1.3rem;
   border-top: 1px solid var(--color-line);
@@ -1168,6 +1208,7 @@ body:has(.price-modal-open:checked) {
 .price-note {
   margin-top: 1.2rem;
   font-size: 0.9rem;
+  text-align: center;
 }
 
 .offers-section {
@@ -1339,10 +1380,13 @@ body:has(.price-modal-open:checked) {
 }
 
 .offer-cta {
-  width: 100%;
+  width: auto;
+  min-width: min(100%, 12rem);
+  align-self: flex-start;
   margin-top: 0.85rem;
   min-height: 44px;
   padding-block: 0.65rem;
+  padding-inline: 1.25rem;
 }
 
 .offer-slide.is-featured {
@@ -1407,6 +1451,9 @@ body:has(.price-modal-open:checked) {
 }
 
 .feature-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   padding: 1rem;
 }
 
@@ -2044,6 +2091,9 @@ body.reviews-modal-open {
 }
 
 .info-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   padding: 1.2rem;
 }
 
@@ -2295,6 +2345,9 @@ body.reviews-modal-open {
 }
 
 .contact-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   padding: clamp(1.2rem, 3vw, 1.7rem);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
@@ -2304,7 +2357,9 @@ body.reviews-modal-open {
 }
 
 .contact-card .contact-actions {
-  margin-top: 1.25rem;
+  justify-content: flex-start;
+  margin-top: auto;
+  padding-top: 1.25rem;
 }
 
 .contact-layout .map-panel {
@@ -2380,7 +2435,18 @@ body.reviews-modal-open {
 }
 
 .page-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   padding: 1.2rem;
+}
+
+.treatment-card .btn,
+.feature-card .btn,
+.info-card .btn,
+.page-card .btn {
+  align-self: flex-start;
+  margin-top: auto;
 }
 
 .legal-hero .container {
@@ -2569,8 +2635,10 @@ body.reviews-modal-open {
 .booking-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-start;
   gap: 0.8rem;
-  margin-top: 0.35rem;
+  margin-top: auto;
+  padding-top: 0.35rem;
 }
 
 .booking-widget-placeholder {
@@ -2756,5 +2824,112 @@ body.reviews-modal-open {
     opacity: 1;
     transform: none;
     filter: none;
+  }
+}
+
+/* ============================ Booking page (Square Appointments) ============================ */
+.booking-layout {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.booking-main {
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+
+.booking-embed {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.booking-frame {
+  display: block;
+  width: 100%;
+  min-height: 760px;
+  border: 0;
+}
+
+.booking-embed-placeholder {
+  display: grid;
+  gap: 0.85rem;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  background:
+    radial-gradient(circle at 88% 8%, rgba(219, 234, 240, 0.6), transparent 12rem),
+    radial-gradient(circle at 6% 96%, rgba(242, 216, 217, 0.45), transparent 12rem),
+    rgba(255, 255, 255, 0.55);
+  text-align: left;
+}
+
+.booking-pill {
+  width: fit-content;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.booking-embed-placeholder h2 {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+}
+
+.booking-embed-placeholder p {
+  max-width: 48ch;
+}
+
+.booking-secure {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.booking-secure svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--color-rose-deep);
+}
+
+.booking-side {
+  display: grid;
+  gap: 1.2rem;
+  align-content: start;
+}
+
+.booking-steps {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0.6rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.booking-steps li {
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.booking-steps strong {
+  color: var(--color-charcoal);
+}
+
+.booking-side-sub {
+  margin-top: 1.1rem;
+}
+
+@media (min-width: 900px) {
+  .booking-layout {
+    grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
+    align-items: start;
   }
 }
