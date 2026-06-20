@@ -2078,11 +2078,30 @@ body.reviews-modal-open {
 }
 
 .simple-hero {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   min-height: auto;
   padding: clamp(5.1rem, 7vw, 6.2rem) 0 clamp(1.4rem, 3vw, 2.2rem);
+}
+
+.simple-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    right -2rem top 1rem / min(64vw, 900px) auto no-repeat url("../assets/images/hero-cells.svg?v=20260620-cells-bg"),
+    left -8rem bottom -6rem / min(52vw, 720px) auto no-repeat url("../assets/images/hero-cells.svg?v=20260620-cells-bg"),
+    linear-gradient(180deg, rgba(255, 253, 249, 0), rgba(219, 234, 240, 0.2));
+  opacity: 0.76;
+  pointer-events: none;
+}
+
+.simple-hero .container {
+  position: relative;
+  z-index: 1;
 }
 
 .hero-banner {
@@ -2103,27 +2122,6 @@ body.reviews-modal-open {
   pointer-events: none;
   background: linear-gradient(90deg, rgba(41, 36, 38, 0.55) 0%, rgba(41, 36, 38, 0.18) 50%, rgba(41, 36, 38, 0.3) 100%);
 }
-
-.hero-banner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: center right / cover no-repeat url("../assets/images/hero-cells.svg?v=20260620-cells");
-  opacity: 0.55;
-  mix-blend-mode: screen;
-  pointer-events: none;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 30%, #000 68%);
-  mask-image: linear-gradient(90deg, transparent 0%, transparent 30%, #000 68%);
-  animation: heroCellsDrift 26s ease-in-out infinite;
-}
-
-@keyframes heroCellsDrift {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1.02); }
-  50% { transform: translate3d(-1.6%, 1.8%, 0) scale(1.06); }
-}
-
-
 
 .hero-banner-media {
   position: absolute;

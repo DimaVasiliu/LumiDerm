@@ -27,9 +27,7 @@
   }
 
   .hero-banner::before {
-    background:
-      linear-gradient(180deg, rgba(41, 36, 38, 0.18) 0%, rgba(41, 36, 38, 0.24) 36%, rgba(41, 36, 38, 0.64) 100%),
-      radial-gradient(circle at 30% 72%, rgba(255, 253, 249, 0.18), transparent 13rem);
+    background: linear-gradient(180deg, rgba(41, 36, 38, 0.18) 0%, rgba(41, 36, 38, 0.24) 36%, rgba(41, 36, 38, 0.64) 100%);
   }
 
   .hero-banner-media img {
