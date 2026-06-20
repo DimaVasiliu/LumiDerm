@@ -1,0 +1,6 @@
+.fuse_hidden*
+.DS_Store
+**/.DS_Store
+*.lock
+.git/index.lock
+node_modules/
