@@ -34,29 +34,12 @@
       <section class="page-content">
         <div class="container booking-layout">
           <div class="booking-main">
-            <!--
-              ========================  SQUARE APPOINTMENTS  ========================
-              GO-LIVE STEP: when Iulia's Square Appointments online-booking link is
-              ready, do two things:
-                1. Replace the whole .booking-embed-placeholder block below with:
-                     <iframe class="booking-frame" title="Book a Lumi Derm appointment"
-                             loading="lazy" src="PASTE_SQUARE_BOOKING_LINK_HERE"></iframe>
-                2. (Optional) keep the phone/email buttons as a fallback.
-              The Square link looks like https://book.squareup.com/.../start  or
-              https://<her-site>.square.site/appointments/...
-              =====================================================================
-            -->
+            <!-- Square Appointments booking flow (full payment online). To change the link,
+                 update the iframe src and the fallback link below with the new Square booking URL. -->
             <div class="booking-embed" data-square-booking>
-              <div class="booking-embed-placeholder">
-                <span class="booking-pill">Powered by Square</span>
-                <h2>Online booking &amp; secure payment</h2>
-                <p>Scheduling with full payment at booking is being switched on for Lumi Derm. In the meantime, reserve your appointment directly with the studio and Iulia will confirm your time.</p>
-                <div class="booking-actions">
-                  <a class="btn btn-primary" href="tel:07832839298">Call to book &mdash; 07832839298</a>
-                  <a class="btn btn-secondary" href="mailto:info@lumidermaesthetics.co.uk?subject=Lumi%20Derm%20appointment%20request">Email to book</a>
-                </div>
-              </div>
+              <iframe class="booking-frame" title="Book and pay for a Lumi Derm appointment with Square" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://app.squareup.com/appointments/book/6b4r5p8hdmfcv1/LV3QXT3NYT4FA/start"></iframe>
             </div>
+            <p class="booking-fallback">Booking window not loading? <a href="https://app.squareup.com/appointments/book/6b4r5p8hdmfcv1/LV3QXT3NYT4FA/start" target="_blank" rel="noopener">Open booking &amp; payment in a new tab &rarr;</a></p>
             <p class="booking-secure">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l7 3v6c0 5-3.4 8.3-7 9-3.6-.7-7-4-7-9V5l7-3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
               Payments are processed securely by Square. Lumi Derm never sees or stores your card details.

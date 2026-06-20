@@ -52,7 +52,7 @@
             <span></span><span></span><span></span>
           </button>
           <nav class="nav-menu" id="site-navigation" aria-label="Primary navigation" data-nav-menu>
-            <a class="nav-link" href="pages/services.html" data-nav-link>Treatments</a>
+            <a class="nav-link" href="#offers">Treatments</a>
             <a class="nav-link" href="#prices">Prices</a>
             <a class="nav-link" href="#offers">Offers</a>
             <a class="nav-link" href="#contact">Contacts</a>
@@ -80,7 +80,7 @@
                     <p class="lead">Laser treatments, electrolysis, Endospheres therapy, PRP, boosters, facials, peels and advanced skin plans shaped around your goals with Iulia.</p>
                     <div class="hero-actions">
                       <a class="btn btn-primary" href="pages/booking.html">Book a consultation</a>
-                      <a class="btn btn-secondary" href="pages/services.html">View treatments</a>
+                      <a class="btn btn-secondary" href="#offers">View treatments</a>
                     </div>
                   </div>
                 </div>

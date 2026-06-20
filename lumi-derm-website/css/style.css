@@ -2933,3 +2933,14 @@ body.reviews-modal-open {
     align-items: start;
   }
 }
+
+.booking-fallback {
+  margin-top: 0.2rem;
+  color: var(--color-muted);
+  font-size: 0.86rem;
+}
+
+.booking-fallback a {
+  color: var(--color-rose-deep);
+  font-weight: 800;
+}
