@@ -497,3 +497,40 @@ document.querySelectorAll("[data-nav-link]").forEach((link) => {
     link.setAttribute("aria-current", "page");
   }
 });
+
+/* ===================== Cookie consent banner (GDPR/PECR) ===================== */
+(function initCookieConsent() {
+  var KEY = "ld-cookie-consent";
+  function apply(choice) { window.ldConsent = choice; }
+  try {
+    var saved = localStorage.getItem(KEY);
+    if (saved) { apply(saved); return; }
+  } catch (e) { /* storage unavailable — still show the notice */ }
+
+  var cookiesHref = location.pathname.indexOf("/pages/") > -1 ? "cookies.html" : "pages/cookies.html";
+  var banner = document.createElement("div");
+  banner.className = "cookie-banner";
+  banner.setAttribute("role", "dialog");
+  banner.setAttribute("aria-label", "Cookie notice");
+  banner.innerHTML =
+    '<div class="cookie-banner-inner">' +
+      '<p class="cookie-banner-text">We use essential cookies to run the site and online booking, and privacy-friendly analytics to improve it. ' +
+        'Read our <a href="' + cookiesHref + '">Cookie Policy</a>.</p>' +
+      '<div class="cookie-banner-actions">' +
+        '<button type="button" class="btn btn-secondary" data-consent="essential">Essential only</button>' +
+        '<button type="button" class="btn btn-primary" data-consent="all">Accept all</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(banner);
+  requestAnimationFrame(function () { banner.classList.add("is-visible"); });
+
+  banner.addEventListener("click", function (event) {
+    var btn = event.target.closest("[data-consent]");
+    if (!btn) return;
+    var choice = btn.getAttribute("data-consent");
+    try { localStorage.setItem(KEY, choice); } catch (e) {}
+    apply(choice);
+    banner.classList.remove("is-visible");
+    setTimeout(function () { banner.remove(); }, 320);
+  });
+})();

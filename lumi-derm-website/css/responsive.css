@@ -191,11 +191,13 @@
   }
 
   .price-modal-foot {
+    justify-content: flex-start;
     padding: 0.9rem 1rem 1rem;
   }
 
   .price-modal-foot .btn {
     width: 100%;
+    margin-left: 0;
   }
 
   .price-bundle {
