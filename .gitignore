@@ -4,3 +4,4 @@
 *.lock
 .git/index.lock
 node_modules/
+.wrangler/
