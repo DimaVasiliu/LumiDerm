@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
     <title>Lumi Derm Admin | Website Control Room</title>
-    <meta name="description" content="Private Lumi Derm Aesthetics admin workspace for managing website content, offers, prices, reviews, booking links and platform settings.">
+    <meta name="description" content="Private Lumi Derm Aesthetics admin workspace for managing website content, offers, prices, reviews, marketing campaigns, subscribers and settings.">
     <link rel="icon" type="image/png" href="../assets/icons/favicon.png">
     <link rel="apple-touch-icon" href="../assets/icons/lumi-derm-logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,7 +14,19 @@
     <link rel="stylesheet" href="admin.css">
   </head>
   <body>
-    <div class="admin-shell">
+    <!-- Soft lock screen (light gate only — enable Cloudflare Access for real protection) -->
+    <div class="admin-gate" data-admin-gate hidden>
+      <form class="admin-gate-card" data-gate-form>
+        <span class="admin-logo"><img src="../assets/icons/lumi-derm-logo.png" alt="" aria-hidden="true"></span>
+        <h1>Lumi Derm Admin</h1>
+        <p>Enter your passcode to open the workspace.</p>
+        <label>Passcode<input type="password" autocomplete="off" data-gate-input></label>
+        <button class="admin-button admin-button-primary" type="submit">Unlock</button>
+        <small>A light lock for shared screens. For real security, protect this URL with Cloudflare Access.</small>
+      </form>
+    </div>
+
+    <div class="admin-shell" data-admin-shell hidden>
       <aside class="admin-sidebar" aria-label="Admin navigation">
         <a class="admin-brand" href="index.html" aria-label="Lumi Derm admin home">
           <span class="admin-logo"><img src="../assets/icons/lumi-derm-logo.png" alt="" aria-hidden="true"></span>
@@ -24,6 +36,7 @@
           <button class="admin-nav-item is-active" type="button" data-admin-panel="dashboard">Overview</button>
           <button class="admin-nav-item" type="button" data-admin-panel="offers">Offers</button>
           <button class="admin-nav-item" type="button" data-admin-panel="prices">Prices</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="marketing">Marketing</button>
           <button class="admin-nav-item" type="button" data-admin-panel="reviews">Reviews</button>
           <button class="admin-nav-item" type="button" data-admin-panel="media">Media</button>
           <button class="admin-nav-item" type="button" data-admin-panel="content">Pages</button>
@@ -32,7 +45,7 @@
         </nav>
         <div class="admin-sidebar-note">
           <span>Private route</span>
-          <p>Protect this page with Cloudflare Access before launch.</p>
+          <p>Protect this page with Cloudflare Access before launch. Changes save in this browser until a CMS/API is connected.</p>
         </div>
       </aside>
 
@@ -40,88 +53,70 @@
         <header class="admin-topbar">
           <div>
             <p class="admin-eyebrow">Website control room</p>
-            <h1>Admin dashboard</h1>
+            <h1 data-panel-title>Overview</h1>
+            <p class="admin-saved" data-last-saved>No changes saved yet.</p>
           </div>
           <div class="admin-topbar-actions">
             <a class="admin-button admin-button-ghost" href="../index.html" target="_blank" rel="noopener">View site</a>
-            <button class="admin-button admin-button-secondary" type="button" data-export-admin>Export draft</button>
-            <button class="admin-button admin-button-primary" type="button" data-publish-demo>Publish checklist</button>
+            <button class="admin-button admin-button-secondary" type="button" data-import-admin>Import</button>
+            <button class="admin-button admin-button-secondary" type="button" data-export-admin>Export</button>
+            <button class="admin-button admin-button-primary" type="button" data-publish-demo>Publish guide</button>
+            <input type="file" accept="application/json" data-import-file hidden>
           </div>
         </header>
 
         <main>
+          <!-- ===================== OVERVIEW ===================== -->
           <section class="admin-panel is-active" id="dashboard" data-admin-section>
             <div class="admin-grid admin-grid-4">
-              <article class="metric-card">
-                <span>Booking</span>
-                <strong>Square</strong>
-                <p>Live booking and payment iframe connected.</p>
-              </article>
-              <article class="metric-card">
-                <span>Reviews</span>
-                <strong data-review-count>43</strong>
-                <p>Local verified review feed, ready for Google sync.</p>
-              </article>
-              <article class="metric-card">
-                <span>Content drafts</span>
-                <strong data-draft-count>0</strong>
-                <p>Saved browser drafts awaiting CMS/API connection.</p>
-              </article>
-              <article class="metric-card">
-                <span>Protection</span>
-                <strong>Needed</strong>
-                <p>Enable Cloudflare Access before giving this URL out.</p>
-              </article>
+              <article class="metric-card"><span>Offers live</span><strong data-metric="offers-published">0</strong><p>Published offer cards on the homepage carousel.</p></article>
+              <article class="metric-card"><span>Reviews pending</span><strong data-metric="reviews-pending">0</strong><p>Awaiting your approval before they show publicly.</p></article>
+              <article class="metric-card"><span>Campaign drafts</span><strong data-metric="campaigns">0</strong><p>Email/offer campaigns saved and ready to send.</p></article>
+              <article class="metric-card"><span>Subscribers</span><strong data-metric="subscribers">0</strong><p>Opted-in contacts for offers and updates.</p></article>
             </div>
 
             <div class="admin-grid admin-grid-2">
               <section class="admin-card">
-                <div class="admin-card-head">
-                  <div>
-                    <p class="admin-eyebrow">Maintenance</p>
-                    <h2>What Iulia can manage here</h2>
-                  </div>
-                </div>
-                <div class="admin-checklist">
-                  <label><input type="checkbox" checked> Update homepage offers and carousel order</label>
-                  <label><input type="checkbox" checked> Update service price groups and notes</label>
-                  <label><input type="checkbox" checked> Approve, hide, feature and import reviews</label>
-                  <label><input type="checkbox" checked> Track Square booking, payments and client marketing links</label>
-                  <label><input type="checkbox" checked> Maintain hero copy, contact details, policies, SEO and gallery notes</label>
+                <div class="admin-card-head"><div><p class="admin-eyebrow">Quick actions</p><h2>Jump straight in</h2></div></div>
+                <div class="quick-actions">
+                  <button class="quick-action" type="button" data-go="offers"><strong>Add an offer</strong><span>New homepage carousel card</span></button>
+                  <button class="quick-action" type="button" data-go="marketing"><strong>Send an offer email</strong><span>Compose a campaign</span></button>
+                  <button class="quick-action" type="button" data-go="reviews"><strong>Approve reviews</strong><span>Clear the pending queue</span></button>
+                  <button class="quick-action" type="button" data-go="prices"><strong>Update prices</strong><span>Edit treatment price groups</span></button>
                 </div>
               </section>
 
               <section class="admin-card">
-                <div class="admin-card-head">
-                  <div>
-                    <p class="admin-eyebrow">Next integration</p>
-                    <h2>Recommended backend path</h2>
-                  </div>
-                </div>
-                <ol class="admin-steps">
-                  <li><strong>Sveltia CMS</strong><span>Friendly forms at /admin that commit offers, treatments and prices to GitHub.</span></li>
-                  <li><strong>Cloudflare Access</strong><span>Restrict admin login to Iulia and the site maintainer.</span></li>
-                  <li><strong>Google reviews worker</strong><span>Sync reviews into a queue, then approve what appears publicly.</span></li>
-                  <li><strong>Square links</strong><span>Use Square for bookings, payments, customer directory and marketing.</span></li>
-                </ol>
+                <div class="admin-card-head"><div><p class="admin-eyebrow">Needs attention</p><h2>Today's to-do</h2></div></div>
+                <ul class="admin-status-list" data-attention></ul>
               </section>
             </div>
+
+            <section class="admin-card">
+              <div class="admin-card-head"><div><p class="admin-eyebrow">Getting started</p><h2>How this works</h2></div></div>
+              <ol class="admin-steps compact">
+                <li><strong>Edit anything here</strong><span>Offers, prices, reviews, marketing and page text. Everything saves automatically in this browser.</span></li>
+                <li><strong>Export a backup</strong><span>Use Export (top right) to download a JSON backup, or Import to restore one.</span></li>
+                <li><strong>Publishing</strong><span>For now changes are drafts. Once the CMS/API is connected, Save will publish to the live site.</span></li>
+              </ol>
+            </section>
           </section>
 
+          <!-- ===================== OFFERS ===================== -->
           <section class="admin-panel" id="offers" data-admin-section>
             <div class="admin-section-head">
               <div>
                 <p class="admin-eyebrow">Homepage</p>
-                <h2>Offers and treatment carousel</h2>
-                <p>Draft new carousel cards, update offer prices, hide seasonal cards, and prepare content for the public homepage.</p>
+                <h2>Offers carousel</h2>
+                <p>Create offer cards, change the order, hide seasonal cards, and edit prices. Drag-free reordering with the arrows.</p>
               </div>
-              <button class="admin-button admin-button-primary" type="button" data-add-offer>Add offer draft</button>
+              <button class="admin-button admin-button-primary" type="button" data-add-offer>Add offer</button>
             </div>
             <div class="admin-layout">
               <section class="admin-card">
                 <div class="admin-table-wrap">
                   <table class="admin-table">
-                    <thead><tr><th>Offer</th><th>Price</th><th>Status</th><th>Priority</th><th></th></tr></thead>
+                    <thead><tr><th>Offer</th><th>Price</th><th>Status</th><th>Order</th><th>Actions</th></tr></thead>
                     <tbody data-offer-table></tbody>
                   </table>
                 </div>
@@ -131,35 +126,118 @@
                 <label>Title<input type="text" data-offer-field="title"></label>
                 <label>Category<input type="text" data-offer-field="category"></label>
                 <label>Display price<input type="text" data-offer-field="price"></label>
-                <label>Short description<textarea rows="4" data-offer-field="description"></textarea></label>
+                <label>Short description<textarea rows="3" data-offer-field="description"></textarea></label>
                 <label>Image file<select data-offer-field="image"></select></label>
                 <label>Status<select data-offer-field="status"><option>Published</option><option>Draft</option><option>Hidden</option></select></label>
-                <button class="admin-button admin-button-primary" type="button" data-save-offer>Save offer draft</button>
-                <p class="admin-help">Future CMS action: write this card into <code>assets/data/offers.json</code> and rebuild the homepage.</p>
+                <button class="admin-button admin-button-primary" type="button" data-save-offer>Save offer</button>
+                <div class="offer-preview" data-offer-preview></div>
               </aside>
             </div>
           </section>
 
+          <!-- ===================== PRICES ===================== -->
           <section class="admin-panel" id="prices" data-admin-section>
             <div class="admin-section-head">
               <div>
                 <p class="admin-eyebrow">Treatment menu</p>
-                <h2>Prices and service groups</h2>
-                <p>Keep the price cards, modal rows, consultation notes and instalment wording aligned with the clinic price list.</p>
+                <h2>Prices and groups</h2>
+                <p>Keep price groups, rows, consultation notes and instalment wording aligned with the clinic list. Square stays the source of paid booking items.</p>
               </div>
-              <button class="admin-button admin-button-primary" type="button" data-add-price-group>Add group draft</button>
+              <button class="admin-button admin-button-primary" type="button" data-add-price-group>Add group</button>
             </div>
             <div class="admin-grid admin-grid-3" data-price-groups></div>
             <section class="admin-card">
               <div class="admin-card-head">
-                <div><p class="admin-eyebrow">Selected group</p><h3 data-price-editor-title>Laser treatments</h3></div>
-                <button class="admin-button admin-button-secondary" type="button" data-add-price-row>Add row</button>
+                <div><p class="admin-eyebrow">Selected group</p><h3 data-price-editor-title>Group</h3></div>
+                <div class="admin-actions-inline">
+                  <button class="admin-button admin-button-secondary" type="button" data-add-price-row>Add row</button>
+                  <button class="admin-button admin-button-ghost" type="button" data-delete-price-group>Delete group</button>
+                </div>
               </div>
+              <div class="admin-editor"><label>Group name<input type="text" data-price-group-title></label></div>
               <div class="price-row-editor" data-price-row-editor></div>
-              <p class="admin-help">Future CMS action: save as structured treatment and price JSON. Square remains the source of final paid booking items.</p>
             </section>
           </section>
 
+          <!-- ===================== MARKETING ===================== -->
+          <section class="admin-panel" id="marketing" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Email &amp; SMS</p>
+                <h2>Marketing campaigns</h2>
+                <p>Compose offers and updates to send through Square Marketing. Draft and preview here; sending happens in Square with proper consent and an unsubscribe link.</p>
+              </div>
+              <button class="admin-button admin-button-primary" type="button" data-add-campaign>New campaign</button>
+            </div>
+            <div class="admin-layout">
+              <section class="admin-card admin-editor">
+                <p class="admin-eyebrow">Campaign editor</p>
+                <label>Start from a template<select data-campaign-field="template" data-campaign-template>
+                  <option value="">Blank</option>
+                  <option value="offer">New offer announcement</option>
+                  <option value="newsletter">Monthly newsletter</option>
+                  <option value="birthday">Birthday treat</option>
+                  <option value="winback">We miss you (win-back)</option>
+                </select></label>
+                <label>Campaign name<input type="text" data-campaign-field="name"></label>
+                <label>Audience<select data-campaign-field="audience">
+                  <option>All subscribers</option>
+                  <option>New clients (last 30 days)</option>
+                  <option>Lapsed clients (90+ days)</option>
+                  <option>Booked: laser &amp; hair</option>
+                  <option>Booked: facials &amp; skin</option>
+                  <option>Booked: injectables</option>
+                </select></label>
+                <label>Email subject<input type="text" data-campaign-field="subject"></label>
+                <label>Preview text<input type="text" data-campaign-field="preview"></label>
+                <label>Message<textarea rows="6" data-campaign-field="body"></textarea></label>
+                <div class="field-pair">
+                  <label>Button label<input type="text" data-campaign-field="ctaLabel"></label>
+                  <label>Button link<input type="url" data-campaign-field="ctaUrl"></label>
+                </div>
+                <div class="field-pair">
+                  <label>Send date<input type="date" data-campaign-field="sendDate"></label>
+                  <label>Status<select data-campaign-field="status"><option>Draft</option><option>Scheduled</option><option>Sent</option></select></label>
+                </div>
+                <div class="admin-actions-inline start">
+                  <button class="admin-button admin-button-primary" type="button" data-save-campaign>Save campaign</button>
+                  <button class="admin-button admin-button-secondary" type="button" data-copy-campaign>Copy text</button>
+                  <a class="admin-button admin-button-ghost" href="https://squareup.com/dashboard/marketing" target="_blank" rel="noopener">Send in Square</a>
+                </div>
+                <p class="admin-help">Drafts save in this browser. Paste into Square Marketing (or a future API) to send — Square handles consent and unsubscribe.</p>
+              </section>
+              <aside class="admin-stack">
+                <section class="admin-card">
+                  <div class="admin-card-head"><div><p class="admin-eyebrow">Live preview</p><h3>Email preview</h3></div></div>
+                  <div class="email-preview" data-campaign-preview></div>
+                </section>
+                <section class="admin-card">
+                  <div class="admin-card-head"><div><p class="admin-eyebrow">Saved</p><h3>Campaign drafts</h3></div></div>
+                  <div class="campaign-list" data-campaign-list></div>
+                </section>
+              </aside>
+            </div>
+
+            <div class="admin-section-head">
+              <div><p class="admin-eyebrow">Audience</p><h2>Newsletter subscribers</h2><p>People who opted in to offers. This list will sync to Square or your email tool. Add or import now; export any time.</p></div>
+              <div class="admin-actions-inline">
+                <button class="admin-button admin-button-secondary" type="button" data-import-subs>Import CSV</button>
+                <button class="admin-button admin-button-secondary" type="button" data-export-subs>Export CSV</button>
+                <button class="admin-button admin-button-primary" type="button" data-add-sub>Add subscriber</button>
+                <input type="file" accept=".csv,text/csv" data-subs-file hidden>
+              </div>
+            </div>
+            <div class="admin-card">
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead><tr><th>Email</th><th>Name</th><th>Segment</th><th>Consent</th><th></th></tr></thead>
+                  <tbody data-subs-table></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===================== REVIEWS ===================== -->
           <section class="admin-panel" id="reviews" data-admin-section>
             <div class="admin-section-head">
               <div>
@@ -168,41 +246,43 @@
                 <p>Approve what appears on the homepage, feature the strongest reviews, and prepare for Google Business Profile sync.</p>
               </div>
               <div class="admin-actions-inline">
-                <button class="admin-button admin-button-secondary" type="button" data-sync-google>Sync Google placeholder</button>
-                <button class="admin-button admin-button-primary" type="button" data-add-review>Add manual review</button>
+                <button class="admin-button admin-button-secondary" type="button" data-sync-google>Import Google (demo)</button>
+                <button class="admin-button admin-button-primary" type="button" data-add-review>Add review</button>
               </div>
             </div>
             <div class="review-controls">
               <label>Filter<select data-review-filter><option value="all">All</option><option value="approved">Approved</option><option value="featured">Featured</option><option value="pending">Pending</option><option value="hidden">Hidden</option></select></label>
-              <p>Live Google integration should save imported reviews as <strong>pending</strong> until approved.</p>
+              <p>Imported reviews stay <strong>pending</strong> until you approve them.</p>
             </div>
             <div class="admin-review-list" data-review-list></div>
           </section>
 
+          <!-- ===================== MEDIA ===================== -->
           <section class="admin-panel" id="media" data-admin-section>
             <div class="admin-section-head">
               <div>
                 <p class="admin-eyebrow">Assets</p>
-                <h2>Media and gallery</h2>
-                <p>Track local images, decide what appears in offers or gallery, and prepare for future upload handling.</p>
+                <h2>Media library</h2>
+                <p>Browse local images used in offers and the gallery. Real uploads will go through the CMS or a protected Worker endpoint.</p>
               </div>
-              <button class="admin-button admin-button-secondary" type="button" data-demo-upload>Upload placeholder</button>
+              <button class="admin-button admin-button-secondary" type="button" data-demo-upload>Upload (info)</button>
             </div>
             <div class="media-grid" data-media-grid></div>
           </section>
 
+          <!-- ===================== PAGES ===================== -->
           <section class="admin-panel" id="content" data-admin-section>
             <div class="admin-section-head">
               <div>
                 <p class="admin-eyebrow">Pages</p>
-                <h2>Website content controls</h2>
-                <p>Edit key public content areas without touching code once the CMS layer is wired.</p>
+                <h2>Website content</h2>
+                <p>Edit key public content. Once the CMS layer is wired, Save publishes to the live site.</p>
               </div>
             </div>
             <div class="admin-grid admin-grid-2">
               <section class="admin-card admin-editor">
                 <p class="admin-eyebrow">Homepage hero</p>
-                <label>Headline<textarea rows="3" data-content-field="heroTitle">Advanced skin, laser & body treatments</textarea></label>
+                <label>Headline<textarea rows="2" data-content-field="heroTitle">Advanced skin, laser &amp; body treatments</textarea></label>
                 <label>Supporting text<textarea rows="4" data-content-field="heroText">Laser treatments, electrolysis, Endospheres therapy, PRP, boosters, facials, peels and advanced skin plans shaped around your goals with Iulia.</textarea></label>
                 <button class="admin-button admin-button-primary" type="button" data-save-content>Save page draft</button>
               </section>
@@ -212,83 +292,103 @@
                 <label>Email<input type="email" data-content-field="email" value="info@lumidermaesthetics.co.uk"></label>
                 <label>Address<textarea rows="3" data-content-field="address">Unit 41 Skylines Village, Limeharbour, London, E14 9TS</textarea></label>
                 <label>Instagram<input type="url" data-content-field="instagram" value="https://www.instagram.com/lumi.derm.aesthetic/"></label>
+                <button class="admin-button admin-button-primary" type="button" data-save-content>Save details</button>
               </section>
               <section class="admin-card">
                 <p class="admin-eyebrow">Legal</p>
                 <h3>Policy status</h3>
                 <ul class="admin-status-list">
-                  <li><span>Privacy Policy</span><strong>Needs solicitor/client approval</strong></li>
-                  <li><span>Terms & booking policy</span><strong>Needs Square cancellation rules</strong></li>
-                  <li><span>Cookie Policy</span><strong>Needs final analytics/iframe review</strong></li>
+                  <li><span>Privacy Policy</span><strong>Live — pending solicitor review</strong></li>
+                  <li><span>Terms &amp; booking policy</span><strong>Live — add Square cancellation rules</strong></li>
+                  <li><span>Cookie Policy</span><strong>Live — consent banner active</strong></li>
                 </ul>
               </section>
               <section class="admin-card">
                 <p class="admin-eyebrow">SEO</p>
-                <h3>Editable fields later</h3>
+                <h3>Editable later via CMS</h3>
                 <ul class="admin-status-list">
-                  <li><span>Page titles</span><strong>CMS field</strong></li>
-                  <li><span>Meta descriptions</span><strong>CMS field</strong></li>
+                  <li><span>Page titles &amp; meta</span><strong>CMS field</strong></li>
                   <li><span>Schema opening hours</span><strong>CMS field</strong></li>
+                  <li><span>Open Graph image</span><strong>CMS field</strong></li>
                 </ul>
               </section>
             </div>
           </section>
 
+          <!-- ===================== CLIENTS ===================== -->
           <section class="admin-panel" id="clients" data-admin-section>
             <div class="admin-section-head">
               <div>
                 <p class="admin-eyebrow">Square first</p>
-                <h2>Clients, booking and marketing</h2>
-                <p>Customer records, payments and marketing should live in Square unless the business later needs a custom database.</p>
+                <h2>Clients &amp; bookings</h2>
+                <p>Customer records, payments and booking history live in Square. Open the relevant area below.</p>
               </div>
             </div>
             <div class="admin-grid admin-grid-3">
               <article class="admin-card">
                 <p class="admin-eyebrow">Bookings</p>
                 <h3>Square Appointments</h3>
-                <p>Manage calendar, services, staff availability, deposits/full payments, reminders and cancellations in Square.</p>
-                <a class="admin-button admin-button-secondary" href="https://squareup.com/dashboard" target="_blank" rel="noopener">Open Square</a>
+                <p>Calendar, services, staff, deposits/full payments, reminders and cancellations.</p>
+                <a class="admin-button admin-button-secondary" href="https://squareup.com/dashboard/appointments" target="_blank" rel="noopener">Open Appointments</a>
               </article>
               <article class="admin-card">
                 <p class="admin-eyebrow">Customers</p>
                 <h3>Customer Directory</h3>
-                <p>Use Square as the client CRM for booked clients, payment history and contact preferences.</p>
-                <button class="admin-button admin-button-secondary" type="button" data-admin-toast="Customer export would come from Square.">Export plan</button>
+                <p>Your client CRM — contacts, payment history and preferences.</p>
+                <a class="admin-button admin-button-secondary" href="https://squareup.com/dashboard/customers/directory" target="_blank" rel="noopener">Open Directory</a>
               </article>
               <article class="admin-card">
                 <p class="admin-eyebrow">Marketing</p>
-                <h3>Email and SMS campaigns</h3>
-                <p>Use Square Marketing or a connected platform for offers, birthdays, win-back and loyalty campaigns.</p>
-                <button class="admin-button admin-button-secondary" type="button" data-admin-toast="Marketing sync endpoint can be added after consent wording is approved.">Campaign notes</button>
+                <h3>Square Marketing</h3>
+                <p>Send the campaigns you draft in the Marketing tab.</p>
+                <a class="admin-button admin-button-secondary" href="https://squareup.com/dashboard/marketing" target="_blank" rel="noopener">Open Marketing</a>
               </article>
             </div>
           </section>
 
+          <!-- ===================== SETTINGS ===================== -->
           <section class="admin-panel" id="settings" data-admin-section>
             <div class="admin-section-head">
               <div>
                 <p class="admin-eyebrow">Platform</p>
-                <h2>Settings and integrations</h2>
-                <p>Operational controls for the next production admin build.</p>
+                <h2>Settings</h2>
+                <p>Access, data backups and integration status.</p>
               </div>
             </div>
             <div class="admin-grid admin-grid-2">
+              <section class="admin-card admin-editor">
+                <p class="admin-eyebrow">Access</p>
+                <h3>Admin passcode</h3>
+                <label>Set / change passcode<input type="text" data-set-pass placeholder="New passcode"></label>
+                <button class="admin-button admin-button-secondary" type="button" data-save-pass>Save passcode</button>
+                <p class="admin-help">This is a light lock only. For real protection, enable <strong>Cloudflare Access</strong> on the /admin route.</p>
+              </section>
+              <section class="admin-card">
+                <p class="admin-eyebrow">Data</p>
+                <h3>Backup &amp; restore</h3>
+                <div class="admin-actions-inline start" style="margin-top:0.8rem">
+                  <button class="admin-button admin-button-secondary" type="button" data-export-admin>Export all</button>
+                  <button class="admin-button admin-button-secondary" type="button" data-import-admin>Import</button>
+                  <button class="admin-button admin-button-ghost" type="button" data-reset-admin>Reset to defaults</button>
+                </div>
+                <p class="admin-help">Export downloads a JSON backup of everything in this admin. Reset clears local drafts.</p>
+              </section>
               <section class="admin-card">
                 <h3>Integration checklist</h3>
                 <ul class="admin-status-list">
-                  <li><span>Cloudflare Access</span><strong>Required before use</strong></li>
-                  <li><span>Sveltia CMS + GitHub OAuth</span><strong>Recommended for content editing</strong></li>
-                  <li><span>Google Business Profile reviews</span><strong>Optional API sync</strong></li>
-                  <li><span>Square Appointments</span><strong>Current booking/payment source</strong></li>
-                  <li><span>Cloudflare Web Analytics</span><strong>Recommended</strong></li>
+                  <li><span>Cloudflare Access</span><strong>Required before sharing this URL</strong></li>
+                  <li><span>Sveltia CMS + GitHub OAuth</span><strong>For real publishing of offers/prices</strong></li>
+                  <li><span>Square Appointments + Marketing</span><strong>Live booking, payments, email</strong></li>
+                  <li><span>Cloudflare Web Analytics</span><strong>Live (cookieless)</strong></li>
+                  <li><span>Newsletter signup → Square</span><strong>Phase 2 build</strong></li>
                 </ul>
               </section>
               <section class="admin-card">
                 <h3>Publishing model</h3>
-                <p>This static admin prototype saves drafts in the browser. Production should either:</p>
+                <p>This admin saves drafts in the browser. Production options:</p>
                 <ol class="admin-steps compact">
-                  <li><strong>CMS route</strong><span>Commit content JSON to GitHub, then Cloudflare redeploys.</span></li>
-                  <li><strong>API route</strong><span>Save approved content to D1/R2 through protected Workers endpoints.</span></li>
+                  <li><strong>CMS route</strong><span>Commit content JSON to GitHub, Cloudflare redeploys.</span></li>
+                  <li><strong>API route</strong><span>Save approved content to D1/R2 via protected Workers.</span></li>
                 </ol>
               </section>
             </div>
