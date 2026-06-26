@@ -71,7 +71,10 @@ legal/GDPR steps. Last updated during the Square + Cloudflare go-live build.
 
 **Phase 3 — Self-serve admin / CMS**
 - Move offers + treatments to `assets/data/offers.json` / `treatments.json` with HTML fallback.
-- Add **Sveltia CMS** at `/admin` + GitHub OAuth Worker.
+- A private, unlinked `/admin/` prototype now exists for offers, prices, reviews, media,
+  page content, Square links and integration planning. Protect it with **Cloudflare Access**
+  before client use.
+- Add **Sveltia CMS** at `/admin` + GitHub OAuth Worker for real publishing.
 - Iulia can publish new offers/treatments herself.
 
 **Phase 4 — Content & growth**

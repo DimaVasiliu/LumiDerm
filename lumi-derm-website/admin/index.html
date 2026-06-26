@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Lumi Derm Admin | Website Control Room</title>
+    <meta name="description" content="Private Lumi Derm Aesthetics admin workspace for managing website content, offers, prices, reviews, booking links and platform settings.">
+    <link rel="icon" type="image/png" href="../assets/icons/favicon.png">
+    <link rel="apple-touch-icon" href="../assets/icons/lumi-derm-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+  </head>
+  <body>
+    <div class="admin-shell">
+      <aside class="admin-sidebar" aria-label="Admin navigation">
+        <a class="admin-brand" href="index.html" aria-label="Lumi Derm admin home">
+          <span class="admin-logo"><img src="../assets/icons/lumi-derm-logo.png" alt="" aria-hidden="true"></span>
+          <span><strong>Lumi Derm</strong><small>Admin workspace</small></span>
+        </a>
+        <nav class="admin-nav" data-admin-nav>
+          <button class="admin-nav-item is-active" type="button" data-admin-panel="dashboard">Overview</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="offers">Offers</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="prices">Prices</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="reviews">Reviews</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="media">Media</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="content">Pages</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="clients">Clients</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="settings">Settings</button>
+        </nav>
+        <div class="admin-sidebar-note">
+          <span>Private route</span>
+          <p>Protect this page with Cloudflare Access before launch.</p>
+        </div>
+      </aside>
+
+      <div class="admin-main">
+        <header class="admin-topbar">
+          <div>
+            <p class="admin-eyebrow">Website control room</p>
+            <h1>Admin dashboard</h1>
+          </div>
+          <div class="admin-topbar-actions">
+            <a class="admin-button admin-button-ghost" href="../index.html" target="_blank" rel="noopener">View site</a>
+            <button class="admin-button admin-button-secondary" type="button" data-export-admin>Export draft</button>
+            <button class="admin-button admin-button-primary" type="button" data-publish-demo>Publish checklist</button>
+          </div>
+        </header>
+
+        <main>
+          <section class="admin-panel is-active" id="dashboard" data-admin-section>
+            <div class="admin-grid admin-grid-4">
+              <article class="metric-card">
+                <span>Booking</span>
+                <strong>Square</strong>
+                <p>Live booking and payment iframe connected.</p>
+              </article>
+              <article class="metric-card">
+                <span>Reviews</span>
+                <strong data-review-count>43</strong>
+                <p>Local verified review feed, ready for Google sync.</p>
+              </article>
+              <article class="metric-card">
+                <span>Content drafts</span>
+                <strong data-draft-count>0</strong>
+                <p>Saved browser drafts awaiting CMS/API connection.</p>
+              </article>
+              <article class="metric-card">
+                <span>Protection</span>
+                <strong>Needed</strong>
+                <p>Enable Cloudflare Access before giving this URL out.</p>
+              </article>
+            </div>
+
+            <div class="admin-grid admin-grid-2">
+              <section class="admin-card">
+                <div class="admin-card-head">
+                  <div>
+                    <p class="admin-eyebrow">Maintenance</p>
+                    <h2>What Iulia can manage here</h2>
+                  </div>
+                </div>
+                <div class="admin-checklist">
+                  <label><input type="checkbox" checked> Update homepage offers and carousel order</label>
+                  <label><input type="checkbox" checked> Update service price groups and notes</label>
+                  <label><input type="checkbox" checked> Approve, hide, feature and import reviews</label>
+                  <label><input type="checkbox" checked> Track Square booking, payments and client marketing links</label>
+                  <label><input type="checkbox" checked> Maintain hero copy, contact details, policies, SEO and gallery notes</label>
+                </div>
+              </section>
+
+              <section class="admin-card">
+                <div class="admin-card-head">
+                  <div>
+                    <p class="admin-eyebrow">Next integration</p>
+                    <h2>Recommended backend path</h2>
+                  </div>
+                </div>
+                <ol class="admin-steps">
+                  <li><strong>Sveltia CMS</strong><span>Friendly forms at /admin that commit offers, treatments and prices to GitHub.</span></li>
+                  <li><strong>Cloudflare Access</strong><span>Restrict admin login to Iulia and the site maintainer.</span></li>
+                  <li><strong>Google reviews worker</strong><span>Sync reviews into a queue, then approve what appears publicly.</span></li>
+                  <li><strong>Square links</strong><span>Use Square for bookings, payments, customer directory and marketing.</span></li>
+                </ol>
+              </section>
+            </div>
+          </section>
+
+          <section class="admin-panel" id="offers" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Homepage</p>
+                <h2>Offers and treatment carousel</h2>
+                <p>Draft new carousel cards, update offer prices, hide seasonal cards, and prepare content for the public homepage.</p>
+              </div>
+              <button class="admin-button admin-button-primary" type="button" data-add-offer>Add offer draft</button>
+            </div>
+            <div class="admin-layout">
+              <section class="admin-card">
+                <div class="admin-table-wrap">
+                  <table class="admin-table">
+                    <thead><tr><th>Offer</th><th>Price</th><th>Status</th><th>Priority</th><th></th></tr></thead>
+                    <tbody data-offer-table></tbody>
+                  </table>
+                </div>
+              </section>
+              <aside class="admin-card admin-editor">
+                <p class="admin-eyebrow">Offer editor</p>
+                <label>Title<input type="text" data-offer-field="title"></label>
+                <label>Category<input type="text" data-offer-field="category"></label>
+                <label>Display price<input type="text" data-offer-field="price"></label>
+                <label>Short description<textarea rows="4" data-offer-field="description"></textarea></label>
+                <label>Image file<select data-offer-field="image"></select></label>
+                <label>Status<select data-offer-field="status"><option>Published</option><option>Draft</option><option>Hidden</option></select></label>
+                <button class="admin-button admin-button-primary" type="button" data-save-offer>Save offer draft</button>
+                <p class="admin-help">Future CMS action: write this card into <code>assets/data/offers.json</code> and rebuild the homepage.</p>
+              </aside>
+            </div>
+          </section>
+
+          <section class="admin-panel" id="prices" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Treatment menu</p>
+                <h2>Prices and service groups</h2>
+                <p>Keep the price cards, modal rows, consultation notes and instalment wording aligned with the clinic price list.</p>
+              </div>
+              <button class="admin-button admin-button-primary" type="button" data-add-price-group>Add group draft</button>
+            </div>
+            <div class="admin-grid admin-grid-3" data-price-groups></div>
+            <section class="admin-card">
+              <div class="admin-card-head">
+                <div><p class="admin-eyebrow">Selected group</p><h3 data-price-editor-title>Laser treatments</h3></div>
+                <button class="admin-button admin-button-secondary" type="button" data-add-price-row>Add row</button>
+              </div>
+              <div class="price-row-editor" data-price-row-editor></div>
+              <p class="admin-help">Future CMS action: save as structured treatment and price JSON. Square remains the source of final paid booking items.</p>
+            </section>
+          </section>
+
+          <section class="admin-panel" id="reviews" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Reputation</p>
+                <h2>Reviews queue</h2>
+                <p>Approve what appears on the homepage, feature the strongest reviews, and prepare for Google Business Profile sync.</p>
+              </div>
+              <div class="admin-actions-inline">
+                <button class="admin-button admin-button-secondary" type="button" data-sync-google>Sync Google placeholder</button>
+                <button class="admin-button admin-button-primary" type="button" data-add-review>Add manual review</button>
+              </div>
+            </div>
+            <div class="review-controls">
+              <label>Filter<select data-review-filter><option value="all">All</option><option value="approved">Approved</option><option value="featured">Featured</option><option value="pending">Pending</option><option value="hidden">Hidden</option></select></label>
+              <p>Live Google integration should save imported reviews as <strong>pending</strong> until approved.</p>
+            </div>
+            <div class="admin-review-list" data-review-list></div>
+          </section>
+
+          <section class="admin-panel" id="media" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Assets</p>
+                <h2>Media and gallery</h2>
+                <p>Track local images, decide what appears in offers or gallery, and prepare for future upload handling.</p>
+              </div>
+              <button class="admin-button admin-button-secondary" type="button" data-demo-upload>Upload placeholder</button>
+            </div>
+            <div class="media-grid" data-media-grid></div>
+          </section>
+
+          <section class="admin-panel" id="content" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Pages</p>
+                <h2>Website content controls</h2>
+                <p>Edit key public content areas without touching code once the CMS layer is wired.</p>
+              </div>
+            </div>
+            <div class="admin-grid admin-grid-2">
+              <section class="admin-card admin-editor">
+                <p class="admin-eyebrow">Homepage hero</p>
+                <label>Headline<textarea rows="3" data-content-field="heroTitle">Advanced skin, laser & body treatments</textarea></label>
+                <label>Supporting text<textarea rows="4" data-content-field="heroText">Laser treatments, electrolysis, Endospheres therapy, PRP, boosters, facials, peels and advanced skin plans shaped around your goals with Iulia.</textarea></label>
+                <button class="admin-button admin-button-primary" type="button" data-save-content>Save page draft</button>
+              </section>
+              <section class="admin-card admin-editor">
+                <p class="admin-eyebrow">Clinic details</p>
+                <label>Phone<input type="text" data-content-field="phone" value="07832839298"></label>
+                <label>Email<input type="email" data-content-field="email" value="info@lumidermaesthetics.co.uk"></label>
+                <label>Address<textarea rows="3" data-content-field="address">Unit 41 Skylines Village, Limeharbour, London, E14 9TS</textarea></label>
+                <label>Instagram<input type="url" data-content-field="instagram" value="https://www.instagram.com/lumi.derm.aesthetic/"></label>
+              </section>
+              <section class="admin-card">
+                <p class="admin-eyebrow">Legal</p>
+                <h3>Policy status</h3>
+                <ul class="admin-status-list">
+                  <li><span>Privacy Policy</span><strong>Needs solicitor/client approval</strong></li>
+                  <li><span>Terms & booking policy</span><strong>Needs Square cancellation rules</strong></li>
+                  <li><span>Cookie Policy</span><strong>Needs final analytics/iframe review</strong></li>
+                </ul>
+              </section>
+              <section class="admin-card">
+                <p class="admin-eyebrow">SEO</p>
+                <h3>Editable fields later</h3>
+                <ul class="admin-status-list">
+                  <li><span>Page titles</span><strong>CMS field</strong></li>
+                  <li><span>Meta descriptions</span><strong>CMS field</strong></li>
+                  <li><span>Schema opening hours</span><strong>CMS field</strong></li>
+                </ul>
+              </section>
+            </div>
+          </section>
+
+          <section class="admin-panel" id="clients" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Square first</p>
+                <h2>Clients, booking and marketing</h2>
+                <p>Customer records, payments and marketing should live in Square unless the business later needs a custom database.</p>
+              </div>
+            </div>
+            <div class="admin-grid admin-grid-3">
+              <article class="admin-card">
+                <p class="admin-eyebrow">Bookings</p>
+                <h3>Square Appointments</h3>
+                <p>Manage calendar, services, staff availability, deposits/full payments, reminders and cancellations in Square.</p>
+                <a class="admin-button admin-button-secondary" href="https://squareup.com/dashboard" target="_blank" rel="noopener">Open Square</a>
+              </article>
+              <article class="admin-card">
+                <p class="admin-eyebrow">Customers</p>
+                <h3>Customer Directory</h3>
+                <p>Use Square as the client CRM for booked clients, payment history and contact preferences.</p>
+                <button class="admin-button admin-button-secondary" type="button" data-admin-toast="Customer export would come from Square.">Export plan</button>
+              </article>
+              <article class="admin-card">
+                <p class="admin-eyebrow">Marketing</p>
+                <h3>Email and SMS campaigns</h3>
+                <p>Use Square Marketing or a connected platform for offers, birthdays, win-back and loyalty campaigns.</p>
+                <button class="admin-button admin-button-secondary" type="button" data-admin-toast="Marketing sync endpoint can be added after consent wording is approved.">Campaign notes</button>
+              </article>
+            </div>
+          </section>
+
+          <section class="admin-panel" id="settings" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Platform</p>
+                <h2>Settings and integrations</h2>
+                <p>Operational controls for the next production admin build.</p>
+              </div>
+            </div>
+            <div class="admin-grid admin-grid-2">
+              <section class="admin-card">
+                <h3>Integration checklist</h3>
+                <ul class="admin-status-list">
+                  <li><span>Cloudflare Access</span><strong>Required before use</strong></li>
+                  <li><span>Sveltia CMS + GitHub OAuth</span><strong>Recommended for content editing</strong></li>
+                  <li><span>Google Business Profile reviews</span><strong>Optional API sync</strong></li>
+                  <li><span>Square Appointments</span><strong>Current booking/payment source</strong></li>
+                  <li><span>Cloudflare Web Analytics</span><strong>Recommended</strong></li>
+                </ul>
+              </section>
+              <section class="admin-card">
+                <h3>Publishing model</h3>
+                <p>This static admin prototype saves drafts in the browser. Production should either:</p>
+                <ol class="admin-steps compact">
+                  <li><strong>CMS route</strong><span>Commit content JSON to GitHub, then Cloudflare redeploys.</span></li>
+                  <li><strong>API route</strong><span>Save approved content to D1/R2 through protected Workers endpoints.</span></li>
+                </ol>
+              </section>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
+    <script src="admin.js"></script>
+  </body>
+</html>
