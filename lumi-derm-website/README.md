@@ -36,6 +36,7 @@ legal/GDPR steps. Last updated during the Square + Cloudflare go-live build.
   "how it works", secure-payment note). Every "Book" CTA points here.
 - **Migrated to `.com`** — all canonical/OG/schema/sitemap URLs; emails kept on `.co.uk`.
 - **Cloudflare deploy config** (`wrangler.jsonc`), `.gitignore`.
+- Latest deploy trigger: admin route smoke update.
 - Legal page shells exist: `privacy.html`, `terms.html`, `cookies.html`, `policies.html`
   (⚠ still placeholder copy — see §6).
 
