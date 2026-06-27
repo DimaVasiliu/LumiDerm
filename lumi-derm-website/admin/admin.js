@@ -51,27 +51,54 @@ let selectedCampaignIndex = -1;
 
 const toastRegion = document.querySelector("[data-admin-toast-region]");
 
-document.addEventListener("DOMContentLoaded", initGate);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initGate);
+} else {
+  initGate();
+}
 
 /* ---------------- Gate ---------------- */
+function reveal(gate, shell) {
+  gate.hidden = true;
+  shell.hidden = false;
+  try { runApp(); console.log("[admin] app loaded"); }
+  catch (err) { console.error("[admin] app init error (still unlocked):", err); }
+}
+
 function initGate() {
+  console.log("[admin] initGate running, readyState:", document.readyState);
   const gate = document.querySelector("[data-admin-gate]");
   const shell = document.querySelector("[data-admin-shell]");
+  if (!gate || !shell) { console.error("[admin] gate or shell element not found"); return; }
+
   if (sessionStorage.getItem(UNLOCK_KEY) === "1") {
-    gate.hidden = true; shell.hidden = false; runApp(); return;
+    console.log("[admin] session already unlocked");
+    reveal(gate, shell);
+    return;
   }
-  gate.hidden = false; shell.hidden = true;
-  document.querySelector("[data-gate-form]").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const input = document.querySelector("[data-gate-input]");
+  gate.hidden = false;
+  shell.hidden = true;
+
+  const input = document.querySelector("[data-gate-input]");
+  function tryUnlock() {
     const pass = localStorage.getItem(PASS_KEY) || DEFAULT_PASS;
-    if (input.value.trim().toLowerCase() === pass.trim().toLowerCase()) {
+    const entered = (input?.value || "").trim().toLowerCase();
+    console.log("[admin] unlock attempt — match:", entered === pass.trim().toLowerCase());
+    if (entered === pass.trim().toLowerCase()) {
       sessionStorage.setItem(UNLOCK_KEY, "1");
-      gate.hidden = true; shell.hidden = false; runApp();
+      reveal(gate, shell);
     } else {
-      input.value = ""; input.focus(); toast("Incorrect passcode.");
+      if (input) { input.value = ""; input.focus(); }
+      toast("Incorrect passcode.");
     }
-  });
+  }
+
+  const btn = document.querySelector("[data-gate-unlock]");
+  const form = document.querySelector("[data-gate-form]");
+  console.log("[admin] gate elements — button:", !!btn, "form:", !!form, "input:", !!input);
+  btn?.addEventListener("click", (e) => { e.preventDefault(); tryUnlock(); });
+  form?.addEventListener("submit", (e) => { e.preventDefault(); tryUnlock(); });
+  input?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); tryUnlock(); } });
 }
 
 function runApp() {
