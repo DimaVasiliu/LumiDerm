@@ -825,3 +825,7 @@ code {
 @media (min-width: 720px) {
   .field-pair { grid-template-columns: 1fr 1fr; }
 }
+
+/* Make the [hidden] attribute actually hide the gate/shell (overrides display:grid) */
+.admin-gate[hidden],
+.admin-shell[hidden] { display: none !important; }
