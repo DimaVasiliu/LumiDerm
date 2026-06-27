@@ -65,7 +65,7 @@ function initGate() {
     e.preventDefault();
     const input = document.querySelector("[data-gate-input]");
     const pass = localStorage.getItem(PASS_KEY) || DEFAULT_PASS;
-    if (input.value === pass) {
+    if (input.value.trim().toLowerCase() === pass.trim().toLowerCase()) {
       sessionStorage.setItem(UNLOCK_KEY, "1");
       gate.hidden = true; shell.hidden = false; runApp();
     } else {
