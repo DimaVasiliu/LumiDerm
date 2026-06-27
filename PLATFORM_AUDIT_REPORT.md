@@ -21,7 +21,7 @@ Current data capture is minimal:
 
 ## Main Recommendation
 
-Use Cloudflare for hosting and backend infrastructure, but do not use R2 as the customer database.
+Use Cloudflare for hosting and backend infrastructure, but do not use R2 as the customer database. Trigger Cloudflare
 
 Recommended stack:
 
