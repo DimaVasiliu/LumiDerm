@@ -16,8 +16,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260620-cells">
-    <link rel="stylesheet" href="css/responsive.css?v=20260620-cells">
+    <link rel="stylesheet" href="css/style.css?v=20260628-stabilise">
+    <link rel="stylesheet" href="css/responsive.css?v=20260628-stabilise">
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -40,7 +40,7 @@
       }
     </script>
   </head>
-  <body>
+  <body><a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="site-shell">
       <header class="site-header" data-header>
         <div class="container nav-wrap">
@@ -62,7 +62,7 @@
         </div>
       </header>
 
-      <main>
+      <main tabindex="-1" id="main-content">
         <section class="hero simple-hero" id="home">
           <div class="container">
             <div class="hero-banner">
@@ -95,7 +95,7 @@
               <div class="section-header">
                 <p class="eyebrow">Treatments &amp; offers</p>
                 <h2>Choose your glow step</h2>
-                <p>A focused menu of advanced laser, skin, body and beauty treatments ready to refine with final clinic pricing.</p>
+                <p>Explore the current menu of laser, skin, body and beauty treatments.</p>
               </div>
               <div class="offers-nav" aria-label="Offer carousel controls">
                 <button class="carousel-button" type="button" data-offers-prev aria-label="Previous offers">‹</button>
@@ -727,12 +727,16 @@
                   <li><span>Sunday</span>Closed</li>
                 </ul>
               </div>
-              <div class="map-panel reveal" data-reveal>
-                <iframe
-                  title="Map to Lumi Derm Aesthetics at Skylines Village"
-                  loading="lazy"
-                  referrerpolicy="no-referrer-when-downgrade"
-                  src="https://www.google.com/maps?q=Unit%2041%20Skylines%20Village%20Limeharbour%20London%20E14%209TS&output=embed"></iframe>
+              <div class="map-panel consent-embed reveal" data-reveal data-consent-embed data-provider="google-maps" data-title="Map to Lumi Derm Aesthetics at Skylines Village" data-src="https://www.google.com/maps?q=Unit%2041%20Skylines%20Village%20Limeharbour%20London%20E14%209TS&amp;output=embed">
+                <div class="consent-embed-placeholder">
+                  <p class="eyebrow">Google Maps</p>
+                  <h3>Load the interactive map</h3>
+                  <p class="consent-embed-description">Google Maps is optional and may set its own cookies after loading.</p>
+                  <div class="consent-embed-actions">
+                    <button class="btn btn-primary" type="button" data-load-consent-embed>Load map once</button>
+                    <a class="btn btn-secondary" href="https://maps.google.com/?q=Unit%2041%20Skylines%20Village%20Limeharbour%20London%20E14%209TS" target="_blank" rel="noopener">Open directions</a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -745,10 +749,10 @@
                 <p class="eyebrow">Client feedback</p>
                 <h2>Trusted by Lumi Derm clients</h2>
               </div>
-              <div class="review-strip-meta" data-reviews-summary aria-label="Rated 5.0 out of 5 from 43 client reviews">
+              <div class="review-strip-meta" data-reviews-summary aria-label="Rated 5.0 out of 5 from 15 reviews in this feed">
                 <strong>5.0</strong>
                 <span aria-hidden="true">★★★★★</span>
-                <small>43 client reviews</small>
+                <small>15 reviews in this feed</small>
               </div>
               <p class="review-strip-quote">“Professional, friendly and calm care in a clean studio.”</p>
               <button class="btn btn-secondary review-modal-open" type="button" data-review-modal-open>Read reviews</button>
@@ -763,7 +767,7 @@
             <div class="review-modal-header">
               <p class="eyebrow">Client feedback</p>
               <h2 id="review-modal-title">Client reviews</h2>
-              <p>Real appointment feedback from Lumi Derm Aesthetics clients.</p>
+              <p>Client feedback currently held in the Lumi Derm review feed.</p>
             </div>
             <div class="reviews-grid reviews-grid-expanded" data-reviews-grid data-reviews-source="assets/data/reviews.json" aria-live="polite"></div>
           </div>
@@ -791,12 +795,10 @@
               <div><h3>Legal</h3><ul><li><a href="pages/policies.html">Policies</a></li><li><a href="pages/privacy.html">Privacy</a></li><li><a href="pages/terms.html">Terms</a></li><li><a href="pages/cookies.html">Cookies</a></li></ul></div>
             </div>
           </div>
-          <div class="footer-bottom">© 2026 Lumi Derm Aesthetics. All rights reserved.</div>
+          <div class="footer-bottom"><button class="cookie-settings-link" type="button" data-cookie-settings>Cookie settings</button><span>© 2026 Lumi Derm Aesthetics. All rights reserved.</span></div>
         </div>
       </footer>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-    <script src="js/main.js?v=20260620-cells"></script>
+    <script src="js/main.js?v=20260628-stabilise"></script>
   </body>
 </html>

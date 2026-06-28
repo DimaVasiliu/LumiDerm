@@ -1,9 +1,9 @@
 {
   "summary": {
     "rating": "5.0",
-    "count": 43,
-    "label": "Client reviews",
-    "note": "Feedback currently imported from verified client sources. Future Google reviews can be merged into this feed through the approved API."
+    "count": 15,
+    "label": "Reviews in this feed",
+    "note": "The count and rating describe only the records in this file. Source provenance remains subject to clinic verification."
   },
   "reviews": [
     {
@@ -11,7 +11,7 @@
       "initial": "E",
       "rating": 5,
       "treatment": "Lymphatic Drainage",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "Iulia is highly experienced and I have complete confidence in her expertise. The studio is clean, comfortable, and fully equipped to ensure a great experience and quality treatment. I would highly recommend her."
     },
     {
@@ -19,7 +19,7 @@
       "initial": "T",
       "rating": 5,
       "treatment": "Cellulite Treatment",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "Iulia is love from the very first visit. Kind, attentive, with truly magical hands. After her treatments you feel light, happy, and full of energy. Her facial treatments are simply amazing, with a cozy space, calming atmosphere, and genuine care."
     },
     {
@@ -27,7 +27,7 @@
       "initial": "N",
       "rating": 5,
       "treatment": "Lash Lift",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "I was slightly late but Iulia was accommodating and efficient, so we finished the procedure on time. I love the result!"
     },
     {
@@ -35,7 +35,7 @@
       "initial": "M",
       "rating": 5,
       "treatment": "Beauty Treatments",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "Yulia is a really professional and caring beauty therapist. She always gives good advice based on your needs. I have been going to her for many years now and can definitely recommend her services."
     },
     {
@@ -43,7 +43,7 @@
       "initial": "A",
       "rating": 5,
       "treatment": "Laser Hair Removal",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "Lovely and clean, and the treatment went really well."
     },
     {
@@ -51,7 +51,7 @@
       "initial": "F",
       "rating": 5,
       "treatment": "Electrolysis",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "Iulia is highly professional, skilled, and very friendly."
     },
     {
@@ -59,7 +59,7 @@
       "initial": "A",
       "rating": 5,
       "treatment": "Electrolysis",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "Professional, friendly therapist. Nice atmosphere."
     },
     {
@@ -67,7 +67,7 @@
       "initial": "N",
       "rating": 5,
       "treatment": "Cellulite Treatment",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "Exceptional service, thank you!"
     },
     {
@@ -75,7 +75,7 @@
       "initial": "A",
       "rating": 5,
       "treatment": "Laser Hair Removal",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "Fantastic experience with Iulia."
     },
     {
@@ -83,7 +83,7 @@
       "initial": "A",
       "rating": 5,
       "treatment": "Electrolysis",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "Brilliant."
     },
     {
@@ -91,7 +91,7 @@
       "initial": "R",
       "rating": 5,
       "treatment": "Hollywood Waxing",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "A welcoming visit with a comfortable experience and clear care throughout the appointment."
     },
     {
@@ -99,7 +99,7 @@
       "initial": "A",
       "rating": 5,
       "treatment": "Electrolysis",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "A perfect appointment with careful treatment and a calm finish."
     },
     {
@@ -107,7 +107,7 @@
       "initial": "C",
       "rating": 5,
       "treatment": "Electrolysis",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "Excellent service in a friendly, professional studio."
     },
     {
@@ -115,7 +115,7 @@
       "initial": "S",
       "rating": 5,
       "treatment": "Laser Hair Removal",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "Careful laser treatment with a reassuring appointment and smooth experience."
     },
     {
@@ -123,7 +123,7 @@
       "initial": "E",
       "rating": 5,
       "treatment": "Lymphatic Drainage",
-      "source": "Verified client",
+      "source": "Client feedback",
       "text": "A professional visit with a clean studio, comfortable setting, and confident care."
     }
   ]

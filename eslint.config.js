@@ -26,6 +26,12 @@ export default tseslint.config(
       sourceType: 'module',
     },
   },
+  {
+    files: ['scripts/test-browser.mjs'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
+    },
+  },
   ...tseslint.configs.recommended.map((config) => ({
     ...config,
     files: ['worker/**/*.ts', 'src/**/*.ts', 'test/**/*.ts'],

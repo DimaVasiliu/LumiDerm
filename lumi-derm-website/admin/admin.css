@@ -762,7 +762,14 @@ code {
   text-align: center;
 }
 .admin-gate-card .admin-logo { margin: 0 auto; }
-.admin-gate-card h1 { font-size: 1.7rem; }
+
+.admin-gate-title {
+  margin: 0;
+  font-family: var(--admin-heading);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
 .admin-gate-card label { display: grid; gap: 0.4rem; text-align: left; font-size: 0.76rem; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; color: var(--admin-accent-dark); }
 .admin-gate-card input { border: 1px solid rgba(68, 52, 49, 0.16); border-radius: 14px; padding: 0.8rem 0.9rem; }
 .admin-gate-card small { color: var(--admin-muted); font-size: 0.78rem; }

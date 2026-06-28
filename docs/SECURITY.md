@@ -8,10 +8,11 @@
   subscriber, consultation, or health data must not be entered.
 - There is no server-side API, Access JWT verification, role enforcement, CSRF control, audit log,
   rate limit, or database.
-- Square booking and Google Maps iframes are loaded by public HTML before a meaningful optional
-  consent decision.
+- Square booking and Google Maps are blocked until a versioned external-media consent decision or an
+  explicit one-time load action. Withdrawing permission unloads either iframe.
 - Provider secrets are not required by the current static deployment and none should be added.
-- Production response security headers have not yet been established in repository code.
+- Repository security and cache headers are defined in `_headers` and verified with Wrangler;
+  production verification remains required after an explicitly approved deployment.
 
 Cloudflare Access protection is a launch blocker and is tracked in `MANUAL_ACTIONS_REQUIRED.md`.
 
@@ -72,10 +73,10 @@ bodies, tokens, complete customer records, and unnecessary personal identifiers.
 
 ## Security headers target
 
-Phase 1 will add and test a resource-specific Content Security Policy,
-`X-Content-Type-Options: nosniff`, a restrictive `Referrer-Policy`, `Permissions-Policy`, and
-appropriate cache controls. HSTS requires production-domain confirmation before enabling. CSP must
-not be weakened with broad wildcards merely to make third-party embeds work.
+Phase 1 added and locally tested a resource-specific Content Security Policy,
+`X-Content-Type-Options: nosniff`, restrictive `Referrer-Policy`, `Permissions-Policy`, HSTS and
+appropriate cache controls. CSP uses retained provider origins rather than broad wildcards.
+`CF-HEADERS-001` tracks the required production verification after an approved deployment.
 
 ## Incident outline
 

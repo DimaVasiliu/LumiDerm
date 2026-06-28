@@ -3,19 +3,46 @@
   xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://lumidermaesthetics.com/</loc>
+    <lastmod>2026-06-28</lastmod>
     <image:image>
       <image:loc>https://lumidermaesthetics.com/assets/icons/lumi-derm-logo.png</image:loc>
       <image:title>Lumi Derm Aesthetics logo</image:title>
     </image:image>
   </url>
-  <url><loc>https://lumidermaesthetics.com/pages/services.html</loc></url>
-  <url><loc>https://lumidermaesthetics.com/pages/treatment.html</loc></url>
-  <url><loc>https://lumidermaesthetics.com/pages/booking.html</loc></url>
-  <url><loc>https://lumidermaesthetics.com/pages/gallery.html</loc></url>
-  <url><loc>https://lumidermaesthetics.com/pages/about.html</loc></url>
-  <url><loc>https://lumidermaesthetics.com/pages/contact.html</loc></url>
-  <url><loc>https://lumidermaesthetics.com/pages/policies.html</loc></url>
-  <url><loc>https://lumidermaesthetics.com/pages/privacy.html</loc></url>
-  <url><loc>https://lumidermaesthetics.com/pages/terms.html</loc></url>
-  <url><loc>https://lumidermaesthetics.com/pages/cookies.html</loc></url>
+  <url>
+    <loc>https://lumidermaesthetics.com/pages/services.html</loc>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+  <url>
+    <loc>https://lumidermaesthetics.com/pages/booking.html</loc>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+  <url>
+    <loc>https://lumidermaesthetics.com/pages/gallery.html</loc>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+  <url>
+    <loc>https://lumidermaesthetics.com/pages/about.html</loc>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+  <url>
+    <loc>https://lumidermaesthetics.com/pages/contact.html</loc>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+  <url>
+    <loc>https://lumidermaesthetics.com/pages/policies.html</loc>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+  <url>
+    <loc>https://lumidermaesthetics.com/pages/privacy.html</loc>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+  <url>
+    <loc>https://lumidermaesthetics.com/pages/terms.html</loc>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+  <url>
+    <loc>https://lumidermaesthetics.com/pages/cookies.html</loc>
+    <lastmod>2026-06-28</lastmod>
+  </url>
 </urlset>

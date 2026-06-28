@@ -7,7 +7,7 @@
 - Static asset root: `lumi-derm-website/`
 - Wrangler configuration: `wrangler.jsonc`
 - Production branch: `main`
-- Current repository baseline: commit `9a18550`
+- Phase 0 implementation baseline: commit `5159f48`
 
 The audit reports that Cloudflare's Git integration is disconnected. Until the action in
 `MANUAL_ACTIONS_REQUIRED.md` is completed and verified, pushes do not have a trusted automatic
@@ -17,17 +17,19 @@ deployment path. Do not deploy or push without explicit owner approval.
 
 ```bash
 npm ci
+npm run sitemap
 npm run check:js
 npm run check:site
 npm test
 npm run lint
 npm run format:check
-npm run serve
+npm run dev
+npm run test:browser
 ```
 
-Baseline integrity/lint/format failures are recorded in `IMPLEMENTATION_STATUS.md`; they must not be
-suppressed. The site can also be served directly from the static directory, but `npm run serve` is
-the canonical repository command.
+The Phase 1 integrity and JavaScript gates pass. CSS lint and formatting baselines are recorded in
+`IMPLEMENTATION_STATUS.md`; they must not be suppressed. Use Wrangler for header/custom-404 checks;
+`npm run serve` remains available for simple static inspection.
 
 ## Deployment (approval required)
 

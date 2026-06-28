@@ -93,7 +93,7 @@ export async function auditSite({ siteRoot, canonicalOrigin = DEFAULT_ORIGIN }) 
     }
 
     const h1Count = [...source.matchAll(/<h1\b/gi)].length;
-    if (h1Count !== 1) {
+    if (h1Count !== 1 && !refresh) {
       issues.push(issue('H1_COUNT', displayFile, `Expected exactly one h1; found ${h1Count}`));
     }
   }

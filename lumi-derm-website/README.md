@@ -1,5 +1,8 @@
 # Lumi Derm Aesthetics — Website Status & Roadmap
 
+> Historical build notes. The current production plan and architecture are maintained in the
+> repository-root implementation reports and `docs/` files.
+
 Living audit of the project: what exists, the architecture, what's next, and the
 legal/GDPR steps. Last updated during the Square + Cloudflare go-live build.
 
@@ -9,7 +12,7 @@ legal/GDPR steps. Last updated during the Square + Cloudflare go-live build.
 
 - **Type:** Static site — semantic HTML5, modern CSS, vanilla JS. No build step.
 - **Live at:** https://lumidermaesthetics.com (apex + www).
-- **Repo:** GitHub `DimaVasiliu/LumiDerm` → auto-deploys to Cloudflare on push to `main`.
+- **Repo:** GitHub `DimaVasiliu/LumiDerm`; Cloudflare Git builds are currently reported disconnected and must be re-verified before relying on push-to-deploy.
 - **Payments:** **Square** (NOT Stripe). **Booking:** **Square Appointments** (we run our
   own booking; **Treatwell is no longer used for booking** — only legacy reviews are shown).
 
@@ -19,7 +22,7 @@ legal/GDPR steps. Last updated during the Square + Cloudflare go-live build.
 |------|---------|-------|
 | Hosting/CDN | Cloudflare (Worker static assets) | `wrangler.jsonc` serves `./lumi-derm-website` at the domain root. Free plan. |
 | Domain | lumidermaesthetics.com | Bought at registrar, nameservers on Cloudflare. Apex + `www` attached to the Worker. |
-| Booking + payment | Square Appointments | Embedded iframe on `pages/booking.html`, set to **full payment online**. |
+| Booking + payment | Square Appointments | Consent-controlled embed and new-tab fallback on `pages/booking.html`; payment/deposit settings require owner verification. |
 | Email (inbox) | info@lumidermaesthetics.**co.uk** | Namecheap forwarding. Note: email is `.co.uk`, website is `.com` (intentional). |
 | Reviews | Treatwell (display only) | Static cards on the homepage. |
 

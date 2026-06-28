@@ -8,24 +8,24 @@
 
 ## Phase summary
 
-| Phase                                        | Status                                   | Commit                                                | Notes                                                                                              |
-| -------------------------------------------- | ---------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| 0 — Baseline, documentation and safety rails | COMPLETE WITH RECORDED BASELINE FAILURES | `chore: establish production implementation baseline` | Tooling is installed and locked; existing integrity, lint, and formatting findings remain visible. |
-| 1 — Production stabilisation                 | NOT STARTED                              | —                                                     | Recommended next phase after reviewing Phase 0 evidence.                                           |
-| 2 — Worker foundation                        | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 3 — D1 content/server rendering              | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 4 — Access-protected admin API               | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 5 — Owner admin UX                           | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 6 — R2 media                                 | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 7 — Public site completion                   | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 8 — Square integration                       | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 9 — Google reviews                           | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 10 — Marketing/consent                       | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 11 — Legal framework                         | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 12 — SEO/analytics                           | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 13 — Accessibility/performance/security      | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 14 — CI/CD/operations                        | NOT STARTED                              | —                                                     | —                                                                                                  |
-| 15 — Production acceptance                   | NOT STARTED                              | —                                                     | —                                                                                                  |
+| Phase                                        | Status                                   | Commit                                        | Notes                                                                                              |
+| -------------------------------------------- | ---------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| 0 — Baseline, documentation and safety rails | COMPLETE WITH RECORDED BASELINE FAILURES | `5159f48`                                     | Tooling is installed and locked; existing lint and formatting findings remain visible.             |
+| 1 — Production stabilisation                 | COMPLETE — MANUAL LAUNCH ACTIONS REMAIN  | `fix: stabilise public production experience` | Repository work is complete; provider catalogue, Access, Git and live-header checks remain manual. |
+| 2 — Worker foundation                        | NOT STARTED                              | —                                             | —                                                                                                  |
+| 3 — D1 content/server rendering              | NOT STARTED                              | —                                             | —                                                                                                  |
+| 4 — Access-protected admin API               | NOT STARTED                              | —                                             | —                                                                                                  |
+| 5 — Owner admin UX                           | NOT STARTED                              | —                                             | —                                                                                                  |
+| 6 — R2 media                                 | NOT STARTED                              | —                                             | —                                                                                                  |
+| 7 — Public site completion                   | NOT STARTED                              | —                                             | —                                                                                                  |
+| 8 — Square integration                       | NOT STARTED                              | —                                             | —                                                                                                  |
+| 9 — Google reviews                           | NOT STARTED                              | —                                             | —                                                                                                  |
+| 10 — Marketing/consent                       | NOT STARTED                              | —                                             | —                                                                                                  |
+| 11 — Legal framework                         | NOT STARTED                              | —                                             | —                                                                                                  |
+| 12 — SEO/analytics                           | NOT STARTED                              | —                                             | —                                                                                                  |
+| 13 — Accessibility/performance/security      | NOT STARTED                              | —                                             | —                                                                                                  |
+| 14 — CI/CD/operations                        | NOT STARTED                              | —                                             | —                                                                                                  |
+| 15 — Production acceptance                   | NOT STARTED                              | —                                             | —                                                                                                  |
 
 ## Phase 0 — Baseline, documentation and safety rails
 
@@ -103,3 +103,64 @@ in the Phase 0 commit unless the owner separately requests that scope.
 Phase 1 — Production stabilisation. Begin with repository-side sitemap, redirect, cookie/embed,
 review-count, accessibility, security-header, and caching work. Cloudflare Access remains an
 external launch blocker until `CF-ACCESS-001` is verified.
+
+## Phase 1 — Production stabilisation
+
+**Execution date:** 28 June 2026
+
+**Status:** Repository implementation complete; external launch verification remains
+
+### Delivered
+
+- [x] Preserved the approved homepage hero and visual system while normalising skip links, main
+      landmarks, navigation labels, cache-busted assets and permanent cookie-settings controls.
+- [x] Replaced eager Square and Google iframes with versioned, external-media consent controls,
+      one-time loading, persisted permission and immediate unload after withdrawal.
+- [x] Corrected the local review total to the 15 records actually supplied and removed unsupported
+      verification language; no external review count is claimed.
+- [x] Made offer and review carousels keyboard-operable, reduced-motion aware, pausable and safe for
+      assistive technology; cloned slides are inert and excluded from focus order.
+- [x] Added focus management, Escape handling, focus traps and restoration for navigation and modal
+      interactions.
+- [x] Generated a canonical 10-route sitemap with `lastmod`, removed the redirect route, corrected
+      `robots.txt`, and added a branded custom HTTP 404 page.
+- [x] Added resource-specific security/cache headers and Wrangler static-asset 404 configuration.
+- [x] Removed the GSAP CDN dependency and replaced reveal behaviour with native browser APIs.
+- [x] Removed unsupported booking-payment and analytics claims without inventing replacement
+      business information.
+- [x] Added static regression tests and a Playwright Core browser matrix using the installed Chrome.
+- [x] Did not deploy or push.
+
+### Test evidence
+
+| Command/check          | Result            | Evidence                                                                                                                                                                                                         |
+| ---------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run sitemap`      | PASS              | Generated 10 canonical entries; redirect/noindex treatment URL excluded.                                                                                                                                         |
+| `npm run check:js`     | PASS              | 10 first-party JavaScript/module files parsed successfully.                                                                                                                                                      |
+| `npm run check:site`   | PASS              | 13 HTML files passed links, fragments, IDs, alt, H1 and sitemap checks.                                                                                                                                          |
+| `npm test`             | PASS              | 8 tests passed; 0 failed.                                                                                                                                                                                        |
+| `npm run lint:js`      | PASS              | No ESLint errors or warnings.                                                                                                                                                                                    |
+| `npm run lint:css`     | RECORDED BASELINE | 826 existing style findings, exactly matching Phase 0; Phase 1 introduced no net CSS lint debt.                                                                                                                  |
+| `npm run format:check` | RECORDED BASELINE | 21 existing planning/site files remain outside Prettier format, down from 22 in Phase 0.                                                                                                                         |
+| `npm run test:browser` | PASS              | Home, services, booking and policies passed at 320, 390, 768, 1024, 1440 and 1920 px (24 page/viewport combinations), plus consent, keyboard, carousel, modal, mobile-nav, reduced-motion and custom-404 checks. |
+| Local Wrangler checks  | PASS              | Parsed all 10 header rules; HTML, CSS, JSON and admin cache policies were observed locally; nonexistent routes returned the branded page with HTTP 404.                                                          |
+| Visual review          | PASS              | Screenshots reviewed at representative mobile, tablet and desktop widths; no horizontal overflow or hero/design regression found.                                                                                |
+| `git diff --check`     | PASS              | No whitespace errors.                                                                                                                                                                                            |
+
+### Remaining manual actions/blockers
+
+- `CF-ACCESS-001` — **BLOCKING:** exact-email Cloudflare Access protection for `/admin/*`.
+- `SQUARE-CATALOG-001` — **BLOCKING:** remove the example haircut service from live booking.
+- `CF-GIT-001` — **REQUIRED BEFORE LAUNCH:** reconnect and verify Workers Builds.
+- `SQUARE-CATALOG-002` — **REQUIRED BEFORE LAUNCH:** owner-approved website/Square catalogue
+  reconciliation.
+- `SQUARE-FLOW-001` — **REQUIRED BEFORE LAUNCH:** owner-authorised booking/payment/cancellation/
+  refund tests.
+- `CF-HEADERS-001` — **REQUIRED BEFORE LAUNCH:** verify Phase 1 headers and 404 on production only
+  after an explicitly approved deployment.
+
+### Recommended next phase
+
+Phase 2 — Worker foundation. Continue repository implementation while the external Phase 1 actions
+are completed, but do not treat the site as launch-ready and do not store real admin/client data
+until the blocking Access and Square catalogue actions are verified.

@@ -107,3 +107,120 @@ instructions or supporting code is not evidence that a provider action is comple
 - **Verification:** Codex will make unauthenticated read-only requests to `/admin/` and
   `/admin/index.html` and confirm they are intercepted by Access; the owner/developer will verify
   successful authorised login and denied unauthorised login.
+
+## SQUARE-CATALOG-001 Remove the example haircut service
+
+- **Status:** BLOCKING
+- **Owner:** Iulia
+- **Service:** Square
+- **Why it is needed:** The live booking catalogue reportedly exposes `Haircut (example service)`,
+  which is not an approved Lumi Derm treatment and must not remain customer-bookable.
+- **Open:** <https://squareup.com/dashboard/items/services>
+- **Steps:**
+  1. Sign in to the Lumi Derm Square account and open **Items & services** -> **Items** -> **Service
+     library**.
+  2. Search for the exact service `Haircut (example service)` and open it.
+  3. First turn off **Online booking** for every variation/location so it is immediately removed
+     from the customer booking flow.
+  4. Confirm there are no legitimate appointments, reports or integrations that depend on this
+     example record. Then use the service action menu to delete/archive it and confirm the action.
+  5. Open **Appointments** -> **Online Booking** -> **Channels**, preview the published booking
+     site, and search every service category to confirm the haircut entry is absent.
+- **Values to enter:** none; remove only the exact example service. Do not edit a similarly named
+  real service.
+- **Return to Codex with:** confirmation that online booking is off and the non-secret service name,
+  deletion/archive status, and date checked.
+- **Never send:** Square password, access token, card/payment data, customer details, appointment
+  details, or recovery codes.
+- **Verification:** Codex will make a read-only visit to the public Square booking flow after owner
+  approval and confirm the example service is not offered. No booking will be submitted.
+
+## SQUARE-CATALOG-002 Reconcile the website and Square service catalogue
+
+- **Status:** REQUIRED BEFORE LAUNCH
+- **Owner:** Iulia
+- **Service:** Square
+- **Why it is needed:** Website prices and treatment names cannot be declared accurate until the
+  owner compares them with Square's service variations, duration, staff, location and online
+  availability.
+- **Open:** <https://squareup.com/dashboard/items/services>
+- **Steps:**
+  1. Open **Items & services** -> **Items** -> **Service library** in Square Dashboard.
+  2. Compare each website treatment/price row with the approved master list and the corresponding
+     Square service variation.
+  3. For every variation, confirm customer-facing name, fixed/variable price, duration, category,
+     assigned location, eligible team member and **Online booking** setting.
+  4. Open **Appointments** -> **Online Booking** -> **Channels** -> preview the booking site and
+     confirm only intended services are visible and bookable.
+  5. Record mismatches in a non-secret table containing website label, approved value, Square label,
+     price, duration and availability. Do not change public prices until Iulia explicitly approves
+     the corrected list.
+- **Values to enter:** only Iulia's approved names, prices, durations, location/staff assignments
+  and availability; no values may be inferred from this website.
+- **Return to Codex with:** the approved non-secret comparison table and confirmation of which value
+  is authoritative for every mismatch.
+- **Never send:** customer exports, appointment records, access tokens, passwords, card data or
+  internal payment details.
+- **Verification:** Codex will compare the supplied approved table against public HTML/JSON and, in
+  Phase 8, the read-only Square reconciliation output.
+
+## SQUARE-FLOW-001 Verify booking, payment, cancellation and refund
+
+- **Status:** REQUIRED BEFORE LAUNCH
+- **Owner:** Iulia
+- **Service:** Square
+- **Why it is needed:** The website no longer claims full prepayment because the actual Square
+  payment/cancellation configuration and end-to-end customer flow are not yet verified.
+- **Open:** <https://squareup.com/dashboard/appointments/settings/payments>
+- **Steps:**
+  1. In Square Dashboard open **Appointments** -> **Settings** -> **Payments & cancellations**.
+  2. Record the selected booking payment policy: no requirement, deposit, full prepayment or card
+     hold/no-show protection. Record the cancellation cutoff and whether clients may cancel or
+     reschedule before it.
+  3. Confirm the displayed Square policy wording matches the clinic-approved website policy. If it
+     does not, stop and obtain owner/legal wording approval before changing either system.
+  4. With an owner-approved low-value real service and payment method, complete one mobile and one
+     desktop booking from the public website. Never use the example haircut service.
+  5. Confirm the correct service, practitioner, location, duration, amount/deposit, confirmation and
+     reminder behavior.
+  6. Test owner-approved rescheduling and cancellation. If money was taken, follow Square's refund
+     flow from the cancelled appointment or **Transactions** -> payment -> **Issue refund**.
+  7. Confirm the refund status in Square and on the test payment method, then remove/anonymise test
+     notes where operationally appropriate.
+- **Values to enter:** only the clinic-approved payment/cancellation policy and an owner-authorised
+  low-value test appointment.
+- **Return to Codex with:** non-secret policy selection, cutoff, service name, device/browser, pass
+  or fail for booking/confirmation/reminder/reschedule/cancel/refund, and refund completion status.
+- **Never send:** card numbers, payment receipts containing personal data, customer data, passwords,
+  access tokens or recovery codes.
+- **Verification:** Codex will compare the reported policy with the public wording and record the
+  owner-signed test evidence; Codex will not initiate a paid booking or refund without separate
+  explicit authorisation.
+
+## CF-HEADERS-001 Verify production security and cache headers
+
+- **Status:** REQUIRED BEFORE LAUNCH
+- **Owner:** Developer
+- **Service:** Cloudflare
+- **Why it is needed:** Phase 1 headers pass in Wrangler locally but cannot be claimed live until an
+  explicitly authorised deployment is complete.
+- **Open:** <https://dash.cloudflare.com/>
+- **Steps:**
+  1. Do not deploy from this action alone. After the owner separately approves a Phase 1 deployment,
+     open **Workers & Pages** -> **lumiderm** -> **Deployments** and confirm the Phase 1 commit is
+     the active version.
+  2. Open the homepage, a CSS asset, `assets/data/reviews.json`, `/admin/`, and a nonexistent path
+     in a private browser or with a read-only header request.
+  3. Confirm the homepage has CSP, HSTS, Permissions-Policy, Referrer-Policy, X-Content-Type-Options
+     and X-Frame-Options.
+  4. Confirm HTML/data revalidate, versioned CSS/JS is immutable for one year, `/admin/` is
+     `private, no-store`, and the nonexistent path returns the branded page with HTTP 404.
+  5. Test Square and Google only after an explicit external-media choice and confirm the browser
+     reports no CSP violations for their retained origins.
+- **Values to enter:** none.
+- **Return to Codex with:** active non-secret deployment ID/commit SHA and the response
+  status/header results for each tested URL.
+- **Never send:** Cloudflare credentials, API tokens, Access JWTs/cookies, passwords or recovery
+  codes.
+- **Verification:** Codex will repeat read-only production header and consent-loading checks after
+  deployment is explicitly authorised. No deployment is authorised by this entry.

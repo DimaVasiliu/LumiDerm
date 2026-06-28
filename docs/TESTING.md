@@ -11,16 +11,26 @@
 | Command                   | Purpose                                                                                                          | Expected use               |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `npm run serve`           | Serve `lumi-derm-website/` at `http://127.0.0.1:8080`                                                            | Local visual/manual checks |
+| `npm run dev`             | Serve through Wrangler at `http://127.0.0.1:8787` with `_headers` and custom 404 behaviour                       | Worker-equivalent checks   |
+| `npm run sitemap`         | Regenerate canonical sitemap entries and `lastmod` values                                                        | After public route changes |
 | `PORT=8090 npm run serve` | Serve on another port                                                                                            | Parallel/local automation  |
 | `npm run check:js`        | Parse all first-party JavaScript with the current Node runtime                                                   | Fast syntax gate           |
 | `npm run check:site`      | Check local `href`/`src`, fragments, duplicate IDs, image alt attributes, one H1 per HTML page, and sitemap URLs | Static integrity gate      |
 | `npm test`                | Run Node unit tests for repository tooling                                                                       | Every change               |
+| `npm run test:browser`    | Run the Phase 1 browser matrix in installed Chrome against `npm run dev`                                         | Public UX regression gate  |
 | `npm run lint`            | Run ESLint and Stylelint                                                                                         | Code quality gate          |
 | `npm run format:check`    | Check supported source/docs with Prettier                                                                        | Formatting gate            |
 | `npm run check`           | Run syntax, site integrity, and unit tests                                                                       | Core local gate            |
 
-`npm run check:site` intentionally exits non-zero for existing defects. Do not add ignore lists to
-make the baseline green. Fix findings in the phase assigned by the implementation plan.
+`npm run check:site` is green after Phase 1. CSS lint and repository-wide formatting still expose
+the recorded legacy baselines; do not suppress those findings or mechanically restyle the approved
+design outside its assigned phase.
+
+The browser runner covers home, services, booking and policies at 320, 390, 768, 1024, 1440 and 1920
+px. It also checks custom 404 status, initial embed blocking, consent persistence/withdrawal,
+one-time booking load, skip-link focus, mobile navigation, carousel keyboard/pause behaviour, modal
+focus/Escape handling and reduced motion. Screenshots are written to
+`/private/tmp/lumiderm-phase1-screenshots` and must be visually reviewed.
 
 ## Static checker scope
 
