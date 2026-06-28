@@ -1,0 +1,5 @@
+.git/
+.wrangler/
+node_modules/
+assets/
+lumi-derm-website/assets/

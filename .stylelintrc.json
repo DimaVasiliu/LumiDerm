@@ -1,0 +1,9 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "ignoreFiles": ["assets/**", "lumi-derm-website/assets/**"],
+  "rules": {
+    "custom-property-empty-line-before": null,
+    "declaration-empty-line-before": null,
+    "selector-class-pattern": null
+  }
+}

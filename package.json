@@ -1,0 +1,30 @@
+{
+  "name": "lumiderm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "check:js": "node scripts/check-js-syntax.mjs",
+    "check:site": "node scripts/check-site.mjs",
+    "format": "prettier --write \"*.{md,json,js}\" \"docs/**/*.md\" \"scripts/**/*.mjs\" \"test/**/*.mjs\" \"lumi-derm-website/**/*.{html,css,js,json,md}\"",
+    "format:check": "prettier --check \"*.{md,json,js}\" \"docs/**/*.md\" \"scripts/**/*.mjs\" \"test/**/*.mjs\" \"lumi-derm-website/**/*.{html,css,js,json,md}\"",
+    "lint": "npm run lint:js && npm run lint:css",
+    "lint:js": "eslint eslint.config.js scripts test lumi-derm-website/js lumi-derm-website/admin/admin.js",
+    "lint:css": "stylelint \"lumi-derm-website/**/*.css\"",
+    "test": "node --test",
+    "check": "npm run check:js && npm run check:site && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.0.0",
+    "eslint": "9.0.0",
+    "globals": "16.0.0",
+    "prettier": "3.0.0",
+    "stylelint": "16.23.1",
+    "stylelint-config-standard": "38.0.0",
+    "typescript-eslint": "8.0.0"
+  }
+}
