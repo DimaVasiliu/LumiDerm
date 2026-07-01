@@ -1218,6 +1218,45 @@ body.price-modal-active {
   font-weight: 800;
 }
 
+.price-modal-notice {
+  margin: 1rem 0 0.45rem;
+  padding: 0.8rem 0.9rem;
+  border-left: 3px solid var(--color-rose-deep);
+  background: rgba(242, 216, 217, 0.28);
+  color: var(--color-charcoal);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.laser-price-group {
+  padding: 1rem 0 0.2rem;
+}
+
+.laser-price-group + .laser-price-group {
+  border-top: 1px solid var(--color-line);
+}
+
+.laser-price-group h4 {
+  color: var(--color-charcoal);
+  font-family: var(--font-heading);
+  font-size: 1.16rem;
+  line-height: 1.2;
+}
+
+.laser-price-key {
+  margin: 0.35rem 0 0.15rem;
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.laser-package-discounts .price-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.2rem;
+}
+
 .price-modal-foot {
   display: flex;
   flex-wrap: wrap;

@@ -190,6 +190,10 @@
     grid-column: auto;
   }
 
+  .laser-package-discounts .price-list {
+    grid-template-columns: 1fr;
+  }
+
   .price-modal-foot {
     justify-content: flex-start;
     padding: 0.9rem 1rem 1rem;

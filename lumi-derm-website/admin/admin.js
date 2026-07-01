@@ -18,14 +18,39 @@ const imageOptions = [
 ];
 
 const defaultOffers = [
-  { title: "Laser treatments", category: "Cynosure Elite", price: "from £45", description: "Laser hair removal, rejuvenation and vascular treatment planning.", image: "offer-laser-treatments-cynosure.webp", status: "Published", priority: 1 },
+  { title: "Laser treatments", category: "Cynosure Elite", price: "from £40", description: "Laser hair removal, rejuvenation and vascular treatment planning.", image: "offer-laser-treatments-cynosure.webp", status: "Published", priority: 1 },
   { title: "Endospheres therapy", category: "Body therapy", price: "from £50", description: "Body-focused lymphatic drainage, smoothing and contour support.", image: "offer-endospheres-therapy.webp", status: "Published", priority: 2 },
   { title: "Skin boosters", category: "Injectable skin support", price: "from £220", description: "Profhilo and polynucleotide treatment plans for hydration support.", image: "offer-skin-boosters.webp", status: "Published", priority: 3 },
   { title: "Facials & peels", category: "Skin polish", price: "from £70", description: "Deep cleansing, dermaplaning, microdermabrasion and tailored peels.", image: "offer-facials.webp", status: "Draft", priority: 4 }
 ];
 
 const defaultPriceGroups = [
-  { id: "laser", label: "Cynosure Elite", title: "Laser treatments", min: "from £10", rows: [["Laser consultation", "£10"], ["Laser hair removal", "from £45"], ["Laser rejuvenation / vascular", "consultation"]] },
+  { id: "laser", label: "Cynosure Elite", title: "Laser treatments", min: "from £40", rows: [
+    ["Hair removal — upper lip / eyebrows / nose / ears", "£40 / 1 · £35 each / 6 · £30 each / 10"],
+    ["Hair removal — chin / side of face / hair line", "£60 / 1 · £50 each / 6 · £45 each / 10"],
+    ["Hair removal — neck / jawline", "£80 / 1 · £70 each / 6 · £65 each / 10"],
+    ["Hair removal — half face / beard", "£100 / 1 · £85 each / 6 · £80 each / 10"],
+    ["Hair removal — full face", "£125 / 1 · £105 each / 6 · £95 each / 10"],
+    ["Hair removal — underarms / hands & fingers / navel line", "£60 / 1 · £50 each / 6 · £45 each / 10"],
+    ["Hair removal — chest / abdomen / half arms", "£100 / 1 · £85 each / 6 · £80 each / 10"],
+    ["Hair removal — full back / chest + abdomen / full arms", "£125 / 1 · £105 each / 6 · £95 each / 10"],
+    ["Hair removal — bikini line / peri-anal / feet & toes", "£60 / 1 · £50 each / 6 · £45 each / 10"],
+    ["Hair removal — extended bikini", "£70 / 1 · £60 each / 6 · £55 each / 10"],
+    ["Hair removal — Brazilian", "£80 / 1 · £70 each / 6 · £65 each / 10"],
+    ["Hair removal — Hollywood / buttocks", "£100 / 1 · £85 each / 6 · £80 each / 10"],
+    ["Hair removal — lower legs / thighs", "£120 / 1 · £105 each / 6 · £95 each / 10"],
+    ["Hair removal — full legs", "£150 / 1 · £130 each / 6 · £120 each / 10"],
+    ["Hair removal — full body women", "£400 / 1 · £350 each / 6 · £300 each / 10"],
+    ["Hair removal — full body men", "£450 / 1 · £375 each / 6 · £325 each / 10"],
+    ["Multi-area package discounts", "2 areas 15% · 3 areas 20% · 4 areas 25% · 5 areas 30%"],
+    ["Vascular — small area, e.g. nose", "£45 / 1 · £85 / 2 · £120 / 3"],
+    ["Vascular — medium area, e.g. face", "£80 / 1 · £150 / 2 · £210 / 3"],
+    ["Vascular — large area, e.g. leg", "£125 / 1 · £235 / 2 · £330 / 3"],
+    ["Vascular — extra-large area, e.g. both legs", "£180 / 1 · £340 / 2 · £480 / 3"],
+    ["Skin rejuvenation — face + neck", "£100 / 1 · £270 / 3"],
+    ["Skin rejuvenation — face + neck + decollete", "£130 / 1 · £330 / 3"],
+    ["Package instalments", "Available at the venue"]
+  ] },
   { id: "electrolysis", label: "Apilus", title: "Electrolysis permanent hair removal", min: "from £10", rows: [["Electrolysis consultation", "£10"], ["15 minutes", "£30"], ["30 minutes", "£50"], ["60 minutes", "£100"]] },
   { id: "boosters", label: "Injectable skin support", title: "Skin boosters", min: "from £120", rows: [["Skin boosters consultation", "£10"], ["Profhilo", "£265 / 1 session"], ["Profhilo course", "£490 / 2 sessions"], ["Polynucleotides eyes", "£220 / 1 session"]] },
   { id: "facials", label: "Facials", title: "Facials and skin polish", min: "from £70", rows: [["Facial consultation", "£10"], ["Fire & Ice by IS Clinical + LED", "£90"], ["Bespoke deep cleansing facial", "£100"], ["Microdermabrasion", "£70"]] }
