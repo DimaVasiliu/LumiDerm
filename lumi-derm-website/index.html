@@ -16,8 +16,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260710-faq4">
-    <link rel="stylesheet" href="css/responsive.css?v=20260710-faq4">
+    <link rel="stylesheet" href="css/style.css?v=20260712-hero1">
+    <link rel="stylesheet" href="css/responsive.css?v=20260712-hero1">
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -64,7 +64,9 @@
       <main tabindex="-1" id="main-content">
         <section class="hero simple-hero hero-cinematic" id="home" aria-label="Lumi Derm Aesthetics introduction">
           <div class="hero-media" aria-hidden="true">
-            <video class="hero-video" data-hero-video autoplay muted loop playsinline preload="metadata" poster="assets/images/iulia-clinic-treatment-consultation.webp"></video>
+            <video class="hero-video" data-hero-video autoplay muted loop playsinline preload="auto" poster="assets/images/iulia-clinic-treatment-consultation.webp">
+              <source src="assets/videos/lumi-derm-hero.mp4" type="video/mp4">
+            </video>
             <div class="hero-overlay"></div>
           </div>
           <div class="container hero-inner">
@@ -100,24 +102,9 @@
               <span class="hero-showcase-dots" data-hero-dots></span>
             </figure>
           </aside>
-          <!-- Hero background video: local cinematic clip with poster fallback for reduced motion. -->
-          <script>
-            (function () {
-              const HERO_VIDEO_SRC = "assets/videos/lumi-derm-hero.mp4";
-              const video = document.querySelector('[data-hero-video]');
-              const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-              // If the visitor prefers reduced motion, the poster image is shown instead.
-              if (!video || !HERO_VIDEO_SRC || reduceMotion) return;
-              const source = document.createElement('source');
-              source.src = HERO_VIDEO_SRC;
-              source.type = /\.webm$/i.test(HERO_VIDEO_SRC) ? 'video/webm' : 'video/mp4';
-              video.appendChild(source);
-              video.load();
-              const play = function () { const p = video.play(); if (p && p.catch) p.catch(function () {}); };
-              if (video.readyState >= 2) play();
-              else video.addEventListener('loadeddata', play, { once: true });
-            })();
-          </script>
+          <!-- Hero background video: local cinematic clip. The <source> is inline in the
+               <video> above so it works under the site CSP (no inline script). Reduced-motion
+               visitors have it paused to the poster frame by main.js. -->
         </section>
 
         <section class="section treatment-index-section" id="offers">
@@ -377,7 +364,7 @@
         </div>
       </footer>
     </div>
-    <script src="js/main.js?v=20260710-faq4"></script>
+    <script src="js/main.js?v=20260712-hero1"></script>
     <script src="js/chatbot.js?v=20260710-flow1"></script>
   </body>
 </html>

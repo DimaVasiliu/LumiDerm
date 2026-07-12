@@ -112,6 +112,24 @@ document.querySelectorAll("a[href^='#']").forEach((link) => {
   });
 });
 
+// Hero background video: plays via the inline <source> + autoplay attribute (CSP-safe).
+// Honour reduced-motion by pausing to the poster frame; otherwise make sure it plays.
+(function initHeroVideo() {
+  const video = document.querySelector('[data-hero-video]');
+  if (!video) return;
+  if (prefersReducedMotion) {
+    video.removeAttribute('autoplay');
+    video.pause();
+    return;
+  }
+  const play = () => {
+    const p = video.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+  };
+  if (video.readyState >= 2) play();
+  else video.addEventListener('loadeddata', play, { once: true });
+})();
+
 // FAQ — minimal question list; each answer opens in a modal
 (function initFaqModal() {
   const modal = document.querySelector('[data-faq-modal]');
