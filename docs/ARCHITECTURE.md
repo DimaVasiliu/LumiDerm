@@ -1,115 +1,82 @@
 # Lumi Derm Architecture
 
-**Baseline date:** 28 June 2026
+**Updated:** 5 July 2026
 
 **Production domain:** <https://lumidermaesthetics.com>
 
 **Worker:** `lumiderm`
 
-## Current production architecture
+## Current architecture
 
 ```text
 Browser
   |
   +-- lumidermaesthetics.com
-  |     Cloudflare Worker Static Assets
-  |       `wrangler.jsonc` -> `lumi-derm-website/`
+  |     Cloudflare Worker Static Assets -> lumi-derm-website/
   |
-  +-- Square Appointments iframe and new-tab link
-  |     appointments and payments remain in Square
+  +-- Treatwell external booking link
+  |     bookings, availability, payments and client records stay in Treatwell
   |
-  +-- Google Maps iframe
+  +-- consent-controlled Google Maps iframe
   |
-  +-- /admin/
-        static HTML/CSS/JS
-        client-side passcode + localStorage drafts only
+  +-- /admin/*
+        Cloudflare Access
+        static HTML/CSS/JS with browser-only website drafts
 ```
 
-The current Worker has no application entry point. It serves files directly from
-`lumi-derm-website/`; there is no API, database, server-side session, server-side Access token
-verification, content publishing path, webhook receiver, or media store. Public content is
-duplicated across HTML and browser JavaScript. The Square booking URL is embedded directly in
-`pages/booking.html`. The home page loads Google Maps directly. These facts describe the baseline
-and are not an approval of the current privacy or security posture.
-
-The Git repository is `DimaVasiliu/LumiDerm`, branch `main`. The audit reports that the Cloudflare
-Git integration is disconnected, so a push must not be assumed to deploy. Manual Wrangler deployment
-is the only documented working deployment path at this baseline.
+The repository currently has no application Worker entry point, D1 binding, R2 binding or
+server-side admin API. Public booking uses the official Lumi Derm Treatwell widget supplied through
+Treatwell Connect, with the official venue page retained as a fallback. The widget is loaded only
+after the visitor allows external content or selects the one-time booking action.
 
 ## Target architecture
 
 ```text
-Browser
-  |
-  +-- Public HTML/CSS/JS
-  |     Cloudflare Worker -> static asset fallback
-  |                       -> server-rendered published D1 content
-  |                       -> /api/public/*
-  |
-  +-- /admin/*
-  |     Cloudflare Access -> admin UI -> /api/admin/*
-  |                                      JWT + CSRF + validation
-  |
-  +-- consent-aware provider loading
-        Square booking | Google Maps
+Public visitor -> Worker-rendered website content with checked-in fallback
+               -> Treatwell booking link or official widget
+               -> consent-controlled Google Maps
 
-Cloudflare Worker
-  +-- D1: published/draft content, versions, audit, consent, sync state
-  +-- R2: approved media only
-  +-- Square: booking/payment system of record; read-only reconciliation
-  +-- Google Business Profile: owned review synchronisation
-  +-- Brevo: consented marketing, if approved by the owner
+Administrator -> Cloudflare Access -> /admin/ -> protected Worker API
+                                            |-> D1 website content and audit log
+                                            |-> R2 approved website media
+                                            |-> Google Business Profile review sync
+
+Treatwell Connect -> appointments, availability, payments, client records,
+                     reminders, consultation forms and booking reviews
 ```
 
-## Boundaries and ownership
+## Boundaries
 
-| Capability                                  | System of record                            | Website responsibility                                                 |
-| ------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------- |
-| Appointments, payments, booked customers    | Square                                      | Consent-aware entry point and later read-only reconciliation           |
-| Public treatments, prices, offers, settings | D1 after Phase 3                            | Render crawlable HTML with a static fallback                           |
-| Admin identity                              | Cloudflare Access                           | Verify Access JWT server-side; apply roles and CSRF controls           |
-| Approved website media                      | R2 after Phase 6                            | Validate, record consent/alt text, and control publication             |
-| Google reviews                              | Google Business Profile                     | Preserve source text; store moderation separately                      |
-| Marketing contacts/campaigns                | Brevo by default, or Square Marketing UI    | Store explicit consent evidence only; never infer consent from booking |
-| Clinical and consultation records           | Approved clinical system, not this platform | Do not collect or store in D1, R2, Git, logs, or localStorage          |
+| Capability | System of record | Website responsibility |
+| --- | --- | --- |
+| Appointments, availability and payments | Treatwell | Clear booking entry point and accurate explanatory copy |
+| Booking clients, reminders and consultation forms | Treatwell | Do not duplicate client or clinical records |
+| Public treatments, prices, offers and settings | D1 after content phases | Crawlable rendering with a checked-in fallback |
+| Admin identity | Cloudflare Access | Verify Access identity server-side and fail closed |
+| Approved website media | R2 after media phase | Validate files, consent evidence and alt text |
+| Google reviews | Google Business Profile | Preserve source content and moderate display separately |
+| Treatwell reviews | Treatwell | Use only an official widget/feed or approved manual evidence |
+| Marketing recipients | Treatwell or another approved sender | Do not infer consent from a booking or copy client data casually |
+| Clinical records | Treatwell/approved clinical process | Never store full clinical records in website content systems |
 
-## Public rendering and failure behaviour
+## Failure behaviour
 
-Published SEO content must be present in the initial HTML. The target Worker will read D1 and use
-`HTMLRewriter` to populate marked regions. A checked-in static fallback remains available if D1
-fails. Provider failures must leave telephone, email, directions, and Square new-tab links usable.
-Production admin authentication fails closed if Access configuration or verification is unavailable.
+Published SEO content must remain available in initial HTML. A D1 failure falls back to checked-in
+content. Treatwell failure leaves telephone and email contact options available. Google Maps
+failure leaves a normal directions link. Admin authentication and writes fail closed.
 
-## Data flows
-
-### Public content
-
-```text
-Owner -> Access -> Admin API -> validate/version/audit -> D1
-Visitor -> Worker -> published D1 rows -> HTML response
-                         failure -> static checked-in fallback
-```
-
-### Booking
+## Booking flow
 
 ```text
-Visitor -> consent or explicit load action -> Square-hosted booking
-Square -> appointment/payment records stay in Square
-Website -> never receives or stores card data
-```
-
-### Media
-
-```text
-Owner -> Access -> validated upload -> private R2 object
-                              +-----> D1 metadata/consent/status
-Visitor -> controlled public route -> approved object only
+Visitor -> official Treatwell venue page/widget -> Treatwell confirmation
+Treatwell -> booking/payment/client records remain in Treatwell
+Website -> never receives card details or creates booking records
 ```
 
 ## Deliberately excluded
 
-- a custom booking or payment engine;
-- payment card or complete clinical/medical record storage;
-- multi-tenant SaaS features;
-- invented business, clinical, legal, review, or qualification data;
-- public reliance on client-side-only content for indexable material.
+- a custom booking, payment or instalment engine;
+- undocumented Treatwell API calls or scraping;
+- duplicated Treatwell customer/appointment data;
+- payment card or complete clinical record storage;
+- invented business, clinical, legal, review or qualification data.

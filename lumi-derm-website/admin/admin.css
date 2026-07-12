@@ -836,3 +836,31 @@ code {
 /* Make the [hidden] attribute actually hide the gate/shell (overrides display:grid) */
 .admin-gate[hidden],
 .admin-shell[hidden] { display: none !important; }
+
+/* ---------- Publish bar (offers -> live website) ---------- */
+.admin-publish-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgba(169, 111, 104, 0.35);
+  border-radius: 14px;
+  background: rgba(169, 111, 104, 0.07);
+}
+.admin-publish-bar strong { display: block; font-size: 0.98rem; }
+.admin-publish-bar p { margin: 0.2rem 0 0; font-size: 0.85rem; opacity: 0.75; }
+.admin-publish-btn { min-width: 10rem; }
+.admin-publish-btn:disabled { opacity: 0.6; cursor: progress; }
+
+/* checkbox row in the offer editor */
+.admin-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+.admin-check input { width: auto; margin: 0; }
+.admin-editor label small { font-weight: 400; opacity: 0.65; }

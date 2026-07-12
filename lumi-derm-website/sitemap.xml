@@ -3,7 +3,7 @@
   xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://lumidermaesthetics.com/</loc>
-    <lastmod>2026-06-28</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <image:image>
       <image:loc>https://lumidermaesthetics.com/assets/icons/lumi-derm-logo.png</image:loc>
       <image:title>Lumi Derm Aesthetics logo</image:title>
@@ -15,7 +15,7 @@
   </url>
   <url>
     <loc>https://lumidermaesthetics.com/pages/booking.html</loc>
-    <lastmod>2026-06-28</lastmod>
+    <lastmod>2026-07-05</lastmod>
   </url>
   <url>
     <loc>https://lumidermaesthetics.com/pages/gallery.html</loc>
@@ -35,7 +35,7 @@
   </url>
   <url>
     <loc>https://lumidermaesthetics.com/pages/privacy.html</loc>
-    <lastmod>2026-06-28</lastmod>
+    <lastmod>2026-07-05</lastmod>
   </url>
   <url>
     <loc>https://lumidermaesthetics.com/pages/terms.html</loc>
@@ -43,6 +43,6 @@
   </url>
   <url>
     <loc>https://lumidermaesthetics.com/pages/cookies.html</loc>
-    <lastmod>2026-06-28</lastmod>
+    <lastmod>2026-07-05</lastmod>
   </url>
 </urlset>

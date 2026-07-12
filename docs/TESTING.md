@@ -27,8 +27,8 @@ the recorded legacy baselines; do not suppress those findings or mechanically re
 design outside its assigned phase.
 
 The browser runner covers home, services, booking and policies at 320, 390, 768, 1024, 1440 and 1920
-px. It also checks custom 404 status, initial embed blocking, consent persistence/withdrawal,
-one-time booking load, skip-link focus, mobile navigation, carousel keyboard/pause behaviour, modal
+px. It also checks custom 404 status, initial Google embed blocking, consent persistence/withdrawal,
+the official Treatwell link, skip-link focus, mobile navigation, carousel keyboard/pause behaviour, modal
 focus/Escape handling and reduced motion. Screenshots are written to
 `/private/tmp/lumiderm-phase1-screenshots` and must be visually reviewed.
 
@@ -48,8 +48,8 @@ use. Remote links are not fetched by this deterministic local check.
 2. Open `/`, `/pages/services.html`, `/pages/booking.html`, `/pages/policies.html`, and `/admin/`.
 3. Confirm CSS, JavaScript, icons, and images load locally.
 4. Do not submit a live booking or enter real data in admin.
-5. Confirm the Square new-tab link is present; do not claim booking/payment success without an
-   owner-authorised transaction.
+5. Confirm the official Treatwell new-tab link is present; do not claim booking/payment success
+   without an owner-authorised transaction.
 6. Stop the server with Ctrl+C.
 
 ## Future quality gates

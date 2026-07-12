@@ -4,13 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Book Online | Lumi Derm Aesthetics</title>
-    <meta name="description" content="Open the Lumi Derm Aesthetics Square booking page to choose an available treatment and appointment time.">
+    <meta name="description" content="Book your Lumi Derm Aesthetics appointment online. Choose your treatment, see live availability and confirm your time — without leaving the site.">
     <link rel="canonical" href="https://lumidermaesthetics.com/pages/booking.html"><link rel="icon" type="image/png" href="../assets/icons/favicon.png"><link rel="apple-touch-icon" href="../assets/icons/lumi-derm-logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style.css?v=20260628-stabilise">
-    <link rel="stylesheet" href="../css/responsive.css?v=20260628-stabilise">
+    <link rel="stylesheet" href="../css/style.css?v=20260712-booking-redesign">
+    <link rel="stylesheet" href="../css/responsive.css?v=20260712-booking-redesign">
   </head>
   <body><a class="skip-link" href="#main-content">Skip to main content</a>
     <header class="site-header" data-header>
@@ -18,65 +18,136 @@
         <a class="logo" href="../index.html"><span class="logo-mark"><img src="../assets/icons/lumi-derm-logo.png" alt="" aria-hidden="true"></span><span>Lumi Derm Aesthetics</span></a>
         <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="site-navigation" data-nav-toggle><span></span><span></span><span></span></button>
         <nav class="nav-menu" aria-label="Primary navigation" id="site-navigation" data-nav-menu>
-          <a class="nav-link" href="services.html" data-nav-link>Treatments</a><a class="nav-link" href="../index.html#prices">Prices</a><a class="nav-link" href="../index.html#offers">Offers</a><a class="nav-link" href="about.html" data-nav-link>About</a><a class="nav-link" href="contact.html" data-nav-link>Contact</a>
+          <a class="nav-link" href="services.html" data-nav-link>Treatments</a><a class="nav-link" href="../index.html#offers">Offers</a><a class="nav-link" href="about.html" data-nav-link>About</a><a class="nav-link" href="../index.html#contact">Contact</a>
           <a class="btn btn-primary nav-cta" href="booking.html">Book Now</a>
         </nav>
       </div>
     </header>
-    <main tabindex="-1" id="main-content">
-      <section class="page-hero">
-        <div class="container">
-          <p class="eyebrow">Secure online booking</p>
-          <h1>Book your treatment</h1>
-          <p class="lead">Choose an available treatment and appointment time through Square. Any payment requirement and confirmation details are shown in the Square booking flow.</p>
+    <main tabindex="-1" id="main-content" class="booking-redesign">
+      <section class="booking-hero-clean">
+        <div class="container booking-hero-clean-grid">
+          <div class="booking-hero-copy">
+            <p class="eyebrow">Online booking</p>
+            <h1>Book your appointment</h1>
+            <ol class="booking-flow-line" aria-label="Booking steps">
+              <li><span aria-hidden="true">01</span>Choose treatment</li>
+              <li><span aria-hidden="true">02</span>Check notes</li>
+              <li><span aria-hidden="true">03</span>Open calendar</li>
+            </ol>
+          </div>
+          <aside class="booking-confidence" aria-label="Booking details">
+            <span>
+              <strong>5.0</strong>
+              <small>37 reviews</small>
+            </span>
+            <span>
+              <strong>Secure</strong>
+              <small>Treatwell calendar</small>
+            </span>
+            <span>
+              <strong>E14</strong>
+              <small>London Docklands</small>
+            </span>
+          </aside>
         </div>
       </section>
-      <section class="page-content">
-        <div class="container booking-layout">
-          <div class="booking-main">
-            <!-- Square Appointments booking flow. To change the link,
-                 update the iframe src and the fallback link below with the new Square booking URL. -->
-            <div class="booking-embed consent-embed" data-square-booking data-consent-embed data-provider="square" data-title="Book a Lumi Derm appointment with Square" data-src="https://app.squareup.com/appointments/book/6b4r5p8hdmfcv1/LV3QXT3NYT4FA/start">
+
+      <section class="booking-picker-section" id="choose-treatment" aria-labelledby="booking-picker-title">
+        <div class="container booking-picker">
+          <div class="booking-picker-head">
+            <p class="eyebrow">Treatment booking</p>
+            <h2 id="booking-picker-title">Choose a treatment</h2>
+            <p data-booking-picker-copy>Select a category, then tap a treatment card.</p>
+            <button class="booking-change-link" type="button" data-booking-change hidden>Change treatment</button>
+          </div>
+
+          <div class="booking-filter-bar" aria-label="Filter treatments">
+            <button class="is-active" type="button" data-booking-filter="all">All</button>
+            <button type="button" data-booking-filter="laser">Laser &amp; hair</button>
+            <button type="button" data-booking-filter="injectables">Injectables</button>
+            <button type="button" data-booking-filter="facials">Facials &amp; skin</button>
+            <button type="button" data-booking-filter="body">Body &amp; beauty</button>
+          </div>
+
+          <article class="booking-detail-panel" data-booking-detail aria-live="polite">
+            <div class="booking-detail-media">
+              <img src="../assets/images/offer-laser-treatments-cynosure.webp" alt="" data-detail-image>
+            </div>
+            <div class="booking-detail-copy">
+              <div>
+                <p class="booking-detail-kicker" data-detail-category>Cynosure Elite</p>
+                <h2 data-detail-title>Laser hair removal</h2>
+                <p data-detail-summary>Long-term hair reduction for face and body areas using Cynosure Elite technology.</p>
+              </div>
+              <div class="booking-detail-meta" aria-label="Treatment summary">
+                <span data-detail-price>From £40</span>
+                <span data-detail-duration>Patch test required</span>
+              </div>
+              <div class="booking-detail-lists">
+                <div>
+                  <h3>Good for</h3>
+                  <ul data-detail-best></ul>
+                </div>
+                <div>
+                  <h3>Before</h3>
+                  <ul data-detail-prep></ul>
+                </div>
+                <div>
+                  <h3>Aftercare</h3>
+                  <ul data-detail-aftercare></ul>
+                </div>
+              </div>
+              <div class="booking-detail-actions">
+                <button class="btn btn-primary" type="button" data-detail-book-button data-booking-open-widget>Book this treatment</button>
+                <a class="btn btn-ghost" href="services.html" data-detail-service-link>View full prices</a>
+              </div>
+            </div>
+          </article>
+
+          <div class="booking-card-grid" data-booking-cards aria-label="Treatment choices"></div>
+
+          <section class="booking-widget-card" id="booking-calendar" data-booking-widget-section aria-labelledby="booking-calendar-title">
+            <div class="booking-widget-copy">
+              <p class="eyebrow">Live booking</p>
+              <h2 id="booking-calendar-title">Choose your time on the Treatwell calendar</h2>
+              <p>Select the same treatment in the widget menu, then choose your appointment time and confirm securely without leaving this page.</p>
+            </div>
+            <div
+              class="booking-embed consent-embed"
+              data-consent-embed
+              data-provider="treatwell"
+              data-title="Lumi Derm Aesthetics booking"
+              data-widget-script="https://widget.treatwell.co.uk/common/venue-menu/javascript/widget-button.js?v1"
+              data-widget-style="https://widget.treatwell.co.uk/common/venue-menu/css/widget-button.css"
+              data-widget-url="https://widget.treatwell.co.uk/place/523733/menu/"
+            >
               <div class="booking-embed-placeholder consent-embed-placeholder">
-                <span class="booking-pill">Square Appointments</span>
-                <h2>Load secure online booking</h2>
-                <p class="consent-embed-description">Square booking is optional external content and may set its own cookies after loading.</p>
+                <span class="booking-pill">Secure Treatwell booking</span>
+                <h3>Load appointment calendar</h3>
+                <p class="consent-embed-description">The calendar is powered by Treatwell and may use its own cookies. Load it when you are ready to choose your time.</p>
                 <div class="consent-embed-actions">
-                  <button class="btn btn-primary" type="button" data-load-consent-embed>Load booking once</button>
-                  <a class="btn btn-secondary" href="https://app.squareup.com/appointments/book/6b4r5p8hdmfcv1/LV3QXT3NYT4FA/start" target="_blank" rel="noopener">Open booking in a new tab</a>
+                  <button class="btn btn-primary" type="button" data-load-consent-embed>Load booking calendar</button>
                 </div>
               </div>
             </div>
-            <p class="booking-fallback">Booking window not loading? <a href="https://app.squareup.com/appointments/book/6b4r5p8hdmfcv1/LV3QXT3NYT4FA/start" target="_blank" rel="noopener">Open booking &amp; payment in a new tab &rarr;</a></p>
             <p class="booking-secure">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l7 3v6c0 5-3.4 8.3-7 9-3.6-.7-7-4-7-9V5l7-3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Booking and any online payment shown in the flow are handled by Square. Lumi Derm does not collect card details on this website.
+              Lumi Derm does not collect card details on this website. Payments are processed by Treatwell inside the widget.
             </p>
+          </section>
+
+          <div class="booking-support-strip">
+            <div>
+              <strong>Not sure what to choose?</strong>
+              <p>Book a consultation or message Lumi Derm before selecting a treatment.</p>
+            </div>
+            <div class="booking-support-actions">
+              <button class="btn btn-primary" type="button" data-booking-open-widget>Load calendar</button>
+              <a class="btn btn-ghost" href="tel:07832839298">Call 07832839298</a>
+            </div>
           </div>
-          <aside class="booking-side">
-            <div class="page-card">
-              <h3>How it works</h3>
-              <ol class="booking-steps">
-                <li><strong>Choose</strong> your treatment and a time that suits you.</li>
-                <li><strong>Review the booking terms</strong> and any payment requirement shown by Square.</li>
-                <li><strong>Follow Square's confirmation</strong> after completing the booking.</li>
-              </ol>
-            </div>
-            <div class="page-card">
-              <h3>Studio</h3>
-              <ul class="info-list">
-                <li><span>Address</span>Unit 41 Skylines Village, Limeharbour, London, E14 9TS</li>
-                <li><span>Phone</span><a href="tel:07832839298">07832839298</a></li>
-                <li><span>Email</span><a href="mailto:info@lumidermaesthetics.co.uk">info@lumidermaesthetics.co.uk</a></li>
-              </ul>
-              <h3 class="booking-side-sub">Opening hours</h3>
-              <ul class="info-list">
-                <li><span>Monday &ndash; Friday</span>10:00 - 20:00</li>
-                <li><span>Saturday</span>10:00 - 18:00</li>
-                <li><span>Sunday</span>Closed</li>
-              </ul>
-            </div>
-          </aside>
+
+          <p class="booking-smallprint">Treatwell powers the booking calendar embedded on this page. Treatment suitability, final pricing, deposits and cancellation terms are confirmed through Treatwell and during consultation.</p>
         </div>
       </section>
     </main>
@@ -85,14 +156,15 @@
         <div class="footer-grid">
           <div class="footer-brand"><a class="logo" href="../index.html"><span class="logo-mark"><img src="../assets/icons/lumi-derm-logo.png" alt="" aria-hidden="true"></span><span>Lumi Derm Aesthetics</span></a><p>Advanced beauty and skin treatments in a calm premium clinic environment.</p></div>
           <div class="footer-links">
-            <div><h3>Quick links</h3><ul><li><a href="services.html">Services</a></li><li><a href="../index.html#prices">Prices</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li></ul></div>
-            <div><h3>Services</h3><ul><li><a href="services.html">Laser treatments</a></li><li><a href="services.html">Electrolysis</a></li><li><a href="services.html">PRP &amp; boosters</a></li><li><a href="services.html">Facials &amp; peels</a></li></ul></div>
-            <div><h3>Booking</h3><ul><li><a href="booking.html">Book a Consultation</a></li><li><a href="policies.html">Policies</a></li><li><a href="https://www.instagram.com/lumi.derm.aesthetic">Instagram</a></li></ul></div>
+            <div><h3>Quick links</h3><ul><li><a href="services.html">Treatments &amp; prices</a></li><li><a href="../index.html#offers">Offers</a></li><li><a href="about.html">About</a></li><li><a href="../index.html#contact">Contact</a></li></ul></div>
+            <div><h3>Treatments</h3><ul><li><a href="services.html#laser-hair-removal">Laser hair removal</a></li><li><a href="services.html#electrolysis">Electrolysis</a></li><li><a href="services.html#profhilo">PRP &amp; boosters</a></li><li><a href="services.html#facials">Facials &amp; peels</a></li></ul></div>
+            <div><h3>Booking</h3><ul><li><a href="booking.html">Book an appointment</a></li><li><a href="policies.html">Policies</a></li><li><a href="https://www.instagram.com/lumi.derm.aesthetic/" target="_blank" rel="noopener">Instagram</a></li></ul></div>
           </div>
         </div>
         <div class="footer-bottom"><button class="cookie-settings-link" type="button" data-cookie-settings>Cookie settings</button><span>© 2026 Lumi Derm Aesthetics. All rights reserved.</span></div>
       </div>
     </footer>
-    <script src="../js/main.js?v=20260628-stabilise"></script>
+    <script src="../js/main.js?v=20260712-booking-redesign"></script>
+    <script src="../js/booking.js?v=20260712-booking-redesign"></script>
   </body>
 </html>

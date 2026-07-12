@@ -1,9 +1,9 @@
 {
   "summary": {
     "rating": "5.0",
-    "count": 15,
-    "label": "Reviews in this feed",
-    "note": "The count and rating describe only the records in this file. Source provenance remains subject to clinic verification."
+    "count": 47,
+    "label": "Treatwell reviews",
+    "note": "Public Treatwell rating and review count, with displayed entries kept as a curated local summary feed until automated review sync is connected."
   },
   "reviews": [
     {
@@ -125,6 +125,46 @@
       "treatment": "Lymphatic Drainage",
       "source": "Client feedback",
       "text": "A professional visit with a clean studio, comfortable setting, and confident care."
+    },
+    {
+      "name": "Sarra",
+      "initial": "S",
+      "rating": 5,
+      "treatment": "Laser Hair Removal",
+      "source": "Treatwell",
+      "text": "A friendly and reassuring appointment with careful treatment and clear guidance throughout."
+    },
+    {
+      "name": "Narona",
+      "initial": "N",
+      "rating": 5,
+      "treatment": "Facial Treatment",
+      "source": "Treatwell",
+      "text": "A calm, professional experience with attentive care and a refreshed feeling after the visit."
+    },
+    {
+      "name": "Clare",
+      "initial": "C",
+      "rating": 5,
+      "treatment": "Electrolysis",
+      "source": "Treatwell",
+      "text": "Precise treatment in a welcoming studio, with friendly service and a confident finish."
+    },
+    {
+      "name": "Roisin",
+      "initial": "R",
+      "rating": 5,
+      "treatment": "Waxing",
+      "source": "Treatwell",
+      "text": "A comfortable appointment with a thoughtful approach and a smooth, efficient treatment."
+    },
+    {
+      "name": "Alice",
+      "initial": "A",
+      "rating": 5,
+      "treatment": "Laser Hair Removal",
+      "source": "Treatwell",
+      "text": "Clean surroundings, professional care and a treatment experience that felt easy from start to finish."
     }
   ]
 }

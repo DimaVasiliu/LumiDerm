@@ -107,11 +107,12 @@
 
   .offer-slide {
     flex-basis: 86%;
-    border-radius: 20px;
+    border-radius: 24px;
   }
 
   .simple-hero ~ .offers-section .offer-body {
-    padding: 1rem;
+    min-height: 16.75rem;
+    padding: 1.05rem;
   }
 
   .offer-slide h3 {
@@ -429,11 +430,6 @@
 
   .contact-layout .map-panel {
     grid-column: 1 / -1;
-  }
-
-  .faq-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 1.1rem;
   }
 
   .offer-slide {

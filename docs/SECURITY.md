@@ -4,12 +4,12 @@
 
 - `/admin/` is publicly routable. Its passcode and authentication decision are implemented in
   browser JavaScript, so they are not a security boundary.
-- Admin drafts, subscribers, and other prototype records use browser `localStorage`. Real client,
-  subscriber, consultation, or health data must not be entered.
+- Admin website drafts use browser `localStorage`. Real client, subscriber, consultation, booking
+  or health data must not be entered.
 - There is no server-side API, Access JWT verification, role enforcement, CSRF control, audit log,
   rate limit, or database.
-- Square booking and Google Maps are blocked until a versioned external-media consent decision or an
-  explicit one-time load action. Withdrawing permission unloads either iframe.
+- The Treatwell widget and Google Maps remain blocked until a versioned external-content consent
+  decision or the relevant explicit one-time load action. Treatwell also has a direct fallback link.
 - Provider secrets are not required by the current static deployment and none should be added.
 - Repository security and cache headers are defined in `_headers` and verified with Wrangler;
   production verification remains required after an explicitly approved deployment.
@@ -44,7 +44,7 @@ schema validation, optimistic concurrency, and an audit event. Admin and API res
 | Provider                | Minimum intended access                                                                          |
 | ----------------------- | ------------------------------------------------------------------------------------------------ |
 | Cloudflare Access       | authenticate the two explicitly approved admin identities                                        |
-| Square                  | no API in baseline; later read-only catalogue/booking/payment access plus only required webhooks |
+| Treatwell               | external booking link/widget only; no undocumented API or scraping                              |
 | Google Business Profile | `business.manage` only when review sync is approved                                              |
 | Brevo                   | contacts/campaign operations only if the owner approves custom marketing                         |
 
@@ -54,7 +54,7 @@ schema validation, optimistic concurrency, and an audit event. Admin and API res
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------ |
 | Public     | approved treatment copy, public prices, published reviews      | D1/public HTML after validation                  |
 | Internal   | drafts, audit history, media consent references                | Access-protected D1/R2                           |
-| Personal   | subscriber identity and consent evidence                       | minimum necessary, protected, retained by policy |
+| Personal   | future website newsletter identity and consent evidence        | not implemented; requires approved sender/policy  |
 | Prohibited | card data, full consultation/clinical record, passwords/tokens | never store in this platform                     |
 
 Logs use request IDs and operational metadata. They exclude health/treatment details, message

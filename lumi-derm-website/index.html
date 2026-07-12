@@ -16,8 +16,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260701-laser-prices">
-    <link rel="stylesheet" href="css/responsive.css?v=20260701-laser-prices">
+    <link rel="stylesheet" href="css/style.css?v=20260710-faq4">
+    <link rel="stylesheet" href="css/responsive.css?v=20260710-faq4">
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -40,7 +40,7 @@
       }
     </script>
   </head>
-  <body><a class="skip-link" href="#main-content">Skip to main content</a>
+  <body class="home-hero"><a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="site-shell">
       <header class="site-header" data-header>
         <div class="container nav-wrap">
@@ -53,7 +53,6 @@
           </button>
           <nav class="nav-menu" id="site-navigation" aria-label="Primary navigation" data-nav-menu>
             <a class="nav-link" href="pages/services.html" data-nav-link>Treatments</a>
-            <a class="nav-link" href="#prices">Prices</a>
             <a class="nav-link" href="#offers">Offers</a>
             <a class="nav-link" href="pages/about.html" data-nav-link>About</a>
             <a class="nav-link" href="#contact">Contact</a>
@@ -63,688 +62,101 @@
       </header>
 
       <main tabindex="-1" id="main-content">
-        <section class="hero simple-hero" id="home">
-          <div class="container">
-            <div class="hero-banner">
-              <div class="hero-banner-media" aria-hidden="true">
-                <img src="assets/images/hero-lumi-derm-editorial-skin.webp" alt="">
+        <section class="hero simple-hero hero-cinematic" id="home" aria-label="Lumi Derm Aesthetics introduction">
+          <div class="hero-media" aria-hidden="true">
+            <video class="hero-video" data-hero-video autoplay muted loop playsinline preload="metadata" poster="assets/images/iulia-clinic-treatment-consultation.webp"></video>
+            <div class="hero-overlay"></div>
+          </div>
+          <div class="container hero-inner">
+            <div class="hero-content">
+              <p class="hero-eyebrow"><span class="hero-eyebrow-rule" aria-hidden="true"></span>Lumi Derm Aesthetics &middot; London Docklands</p>
+              <h1 class="hero-title">Skin confidence,<br>made personal.</h1>
+              <p class="hero-lead">Advanced skin, laser and body treatments designed around your goals, your skin and your lifestyle &mdash; delivered with calm, expert-led care.</p>
+              <p class="hero-microdetail"><span class="hero-microdetail-line" aria-hidden="true"></span>Tailored treatment plans</p>
+              <div class="hero-actions">
+                <a class="btn btn-primary" href="pages/booking.html">Book your consultation</a>
+                <a class="btn btn-secondary" href="pages/services.html">Explore treatments</a>
               </div>
-              <div class="hero-banner-copy">
-                <div class="hero-kicker">
-                  <span>Lumi Derm Aesthetics</span>
-                  <span>London Docklands</span>
-                </div>
-                <div class="hero-message">
-                  <h1 aria-label="Advanced skin, laser and body treatments for a renewed glow"><span>Advanced skin,</span><span>laser &amp; body</span><span>treatments</span></h1>
-                  <div class="hero-side-copy">
-                    <p class="lead">Laser treatments, electrolysis, Endospheres therapy, PRP, boosters, facials, peels and advanced skin plans shaped around your goals with Iulia.</p>
-                    <div class="hero-actions">
-                      <a class="btn btn-primary" href="pages/booking.html">Book a consultation</a>
-                      <a class="btn btn-secondary" href="pages/services.html">View treatments</a>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            </div>
+            <div class="hero-footer">
+              <p class="hero-trust"><span>Laser &middot; Skin &middot; Body &middot; Regenerative treatments</span><span class="hero-trust-sub">Consultation-led care &middot; London Docklands</span></p>
+              <a class="hero-scroll" href="#offers" aria-label="Scroll down to discover your treatment plan"><span>Discover your treatment plan</span> <span class="hero-scroll-arrow" aria-hidden="true">&darr;</span></a>
             </div>
           </div>
+          <aside class="hero-showcase" aria-hidden="true" data-hero-showcase>
+            <figure class="hero-showcase-card">
+              <div class="hero-showcase-stage">
+                <img class="hero-showcase-slide is-active" src="assets/images/offer-laser-treatments-cynosure.webp" alt="" data-label="Laser hair removal" fetchpriority="low">
+                <img class="hero-showcase-slide" src="assets/images/offer-skin-boosters.webp" alt="" data-label="Skin boosters" loading="lazy">
+                <img class="hero-showcase-slide" src="assets/images/offer-facials.webp" alt="" data-label="Signature facials" loading="lazy">
+                <img class="hero-showcase-slide" src="assets/images/offer-microneedling.webp" alt="" data-label="Microneedling" loading="lazy">
+                <span class="hero-showcase-veil"></span>
+                <span class="hero-showcase-badge"><span class="hero-showcase-badge-star">&#9733;</span> 5.0 rated care</span>
+              </div>
+              <figcaption class="hero-showcase-caption">
+                <span class="hero-showcase-eyebrow">Featured treatment</span>
+                <span class="hero-showcase-label" data-hero-label>Laser hair removal</span>
+              </figcaption>
+              <span class="hero-showcase-dots" data-hero-dots></span>
+            </figure>
+          </aside>
+          <!-- Hero background video: local cinematic clip with poster fallback for reduced motion. -->
+          <script>
+            (function () {
+              const HERO_VIDEO_SRC = "assets/videos/lumi-derm-hero.mp4";
+              const video = document.querySelector('[data-hero-video]');
+              const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+              // If the visitor prefers reduced motion, the poster image is shown instead.
+              if (!video || !HERO_VIDEO_SRC || reduceMotion) return;
+              const source = document.createElement('source');
+              source.src = HERO_VIDEO_SRC;
+              source.type = /\.webm$/i.test(HERO_VIDEO_SRC) ? 'video/webm' : 'video/mp4';
+              video.appendChild(source);
+              video.load();
+              const play = function () { const p = video.play(); if (p && p.catch) p.catch(function () {}); };
+              if (video.readyState >= 2) play();
+              else video.addEventListener('loadeddata', play, { once: true });
+            })();
+          </script>
         </section>
 
-        <section class="section section-tight offers-section" id="offers">
+        <section class="section treatment-index-section" id="offers">
           <div class="container">
-            <div class="offers-header reveal" data-reveal data-animate="fade-up">
-              <div class="section-header">
-                <p class="eyebrow">Treatments &amp; offers</p>
-                <h2>Choose your glow step</h2>
-                <p>Explore the current menu of laser, skin, body and beauty treatments.</p>
-              </div>
-              <div class="offers-nav" aria-label="Offer carousel controls">
-                <button class="carousel-button" type="button" data-offers-prev aria-label="Previous offers">‹</button>
-                <button class="carousel-button" type="button" data-offers-next aria-label="Next offers">›</button>
-              </div>
+            <div class="tindex-head reveal" data-reveal data-animate="fade-up">
+              <p class="eyebrow">Treatments &amp; offers</p>
+              <h2>Choose your treatment plan</h2>
             </div>
-            <div class="offer-carousel reveal" data-offers-carousel data-reveal data-animate="fade-up">
-              <div class="offer-carousel-viewport">
-                <div class="offer-track" data-offers-track>
-	                  <article class="offer-slide is-featured">
-	                    <div class="offer-media">
-	                      <img src="assets/images/offer-laser-treatments-cynosure.webp" alt="Cynosure Elite laser treatments at Lumi Derm" loading="lazy">
-	                      <span class="offer-badge offer-badge-hot">Cynosure Elite</span>
-	                    </div>
-	                    <div class="offer-body">
-	                      <span class="offer-tag">Laser treatments</span>
-	                      <h3>Laser treatments</h3>
-	                      <ul class="offer-sublist">
-	                        <li>Laser hair removal</li>
-	                        <li>Laser skin rejuvenation</li>
-	                        <li>Laser vascular treatment</li>
-	                      </ul>
-	                      <div class="offer-price"><strong>From £40</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Book consultation</a>
-	                    </div>
-	                  </article>
-	                  <article class="offer-slide">
-	                    <div class="offer-media">
-	                      <img src="assets/images/offer-electrolysis-apilus.webp" alt="Apilus electrolysis permanent hair removal at Lumi Derm" loading="lazy">
-	                      <span class="offer-badge">Apilus</span>
-	                    </div>
-	                    <div class="offer-body">
-	                      <span class="offer-tag">Permanent hair removal</span>
-	                      <h3>Electrolysis</h3>
-	                      <p>Apilus permanent hair removal for precise smaller areas.</p>
-	                      <div class="offer-price"><strong>From £30</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Enquire now</a>
-	                    </div>
-	                  </article>
-	                  <article class="offer-slide">
-	                    <div class="offer-media">
-	                      <img src="assets/images/offer-endospheres-therapy.webp" alt="Endospheres body therapy at Lumi Derm" loading="lazy">
-	                      <span class="offer-badge">Body therapy</span>
-	                    </div>
-	                    <div class="offer-body">
-	                      <span class="offer-tag">Endospheres</span>
-	                      <h3>Endospheres therapy</h3>
-	                      <p>Body-focused lymphatic drainage, smoothing and contour support.</p>
-	                      <div class="offer-price"><strong>From £50</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Enquire now</a>
-	                    </div>
-	                  </article>
-	                  <article class="offer-slide">
-	                    <div class="offer-media">
-	                      <img src="assets/images/offer-prp-treatment.webp" alt="PRP skin treatment at Lumi Derm" loading="lazy">
-	                      <span class="offer-badge">Advanced</span>
-	                    </div>
-                    <div class="offer-body">
-	                      <span class="offer-tag">Advanced skin</span>
-	                      <h3>PRP</h3>
-	                      <p>Consultation-led PRP treatment planning for skin and hair concerns.</p>
-	                      <div class="offer-price"><strong>From £240</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Enquire now</a>
-	                    </div>
-	                  </article>
-	                  <article class="offer-slide">
-                    <div class="offer-media">
-                      <img src="assets/images/offer-skin-boosters.webp" alt="Profhilo and Polynucleotide skin boosters at Lumi Derm" loading="lazy">
-                      <span class="offer-badge">Bio-remodel</span>
-                    </div>
-	                    <div class="offer-body">
-	                      <span class="offer-tag">Skin booster</span>
-	                      <h3>Skin boosters</h3>
-	                      <ul class="offer-sublist">
-	                        <li>Profhilo</li>
-	                        <li>Polynucleotides</li>
-	                      </ul>
-	                      <div class="offer-price"><strong>From £220</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Enquire now</a>
-	                    </div>
-	                  </article>
-	                  <article class="offer-slide">
-	                    <div class="offer-media">
-	                      <img src="assets/images/offer-lip-boosters.webp" alt="Lip booster treatment planning at Lumi Derm" loading="lazy">
-	                      <span class="offer-badge">Hydration</span>
-	                    </div>
-	                    <div class="offer-body">
-	                      <span class="offer-tag">Lip care</span>
-	                      <h3>Lip boosters</h3>
-	                      <p>Subtle hydration-focused lip booster treatment planning.</p>
-	                      <div class="offer-price"><strong>From £220</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Enquire now</a>
-	                    </div>
-	                  </article>
-	                  <article class="offer-slide">
-	                    <div class="offer-media">
-	                      <img src="assets/images/offer-mesotherapy.webp" alt="Mesotherapy treatment preparation at Lumi Derm" loading="lazy">
-	                      <span class="offer-badge">Glow boost</span>
-	                    </div>
-	                    <div class="offer-body">
-	                      <span class="offer-tag">Mesotherapy</span>
-	                      <h3>Mesotherapy</h3>
-	                      <p>Micro-infusion treatment planning for glow, hydration and targeted skin support.</p>
-	                      <div class="offer-price"><strong>From £220</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Enquire now</a>
-	                    </div>
-	                  </article>
-	                  <article class="offer-slide">
-	                    <div class="offer-media">
-	                      <img src="assets/images/offer-hair-loss-treatment.webp" alt="Hair loss treatment consultation at Lumi Derm" loading="lazy">
-	                      <span class="offer-badge">Hair</span>
-	                    </div>
-	                    <div class="offer-body">
-	                      <span class="offer-tag">Hair support</span>
-	                      <h3>Hair loss treatment</h3>
-	                      <ul class="offer-sublist">
-	                        <li>Hair mesotherapy</li>
-	                        <li>PRP for hair loss</li>
-	                      </ul>
-	                      <div class="offer-price"><strong>From £140</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Enquire now</a>
-	                    </div>
-	                  </article>
-	                  <article class="offer-slide">
-	                    <div class="offer-media">
-	                      <img src="assets/images/offer-facials.webp" alt="Facial treatments at Lumi Derm" loading="lazy">
-	                      <span class="offer-badge">Facials</span>
-	                    </div>
-	                    <div class="offer-body">
-	                      <span class="offer-tag">Facial menu</span>
-	                      <h3>Facials</h3>
-	                      <ul class="offer-sublist">
-	                        <li>Bespoke Deep Cleanse</li>
-	                        <li>Dermaplaning</li>
-	                        <li>Microdermabrasion</li>
-	                        <li>Fire &amp; Ice iS Clinical</li>
-	                      </ul>
-	                      <div class="offer-price"><strong>From £70</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Enquire now</a>
-	                    </div>
-	                  </article>
-	                  <article class="offer-slide">
-	                    <div class="offer-media">
-	                      <img src="assets/images/offer-microneedling.webp" alt="Microneedling treatment preparation at Lumi Derm" loading="lazy">
-	                      <span class="offer-badge">Skin renewal</span>
-	                    </div>
-	                    <div class="offer-body">
-	                      <span class="offer-tag">Microneedling</span>
-	                      <h3>Microneedling</h3>
-	                      <p>Skin renewal treatment for texture, tone and collagen-focused support.</p>
-	                      <div class="offer-price"><strong>From £130</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Enquire now</a>
-	                    </div>
-	                  </article>
-	                  <article class="offer-slide">
-	                    <div class="offer-media">
-	                      <img src="assets/images/offer-peels.webp" alt="Chemical peel treatment preparation at Lumi Derm" loading="lazy">
-	                      <span class="offer-badge">Peels</span>
-	                    </div>
-	                    <div class="offer-body">
-	                      <span class="offer-tag">Peel menu</span>
-	                      <h3>Peels</h3>
-	                      <ul class="offer-sublist">
-	                        <li>PRX-T33 Peel</li>
-	                        <li>Glycolic Peel</li>
-	                        <li>Azelaic Peel</li>
-	                        <li>Salicylic Peel</li>
-	                      </ul>
-	                      <div class="offer-price"><strong>From £70</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Enquire now</a>
-	                    </div>
-	                  </article>
-	                  <article class="offer-slide">
-	                    <div class="offer-media">
-	                      <img src="assets/images/offer-exosomes.webp" alt="Exosomes advanced skin treatment preparation at Lumi Derm" loading="lazy">
-	                      <span class="offer-badge">Advanced</span>
-	                    </div>
-	                    <div class="offer-body">
-	                      <span class="offer-tag">Skin science</span>
-	                      <h3>Exosomes</h3>
-	                      <p>Advanced skin-support treatment option for a tailored rejuvenation plan.</p>
-	                      <div class="offer-price"><strong>From £150</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Enquire now</a>
-	                    </div>
-	                  </article>
-	                  <article class="offer-slide">
-	                    <div class="offer-media">
-	                      <img src="assets/images/offer-lashes-brows.webp" alt="Lashes and brows treatment tools at Lumi Derm" loading="lazy">
-	                      <span class="offer-badge">Finish</span>
-	                    </div>
-	                    <div class="offer-body">
-	                      <span class="offer-tag">Lashes &amp; brows</span>
-	                      <h3>Lashes &amp; brows</h3>
-	                      <p>Finishing beauty treatments for a polished, natural look.</p>
-	                      <div class="offer-price"><strong>From £45</strong></div>
-	                      <a class="btn btn-primary offer-cta" href="pages/booking.html">Enquire now</a>
-	                    </div>
-	                  </article>
+
+            <div class="tindex reveal" data-tindex data-reveal data-animate="fade-up">
+              <div class="tindex-aside-col">
+                <a class="tindex-visual" data-tindex-cta href="pages/booking.html">
+                  <div class="tindex-frame">
+                    <img class="tindex-layer is-visible" data-tindex-layer alt="" loading="lazy">
+                    <img class="tindex-layer" data-tindex-layer alt="" loading="lazy">
+                    <span class="tindex-frame-veil"></span>
+                    <span class="tindex-progress" data-tindex-progress aria-hidden="true"></span>
+                    <span class="tindex-caption">
+                      <span class="tindex-badge" data-tindex-badge></span>
+                      <span class="tindex-cap-cat" data-tindex-cat></span>
+                      <span class="tindex-cap-title" data-tindex-captitle></span>
+                      <span class="tindex-caption-foot">
+                        <span class="tindex-bigprice" data-tindex-price></span>
+                        <span class="tindex-viewoffer">View offer <span class="tindex-viewoffer-arrow" aria-hidden="true">&rarr;</span></span>
+                      </span>
+                    </span>
+                  </div>
+                </a>
+                <div class="tindex-head-aside">
+                  <p>A curated edit of our current offers and signature treatments &mdash; preview any treatment, or open the full price list for every detail.</p>
+                  <a class="tindex-pricelink" href="pages/services.html">View full price list <span class="tindex-pricelink-arrow" aria-hidden="true">&rarr;</span></a>
                 </div>
               </div>
-              <div class="offer-controls">
-                <div class="carousel-dots" data-offers-dots aria-label="Offer pagination"></div>
-              </div>
+
+              <ol class="tindex-list" data-tindex-list></ol>
             </div>
+
+            <p class="tindex-empty" data-tindex-empty hidden>No offers are running right now — explore our <a href="pages/services.html">full treatment menu &amp; prices</a>.</p>
           </div>
-        </section>
-
-        <section class="section section-tight prices-section" id="prices">
-          <div class="container">
-            <div class="section-header reveal" data-reveal data-animate="fade-up">
-              <p class="eyebrow">Treatment prices</p>
-              <h2>Services &amp; prices</h2>
-              <p>Guide prices supplied by Lumi Derm Aesthetics. Choose a treatment area, then open a service group to view sessions, packages and instalment options.</p>
-            </div>
-              <div class="price-board">
-                <input class="pf-input" type="radio" name="price-filter" id="pf-popular" checked>
-                <input class="pf-input" type="radio" name="price-filter" id="pf-laser">
-                <input class="pf-input" type="radio" name="price-filter" id="pf-injectables">
-                <input class="pf-input" type="radio" name="price-filter" id="pf-skin">
-                <input class="pf-input" type="radio" name="price-filter" id="pf-body">
-                <input class="pf-input" type="radio" name="price-filter" id="pf-all">
-                <div class="price-filter-bar" aria-label="Price categories">
-                  <label class="price-filter" for="pf-popular">Popular</label>
-                  <label class="price-filter" for="pf-laser">Laser &amp; hair</label>
-                  <label class="price-filter" for="pf-injectables">Injectables</label>
-                  <label class="price-filter" for="pf-skin">Facials &amp; skin</label>
-                  <label class="price-filter" for="pf-body">Body &amp; beauty</label>
-                  <label class="price-filter" for="pf-all">All prices</label>
-                </div>
-                <div class="price-grid">
-                  <label class="price-card cat-popular cat-laser" for="t-laser" tabindex="0" role="button">
-                    <span class="price-kicker">Cynosure Elite</span>
-                    <span class="price-title">Laser treatments</span>
-                    <span class="price-card-foot"><span class="price-from">from £40</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-                  </label>
-                  <label class="price-card cat-popular cat-laser" for="t-electrolysis" tabindex="0" role="button">
-                    <span class="price-kicker">Apilus</span>
-                    <span class="price-title">Electrolysis permanent hair removal</span>
-                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-                  </label>
-                  <label class="price-card cat-injectables" for="t-prp" tabindex="0" role="button">
-                    <span class="price-kicker">Regenerative</span>
-                    <span class="price-title">PRP treatments</span>
-                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-                  </label>
-                  <label class="price-card cat-injectables" for="t-mesotherapy" tabindex="0" role="button">
-                    <span class="price-kicker">Skin &amp; hair</span>
-                    <span class="price-title">Mesotherapy</span>
-                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-                  </label>
-                  <label class="price-card cat-injectables" for="t-boosters" tabindex="0" role="button">
-                    <span class="price-kicker">Injectable skin support</span>
-                    <span class="price-title">Skin boosters</span>
-                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-                  </label>
-                  <label class="price-card cat-injectables" for="t-lips" tabindex="0" role="button">
-                    <span class="price-kicker">Hydration</span>
-                    <span class="price-title">Lip boosters</span>
-                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-                  </label>
-                  <label class="price-card cat-skin" for="t-peels" tabindex="0" role="button">
-                    <span class="price-kicker">Skin resurfacing</span>
-                    <span class="price-title">Peels</span>
-                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-                  </label>
-                  <label class="price-card cat-popular cat-skin" for="t-facials" tabindex="0" role="button">
-                    <span class="price-kicker">Facials</span>
-                    <span class="price-title">Facials &amp; skin polish</span>
-                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-                  </label>
-                  <label class="price-card cat-popular cat-body" for="t-endospheres" tabindex="0" role="button">
-                    <span class="price-kicker">Body therapy</span>
-                    <span class="price-title">Endospheres therapy</span>
-                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-                  </label>
-                  <label class="price-card cat-skin" for="t-exosomes" tabindex="0" role="button">
-                    <span class="price-kicker">Advanced skin</span>
-                    <span class="price-title">Exosomes</span>
-                    <span class="price-card-foot"><span class="price-from">from £150</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-                  </label>
-                  <label class="price-card cat-skin" for="t-microneedling" tabindex="0" role="button">
-                    <span class="price-kicker">Texture</span>
-                    <span class="price-title">Microneedling</span>
-                    <span class="price-card-foot"><span class="price-from">from £130</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-                  </label>
-                  <label class="price-card cat-body" for="t-lashes" tabindex="0" role="button">
-                    <span class="price-kicker">Finishing</span>
-                    <span class="price-title">Lashes &amp; brows</span>
-                    <span class="price-card-foot"><span class="price-from">from £10</span><span class="price-view">View prices<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-                  </label>
-                </div>
-              </div>
-            <p class="price-note">Prices are subject to consultation, treatment suitability and clinic policy. Instalment notes apply only where listed.</p>
-              <div class="price-modals">
-                <input type="radio" name="pricemodal" id="t-none" class="price-modal-toggle" checked hidden>
-                <input type="radio" name="pricemodal" id="t-laser" class="price-modal-toggle price-modal-open" hidden>
-                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-laser-title">
-                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
-                  <div class="price-modal-panel">
-                    <div class="price-modal-head">
-                      <div><span class="price-kicker">Cynosure Elite</span><h3 id="t-laser-title">Laser treatments</h3></div>
-                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
-                    </div>
-                    <div class="price-modal-body">
-                      <p class="price-modal-notice">Instalment payments are available for packages at the venue.</p>
-
-                      <section class="laser-price-group" aria-labelledby="laser-hair-face-title">
-                        <h4 id="laser-hair-face-title">Laser hair removal &middot; Face</h4>
-                        <p class="laser-price-key">Prices show 1 session &middot; price per session with 6 sessions &middot; price per session with 10 sessions.</p>
-                        <ul class="price-list">
-                          <li><span>Upper lip / eyebrows / nose / ears</span><strong>£40 &middot; £35 &middot; £30</strong></li>
-                          <li><span>Chin / side of face / hair line</span><strong>£60 &middot; £50 &middot; £45</strong></li>
-                          <li><span>Neck / jawline</span><strong>£80 &middot; £70 &middot; £65</strong></li>
-                          <li><span>Half face / beard</span><strong>£100 &middot; £85 &middot; £80</strong></li>
-                          <li><span>Full face</span><strong>£125 &middot; £105 &middot; £95</strong></li>
-                        </ul>
-                      </section>
-
-                      <section class="laser-price-group" aria-labelledby="laser-hair-upper-title">
-                        <h4 id="laser-hair-upper-title">Laser hair removal &middot; Upper body</h4>
-                        <p class="laser-price-key">Prices show 1 session &middot; price per session with 6 sessions &middot; price per session with 10 sessions.</p>
-                        <ul class="price-list">
-                          <li><span>Underarms / hands &amp; fingers / navel line</span><strong>£60 &middot; £50 &middot; £45</strong></li>
-                          <li><span>Chest / abdomen / half arms</span><strong>£100 &middot; £85 &middot; £80</strong></li>
-                          <li><span>Full back / chest + abdomen / full arms</span><strong>£125 &middot; £105 &middot; £95</strong></li>
-                        </ul>
-                      </section>
-
-                      <section class="laser-price-group" aria-labelledby="laser-hair-lower-title">
-                        <h4 id="laser-hair-lower-title">Laser hair removal &middot; Lower body</h4>
-                        <p class="laser-price-key">Prices show 1 session &middot; price per session with 6 sessions &middot; price per session with 10 sessions.</p>
-                        <ul class="price-list">
-                          <li><span>Bikini line / peri-anal / feet &amp; toes</span><strong>£60 &middot; £50 &middot; £45</strong></li>
-                          <li><span>Extended bikini</span><strong>£70 &middot; £60 &middot; £55</strong></li>
-                          <li><span>Brazilian</span><strong>£80 &middot; £70 &middot; £65</strong></li>
-                          <li><span>Hollywood / buttocks</span><strong>£100 &middot; £85 &middot; £80</strong></li>
-                          <li><span>Lower legs / thighs</span><strong>£120 &middot; £105 &middot; £95</strong></li>
-                          <li><span>Full legs</span><strong>£150 &middot; £130 &middot; £120</strong></li>
-                          <li><span>Full body &middot; Women</span><strong>£400 &middot; £350 &middot; £300</strong></li>
-                          <li><span>Full body &middot; Men</span><strong>£450 &middot; £375 &middot; £325</strong></li>
-                        </ul>
-                      </section>
-
-                      <section class="laser-price-group laser-package-discounts" aria-labelledby="laser-packages-title">
-                        <h4 id="laser-packages-title">Hair removal multi-area packages</h4>
-                        <ul class="price-list">
-                          <li><span>2 areas</span><strong>15% off</strong></li>
-                          <li><span>3 areas</span><strong>20% off</strong></li>
-                          <li><span>4 areas</span><strong>25% off</strong></li>
-                          <li><span>5 areas</span><strong>30% off</strong></li>
-                        </ul>
-                      </section>
-
-                      <section class="laser-price-group" aria-labelledby="laser-vascular-title">
-                        <h4 id="laser-vascular-title">Laser vascular treatments</h4>
-                        <p class="laser-price-key">Prices show 1 session &middot; 2 sessions &middot; 3 sessions.</p>
-                        <ul class="price-list">
-                          <li><span>Small area, e.g. nose</span><strong>£45 / 1 &middot; £85 / 2 &middot; £120 / 3</strong></li>
-                          <li><span>Medium area, e.g. face</span><strong>£80 / 1 &middot; £150 / 2 &middot; £210 / 3</strong></li>
-                          <li><span>Large area, e.g. leg</span><strong>£125 / 1 &middot; £235 / 2 &middot; £330 / 3</strong></li>
-                          <li><span>Extra-large area, e.g. both legs</span><strong>£180 / 1 &middot; £340 / 2 &middot; £480 / 3</strong></li>
-                        </ul>
-                      </section>
-
-                      <section class="laser-price-group" aria-labelledby="laser-rejuvenation-title">
-                        <h4 id="laser-rejuvenation-title">Laser skin rejuvenation</h4>
-                        <ul class="price-list">
-                          <li><span>Face + neck</span><strong>£100 / 1 &middot; £270 / 3</strong></li>
-                          <li><span>Face + neck + decollete</span><strong>£130 / 1 &middot; £330 / 3</strong></li>
-                        </ul>
-                      </section>
-                    </div>
-                    <div class="price-modal-foot">
-                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
-                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
-                    </div>
-                  </div>
-                </div>
-                <input type="radio" name="pricemodal" id="t-electrolysis" class="price-modal-toggle price-modal-open" hidden>
-                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-electrolysis-title">
-                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
-                  <div class="price-modal-panel">
-                    <div class="price-modal-head">
-                      <div><span class="price-kicker">Apilus</span><h3 id="t-electrolysis-title">Electrolysis permanent hair removal</h3></div>
-                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
-                    </div>
-                    <div class="price-modal-body">
-                      <ul class="price-list">
-                        <li><span>Patch test 24h</span><strong>£10</strong></li>
-                        <li><span>15 minutes</span><strong>£30</strong></li>
-                        <li><span>30 minutes</span><strong>£50</strong></li>
-                        <li><span>45 minutes</span><strong>£70</strong></li>
-                        <li><span>1 hour</span><strong>£100</strong></li>
-                      </ul>
-                    </div>
-                    <div class="price-modal-foot">
-                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
-                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
-                    </div>
-                  </div>
-                </div>
-                <input type="radio" name="pricemodal" id="t-prp" class="price-modal-toggle price-modal-open" hidden>
-                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-prp-title">
-                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
-                  <div class="price-modal-panel">
-                    <div class="price-modal-head">
-                      <div><span class="price-kicker">Regenerative</span><h3 id="t-prp-title">PRP treatments</h3></div>
-                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
-                    </div>
-                    <div class="price-modal-body">
-                      <ul class="price-list">
-                        <li><span>PRP consultation</span><strong>£10</strong></li>
-                        <li><span>PRP face/body</span><strong>£240 / 1 session</strong></li>
-                        <li><span>PRP face/body package</span><strong>£650 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                        <li><span>PRP face/body package</span><strong>£950 / 5 sessions</strong><em>pay in 3 instalments</em></li>
-                        <li><span>PRP for hair loss</span><strong>£240 / 1 session</strong></li>
-                        <li><span>PRP for hair loss package</span><strong>£650 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                        <li><span>PRP for hair loss package</span><strong>£950 / 5 sessions</strong><em>pay in 3 instalments</em></li>
-                      </ul>
-                    </div>
-                    <div class="price-modal-foot">
-                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
-                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
-                    </div>
-                  </div>
-                </div>
-                <input type="radio" name="pricemodal" id="t-mesotherapy" class="price-modal-toggle price-modal-open" hidden>
-                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-mesotherapy-title">
-                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
-                  <div class="price-modal-panel">
-                    <div class="price-modal-head">
-                      <div><span class="price-kicker">Skin &amp; hair</span><h3 id="t-mesotherapy-title">Mesotherapy</h3></div>
-                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
-                    </div>
-                    <div class="price-modal-body">
-                      <ul class="price-list">
-                        <li><span>Mesotherapy consultation</span><strong>£10</strong></li>
-                        <li><span>Eye mesotherapy</span><strong>£80 / 1 session</strong></li>
-                        <li><span>Eye mesotherapy package</span><strong>£225 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                        <li><span>Face, neck and decollete</span><strong>£150 / 1 session</strong></li>
-                        <li><span>Face, neck and decollete package</span><strong>£390 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                        <li><span>Hair mesotherapy</span><strong>£140 / 1 session</strong></li>
-                        <li><span>Hair mesotherapy package</span><strong>£390 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                      </ul>
-                    </div>
-                    <div class="price-modal-foot">
-                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
-                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
-                    </div>
-                  </div>
-                </div>
-                <input type="radio" name="pricemodal" id="t-boosters" class="price-modal-toggle price-modal-open" hidden>
-                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-boosters-title">
-                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
-                  <div class="price-modal-panel">
-                    <div class="price-modal-head">
-                      <div><span class="price-kicker">Injectable skin support</span><h3 id="t-boosters-title">Skin boosters</h3></div>
-                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
-                    </div>
-                    <div class="price-modal-body">
-                      <ul class="price-list">
-                        <li><span>Skin boosters consultation</span><strong>£10</strong></li>
-                        <li><span>Profhilo</span><strong>£265 / 1 session</strong></li>
-                        <li><span>Profhilo course</span><strong>£490 / 2 sessions</strong></li>
-                        <li><span>Polynucleotides eyes</span><strong>£220 / 1 session</strong></li>
-                        <li><span>Polynucleotides eyes package</span><strong>£600 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                        <li><span>Polynucleotides face/neck</span><strong>£230 / 1 session</strong></li>
-                        <li><span>Polynucleotides face/neck package</span><strong>£620 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                      </ul>
-                    </div>
-                    <div class="price-modal-foot">
-                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
-                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
-                    </div>
-                  </div>
-                </div>
-                <input type="radio" name="pricemodal" id="t-lips" class="price-modal-toggle price-modal-open" hidden>
-                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-lips-title">
-                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
-                  <div class="price-modal-panel">
-                    <div class="price-modal-head">
-                      <div><span class="price-kicker">Hydration</span><h3 id="t-lips-title">Lip boosters</h3></div>
-                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
-                    </div>
-                    <div class="price-modal-body">
-                      <ul class="price-list">
-                        <li><span>Lip booster consultation</span><strong>£10</strong></li>
-                        <li><span>Skinfill Bacio lip booster</span><strong>£220 / 1 session</strong></li>
-                        <li><span>Skinfill Bacio lip booster package</span><strong>£580 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                      </ul>
-                    </div>
-                    <div class="price-modal-foot">
-                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
-                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
-                    </div>
-                  </div>
-                </div>
-                <input type="radio" name="pricemodal" id="t-peels" class="price-modal-toggle price-modal-open" hidden>
-                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-peels-title">
-                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
-                  <div class="price-modal-panel">
-                    <div class="price-modal-head">
-                      <div><span class="price-kicker">Skin resurfacing</span><h3 id="t-peels-title">Peels</h3></div>
-                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
-                    </div>
-                    <div class="price-modal-body">
-                      <ul class="price-list">
-                        <li><span>Peel consultation</span><strong>£10</strong></li>
-                        <li><span>Glycolic peel</span><strong>£70 / 1 session</strong></li>
-                        <li><span>Glycolic peel package</span><strong>£195 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                        <li><span>Salicylic peel</span><strong>£70 / 1 session</strong></li>
-                        <li><span>Salicylic peel package</span><strong>£195 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                        <li><span>Azelaic peel</span><strong>£70 / 1 session</strong></li>
-                        <li><span>Azelaic peel package</span><strong>£195 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                        <li><span>PRX-T33 peel</span><strong>£110 / 1 session</strong></li>
-                        <li><span>PRX-T33 peel package</span><strong>£310 / 3 sessions</strong><em>pay in 2 instalments</em></li>
-                      </ul>
-                    </div>
-                    <div class="price-modal-foot">
-                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
-                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
-                    </div>
-                  </div>
-                </div>
-                <input type="radio" name="pricemodal" id="t-facials" class="price-modal-toggle price-modal-open" hidden>
-                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-facials-title">
-                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
-                  <div class="price-modal-panel">
-                    <div class="price-modal-head">
-                      <div><span class="price-kicker">Facials</span><h3 id="t-facials-title">Facials &amp; skin polish</h3></div>
-                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
-                    </div>
-                    <div class="price-modal-body">
-                      <ul class="price-list">
-                        <li><span>Facial consultation</span><strong>£10</strong></li>
-                        <li><span>Fire &amp; Ice by IS Clinical Facial + LED Therapy</span><strong>£90</strong></li>
-                        <li><span>Bespoke deep cleansing facial</span><strong>£100</strong></li>
-                        <li><span>Dermaplaning</span><strong>£90</strong></li>
-                        <li><span>Dermaplaning + LED Therapy</span><strong>£100</strong></li>
-                        <li><span>Microdermabrasion</span><strong>£70</strong></li>
-                        <li><span>Microdermabrasion + LED Therapy</span><strong>£80</strong></li>
-                      </ul>
-                    </div>
-                    <div class="price-modal-foot">
-                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
-                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
-                    </div>
-                  </div>
-                </div>
-                <input type="radio" name="pricemodal" id="t-endospheres" class="price-modal-toggle price-modal-open" hidden>
-                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-endospheres-title">
-                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
-                  <div class="price-modal-panel">
-                    <div class="price-modal-head">
-                      <div><span class="price-kicker">Body therapy</span><h3 id="t-endospheres-title">Endospheres therapy</h3></div>
-                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
-                    </div>
-                    <div class="price-modal-body">
-                      <ul class="price-list">
-                        <li><span>Consultation</span><strong>£10</strong></li>
-                        <li><span>Trial session</span><strong>£50</strong></li>
-                        <li><span>Face</span><strong>£55 / 1 session</strong></li>
-                        <li><span>Face package</span><strong>£300 / 6 sessions</strong><em>pay in 2 instalments</em></li>
-                        <li><span>Face package</span><strong>£540 / 12 sessions</strong><em>pay in 3 instalments</em></li>
-                        <li><span>Half body</span><strong>£80 / 1 session</strong></li>
-                        <li><span>Half body package</span><strong>£450 / 6 sessions</strong><em>pay in 2 instalments</em></li>
-                        <li><span>Half body package</span><strong>£800 / 12 sessions</strong><em>pay in 3 instalments</em></li>
-                        <li><span>Full body</span><strong>£105 / 1 session</strong></li>
-                        <li><span>Full body package</span><strong>£600 / 6 sessions</strong><em>pay in 2 instalments</em></li>
-                        <li><span>Full body package</span><strong>£1080 / 12 sessions</strong><em>pay in 3 instalments</em></li>
-                        <li><span>Full body + face</span><strong>£120 / 1 session</strong></li>
-                        <li><span>Full body + face package</span><strong>£690 / 6 sessions</strong><em>pay in 2 instalments</em></li>
-                        <li><span>Full body + face package</span><strong>£1260 / 12 sessions</strong><em>pay in 3 instalments</em></li>
-                      </ul>
-                    </div>
-                    <div class="price-modal-foot">
-                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
-                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
-                    </div>
-                  </div>
-                </div>
-                <input type="radio" name="pricemodal" id="t-exosomes" class="price-modal-toggle price-modal-open" hidden>
-                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-exosomes-title">
-                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
-                  <div class="price-modal-panel">
-                    <div class="price-modal-head">
-                      <div><span class="price-kicker">Advanced skin</span><h3 id="t-exosomes-title">Exosomes</h3></div>
-                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
-                    </div>
-                    <div class="price-modal-body">
-                      <ul class="price-list">
-                        <li><span>Exosomes face</span><strong>£150</strong></li>
-                        <li><span>Exosomes face + neck + decollete</span><strong>£200</strong></li>
-                      </ul>
-                    </div>
-                    <div class="price-modal-foot">
-                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
-                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
-                    </div>
-                  </div>
-                </div>
-                <input type="radio" name="pricemodal" id="t-microneedling" class="price-modal-toggle price-modal-open" hidden>
-                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-microneedling-title">
-                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
-                  <div class="price-modal-panel">
-                    <div class="price-modal-head">
-                      <div><span class="price-kicker">Texture</span><h3 id="t-microneedling-title">Microneedling</h3></div>
-                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
-                    </div>
-                    <div class="price-modal-body">
-                      <ul class="price-list">
-                        <li><span>Microneedling face</span><strong>£130</strong></li>
-                        <li><span>Microneedling face + neck + decollete</span><strong>£200</strong></li>
-                        <li><span>Microneedling + PRX-T33 peel face</span><strong>£150</strong></li>
-                        <li><span>Microneedling + PRX-T33 peel face + neck + decollete</span><strong>£220</strong></li>
-                      </ul>
-                    </div>
-                    <div class="price-modal-foot">
-                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
-                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
-                    </div>
-                  </div>
-                </div>
-                <input type="radio" name="pricemodal" id="t-lashes" class="price-modal-toggle price-modal-open" hidden>
-                <div class="price-modal" role="dialog" aria-modal="true" aria-labelledby="t-lashes-title">
-                  <label class="price-modal-backdrop" for="t-none" aria-label="Close prices"></label>
-                  <div class="price-modal-panel">
-                    <div class="price-modal-head">
-                      <div><span class="price-kicker">Finishing</span><h3 id="t-lashes-title">Lashes &amp; brows</h3></div>
-                      <label class="price-modal-close" for="t-none" aria-label="Close prices">&times;</label>
-                    </div>
-                    <div class="price-modal-body">
-                      <ul class="price-list">
-                        <li><span>Lash/Brow lift + tint compulsory patch test 48h</span><strong>Free</strong></li>
-                        <li><span>Brow lamination, shape not included</span><strong>£45</strong></li>
-                        <li><span>Brow lamination &amp; tint, shape not included</span><strong>£50</strong></li>
-                        <li><span>Add-on brow waxing</span><strong>£10</strong></li>
-                        <li><span>Lash lift</span><strong>£50</strong></li>
-                        <li><span>Lash lift &amp; tint</span><strong>£55</strong></li>
-                      </ul>
-                    </div>
-                    <div class="price-modal-foot">
-                      <span class="price-modal-note">Guide prices &middot; subject to consultation</span>
-                      <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-                  </div>
         </section>
 
         <section class="section contact-section" id="contact">
@@ -754,30 +166,48 @@
               <h2>Contact &amp; location</h2>
             </div>
             <div class="contact-layout">
-              <div class="contact-card reveal" data-reveal>
-                <h3>Studio details</h3>
-                <ul class="info-list">
-                  <li><span>Telephone</span><a href="tel:07832839298">07832839298</a></li>
-                  <li><span>Email</span><a href="mailto:info@lumidermaesthetics.co.uk">info@lumidermaesthetics.co.uk</a></li>
-                  <li><span>Address</span>Unit 41 Skylines Village, Limeharbour, London, E14 9TS</li>
-                  <li><span>Instagram</span><a href="https://www.instagram.com/lumi.derm.aesthetic/" target="_blank" rel="noopener">@lumi.derm.aesthetic</a></li>
-                  <li><span>Facebook</span>LumiDerm</li>
+              <div class="contact-card contact-details reveal" data-reveal>
+                <div class="contact-card-head"><h3>Studio details</h3></div>
+                <ul class="contact-info">
+                  <li>
+                    <span class="info-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5a1 1 0 0 1 1-1h3l2 5-2.4 1.4a12 12 0 0 0 6 6L15 14l5 2v3a1 1 0 0 1-1 1A16 16 0 0 1 4 5z"/></svg></span>
+                    <span class="info-body"><span class="info-label">Telephone</span><a href="tel:07832839298">07832839298</a></span>
+                  </li>
+                  <li>
+                    <span class="info-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg></span>
+                    <span class="info-body"><span class="info-label">Email</span><a href="mailto:info@lumidermaesthetics.co.uk">info@lumidermaesthetics.co.uk</a></span>
+                  </li>
+                  <li>
+                    <span class="info-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.3"/></svg></span>
+                    <span class="info-body"><span class="info-label">Address</span><span>Unit 41 Skylines Village, Limeharbour, London, E14 9TS</span></span>
+                  </li>
+                  <li>
+                    <span class="info-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1.1"/></svg></span>
+                    <span class="info-body"><span class="info-label">Instagram</span><a href="https://www.instagram.com/lumi.derm.aesthetic/" target="_blank" rel="noopener">@lumi.derm.aesthetic</a></span>
+                  </li>
+                  <li>
+                    <span class="info-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 8h2V4.2h-2.6C10.6 4.2 9 5.9 9 8.4V10H7v4h2v6h4v-6h2.4l.6-4h-3V8.8c0-.6.3-.8 1-.8z"/></svg></span>
+                    <span class="info-body"><span class="info-label">Facebook</span><a href="https://www.facebook.com/LumiDerm" target="_blank" rel="noopener">LumiDerm</a></span>
+                  </li>
                 </ul>
                 <div class="contact-actions">
                   <a class="btn btn-primary" href="pages/booking.html">Book consultation</a>
                   <a class="btn btn-secondary" href="https://maps.google.com/?q=Unit%2041%20Skylines%20Village%20Limeharbour%20London%20E14%209TS" target="_blank" rel="noopener">Directions</a>
                 </div>
               </div>
-              <div class="contact-card reveal" data-reveal>
-                <h3>Opening hours</h3>
-                <ul class="info-list">
-                  <li><span>Monday</span>10:00 - 20:00</li>
-                  <li><span>Tuesday</span>10:00 - 20:00</li>
-                  <li><span>Wednesday</span>10:00 - 20:00</li>
-                  <li><span>Thursday</span>10:00 - 20:00</li>
-                  <li><span>Friday</span>10:00 - 20:00</li>
-                  <li><span>Saturday</span>10:00 - 18:00</li>
-                  <li><span>Sunday</span>Closed</li>
+              <div class="contact-card contact-hours reveal" data-reveal>
+                <div class="contact-card-head">
+                  <h3>Opening hours</h3>
+                  <span class="contact-status" data-open-status hidden><span class="contact-status-dot" aria-hidden="true"></span><span class="contact-status-text"></span></span>
+                </div>
+                <ul class="hours-list" data-hours-list>
+                  <li data-day="1" data-open="10:00" data-close="20:00"><span class="hours-day">Monday</span><span class="hours-time">10:00 – 20:00</span></li>
+                  <li data-day="2" data-open="10:00" data-close="20:00"><span class="hours-day">Tuesday</span><span class="hours-time">10:00 – 20:00</span></li>
+                  <li data-day="3" data-open="10:00" data-close="20:00"><span class="hours-day">Wednesday</span><span class="hours-time">10:00 – 20:00</span></li>
+                  <li data-day="4" data-open="10:00" data-close="20:00"><span class="hours-day">Thursday</span><span class="hours-time">10:00 – 20:00</span></li>
+                  <li data-day="5" data-open="10:00" data-close="20:00"><span class="hours-day">Friday</span><span class="hours-time">10:00 – 20:00</span></li>
+                  <li data-day="6" data-open="10:00" data-close="18:00"><span class="hours-day">Saturday</span><span class="hours-time">10:00 – 18:00</span></li>
+                  <li data-day="0" class="is-closed-day"><span class="hours-day">Sunday</span><span class="hours-time">Closed</span></li>
                 </ul>
               </div>
               <div class="map-panel consent-embed reveal" data-reveal data-consent-embed data-provider="google-maps" data-title="Map to Lumi Derm Aesthetics at Skylines Village" data-src="https://www.google.com/maps?q=Unit%2041%20Skylines%20Village%20Limeharbour%20London%20E14%209TS&amp;output=embed">
@@ -802,14 +232,99 @@
                 <p class="eyebrow">Client feedback</p>
                 <h2>Trusted by Lumi Derm clients</h2>
               </div>
-              <div class="review-strip-meta" data-reviews-summary aria-label="Rated 5.0 out of 5 from 15 reviews in this feed">
+              <div class="review-strip-meta" data-reviews-summary aria-label="Rated 5.0 out of 5 from 47 Treatwell reviews">
                 <strong>5.0</strong>
                 <span aria-hidden="true">★★★★★</span>
-                <small>15 reviews in this feed</small>
+                <small>47 Treatwell reviews</small>
               </div>
               <p class="review-strip-quote">“Professional, friendly and calm care in a clean studio.”</p>
               <button class="btn btn-secondary review-modal-open" type="button" data-review-modal-open>Read reviews</button>
             </div>
+          </div>
+        </section>
+
+        <section class="section faq-section" id="faq">
+          <div class="container">
+            <div class="section-header reveal" data-reveal>
+              <p class="eyebrow">Good to know</p>
+              <h2>Frequently asked questions</h2>
+              <p>Everything you need before your visit. Still unsure? Tap the chat button and ask us anything.</p>
+            </div>
+            <ul class="faq-minimal reveal" data-reveal data-faq-list>
+              <li class="faq-row">
+                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
+                  <span class="faq-q-text">Where is Lumi Derm located?</span>
+                </button>
+                <div class="faq-a-source" hidden><p>We're at Unit 41 Skylines Village, Limeharbour, London E14 9TS, in the Docklands. You can <a href="https://maps.google.com/?q=Unit%2041%20Skylines%20Village%20Limeharbour%20London%20E14%209TS" target="_blank" rel="noopener">open directions in Google Maps</a>.</p></div>
+              </li>
+              <li class="faq-row">
+                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
+                  <span class="faq-q-text">What are your opening hours?</span>
+                </button>
+                <div class="faq-a-source" hidden><p>Monday to Friday 10:00–20:00, Saturday 10:00–18:00, and closed on Sunday.</p></div>
+              </li>
+              <li class="faq-row">
+                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
+                  <span class="faq-q-text">How do I book an appointment?</span>
+                </button>
+                <div class="faq-a-source" hidden><p>Use the <a href="pages/booking.html">Book Now</a> page to choose your treatment and time and confirm securely online, or call us on <a href="tel:07832839298">07832839298</a>.</p></div>
+              </li>
+              <li class="faq-row">
+                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
+                  <span class="faq-q-text">Do I pay when I book?</span>
+                </button>
+                <div class="faq-a-source" hidden><p>Treatwell shows the payment options and any deposit or prepayment requirement that applies to the treatment you select. Review those details before confirming your booking.</p></div>
+              </li>
+              <li class="faq-row">
+                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
+                  <span class="faq-q-text">Do I need a consultation first?</span>
+                </button>
+                <div class="faq-a-source" hidden><p>For laser and advanced skin treatments we recommend a consultation so Iulia can assess your skin and build a personalised plan. You can book a consultation the same way as any treatment.</p></div>
+              </li>
+              <li class="faq-row">
+                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
+                  <span class="faq-q-text">Is a patch test needed for laser?</span>
+                </button>
+                <div class="faq-a-source" hidden><p>Yes — a quick patch test is carried out before your first laser session to make sure the treatment is suitable for your skin. We'll arrange this at your consultation.</p></div>
+              </li>
+              <li class="faq-row">
+                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
+                  <span class="faq-q-text">How should I prepare for laser hair removal?</span>
+                </button>
+                <div class="faq-a-source" hidden><p>Shave the area beforehand and avoid sun exposure, tanning and self-tan in the days before. Full pre-care guidance is given at your consultation.</p></div>
+              </li>
+              <li class="faq-row">
+                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
+                  <span class="faq-q-text">How many sessions will I need?</span>
+                </button>
+                <div class="faq-a-source" hidden><p>It depends on the treatment, your skin and hair type and your goals. Laser hair removal is usually a course of several sessions — we'll confirm the right plan for you at your consultation.</p></div>
+              </li>
+              <li class="faq-row">
+                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
+                  <span class="faq-q-text">Does it hurt, and is there downtime?</span>
+                </button>
+                <div class="faq-a-source" hidden><p>Most treatments are comfortable and well tolerated. Some may cause mild, short-lived redness, but downtime is minimal for the majority of our treatments.</p></div>
+              </li>
+              <li class="faq-row">
+                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
+                  <span class="faq-q-text">What is your cancellation policy?</span>
+                </button>
+                <div class="faq-a-source" hidden><p>Please give us as much notice as possible if you need to reschedule or cancel. Cancellation and deposit terms are shown during booking — see our <a href="pages/policies.html">policies</a> for details.</p></div>
+              </li>
+              <li class="faq-row">
+                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
+                  <span class="faq-q-text">Is there an age requirement?</span>
+                </button>
+                <div class="faq-a-source" hidden><p>Our treatments are for clients aged 18 and over.</p></div>
+              </li>
+              <li class="faq-row">
+                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
+                  <span class="faq-q-text">How can I contact you?</span>
+                </button>
+                <div class="faq-a-source" hidden><p>Call or text <a href="tel:07832839298">07832839298</a>, email <a href="mailto:info@lumidermaesthetics.co.uk">info@lumidermaesthetics.co.uk</a>, or message us on Instagram <a href="https://www.instagram.com/lumi.derm.aesthetic/" target="_blank" rel="noopener">@lumi.derm.aesthetic</a>.</p></div>
+              </li>
+            </ul>
+            <p class="faq-note reveal" data-reveal>Still can't find your answer? <button class="faq-note-link" type="button" data-faq-chat>Chat with us</button> or call <a href="tel:07832839298">07832839298</a>.</p>
           </div>
         </section>
 
@@ -823,6 +338,16 @@
               <p>Client feedback currently held in the Lumi Derm review feed.</p>
             </div>
             <div class="reviews-grid reviews-grid-expanded" data-reviews-grid data-reviews-source="assets/data/reviews.json" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="faq-modal" role="dialog" aria-modal="true" aria-labelledby="faq-modal-title" aria-hidden="true" data-faq-modal>
+          <div class="faq-modal-backdrop" data-faq-modal-close></div>
+          <div class="faq-modal-panel" role="document">
+            <button class="faq-modal-close" type="button" aria-label="Close answer" data-faq-modal-close></button>
+            <p class="eyebrow">Good to know</p>
+            <h2 id="faq-modal-title"></h2>
+            <div class="faq-modal-body" data-faq-modal-body></div>
           </div>
         </div>
       </main>
@@ -843,7 +368,7 @@
               </div>
             </div>
             <div class="footer-links">
-              <div><h3>Quick links</h3><ul><li><a href="pages/services.html">Services</a></li><li><a href="#prices">Prices</a></li><li><a href="pages/about.html">About</a></li><li><a href="pages/contact.html">Contact</a></li></ul></div>
+              <div><h3>Quick links</h3><ul><li><a href="pages/services.html">Treatments &amp; prices</a></li><li><a href="#faq">FAQ</a></li><li><a href="pages/about.html">About</a></li><li><a href="#contact">Contact</a></li></ul></div>
               <div><h3>Services</h3><ul><li><a href="pages/services.html">Laser treatments</a></li><li><a href="pages/services.html">Electrolysis</a></li><li><a href="pages/services.html">PRP &amp; boosters</a></li><li><a href="pages/services.html">Facials &amp; peels</a></li></ul></div>
               <div><h3>Legal</h3><ul><li><a href="pages/policies.html">Policies</a></li><li><a href="pages/privacy.html">Privacy</a></li><li><a href="pages/terms.html">Terms</a></li><li><a href="pages/cookies.html">Cookies</a></li></ul></div>
             </div>
@@ -852,6 +377,7 @@
         </div>
       </footer>
     </div>
-    <script src="js/main.js?v=20260628-stabilise"></script>
+    <script src="js/main.js?v=20260710-faq4"></script>
+    <script src="js/chatbot.js?v=20260710-flow1"></script>
   </body>
 </html>

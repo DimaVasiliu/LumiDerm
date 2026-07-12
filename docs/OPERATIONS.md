@@ -88,7 +88,7 @@ encrypted backups and evidence of restoration.
 
 ## Account recovery and secrets
 
-Cloudflare, GitHub, Square, Google, and Brevo accounts must use owner-controlled recovery methods
+Cloudflare, GitHub, Treatwell, Google, and any approved email-provider accounts must use owner-controlled recovery methods
 and MFA. Recovery codes and credentials are never stored in this repository. Provider secrets are
 entered through Cloudflare/Wrangler secret interfaces and rotated according to `docs/SECURITY.md`.
 

@@ -25,20 +25,21 @@ Public queries return only records in a published state and within any active da
 | `summary`, `description`          | text                       | Approved crawlable copy               |
 | `suitability_note`                | text nullable              | Non-diagnostic suitability wording    |
 | `preparation`, `aftercare`        | text nullable              | Approved guidance                     |
-| `duration_text`                   | text nullable              | Display value, reconciled with Square |
+| `duration_text`                   | text nullable              | Approved public display value         |
 | `image_id`                        | media foreign key nullable | Approved public image                 |
-| `square_catalog_object_id`        | text nullable              | Read-only reconciliation reference    |
+| `treatwell_reference`             | text nullable              | Non-secret manual reconciliation note |
 | `status`, `sort_order`, `version` | constrained                | Publishing and ordering               |
 
 ## Prices
 
 `price_groups` contains `id`, `treatment_id`, `title`, `eyebrow`, `from_price_text`, `status`,
 `sort_order`, and `version`. `price_items` contains `id`, `price_group_id`, `name`, `amount_text`,
-`sessions`, `instalment_note`, `square_catalog_object_id`, and `sort_order`.
+`sessions`, `instalment_note`, `treatwell_reference`, and `sort_order`.
 
 Display amounts remain text because approved wording can include “from” or consultation language.
-Reconciliation must compare the linked Square item and report differences; it must not silently
-alter Square or public values.
+Reconciliation must compare the approved website list with the live Treatwell menu and report
+differences. Until Treatwell supplies an approved integration, reconciliation is manual and must
+not scrape or silently alter either source.
 
 ## Offers
 

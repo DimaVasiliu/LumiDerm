@@ -1,7 +1,6 @@
 const header = document.querySelector('[data-header]');
 const navToggle = document.querySelector('[data-nav-toggle]');
 const navMenu = document.querySelector('[data-nav-menu]');
-const faqButtons = document.querySelectorAll('[data-faq-button]');
 const revealItems = document.querySelectorAll('[data-reveal]');
 const filterButtons = document.querySelectorAll('[data-filter]');
 const treatmentCards = document.querySelectorAll('[data-treatment-category]');
@@ -113,14 +112,61 @@ document.querySelectorAll("a[href^='#']").forEach((link) => {
   });
 });
 
-faqButtons.forEach((button) => {
-  const answer = document.getElementById(button.getAttribute('aria-controls'));
+// FAQ — minimal question list; each answer opens in a modal
+(function initFaqModal() {
+  const modal = document.querySelector('[data-faq-modal]');
+  const openers = document.querySelectorAll('[data-faq-open]');
+  if (!modal || !openers.length) return;
+
+  const titleEl = modal.querySelector('#faq-modal-title');
+  const bodyEl = modal.querySelector('[data-faq-modal-body]');
+  const closeEls = modal.querySelectorAll('[data-faq-modal-close]');
+  let lastFocus = null;
+
+  function openModal(button) {
+    const row = button.closest('.faq-row');
+    const source = row && row.querySelector('.faq-a-source');
+    const label = button.querySelector('.faq-q-text');
+    if (titleEl) titleEl.textContent = label ? label.textContent : '';
+    if (bodyEl) bodyEl.innerHTML = source ? source.innerHTML : '';
+
+    lastFocus = document.activeElement;
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('faq-modal-active');
+    requestAnimationFrame(() => modal.querySelector('.faq-modal-close')?.focus());
+  }
+
+  function closeModal() {
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('faq-modal-active');
+    if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+  }
+
+  openers.forEach((button) => button.addEventListener('click', () => openModal(button)));
+  closeEls.forEach((el) => el.addEventListener('click', closeModal));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+  });
+
+  // Keep focus inside the modal while it is open.
+  modal.addEventListener('keydown', (event) => {
+    if (event.key !== 'Tab' || !modal.classList.contains('is-open')) return;
+    const focusable = Array.from(modal.querySelectorAll(focusableSelector)).filter((el) => el.offsetParent !== null);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  });
+})();
+
+// "Chat with us" links open the floating chat assistant
+document.querySelectorAll('[data-faq-chat]').forEach((button) => {
   button.addEventListener('click', () => {
-    const isExpanded = button.getAttribute('aria-expanded') === 'true';
-    button.setAttribute('aria-expanded', String(!isExpanded));
-    if (answer) {
-      answer.style.maxHeight = isExpanded ? '0px' : `${answer.scrollHeight}px`;
-    }
+    const launcher = document.querySelector('.lumi-chat-launcher');
+    if (launcher instanceof HTMLElement) launcher.click();
   });
 });
 
@@ -303,207 +349,6 @@ function initCarousels() {
   });
 }
 
-function initOffersCarousel() {
-  const carousel = document.querySelector('[data-offers-carousel]');
-  if (!carousel) return;
-  const track = carousel.querySelector('[data-offers-track]');
-  const originalSlides = Array.from(carousel.querySelectorAll('.offer-slide'));
-  const prev = document.querySelector('[data-offers-prev]');
-  const next = document.querySelector('[data-offers-next]');
-  const dotsWrap = document.querySelector('[data-offers-dots]');
-  if (!track || originalSlides.length < 2) return;
-
-  carousel.setAttribute('role', 'region');
-  carousel.setAttribute('aria-roledescription', 'carousel');
-  carousel.setAttribute('aria-label', 'Treatments and offers');
-  carousel.setAttribute('tabindex', '0');
-  const status = document.createElement('p');
-  status.className = 'sr-only';
-  status.setAttribute('aria-live', 'polite');
-  carousel.appendChild(status);
-  const pauseButton = document.createElement('button');
-  pauseButton.className = 'carousel-pause';
-  pauseButton.type = 'button';
-  pauseButton.textContent = 'Pause rotation';
-  dotsWrap?.insertAdjacentElement('afterend', pauseButton);
-
-  originalSlides.forEach((slide, slideIndex) => {
-    slide.setAttribute('role', 'group');
-    slide.setAttribute('aria-roledescription', 'slide');
-    slide.setAttribute('aria-label', `${slideIndex + 1} of ${originalSlides.length}`);
-  });
-
-  originalSlides.forEach((slide) => {
-    const beforeClone = slide.cloneNode(true);
-    const afterClone = slide.cloneNode(true);
-    beforeClone.classList.add('is-clone');
-    afterClone.classList.add('is-clone');
-    beforeClone.setAttribute('aria-hidden', 'true');
-    afterClone.setAttribute('aria-hidden', 'true');
-    beforeClone.inert = true;
-    afterClone.inert = true;
-    setFocusableState(beforeClone, false);
-    setFocusableState(afterClone, false);
-    track.insertBefore(beforeClone, track.firstChild);
-    track.appendChild(afterClone);
-  });
-
-  const slides = Array.from(track.querySelectorAll('.offer-slide'));
-  const loopStart = originalSlides.length;
-
-  let index = loopStart;
-  let step = 0;
-  let timer;
-  let dots = [];
-  let paused = prefersReducedMotion;
-  let touchStartX = null;
-  pauseButton.textContent = paused ? 'Resume rotation' : 'Pause rotation';
-
-  function normalizedIndex() {
-    return (
-      (((index - loopStart) % originalSlides.length) + originalSlides.length) %
-      originalSlides.length
-    );
-  }
-
-  function setTrackPosition(withTransition = true) {
-    track.style.transition = withTransition ? '' : 'none';
-    const inset = slides[0]?.offsetLeft || 0;
-    track.style.transform = `translateX(${inset - index * step}px)`;
-    if (!withTransition) {
-      track.offsetHeight;
-      track.style.transition = '';
-    }
-  }
-
-  function measure() {
-    step = slides[1].offsetLeft - slides[0].offsetLeft || slides[0].offsetWidth;
-  }
-
-  function buildDots() {
-    if (!dotsWrap) return;
-    dotsWrap.innerHTML = '';
-    dots = [];
-    originalSlides.forEach((_, i) => {
-      const button = document.createElement('button');
-      button.className = 'carousel-dot';
-      button.type = 'button';
-      button.setAttribute('aria-label', `Go to offer ${i + 1} of ${originalSlides.length}`);
-      button.addEventListener('click', () => goTo(loopStart + i, true));
-      dotsWrap.appendChild(button);
-      dots.push(button);
-    });
-  }
-
-  function update(announce = false) {
-    setTrackPosition();
-    const active = normalizedIndex();
-    originalSlides.forEach((slide, slideIndex) => {
-      slide.classList.toggle('is-active', slideIndex === active);
-      slide.setAttribute('aria-current', slideIndex === active ? 'true' : 'false');
-    });
-    dots.forEach((dot, dotIndex) => {
-      const current = dotIndex === active;
-      dot.classList.toggle('is-active', current);
-      dot.setAttribute('aria-current', current ? 'true' : 'false');
-    });
-    if (announce) status.textContent = `Offer ${active + 1} of ${originalSlides.length}`;
-  }
-
-  function goTo(target, userAction = false) {
-    index = target;
-    update(userAction);
-    if (userAction) restart();
-  }
-
-  function normalizeLoopPosition() {
-    if (index >= loopStart + originalSlides.length) {
-      index -= originalSlides.length;
-      setTrackPosition(false);
-    } else if (index < loopStart) {
-      index += originalSlides.length;
-      setTrackPosition(false);
-    }
-    const active = normalizedIndex();
-    dots.forEach((dot, dotIndex) => dot.classList.toggle('is-active', dotIndex === active));
-  }
-
-  function start() {
-    if (paused) return;
-    timer = window.setInterval(() => goTo(index + 1), 3600);
-  }
-
-  function stop() {
-    window.clearInterval(timer);
-  }
-
-  function restart() {
-    stop();
-    start();
-  }
-
-  function rebuild() {
-    measure();
-    buildDots();
-    setTrackPosition(false);
-    const active = normalizedIndex();
-    dots.forEach((dot, dotIndex) => dot.classList.toggle('is-active', dotIndex === active));
-  }
-
-  prev?.addEventListener('click', () => goTo(index - 1, true));
-  next?.addEventListener('click', () => goTo(index + 1, true));
-  pauseButton.addEventListener('click', () => {
-    paused = !paused;
-    pauseButton.textContent = paused ? 'Resume rotation' : 'Pause rotation';
-    pauseButton.setAttribute('aria-pressed', String(paused));
-    if (paused) stop();
-    else start();
-  });
-  pauseButton.setAttribute('aria-pressed', String(paused));
-  track.addEventListener('transitionend', normalizeLoopPosition);
-  carousel.addEventListener('mouseenter', stop);
-  carousel.addEventListener('mouseleave', start);
-  carousel.addEventListener('focusin', stop);
-  carousel.addEventListener('focusout', start);
-  carousel.addEventListener('keydown', (event) => {
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      goTo(index - 1, true);
-    } else if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      goTo(index + 1, true);
-    }
-  });
-  carousel.addEventListener(
-    'touchstart',
-    (event) => {
-      touchStartX = event.changedTouches[0]?.clientX ?? null;
-      stop();
-    },
-    { passive: true },
-  );
-  carousel.addEventListener(
-    'touchend',
-    (event) => {
-      if (touchStartX === null) return;
-      const distance = (event.changedTouches[0]?.clientX ?? touchStartX) - touchStartX;
-      if (Math.abs(distance) > 45) goTo(index + (distance < 0 ? 1 : -1), true);
-      touchStartX = null;
-      start();
-    },
-    { passive: true },
-  );
-
-  let resizeTimer;
-  window.addEventListener('resize', () => {
-    window.clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(rebuild, 150);
-  });
-
-  rebuild();
-  start();
-}
-
 function initReviewsModal() {
   const modal = document.querySelector('[data-review-modal]');
   const openButton = document.querySelector('[data-review-modal-open]');
@@ -653,20 +498,22 @@ async function initReviewsFeed() {
 
     const summary = document.querySelector('[data-reviews-summary]');
     if (summary) {
-      const count = data.reviews.length;
+      const feedCount = data.reviews.length;
       const total = data.reviews.reduce(
         (sum, review) => sum + Math.max(1, Math.min(5, Number(review.rating) || 5)),
         0,
       );
-      const rating = (total / count).toFixed(1);
+      const rating = data.summary?.rating || (total / feedCount).toFixed(1);
+      const displayCount = data.summary?.count || feedCount;
+      const label = data.summary?.label || 'reviews in this feed';
       summary.setAttribute(
         'aria-label',
-        `Rated ${rating} out of 5 from ${count} reviews in this feed`,
+        `Rated ${rating} out of 5 from ${displayCount} ${label}`,
       );
       summary.innerHTML = `
         <strong>${rating}</strong>
         <span aria-hidden="true">★★★★★</span>
-        <small>${count} reviews in this feed</small>
+        <small>${displayCount} ${escapeHtml(label)}</small>
       `;
     }
   } catch {
@@ -674,13 +521,368 @@ async function initReviewsFeed() {
   }
 }
 
+/* ===================== Services: pinned horizontal scroll =====================
+   Scrolling into the service preview pins the section; cards travel sideways mapped to scroll
+   (rAF + light smoothing so a mouse wheel glides instead of jumping). The card in the
+   centre gently zooms while the clinic backdrop reveals and drifts behind the track.
+   Desktop only; reduced-motion / narrow screens keep the plain carousel. */
+/* ===================== Treatment Index (data-driven from offers.json) =====================
+   Offers are edited in the CMS (/cms/) which commits assets/data/offers.json to GitHub.
+   Cloudflare redeploys and the homepage picks the changes up automatically. */
+const OFFERS_SOURCE = 'assets/data/offers.json';
+
+function tiEscape(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function tiIsLive(offer) {
+  if (!offer || !offer.title) return false;
+  if (String(offer.status || 'live').toLowerCase() !== 'live') return false; // Drafts stay hidden
+  if (!offer.expires) return true;
+  const end = new Date(String(offer.expires) + 'T23:59:59');
+  if (isNaN(end.getTime())) return true;
+  return end.getTime() >= Date.now(); // expired offers drop off automatically
+}
+
+function tiWhenLabel(offer) {
+  if (offer.expires) {
+    const d = new Date(String(offer.expires) + 'T00:00:00');
+    if (!isNaN(d.getTime())) {
+      return 'Ends ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+  }
+  return offer.note || '';
+}
+
+function tiOfferHref(offer) {
+  return offer.service
+    ? 'pages/booking.html?service=' + encodeURIComponent(offer.service)
+    : 'pages/booking.html';
+}
+
+function tiInjectSeo(offers) {
+  const items = offers.map((offer, i) => {
+    const priceMatch = String(offer.price || '').match(/[\d]+(?:\.[\d]+)?/);
+    const node = {
+      '@type': 'Offer',
+      name: offer.title,
+      description: offer.description || undefined,
+      category: offer.category || undefined,
+      url: 'https://lumidermaesthetics.com/' + tiOfferHref(offer),
+      availability: 'https://schema.org/InStock',
+      seller: { '@type': 'BeautySalon', name: 'Lumi Derm Aesthetics' },
+    };
+    if (priceMatch) { node.price = priceMatch[0]; node.priceCurrency = 'GBP'; }
+    if (offer.expires) node.validThrough = offer.expires;
+    return { '@type': 'ListItem', position: i + 1, item: node };
+  });
+  const tag = document.createElement('script');
+  tag.type = 'application/ld+json';
+  tag.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList', itemListElement: items });
+  document.head.appendChild(tag);
+}
+
+async function initTreatmentIndex() {
+  const root = document.querySelector('[data-tindex]');
+  const list = root && root.querySelector('[data-tindex-list]');
+  if (!root || !list) return;
+
+  const layers = Array.from(root.querySelectorAll('[data-tindex-layer]'));
+  const badgeEl = root.querySelector('[data-tindex-badge]');
+  const priceEl = root.querySelector('[data-tindex-price]');
+  const catEl = root.querySelector('[data-tindex-cat]');
+  const capTitleEl = root.querySelector('[data-tindex-captitle]');
+  const ctaEl = root.querySelector('[data-tindex-cta]');
+  const progressEl = root.querySelector('[data-tindex-progress]');
+  const emptyEl = document.querySelector('[data-tindex-empty]');
+
+  let offers = [];
+  try {
+    const res = await fetch(OFFERS_SOURCE, { cache: 'no-cache' });
+    if (res.ok) {
+      const data = await res.json();
+      offers = Array.isArray(data) ? data : (Array.isArray(data.offers) ? data.offers : []);
+    }
+  } catch (err) { /* fall through to the empty state */ }
+
+  // Only live, unexpired offers — featured first, original order otherwise.
+  const live = offers.filter(tiIsLive);
+  live.sort((a, b) => (b.featured === true ? 1 : 0) - (a.featured === true ? 1 : 0));
+
+  if (!live.length) {
+    root.hidden = true;
+    if (emptyEl) emptyEl.hidden = false;
+    return;
+  }
+
+  list.innerHTML = live.map((offer, i) => {
+    const feat = offer.featured ? ' is-featured' : '';
+    const img = tiEscape(offer.image || '');
+    return (
+      '<li class="tindex-row' + feat + '" data-tindex-row' +
+      ' data-img="' + img + '" data-badge="' + tiEscape(offer.badge || '') + '"' +
+      ' data-price="' + tiEscape(offer.price || '') + '"' +
+      " style=\"--tindex-img: url('" + img + "')\">" +
+        '<a class="tindex-link" href="' + tiEscape(tiOfferHref(offer)) + '">' +
+          '<span class="tindex-num">' + String(i + 1).padStart(2, '0') + '</span>' +
+          '<span class="tindex-body">' +
+            '<span class="tindex-cat">' + tiEscape(offer.category || '') +
+              (offer.featured ? '<em class="tindex-star">Featured</em>' : '') +
+            '</span>' +
+            '<span class="tindex-title">' + tiEscape(offer.title) + '</span>' +
+            '<span class="tindex-desc">' + tiEscape(offer.description || '') + '</span>' +
+          '</span>' +
+          '<span class="tindex-meta">' +
+            '<span class="tindex-price">' + tiEscape(offer.price || '') + '</span>' +
+            '<span class="tindex-when">' + tiEscape(tiWhenLabel(offer)) + '</span>' +
+          '</span>' +
+          '<span class="tindex-arrow" aria-hidden="true">&rarr;</span>' +
+        '</a>' +
+      '</li>'
+    );
+  }).join('');
+
+  const rows = Array.from(list.querySelectorAll('[data-tindex-row]'));
+
+  // Keep the active row within the scrollable list (used during auto-advance).
+  function ensureRowVisible(row) {
+    if (list.scrollHeight <= list.clientHeight + 2) return; // not scrollable
+    const listRect = list.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    let delta = 0;
+    if (rowRect.top < listRect.top + 4) delta = rowRect.top - listRect.top - 10;
+    else if (rowRect.bottom > listRect.bottom - 4) delta = rowRect.bottom - listRect.bottom + 10;
+    if (delta) list.scrollBy({ top: delta, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+  }
+
+  // Preview panel: crossfade the image and sync the featured caption + CTA.
+  let front = 0;
+  let active = -1;
+  let timer = null;
+  function setActive(i) {
+    if (i === active || !rows[i]) return;
+    active = i;
+    const row = rows[i];
+    const offer = live[i] || {};
+    rows.forEach((r, n) => r.classList.toggle('is-active', n === i));
+    const src = row.dataset.img;
+    const back = layers[1 - front];
+    if (back) {
+      if (src && back.getAttribute('src') !== src) back.setAttribute('src', src);
+      back.classList.add('is-visible');
+      if (layers[front]) layers[front].classList.remove('is-visible');
+      front = 1 - front;
+    }
+    if (badgeEl) badgeEl.textContent = offer.badge || '';
+    if (priceEl) priceEl.textContent = offer.price || '';
+    if (catEl) catEl.textContent = offer.category || '';
+    if (capTitleEl) capTitleEl.textContent = offer.title || '';
+    if (ctaEl) {
+      ctaEl.setAttribute('href', tiOfferHref(offer));
+      ctaEl.setAttribute('aria-label', offer.title ? 'View offer: ' + offer.title : 'View offer');
+    }
+    if (timer) {
+      restartProgress(); // only animate the bar while auto-playing
+      ensureRowVisible(row); // keep the auto-highlighted row within the scroll box
+    }
+  }
+  rows.forEach((row, i) => {
+    row.addEventListener('mouseenter', () => setActive(i));
+    row.addEventListener('focusin', () => setActive(i));
+  });
+
+  // Ambient auto-advance through the visible offers. The visitor takes over by
+  // hovering/focusing the section; it never runs on touch or under reduced motion.
+  const AUTO_INTERVAL = 3800;
+  const canAuto =
+    !prefersReducedMotion && window.matchMedia('(min-width: 901px) and (hover: hover)').matches;
+  if (progressEl) progressEl.style.setProperty('--tindex-interval', AUTO_INTERVAL + 'ms');
+
+  function visibleIndices() {
+    return rows.map((_, i) => i).filter((i) => !rows[i].classList.contains('is-hidden-row'));
+  }
+  function restartProgress() {
+    if (!progressEl || prefersReducedMotion) return;
+    progressEl.classList.remove('is-running');
+    void progressEl.offsetWidth; // reflow so the animation restarts
+    progressEl.classList.add('is-running');
+  }
+  function play() {
+    if (!canAuto || timer) return;
+    const vis = visibleIndices();
+    if (vis.length < 2) return;
+    restartProgress();
+    timer = window.setInterval(() => {
+      const v = visibleIndices();
+      const pos = v.indexOf(active);
+      setActive(v[(pos + 1) % v.length]);
+    }, AUTO_INTERVAL);
+  }
+  function pause() {
+    if (timer) {
+      window.clearInterval(timer);
+      timer = null;
+    }
+    if (progressEl) progressEl.classList.remove('is-running');
+  }
+
+  if (canAuto) {
+    root.addEventListener('pointerenter', pause);
+    root.addEventListener('pointerleave', play);
+    root.addEventListener('focusin', pause);
+    root.addEventListener('focusout', (event) => {
+      if (!root.contains(event.relatedTarget)) play();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) pause();
+      else play();
+    });
+  }
+
+  setActive(0);
+  play();
+
+  // Size the scrollable list to the preview image so the two columns line up.
+  // On mobile the list flows naturally (CSS clears the inline height).
+  const frame = root.querySelector('.tindex-frame');
+  function matchListHeight() {
+    if (!frame) return;
+    if (window.matchMedia('(min-width: 901px)').matches) {
+      const h = Math.round(frame.getBoundingClientRect().height);
+      if (h > 0) list.style.maxHeight = h + 'px';
+    } else {
+      list.style.maxHeight = '';
+    }
+  }
+  matchListHeight();
+  window.addEventListener('resize', matchListHeight, { passive: true });
+  if (window.requestAnimationFrame) window.requestAnimationFrame(matchListHeight);
+
+  tiInjectSeo(live);
+}
+
+// Contact: highlight today's opening hours and show a live open/closed status.
+function initContactStatus() {
+  const list = document.querySelector('[data-hours-list]');
+  if (!list) return;
+  const rows = Array.from(list.querySelectorAll('li[data-day]'));
+  if (!rows.length) return;
+  const statusEl = document.querySelector('[data-open-status]');
+  const now = new Date();
+  const today = now.getDay(); // 0 = Sunday … 6 = Saturday
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const toMin = (t) => {
+    const [h, m] = String(t).split(':').map(Number);
+    return h * 60 + m;
+  };
+  const byDay = {};
+  rows.forEach((row) => {
+    byDay[Number(row.dataset.day)] = row;
+  });
+
+  // Highlight today's row with a "Today" tag.
+  const todayRow = byDay[today];
+  if (todayRow) {
+    todayRow.classList.add('is-today');
+    const dayCell = todayRow.querySelector('.hours-day');
+    if (dayCell && !dayCell.querySelector('.hours-today')) {
+      const tag = document.createElement('em');
+      tag.className = 'hours-today';
+      tag.textContent = 'Today';
+      dayCell.appendChild(tag);
+    }
+  }
+
+  if (!statusEl) return;
+  const textEl = statusEl.querySelector('.contact-status-text');
+  let openNow = false;
+  let closeAt = null;
+  if (todayRow && todayRow.dataset.open && todayRow.dataset.close) {
+    const openMin = toMin(todayRow.dataset.open);
+    const closeMin = toMin(todayRow.dataset.close);
+    if (nowMin >= openMin && nowMin < closeMin) {
+      openNow = true;
+      closeAt = todayRow.dataset.close;
+    }
+  }
+
+  if (openNow) {
+    statusEl.classList.add('is-open');
+    if (textEl) textEl.textContent = 'Open now · until ' + closeAt;
+  } else {
+    statusEl.classList.add('is-closed');
+    let label = 'Closed';
+    if (todayRow && todayRow.dataset.open && nowMin < toMin(todayRow.dataset.open)) {
+      label = 'Closed · opens ' + todayRow.dataset.open + ' today';
+    } else {
+      for (let i = 1; i <= 7; i += 1) {
+        const nextRow = byDay[(today + i) % 7];
+        if (nextRow && nextRow.dataset.open) {
+          const when = i === 1 ? 'tomorrow' : dayNames[(today + i) % 7];
+          label = 'Closed · opens ' + when + ' ' + nextRow.dataset.open;
+          break;
+        }
+      }
+    }
+    if (textEl) textEl.textContent = label;
+  }
+  statusEl.hidden = false;
+}
+
+// Hero: auto-advancing treatment image showcase on the right of the hero.
+function initHeroShowcase() {
+  const root = document.querySelector('[data-hero-showcase]');
+  if (!root) return;
+  const slides = Array.from(root.querySelectorAll('.hero-showcase-slide'));
+  const label = root.querySelector('[data-hero-label]');
+  const dotsWrap = root.querySelector('[data-hero-dots]');
+  if (slides.length < 2 || !dotsWrap) return;
+
+  const dots = slides.map((_, i) => {
+    const dot = document.createElement('span');
+    dot.className = 'hero-showcase-dot' + (i === 0 ? ' is-active' : '');
+    dotsWrap.appendChild(dot);
+    return dot;
+  });
+
+  let index = 0;
+  function show(next) {
+    if (next === index) return;
+    slides[index].classList.remove('is-active');
+    dots[index].classList.remove('is-active');
+    index = next;
+    slides[index].classList.add('is-active');
+    dots[index].classList.add('is-active');
+    if (label && slides[index].dataset.label) label.textContent = slides[index].dataset.label;
+  }
+
+  // Reduced motion: keep the first image static, no auto-advance.
+  if (prefersReducedMotion) return;
+
+  const advance = () => show((index + 1) % slides.length);
+  let timer = window.setInterval(advance, 4200);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      window.clearInterval(timer);
+      timer = null;
+    } else if (!timer) {
+      timer = window.setInterval(advance, 4200);
+    }
+  });
+}
+
 initReviewsFeed().finally(() => {
   initMotion();
   initCarousels();
-  initOffersCarousel();
+  initTreatmentIndex();
   initPriceAccordions();
   initPriceModals();
   initReviewsModal();
+  initHeroShowcase();
+  initContactStatus();
 });
 
 document.querySelectorAll('[data-nav-link]').forEach((link) => {
@@ -694,8 +896,8 @@ document.querySelectorAll('[data-nav-link]').forEach((link) => {
 
 /* ===================== Cookie consent banner (GDPR/PECR) ===================== */
 (function initCookieConsent() {
-  const KEY = 'ld-cookie-consent-v2';
-  const VERSION = 2;
+  const KEY = 'ld-cookie-consent-v3';
+  const VERSION = 3;
   const embedPlaceholders = new WeakMap();
   let banner = null;
 
@@ -717,16 +919,48 @@ document.querySelectorAll('[data-nav-link]').forEach((link) => {
 
   function loadEmbed(container) {
     if (!container || container.dataset.loaded === 'true') return;
-    const source = container.dataset.src;
     const provider = container.dataset.provider;
-    if (!source || !provider) return;
+    if (!provider) return;
+
+    if (provider === 'treatwell') {
+      const widgetUrl = container.dataset.widgetUrl;
+      const scriptSource = container.dataset.widgetScript;
+      const styleSource = container.dataset.widgetStyle;
+      if (!widgetUrl || !scriptSource || !styleSource) return;
+
+      const stylesheet = document.createElement('link');
+      stylesheet.rel = 'stylesheet';
+      stylesheet.type = 'text/css';
+      stylesheet.media = 'screen';
+      stylesheet.href = styleSource;
+      stylesheet.dataset.treatwellWidgetAsset = 'true';
+
+      const widget = document.createElement('div');
+      widget.id = 'wahanda-online-booking-widget-iframe';
+      widget.dataset.widgetUrl = widgetUrl;
+
+      const script = document.createElement('script');
+      script.src = scriptSource;
+      script.async = true;
+      script.dataset.treatwellWidgetAsset = 'true';
+
+      document.head.appendChild(stylesheet);
+      container.replaceChildren(widget);
+      document.head.appendChild(script);
+      container.dataset.loaded = 'true';
+      container.classList.add('is-loaded');
+      return;
+    }
+
+    const source = container.dataset.src;
+    if (!source) return;
 
     const iframe = document.createElement('iframe');
     iframe.src = source;
     iframe.loading = 'lazy';
     iframe.referrerPolicy = 'no-referrer-when-downgrade';
     iframe.title = container.dataset.title || `Embedded content from ${provider}`;
-    iframe.className = provider === 'square' ? 'booking-frame' : 'consent-embed-frame';
+    iframe.className = 'consent-embed-frame';
     container.replaceChildren(iframe);
     container.dataset.loaded = 'true';
     container.classList.add('is-loaded');
@@ -735,6 +969,9 @@ document.querySelectorAll('[data-nav-link]').forEach((link) => {
   function unloadEmbed(container) {
     const placeholder = embedPlaceholders.get(container);
     if (!container || placeholder === undefined || container.dataset.loaded !== 'true') return;
+    if (container.dataset.provider === 'treatwell') {
+      document.querySelectorAll('[data-treatwell-widget-asset]').forEach((asset) => asset.remove());
+    }
     container.innerHTML = placeholder;
     container.dataset.loaded = 'false';
     container.classList.remove('is-loaded');
@@ -789,7 +1026,7 @@ document.querySelectorAll('[data-nav-link]').forEach((link) => {
     banner.setAttribute('aria-label', 'Cookie and external media settings');
     banner.innerHTML = `
       <div class="cookie-banner-inner">
-        <p class="cookie-banner-text">Essential storage keeps your choice. Optional external media loads Square booking and Google Maps only when you allow it or select a one-time load button. Square may show its own cookie choices after loading. Read our <a href="${cookiesHref}">Cookie Policy</a>.</p>
+        <p class="cookie-banner-text">Essential storage keeps your choice. Optional external content loads the Treatwell booking widget and Google Maps only when you allow it or select a one-time load button. Treatwell and Google apply their own privacy and cookie choices. Read our <a href="${cookiesHref}">Cookie Policy</a>.</p>
         <div class="cookie-banner-actions">
           <button type="button" class="btn btn-secondary" data-consent="essential">Essential only</button>
           <button type="button" class="btn btn-primary" data-consent="external-media">Allow external media</button>

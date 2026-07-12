@@ -1,0 +1,108 @@
+{
+  "offers": [
+    {
+      "title": "15% off your first visit",
+      "category": "New client offer",
+      "description": "Your first single-session treatment, 15% off as you settle in with us.",
+      "price": "From £34",
+      "badge": "Save 15%",
+      "image": "assets/images/offer-laser-treatments-cynosure.webp",
+      "service": "laser-hair-removal",
+      "status": "live",
+      "featured": true,
+      "expires": "2026-08-31",
+      "note": ""
+    },
+    {
+      "title": "Bundle areas & save up to 30%",
+      "category": "Laser packages",
+      "description": "Combine 2–5 laser areas in one plan and save from 15% up to 30% across your course.",
+      "price": "Save up to 30%",
+      "badge": "Bundle",
+      "image": "assets/images/offer-electrolysis-apilus.webp",
+      "service": "laser-hair-removal",
+      "status": "live",
+      "featured": false,
+      "expires": "",
+      "note": "Ongoing offer"
+    },
+    {
+      "title": "Summer glow: Fire & Ice + LED",
+      "category": "Glow facial",
+      "description": "The iconic iS Clinical facial finished with LED light therapy for instant radiance.",
+      "price": "£90",
+      "badge": "Seasonal",
+      "image": "assets/images/offer-facials.webp",
+      "service": "facials",
+      "status": "live",
+      "featured": false,
+      "expires": "2026-09-30",
+      "note": ""
+    },
+    {
+      "title": "Profhilo duo — save £40",
+      "category": "Skin boosters",
+      "description": "The full two-session Profhilo protocol for firmer, hydrated, glowing skin.",
+      "price": "£490",
+      "badge": "Save £40",
+      "image": "assets/images/offer-skin-boosters.webp",
+      "service": "profhilo",
+      "status": "live",
+      "featured": false,
+      "expires": "",
+      "note": "Ongoing offer"
+    },
+    {
+      "title": "Try Endospheres for £50",
+      "category": "Body therapy",
+      "description": "A full session of lymphatic drainage, smoothing and contouring — for £50.",
+      "price": "£50",
+      "badge": "Trial",
+      "image": "assets/images/offer-endospheres-therapy.webp",
+      "service": "endospheres",
+      "status": "live",
+      "featured": false,
+      "expires": "",
+      "note": "First session only"
+    },
+    {
+      "title": "Any peel — course of 3",
+      "category": "Skin peels",
+      "description": "Glycolic, salicylic or azelaic — a course of three, saving versus single sessions.",
+      "price": "£195",
+      "badge": "Course",
+      "image": "assets/images/offer-peels.webp",
+      "service": "facial-peels",
+      "status": "live",
+      "featured": false,
+      "expires": "",
+      "note": "Ongoing offer"
+    },
+    {
+      "title": "You both get 10% off",
+      "category": "Refer a friend",
+      "description": "Refer a friend and you'll each receive 10% off your next treatment.",
+      "price": "10% each",
+      "badge": "Refer",
+      "image": "assets/images/offer-mesotherapy.webp",
+      "service": "",
+      "status": "live",
+      "featured": false,
+      "expires": "",
+      "note": "Always on"
+    },
+    {
+      "title": "Microneedling + exosome glow",
+      "category": "Advanced skin",
+      "description": "Collagen-boosting microneedling supercharged with an exosome finish.",
+      "price": "From £150",
+      "badge": "New",
+      "image": "assets/images/offer-microneedling.webp",
+      "service": "microneedling",
+      "status": "live",
+      "featured": false,
+      "expires": "",
+      "note": "Limited time"
+    }
+  ]
+}

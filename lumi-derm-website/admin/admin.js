@@ -1,6 +1,6 @@
-/* Lumi Derm Admin — client-side workspace.
-   All data persists in localStorage as drafts. Swap the save/load + send
-   functions for real API/CMS calls (Square, GitHub, D1) when keys are ready. */
+/* Lumi Derm Admin — client-side website workspace.
+   Website content persists in localStorage as drafts. Treatwell remains the
+   external system of record for bookings, payments and client information. */
 
 const STORAGE_KEY = "lumi-derm-admin-draft-v2";
 const PASS_KEY = "lumi-derm-admin-pass";
@@ -56,18 +56,14 @@ const defaultPriceGroups = [
   { id: "facials", label: "Facials", title: "Facials and skin polish", min: "from £70", rows: [["Facial consultation", "£10"], ["Fire & Ice by IS Clinical + LED", "£90"], ["Bespoke deep cleansing facial", "£100"], ["Microdermabrasion", "£70"]] }
 ];
 
-const defaultSubscribers = [
-  { email: "client@example.com", name: "Sample Client", segment: "All subscribers", consent: "Opted in" }
-];
-
 const campaignTemplates = {
-  offer: { name: "New offer announcement", audience: "All subscribers", subject: "A little something for your skin ✨", preview: "Our newest treatment offer is here", body: "Hi {first_name},\n\nWe've just added a new offer at Lumi Derm Aesthetics and wanted you to be first to know.\n\n• What it is\n• Who it's perfect for\n• How long it lasts\n\nTap below to book your slot — spaces are limited.\n\nSee you soon,\nIulia", ctaLabel: "Book now", ctaUrl: "https://lumidermaesthetics.com/pages/booking.html" },
-  newsletter: { name: "Monthly newsletter", audience: "All subscribers", subject: "Your Lumi Derm glow update", preview: "What's new this month at the clinic", body: "Hi {first_name},\n\nHere's what's new at Lumi Derm this month:\n\n• A new treatment to try\n• A skin tip from Iulia\n• This month's featured offer\n\nWe'd love to see you soon.\n\nIulia", ctaLabel: "See treatments", ctaUrl: "https://lumidermaesthetics.com/pages/services.html" },
-  birthday: { name: "Birthday treat", audience: "All subscribers", subject: "Happy birthday — a treat from Lumi Derm 🎁", preview: "A little birthday gift for you", body: "Happy birthday, {first_name}!\n\nTo celebrate, here's a little something to enjoy on your next visit this month.\n\nWith love,\nIulia at Lumi Derm", ctaLabel: "Book your treat", ctaUrl: "https://lumidermaesthetics.com/pages/booking.html" },
+  offer: { name: "New offer announcement", audience: "Select an eligible audience in Treatwell Connect", subject: "A little something for your skin ✨", preview: "Our newest treatment offer is here", body: "Hi {first_name},\n\nWe've just added a new offer at Lumi Derm Aesthetics and wanted you to be first to know.\n\n• What it is\n• Who it's perfect for\n• How long it lasts\n\nTap below to book your slot — spaces are limited.\n\nSee you soon,\nIulia", ctaLabel: "Book now", ctaUrl: "https://lumidermaesthetics.com/pages/booking.html" },
+  newsletter: { name: "Monthly newsletter", audience: "Select an eligible audience in Treatwell Connect", subject: "Your Lumi Derm glow update", preview: "What's new this month at the clinic", body: "Hi {first_name},\n\nHere's what's new at Lumi Derm this month:\n\n• A new treatment to try\n• A skin tip from Iulia\n• This month's featured offer\n\nWe'd love to see you soon.\n\nIulia", ctaLabel: "See treatments", ctaUrl: "https://lumidermaesthetics.com/pages/services.html" },
+  birthday: { name: "Birthday treat", audience: "Select an eligible audience in Treatwell Connect", subject: "Happy birthday — a treat from Lumi Derm 🎁", preview: "A little birthday gift for you", body: "Happy birthday, {first_name}!\n\nTo celebrate, here's a little something to enjoy on your next visit this month.\n\nWith love,\nIulia at Lumi Derm", ctaLabel: "Book your treat", ctaUrl: "https://lumidermaesthetics.com/pages/booking.html" },
   winback: { name: "We miss you (win-back)", audience: "Lapsed clients (90+ days)", subject: "We've missed you at Lumi Derm", preview: "It's been a while — here's a welcome-back offer", body: "Hi {first_name},\n\nIt's been a little while since your last visit and we'd love to see you again. Here's a welcome-back offer to make it easy.\n\nBook whenever suits you.\n\nIulia", ctaLabel: "Rebook now", ctaUrl: "https://lumidermaesthetics.com/pages/booking.html" }
 };
 
-const panelTitles = { dashboard: "Overview", offers: "Offers", prices: "Prices", marketing: "Marketing", reviews: "Reviews", media: "Media", content: "Pages", clients: "Clients", settings: "Settings" };
+const panelTitles = { dashboard: "Overview", offers: "Offers", prices: "Prices", marketing: "Marketing", reviews: "Reviews", media: "Media", content: "Pages", clients: "Treatwell", settings: "Settings" };
 
 let state = loadDraft();
 let selectedOfferIndex = 0;
@@ -136,8 +132,11 @@ function runApp() {
   bindContent();
   bindSettings();
   bindGenericToasts();
+  bindPublishing();
   renderAll();
   loadReviewsFromJson();
+  // First run (no local draft yet) -> start from the offers actually on the website.
+  if (!localStorage.getItem(STORAGE_KEY)) loadOffersFromSite(false);
 }
 
 /* ---------------- Storage ---------------- */
@@ -150,11 +149,10 @@ function loadDraft() {
       reviews: Array.isArray(s.reviews) ? s.reviews : [],
       content: s.content || {},
       campaigns: Array.isArray(s.campaigns) ? s.campaigns : [],
-      subscribers: Array.isArray(s.subscribers) ? s.subscribers : structuredClone(defaultSubscribers),
       savedAt: s.savedAt || null
     };
   } catch {
-    return { offers: structuredClone(defaultOffers), priceGroups: structuredClone(defaultPriceGroups), reviews: [], content: {}, campaigns: [], subscribers: structuredClone(defaultSubscribers), savedAt: null };
+    return { offers: structuredClone(defaultOffers), priceGroups: structuredClone(defaultPriceGroups), reviews: [], content: {}, campaigns: [], savedAt: null };
   }
 }
 
@@ -199,7 +197,7 @@ function bindTopActions() {
   document.querySelectorAll("[data-export-admin]").forEach((b) => b.addEventListener("click", exportAll));
   document.querySelectorAll("[data-import-admin]").forEach((b) => b.addEventListener("click", () => document.querySelector("[data-import-file]").click()));
   document.querySelector("[data-import-file]")?.addEventListener("change", importAll);
-  document.querySelector("[data-publish-demo]")?.addEventListener("click", () => toast("Publish guide: enable Cloudflare Access, connect Sveltia CMS or a protected API, test Square links, then push to GitHub to redeploy."));
+  document.querySelector("[data-publish-demo]")?.addEventListener("click", () => { goPanel("offers"); publishOffers(); });
 }
 
 function exportAll() {
@@ -214,7 +212,7 @@ function importAll(e) {
     try {
       const data = JSON.parse(reader.result);
       state = { ...state, ...data };
-      ["offers", "priceGroups", "reviews", "campaigns", "subscribers"].forEach((k) => { if (!Array.isArray(state[k])) state[k] = []; });
+      ["offers", "priceGroups", "reviews", "campaigns"].forEach((k) => { if (!Array.isArray(state[k])) state[k] = []; });
       selectedOfferIndex = 0; selectedCampaignIndex = -1;
       renderAll(); saveDraft("Backup imported.");
     } catch { toast("That file could not be read as a valid backup."); }
@@ -226,13 +224,15 @@ function importAll(e) {
 /* ---------------- Offers ---------------- */
 function bindOffers() {
   document.querySelector("[data-add-offer]")?.addEventListener("click", () => {
-    state.offers.push({ title: "New offer", category: "Draft", price: "from £", description: "Short offer description.", image: imageOptions[0], status: "Draft", priority: state.offers.length + 1 });
+    state.offers.push({ title: "New offer", category: "Offer", price: "From £", badge: "", description: "Short offer description.", image: imageOptions[0], service: "", status: "Draft", featured: false, expires: "", note: "Ongoing offer" });
     selectedOfferIndex = state.offers.length - 1;
     renderOffers(); saveDraft("Offer added.");
   });
   document.querySelector("[data-save-offer]")?.addEventListener("click", () => {
     const offer = state.offers[selectedOfferIndex]; if (!offer) return;
-    document.querySelectorAll("[data-offer-field]").forEach((f) => { offer[f.dataset.offerField] = f.value; });
+    document.querySelectorAll("[data-offer-field]").forEach((f) => {
+      offer[f.dataset.offerField] = f.type === "checkbox" ? f.checked : f.value;
+    });
     renderOffers(); saveDraft("Offer saved.");
   });
   document.querySelectorAll("[data-offer-field]").forEach((f) => f.addEventListener("input", renderOfferPreview));
@@ -270,7 +270,11 @@ function moveOffer(i, dir) {
 
 function populateOfferEditor() {
   const offer = state.offers[selectedOfferIndex]; if (!offer) return;
-  document.querySelectorAll("[data-offer-field]").forEach((f) => { f.value = offer[f.dataset.offerField] || ""; });
+  document.querySelectorAll("[data-offer-field]").forEach((f) => {
+    const key = f.dataset.offerField;
+    if (f.type === "checkbox") f.checked = offer[key] === true;
+    else f.value = offer[key] || "";
+  });
   renderOfferPreview();
 }
 
@@ -345,7 +349,7 @@ function getSelectedPriceGroup() { return state.priceGroups.find((g) => g.id ===
 /* ---------------- Marketing: campaigns ---------------- */
 function bindMarketing() {
   document.querySelector("[data-add-campaign]")?.addEventListener("click", () => {
-    state.campaigns.unshift({ name: "Untitled campaign", audience: "All subscribers", subject: "", preview: "", body: "", ctaLabel: "Book now", ctaUrl: "https://lumidermaesthetics.com/pages/booking.html", sendDate: "", status: "Draft", template: "" });
+    state.campaigns.unshift({ name: "Untitled campaign", audience: "Select an eligible audience in Treatwell Connect", subject: "", preview: "", body: "", ctaLabel: "Book now", ctaUrl: "https://lumidermaesthetics.com/pages/booking.html", sendDate: "", status: "Draft", template: "" });
     selectedCampaignIndex = 0; renderCampaigns(); populateCampaignEditor(); saveDraft("Campaign created.");
   });
   document.querySelector("[data-campaign-template]")?.addEventListener("change", (e) => {
@@ -363,19 +367,9 @@ function bindMarketing() {
   document.querySelector("[data-copy-campaign]")?.addEventListener("click", () => {
     const get = (k) => document.querySelector(`[data-campaign-field="${k}"]`)?.value || "";
     const text = `Subject: ${get("subject")}\nPreview: ${get("preview")}\n\n${get("body")}\n\n[${get("ctaLabel")}] ${get("ctaUrl")}`;
-    navigator.clipboard?.writeText(text).then(() => toast("Campaign text copied — paste into Square Marketing."), () => toast("Copy not available in this browser."));
+    navigator.clipboard?.writeText(text).then(() => toast("Campaign text copied. Send it only through an approved Treatwell or email workflow."), () => toast("Copy not available in this browser."));
   });
   document.querySelectorAll("[data-campaign-field]").forEach((f) => f.addEventListener("input", renderCampaignPreview));
-
-  // Subscribers
-  document.querySelector("[data-add-sub]")?.addEventListener("click", () => {
-    const email = prompt("Subscriber email?"); if (!email) return;
-    state.subscribers.push({ email, name: "", segment: "All subscribers", consent: "Opted in" });
-    renderSubs(); saveDraft("Subscriber added.");
-  });
-  document.querySelector("[data-export-subs]")?.addEventListener("click", exportSubs);
-  document.querySelector("[data-import-subs]")?.addEventListener("click", () => document.querySelector("[data-subs-file]").click());
-  document.querySelector("[data-subs-file]")?.addEventListener("change", importSubs);
 }
 
 function renderCampaigns() {
@@ -384,7 +378,7 @@ function renderCampaigns() {
     <article class="campaign-item ${i === selectedCampaignIndex ? "is-selected" : ""}">
       <div>
         <strong>${escapeHtml(c.name || "Untitled")}</strong>
-        <small>${escapeHtml(c.audience || "All subscribers")} · ${escapeHtml(c.status || "Draft")}${c.sendDate ? " · " + escapeHtml(c.sendDate) : ""}</small>
+        <small>${escapeHtml(c.audience || "Select audience when sending")} · ${escapeHtml(c.status || "Draft")}${c.sendDate ? " · " + escapeHtml(c.sendDate) : ""}</small>
       </div>
       <div class="campaign-actions">
         <button class="tiny-button" type="button" data-edit-campaign="${i}">Edit</button>
@@ -413,48 +407,8 @@ function renderCampaignPreview() {
       <h4>${escapeHtml(get("subject") || "Your subject line")}</h4>
       <p>${body}</p>
       <span class="email-cta">${escapeHtml(get("ctaLabel") || "Book now")}</span>
-      <small class="email-foot">To: ${escapeHtml(get("audience") || "All subscribers")} · Unsubscribe handled by Square</small>
+      <small class="email-foot">Audience: ${escapeHtml(get("audience") || "Select in the sending platform")} · Draft only, not sent from this admin</small>
     </div>`;
-}
-
-/* ---------------- Subscribers ---------------- */
-function renderSubs() {
-  const table = document.querySelector("[data-subs-table]"); if (!table) return;
-  table.innerHTML = state.subscribers.map((s, i) => `
-    <tr>
-      <td><strong>${escapeHtml(s.email)}</strong></td>
-      <td>${escapeHtml(s.name || "—")}</td>
-      <td>${escapeHtml(s.segment || "All subscribers")}</td>
-      <td><span class="status-pill">${escapeHtml(s.consent || "Opted in")}</span></td>
-      <td><button class="tiny-button danger" type="button" data-del-sub="${i}">Remove</button></td>
-    </tr>`).join("") || '<tr><td colspan="5">No subscribers yet. Add or import a list.</td></tr>';
-  table.querySelectorAll("[data-del-sub]").forEach((b) => b.addEventListener("click", () => { state.subscribers.splice(+b.dataset.delSub, 1); renderSubs(); saveDraft("Subscriber removed."); }));
-}
-
-function exportSubs() {
-  const rows = [["email", "name", "segment", "consent"], ...state.subscribers.map((s) => [s.email, s.name || "", s.segment || "", s.consent || ""])];
-  const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-  download(`lumi-subscribers-${new Date().toISOString().slice(0, 10)}.csv`, csv, "text/csv");
-  toast("Subscribers exported as CSV.");
-}
-
-function importSubs(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const lines = String(reader.result).split(/\r?\n/).filter(Boolean);
-    let added = 0;
-    lines.forEach((line, idx) => {
-      const cells = line.split(",").map((c) => c.replace(/^"|"$/g, "").trim());
-      const email = cells[0];
-      if (!email || !email.includes("@") || (idx === 0 && /email/i.test(email))) return;
-      state.subscribers.push({ email, name: cells[1] || "", segment: cells[2] || "All subscribers", consent: cells[3] || "Opted in" });
-      added += 1;
-    });
-    renderSubs(); saveDraft(`${added} subscriber(s) imported.`);
-    e.target.value = "";
-  };
-  reader.readAsText(file);
 }
 
 /* ---------------- Reviews ---------------- */
@@ -546,7 +500,6 @@ function renderAll() {
   renderCampaigns();
   populateCampaignEditor();
   renderCampaignPreview();
-  renderSubs();
   renderMedia();
   renderReviews();
   updateMetrics();
@@ -568,7 +521,6 @@ function updateMetrics() {
   setText('[data-metric="offers-published"]', state.offers.filter((o) => o.status === "Published").length);
   setText('[data-metric="reviews-pending"]', state.reviews.filter((r) => r.status === "pending").length);
   setText('[data-metric="campaigns"]', state.campaigns.length);
-  setText('[data-metric="subscribers"]', state.subscribers.length);
 
   const attention = document.querySelector("[data-attention]"); if (!attention) return;
   const items = [];
@@ -577,8 +529,7 @@ function updateMetrics() {
   const drafts = state.offers.filter((o) => o.status === "Draft").length;
   if (drafts) items.push(["Offer drafts", `${drafts} not yet published`]);
   const sched = state.campaigns.filter((c) => c.status === "Scheduled").length;
-  if (sched) items.push(["Scheduled campaigns", `${sched} ready to send in Square`]);
-  if (!state.subscribers.length) items.push(["No subscribers", "Add or import your opted-in list"]);
+  if (sched) items.push(["Scheduled campaign drafts", `${sched} ready for consent review before sending`]);
   items.push(["Protect the admin", "Enable Cloudflare Access before sharing this URL"]);
   attention.innerHTML = items.map(([t, d]) => `<li><span>${escapeHtml(t)}</span><strong>${escapeHtml(d)}</strong></li>`).join("");
 }
@@ -600,3 +551,186 @@ function toast(message) {
 }
 function escapeHtml(v) { return String(v ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
 function escapeAttr(v) { return escapeHtml(v); }
+
+/* =====================================================================
+   PUBLISHING — offers created here go live on the homepage.
+   The homepage reads assets/data/offers.json. Publishing commits that
+   file to GitHub; Cloudflare then rebuilds the site (about a minute).
+   ===================================================================== */
+const OFFERS_JSON_URL = "../assets/data/offers.json";                    // what the homepage reads
+const OFFERS_REPO_PATH = "lumi-derm-website/assets/data/offers.json";    // path inside the repo
+const GH_KEY = "lumi-derm-gh-v1";
+
+function getGh() {
+  try { return JSON.parse(localStorage.getItem(GH_KEY) || "{}"); } catch { return {}; }
+}
+function setGh(cfg) { localStorage.setItem(GH_KEY, JSON.stringify(cfg)); }
+
+/* admin shape -> offers.json shape (exactly what the homepage expects) */
+function toOffersJson(offers) {
+  return offers.map((o) => ({
+    title: o.title || "",
+    category: o.category || "",
+    description: o.description || "",
+    price: o.price || "",
+    badge: o.badge || "",
+    image: !o.image ? "" : (o.image.startsWith("assets/") ? o.image : "assets/images/" + o.image),
+    service: o.service || "",
+    status: String(o.status || "live").toLowerCase() === "draft" ? "draft" : "live",
+    featured: o.featured === true,
+    expires: o.expires || "",
+    note: o.note || ""
+  }));
+}
+/* offers.json shape -> admin shape */
+function fromOffersJson(list) {
+  return list.map((o) => ({
+    title: o.title || "",
+    category: o.category || "",
+    description: o.description || "",
+    price: o.price || "",
+    badge: o.badge || "",
+    image: String(o.image || "").replace(/^assets\/images\//, ""),
+    service: o.service || "",
+    status: String(o.status || "live").toLowerCase() === "draft" ? "Draft" : "Live",
+    featured: o.featured === true,
+    expires: o.expires || "",
+    note: o.note || ""
+  }));
+}
+
+/* Pull the offers that are actually on the website right now */
+async function loadOffersFromSite(announce) {
+  try {
+    const res = await fetch(OFFERS_JSON_URL + "?t=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error("not found");
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : data.offers;
+    if (!Array.isArray(list)) throw new Error("bad shape");
+    state.offers = fromOffersJson(list);
+    selectedOfferIndex = 0;
+    renderOffers();
+    saveDraft(announce ? "Loaded the offers currently on the website." : null);
+    setPublishStatus("In sync with the website.");
+  } catch (err) {
+    if (announce) toast("Could not read the website's offers file.");
+  }
+}
+
+function setPublishStatus(message) {
+  const el = document.querySelector("[data-publish-status]");
+  if (el) el.textContent = message;
+}
+
+function b64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  bytes.forEach((b) => { bin += String.fromCharCode(b); });
+  return btoa(bin);
+}
+
+async function ghRequest(path, options) {
+  const cfg = getGh();
+  const res = await fetch("https://api.github.com/repos/" + cfg.repo + "/contents/" + path, {
+    ...options,
+    headers: {
+      Authorization: "Bearer " + cfg.token,
+      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json",
+      ...(options && options.headers)
+    }
+  });
+  return res;
+}
+
+/* THE BUTTON: create offers -> click Publish -> live on the homepage */
+async function publishOffers() {
+  const cfg = getGh();
+  if (!cfg.repo || !cfg.token) {
+    toast("Add the website connection first (Settings).");
+    goPanel("settings");
+    return;
+  }
+  const button = document.querySelector("[data-publish-offers]");
+  if (button) { button.disabled = true; button.textContent = "Publishing…"; }
+  setPublishStatus("Publishing to the website…");
+
+  try {
+    const branch = cfg.branch || "main";
+
+    // 1. current file (need its sha to update it)
+    let sha;
+    const current = await ghRequest(OFFERS_REPO_PATH + "?ref=" + encodeURIComponent(branch), { method: "GET" });
+    if (current.ok) sha = (await current.json()).sha;
+    else if (current.status !== 404) {
+      const e = await current.json().catch(() => ({}));
+      throw new Error(e.message || ("GitHub said " + current.status));
+    }
+
+    // 2. commit the new offers
+    const body = {
+      message: "Update homepage offers (via admin)",
+      content: b64(JSON.stringify({ offers: toOffersJson(state.offers) }, null, 2) + "\n"),
+      branch
+    };
+    if (sha) body.sha = sha;
+
+    const put = await ghRequest(OFFERS_REPO_PATH, { method: "PUT", body: JSON.stringify(body) });
+    if (!put.ok) {
+      const e = await put.json().catch(() => ({}));
+      throw new Error(e.message || ("GitHub said " + put.status));
+    }
+
+    state.publishedAt = new Date().toISOString();
+    saveDraft(null);
+    setPublishStatus("Published. The website updates in about a minute.");
+    toast("Published — your offers will be live on the website in about a minute.");
+  } catch (err) {
+    setPublishStatus("Publish failed: " + err.message);
+    toast("Publish failed: " + err.message);
+  } finally {
+    if (button) { button.disabled = false; button.textContent = "Publish offers"; }
+  }
+}
+
+function bindPublishing() {
+  document.querySelector("[data-publish-offers]")?.addEventListener("click", publishOffers);
+  document.querySelector("[data-reload-offers]")?.addEventListener("click", () => {
+    if (!confirm("Replace what's in the editor with the offers currently on the website?")) return;
+    loadOffersFromSite(true);
+  });
+
+  // GitHub connection (one-time setup)
+  const cfg = getGh();
+  document.querySelectorAll("[data-gh-field]").forEach((f) => { f.value = cfg[f.dataset.ghField] || ""; });
+  if (cfg.repo && cfg.token) setGhStatus("Connected to " + cfg.repo + " (" + (cfg.branch || "main") + ").");
+
+  document.querySelector("[data-gh-save]")?.addEventListener("click", () => {
+    const next = {};
+    document.querySelectorAll("[data-gh-field]").forEach((f) => { next[f.dataset.ghField] = f.value.trim(); });
+    if (!next.branch) next.branch = "main";
+    setGh(next);
+    setGhStatus("Saved. Use “Test connection” to check it works.");
+    toast("Website connection saved.");
+  });
+
+  document.querySelector("[data-gh-test]")?.addEventListener("click", async () => {
+    const c = getGh();
+    if (!c.repo || !c.token) { setGhStatus("Fill in the repository and token first."); return; }
+    setGhStatus("Testing…");
+    try {
+      const res = await ghRequest(OFFERS_REPO_PATH + "?ref=" + encodeURIComponent(c.branch || "main"), { method: "GET" });
+      if (res.ok) setGhStatus("Connected. Found offers.json — publishing will work.");
+      else if (res.status === 404) setGhStatus("Connected to the repo, but offers.json was not found at " + OFFERS_REPO_PATH + ".");
+      else if (res.status === 401 || res.status === 403) setGhStatus("The token was rejected. Check it has Contents: read & write on this repo.");
+      else setGhStatus("GitHub said " + res.status + ".");
+    } catch (err) {
+      setGhStatus("Could not reach GitHub: " + err.message);
+    }
+  });
+}
+
+function setGhStatus(message) {
+  const el = document.querySelector("[data-gh-status]");
+  if (el) el.textContent = message;
+}

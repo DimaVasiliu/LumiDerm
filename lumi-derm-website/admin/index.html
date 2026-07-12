@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
     <title>Lumi Derm Admin | Website Control Room</title>
-    <meta name="description" content="Private Lumi Derm Aesthetics admin workspace for managing website content, offers, prices, reviews, marketing campaigns, subscribers and settings.">
+    <meta name="description" content="Private Lumi Derm Aesthetics workspace for managing website content, offers, prices, selected reviews, media and Treatwell links.">
     <link rel="icon" type="image/png" href="../assets/icons/favicon.png">
     <link rel="apple-touch-icon" href="../assets/icons/lumi-derm-logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260626d">
+    <link rel="stylesheet" href="admin.css?v=20260712-publish1">
   </head>
   <body>
     <!-- Soft lock screen (light gate only — enable Cloudflare Access for real protection) -->
@@ -40,7 +40,7 @@
           <button class="admin-nav-item" type="button" data-admin-panel="reviews">Reviews</button>
           <button class="admin-nav-item" type="button" data-admin-panel="media">Media</button>
           <button class="admin-nav-item" type="button" data-admin-panel="content">Pages</button>
-          <button class="admin-nav-item" type="button" data-admin-panel="clients">Clients</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="clients">Treatwell</button>
           <button class="admin-nav-item" type="button" data-admin-panel="settings">Settings</button>
         </nav>
         <div class="admin-sidebar-note">
@@ -72,7 +72,7 @@
               <article class="metric-card"><span>Offers live</span><strong data-metric="offers-published">0</strong><p>Published offer cards on the homepage carousel.</p></article>
               <article class="metric-card"><span>Reviews pending</span><strong data-metric="reviews-pending">0</strong><p>Awaiting your approval before they show publicly.</p></article>
               <article class="metric-card"><span>Campaign drafts</span><strong data-metric="campaigns">0</strong><p>Email/offer campaigns saved and ready to send.</p></article>
-              <article class="metric-card"><span>Subscribers</span><strong data-metric="subscribers">0</strong><p>Opted-in contacts for offers and updates.</p></article>
+              <article class="metric-card"><span>Booking system</span><strong>Treatwell</strong><p>Bookings, payments and client records stay in Treatwell Connect.</p></article>
             </div>
 
             <div class="admin-grid admin-grid-2">
@@ -80,7 +80,7 @@
                 <div class="admin-card-head"><div><p class="admin-eyebrow">Quick actions</p><h2>Jump straight in</h2></div></div>
                 <div class="quick-actions">
                   <button class="quick-action" type="button" data-go="offers"><strong>Add an offer</strong><span>New homepage carousel card</span></button>
-                  <button class="quick-action" type="button" data-go="marketing"><strong>Send an offer email</strong><span>Compose a campaign</span></button>
+                  <button class="quick-action" type="button" data-go="marketing"><strong>Draft an offer email</strong><span>Prepare approved campaign copy</span></button>
                   <button class="quick-action" type="button" data-go="reviews"><strong>Approve reviews</strong><span>Clear the pending queue</span></button>
                   <button class="quick-action" type="button" data-go="prices"><strong>Update prices</strong><span>Edit treatment price groups</span></button>
                 </div>
@@ -110,7 +110,17 @@
                 <h2>Offers carousel</h2>
                 <p>Create offer cards, change the order, hide seasonal cards, and edit prices. Drag-free reordering with the arrows.</p>
               </div>
-              <button class="admin-button admin-button-primary" type="button" data-add-offer>Add offer</button>
+              <div class="admin-actions-inline">
+                <button class="admin-button admin-button-secondary" type="button" data-reload-offers>Reload from website</button>
+                <button class="admin-button admin-button-primary" type="button" data-add-offer>Add offer</button>
+              </div>
+            </div>
+            <div class="admin-publish-bar">
+              <div>
+                <strong>Publish to the website</strong>
+                <p data-publish-status>Your changes are saved in this browser only. Click publish to put them live.</p>
+              </div>
+              <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-offers>Publish offers</button>
             </div>
             <div class="admin-layout">
               <section class="admin-card">
@@ -123,12 +133,35 @@
               </section>
               <aside class="admin-card admin-editor">
                 <p class="admin-eyebrow">Offer editor</p>
-                <label>Title<input type="text" data-offer-field="title"></label>
-                <label>Category<input type="text" data-offer-field="category"></label>
-                <label>Display price<input type="text" data-offer-field="price"></label>
+                <label>Title<input type="text" data-offer-field="title" placeholder="15% off your first visit"></label>
+                <label>Category<input type="text" data-offer-field="category" placeholder="New client offer"></label>
+                <label>Display price<input type="text" data-offer-field="price" placeholder="From £34"></label>
+                <label>Badge<input type="text" data-offer-field="badge" placeholder="Save 15%"></label>
                 <label>Short description<textarea rows="3" data-offer-field="description"></textarea></label>
-                <label>Image file<select data-offer-field="image"></select></label>
-                <label>Status<select data-offer-field="status"><option>Published</option><option>Draft</option><option>Hidden</option></select></label>
+                <label>Image<select data-offer-field="image"></select></label>
+                <label>Links to treatment<select data-offer-field="service">
+                  <option value="">— none (general booking) —</option>
+                  <option value="laser-hair-removal">Laser hair removal</option>
+                  <option value="laser-rejuvenation">Laser skin rejuvenation</option>
+                  <option value="vascular-treatment">Laser vascular &amp; veins</option>
+                  <option value="electrolysis">Electrolysis</option>
+                  <option value="prp">PRP</option>
+                  <option value="profhilo">Profhilo</option>
+                  <option value="polynucleotides">Polynucleotides</option>
+                  <option value="mesotherapy">Mesotherapy</option>
+                  <option value="hair-loss">Hair loss treatment</option>
+                  <option value="lip-boosters">Lip boosters</option>
+                  <option value="exosomes">Exosomes</option>
+                  <option value="facials">Facials</option>
+                  <option value="facial-peels">Facial peels</option>
+                  <option value="microneedling">Microneedling</option>
+                  <option value="endospheres">Endospheres therapy</option>
+                  <option value="lashes-brows">Lashes &amp; brows</option>
+                </select></label>
+                <label>Status<select data-offer-field="status"><option>Live</option><option>Draft</option></select></label>
+                <label>End date <small>(offer disappears automatically after this)</small><input type="date" data-offer-field="expires"></label>
+                <label>Note <small>(used when there is no end date)</small><input type="text" data-offer-field="note" placeholder="Ongoing offer"></label>
+                <label class="admin-check"><input type="checkbox" data-offer-field="featured"> Featured (shows first)</label>
                 <button class="admin-button admin-button-primary" type="button" data-save-offer>Save offer</button>
                 <div class="offer-preview" data-offer-preview></div>
               </aside>
@@ -141,7 +174,7 @@
               <div>
                 <p class="admin-eyebrow">Treatment menu</p>
                 <h2>Prices and groups</h2>
-                <p>Keep price groups, rows, consultation notes and instalment wording aligned with the clinic list. Square stays the source of paid booking items.</p>
+                <p>Keep website price groups, consultation notes and instalment wording aligned with the approved clinic list and the live Treatwell menu.</p>
               </div>
               <button class="admin-button admin-button-primary" type="button" data-add-price-group>Add group</button>
             </div>
@@ -165,7 +198,7 @@
               <div>
                 <p class="admin-eyebrow">Email &amp; SMS</p>
                 <h2>Marketing campaigns</h2>
-                <p>Compose offers and updates to send through Square Marketing. Draft and preview here; sending happens in Square with proper consent and an unsubscribe link.</p>
+                <p>Prepare approved campaign copy here. Sending happens only through a communication feature enabled in Treatwell Connect or another owner-approved email service with valid consent and unsubscribe handling.</p>
               </div>
               <button class="admin-button admin-button-primary" type="button" data-add-campaign>New campaign</button>
             </div>
@@ -181,12 +214,8 @@
                 </select></label>
                 <label>Campaign name<input type="text" data-campaign-field="name"></label>
                 <label>Audience<select data-campaign-field="audience">
-                  <option>All subscribers</option>
-                  <option>New clients (last 30 days)</option>
-                  <option>Lapsed clients (90+ days)</option>
-                  <option>Booked: laser &amp; hair</option>
-                  <option>Booked: facials &amp; skin</option>
-                  <option>Booked: injectables</option>
+                  <option>Select an eligible audience in Treatwell Connect</option>
+                  <option>Website newsletter subscribers only</option>
                 </select></label>
                 <label>Email subject<input type="text" data-campaign-field="subject"></label>
                 <label>Preview text<input type="text" data-campaign-field="preview"></label>
@@ -202,9 +231,9 @@
                 <div class="admin-actions-inline start">
                   <button class="admin-button admin-button-primary" type="button" data-save-campaign>Save campaign</button>
                   <button class="admin-button admin-button-secondary" type="button" data-copy-campaign>Copy text</button>
-                  <a class="admin-button admin-button-ghost" href="https://squareup.com/dashboard/marketing" target="_blank" rel="noopener">Send in Square</a>
+                  <a class="admin-button admin-button-ghost" href="https://connect.treatwell.co.uk/" target="_blank" rel="noopener noreferrer">Open Treatwell Connect</a>
                 </div>
-                <p class="admin-help">Drafts save in this browser. Paste into Square Marketing (or a future API) to send — Square handles consent and unsubscribe.</p>
+                <p class="admin-help">Drafts save in this browser and do not send anything. Before sending, verify that the chosen Treatwell communication feature is enabled and that every recipient has valid marketing consent.</p>
               </section>
               <aside class="admin-stack">
                 <section class="admin-card">
@@ -218,23 +247,11 @@
               </aside>
             </div>
 
-            <div class="admin-section-head">
-              <div><p class="admin-eyebrow">Audience</p><h2>Newsletter subscribers</h2><p>People who opted in to offers. This list will sync to Square or your email tool. Add or import now; export any time.</p></div>
-              <div class="admin-actions-inline">
-                <button class="admin-button admin-button-secondary" type="button" data-import-subs>Import CSV</button>
-                <button class="admin-button admin-button-secondary" type="button" data-export-subs>Export CSV</button>
-                <button class="admin-button admin-button-primary" type="button" data-add-sub>Add subscriber</button>
-                <input type="file" accept=".csv,text/csv" data-subs-file hidden>
-              </div>
-            </div>
-            <div class="admin-card">
-              <div class="admin-table-wrap">
-                <table class="admin-table">
-                  <thead><tr><th>Email</th><th>Name</th><th>Segment</th><th>Consent</th><th></th></tr></thead>
-                  <tbody data-subs-table></tbody>
-                </table>
-              </div>
-            </div>
+            <section class="admin-card">
+              <p class="admin-eyebrow">Audience and consent</p>
+              <h3>Manage recipients in the approved sending platform</h3>
+              <p>Do not copy Treatwell client records into this browser workspace. Client history and booking contacts remain in Treatwell. A separate website newsletter list should only be added later with explicit opt-in, unsubscribe handling and an approved email provider.</p>
+            </section>
           </section>
 
           <!-- ===================== REVIEWS ===================== -->
@@ -299,7 +316,7 @@
                 <h3>Policy status</h3>
                 <ul class="admin-status-list">
                   <li><span>Privacy Policy</span><strong>Live — pending solicitor review</strong></li>
-                  <li><span>Terms &amp; booking policy</span><strong>Live — add Square cancellation rules</strong></li>
+                  <li><span>Terms &amp; booking policy</span><strong>Live — confirm Treatwell cancellation rules</strong></li>
                   <li><span>Cookie Policy</span><strong>Live — consent banner active</strong></li>
                 </ul>
               </section>
@@ -319,29 +336,29 @@
           <section class="admin-panel" id="clients" data-admin-section>
             <div class="admin-section-head">
               <div>
-                <p class="admin-eyebrow">Square first</p>
-                <h2>Clients &amp; bookings</h2>
-                <p>Customer records, payments and booking history live in Square. Open the relevant area below.</p>
+                <p class="admin-eyebrow">Treatwell first</p>
+                <h2>Bookings and client operations</h2>
+                <p>Availability, appointments, payment options, reminders and client records stay in Treatwell. This website does not duplicate them.</p>
               </div>
             </div>
             <div class="admin-grid admin-grid-3">
               <article class="admin-card">
                 <p class="admin-eyebrow">Bookings</p>
-                <h3>Square Appointments</h3>
-                <p>Calendar, services, staff, deposits/full payments, reminders and cancellations.</p>
-                <a class="admin-button admin-button-secondary" href="https://squareup.com/dashboard/appointments" target="_blank" rel="noopener">Open Appointments</a>
+                <h3>Treatwell Connect</h3>
+                <p>Manage the calendar, services, staff, clients, reminders, cancellations and enabled payment options.</p>
+                <a class="admin-button admin-button-secondary" href="https://connect.treatwell.co.uk/" target="_blank" rel="noopener noreferrer">Open Treatwell Connect</a>
               </article>
               <article class="admin-card">
-                <p class="admin-eyebrow">Customers</p>
-                <h3>Customer Directory</h3>
-                <p>Your client CRM — contacts, payment history and preferences.</p>
-                <a class="admin-button admin-button-secondary" href="https://squareup.com/dashboard/customers/directory" target="_blank" rel="noopener">Open Directory</a>
+                <p class="admin-eyebrow">Customer view</p>
+                <h3>Public Treatwell listing</h3>
+                <p>Check the live treatment menu, prices, availability and customer booking experience.</p>
+                <a class="admin-button admin-button-secondary" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener noreferrer">View public listing</a>
               </article>
               <article class="admin-card">
-                <p class="admin-eyebrow">Marketing</p>
-                <h3>Square Marketing</h3>
-                <p>Send the campaigns you draft in the Marketing tab.</p>
-                <a class="admin-button admin-button-secondary" href="https://squareup.com/dashboard/marketing" target="_blank" rel="noopener">Open Marketing</a>
+                <p class="admin-eyebrow">Partner support</p>
+                <h3>Treatwell help</h3>
+                <p>Request the official website widget and confirm review, campaign and service-link options enabled for this account.</p>
+                <a class="admin-button admin-button-secondary" href="https://www.treatwell.co.uk/info/get-in-touch/" target="_blank" rel="noopener noreferrer">Open partner help</a>
               </article>
             </div>
           </section>
@@ -363,6 +380,19 @@
                 <button class="admin-button admin-button-secondary" type="button" data-save-pass>Save passcode</button>
                 <p class="admin-help">This is a light lock only. For real protection, enable <strong>Cloudflare Access</strong> on the /admin route.</p>
               </section>
+              <section class="admin-card admin-editor">
+                <p class="admin-eyebrow">Publishing</p>
+                <h3>Website connection</h3>
+                <label>Repository <small>(owner/repo)</small><input type="text" data-gh-field="repo" placeholder="DimaVasiliu/LumiDerm"></label>
+                <label>Branch<input type="text" data-gh-field="branch" placeholder="main"></label>
+                <label>Access token<input type="password" data-gh-field="token" placeholder="github_pat_..." autocomplete="off"></label>
+                <div class="admin-actions-inline start" style="margin-top:0.8rem">
+                  <button class="admin-button admin-button-primary" type="button" data-gh-save>Save connection</button>
+                  <button class="admin-button admin-button-secondary" type="button" data-gh-test>Test connection</button>
+                </div>
+                <p class="admin-help" data-gh-status>Not connected. Set this up once — Iulia never needs to touch it again.</p>
+                <p class="admin-help"><strong>Keep this page behind Cloudflare Access.</strong> The token is stored in this browser and only allows editing website files.</p>
+              </section>
               <section class="admin-card">
                 <p class="admin-eyebrow">Data</p>
                 <h3>Backup &amp; restore</h3>
@@ -378,9 +408,9 @@
                 <ul class="admin-status-list">
                   <li><span>Cloudflare Access</span><strong>Required before sharing this URL</strong></li>
                   <li><span>Sveltia CMS + GitHub OAuth</span><strong>For real publishing of offers/prices</strong></li>
-                  <li><span>Square Appointments + Marketing</span><strong>Live booking, payments, email</strong></li>
+                  <li><span>Treatwell Connect</span><strong>Booking and client system of record</strong></li>
                   <li><span>Cloudflare Web Analytics</span><strong>Not verified or present in repository code</strong></li>
-                  <li><span>Newsletter signup → Square</span><strong>Phase 2 build</strong></li>
+                  <li><span>Marketing consent workflow</span><strong>Confirm Treatwell account features before build</strong></li>
                 </ul>
               </section>
               <section class="admin-card">
@@ -398,6 +428,6 @@
     </div>
 
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
-    <script src="admin.js?v=20260626d"></script>
+    <script src="admin.js?v=20260712-publish1"></script>
   </body>
 </html>

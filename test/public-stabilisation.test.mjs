@@ -28,14 +28,26 @@ test('public pages expose consistent keyboard navigation landmarks', async () =>
   }
 });
 
-test('Square and Google embeds have no network-loading src before consent', async () => {
+test('Treatwell and Google embeds wait for consent and retain external fallbacks', async () => {
   const home = await readFile(`${site}/index.html`, 'utf8');
   const booking = await readFile(`${site}/pages/booking.html`, 'utf8');
-  for (const html of [home, booking]) {
-    assert.doesNotMatch(html, /<iframe\b[^>]*\bsrc=/i);
-    assert.match(html, /data-consent-embed/);
-    assert.match(html, /data-load-consent-embed/);
-  }
+  assert.doesNotMatch(home, /<iframe\b[^>]*\bsrc=/i);
+  assert.match(home, /data-consent-embed/);
+  assert.match(home, /data-load-consent-embed/);
+  assert.doesNotMatch(booking, /<script\b[^>]*widget\.treatwell/i);
+  assert.match(booking, /data-provider="treatwell"/);
+  assert.match(
+    booking,
+    /data-widget-script="https:\/\/widget\.treatwell\.co\.uk\/common\/venue-menu\/javascript\/widget-button\.js\?v1"/,
+  );
+  assert.match(
+    booking,
+    /data-widget-url="https:\/\/widget\.treatwell\.co\.uk\/place\/523733\/menu\/"/,
+  );
+  assert.match(
+    booking,
+    /href="https:\/\/www\.treatwell\.co\.uk\/place\/lumi-derm-aesthetics\/"/,
+  );
 });
 
 test('review summary is derived from the records in the feed', async () => {
@@ -60,7 +72,9 @@ test('security policy allows only the retained script sources and matches JSON-L
   const headers = await readFile(`${site}/_headers`, 'utf8');
   const home = await readFile(`${site}/index.html`, 'utf8');
   const scriptDirective = headers.match(/script-src[^;]+;/)?.[0] || '';
-  assert.match(scriptDirective, /script-src 'self' 'sha256-[A-Za-z0-9+/=]+'/);
+  assert.match(scriptDirective, /script-src 'self'/);
+  assert.match(scriptDirective, /'sha256-[A-Za-z0-9+/=]+'/);
+  assert.match(scriptDirective, /https:\/\/widget\.treatwell\.co\.uk/);
   assert.doesNotMatch(scriptDirective, /'unsafe-inline'/);
   assert.doesNotMatch(home, /cdn\.jsdelivr\.net\/npm\/gsap/);
   const jsonLd = home.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];

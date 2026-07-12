@@ -14,7 +14,7 @@ const pages = [
   ['legal', '/pages/policies.html'],
 ];
 const essentialConsent = {
-  version: 2,
+  version: 3,
   timestamp: '2026-06-28T00:00:00.000Z',
   categories: { essential: true, externalMedia: false },
 };
@@ -36,12 +36,12 @@ async function createContext(options = {}, externalRequests = []) {
 }
 
 function optionalProviderRequests(requests) {
-  return requests.filter((url) => /app\.squareup\.com|www\.google\.com/.test(url));
+  return requests.filter((url) => /www\.google\.com|widget\.treatwell\.co\.uk/.test(url));
 }
 
 async function setStoredConsent(context, record = essentialConsent) {
   await context.addInitScript((value) => {
-    localStorage.setItem('ld-cookie-consent-v2', JSON.stringify(value));
+    localStorage.setItem('ld-cookie-consent-v3', JSON.stringify(value));
   }, record);
 }
 
@@ -111,9 +111,9 @@ try {
   );
   await consentPage.getByRole('button', { name: 'Essential only' }).click();
   const essentialRecord = await consentPage.evaluate(() =>
-    JSON.parse(localStorage.getItem('ld-cookie-consent-v2')),
+    JSON.parse(localStorage.getItem('ld-cookie-consent-v3')),
   );
-  assert.equal(essentialRecord.version, 2);
+  assert.equal(essentialRecord.version, 3);
   assert.equal(essentialRecord.categories.externalMedia, false);
   assert.deepEqual(
     optionalProviderRequests(providerRequests),
@@ -126,7 +126,7 @@ try {
   await mapFrame.waitFor();
   assert.match(await mapFrame.getAttribute('src'), /^https:\/\/www\.google\.com\/maps/);
   const allRecord = await consentPage.evaluate(() =>
-    JSON.parse(localStorage.getItem('ld-cookie-consent-v2')),
+    JSON.parse(localStorage.getItem('ld-cookie-consent-v3')),
   );
   assert.equal(allRecord.categories.externalMedia, true);
   await consentPage.getByRole('button', { name: 'Cookie settings' }).click();
@@ -135,21 +135,36 @@ try {
   await consentContext.close();
 
   const bookingRequests = [];
-  const bookingContext = await createContext(
-    { viewport: { width: 390, height: 900 } },
-    bookingRequests,
-  );
+  const bookingContext = await createContext({ viewport: { width: 390, height: 900 } }, bookingRequests);
   const bookingPage = await bookingContext.newPage();
   await bookingPage.goto(`${baseUrl}/pages/booking.html`, { waitUntil: 'networkidle' });
   assert.deepEqual(optionalProviderRequests(bookingRequests), []);
-  await bookingPage.getByRole('button', { name: 'Load booking once' }).click();
-  const squareFrame = bookingPage.locator('iframe[title^="Book a Lumi Derm"]');
-  await squareFrame.waitFor();
+  const treatwellLink = bookingPage.getByRole('link', { name: 'Open Treatwell' });
   assert.equal(
-    await bookingPage.evaluate(() => localStorage.getItem('ld-cookie-consent-v2')),
-    null,
+    await treatwellLink.getAttribute('href'),
+    'https://www.treatwell.co.uk/place/lumi-derm-aesthetics/',
   );
-  assert.match(await squareFrame.getAttribute('src'), /^https:\/\/app\.squareup\.com\//);
+  assert.equal(await bookingPage.locator('iframe').count(), 0);
+  await bookingPage.getByRole('button', { name: 'Load booking' }).click();
+  await bookingPage.waitForFunction(() =>
+    document.querySelector('[data-provider="treatwell"]')?.dataset.loaded === 'true',
+  );
+  assert.ok(
+    bookingRequests.includes(
+      'https://widget.treatwell.co.uk/common/venue-menu/javascript/widget-button.js?v1',
+    ),
+  );
+  assert.ok(
+    bookingRequests.includes(
+      'https://widget.treatwell.co.uk/common/venue-menu/css/widget-button.css',
+    ),
+  );
+  assert.equal(
+    await bookingPage
+      .locator('#wahanda-online-booking-widget-iframe')
+      .getAttribute('data-widget-url'),
+    'https://widget.treatwell.co.uk/place/523733/menu/',
+  );
   await bookingContext.close();
 
   const interactionContext = await createContext({ viewport: { width: 390, height: 900 } });
