@@ -103,6 +103,19 @@
       "featured": false,
       "expires": "",
       "note": "Limited time"
+    },
+    {
+      "title": "Oferta Noua",
+      "category": "Offer",
+      "description": "offers.json was not found",
+      "price": "From £1110",
+      "badge": "Save 50%",
+      "image": "assets/images/offer-gemini-generated-image-ctajpxctajpxctaj--mrhseeo2.jpg",
+      "service": "laser-hair-removal",
+      "status": "live",
+      "featured": true,
+      "expires": "2026-08-03",
+      "note": "Ongoing offer"
     }
   ]
 }
