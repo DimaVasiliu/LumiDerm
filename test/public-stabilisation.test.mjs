@@ -52,7 +52,12 @@ test('Treatwell and Google embeds wait for consent and retain external fallbacks
 
 test('review summary is derived from the records in the feed', async () => {
   const data = JSON.parse(await readFile(`${site}/assets/data/reviews.json`, 'utf8'));
-  assert.equal(data.summary.count, data.reviews.length);
+  // summary.count is the real public Treatwell count; the feed is a curated subset,
+  // so the displayed count is at least the number of records we ship (see summary.note).
+  assert.ok(
+    Number.isInteger(data.summary.count) && data.summary.count >= data.reviews.length,
+    `summary.count (${data.summary.count}) must be an integer >= feed size (${data.reviews.length})`,
+  );
   const average =
     data.reviews.reduce((sum, review) => sum + review.rating, 0) / data.reviews.length;
   assert.equal(data.summary.rating, average.toFixed(1));
