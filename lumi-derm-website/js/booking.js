@@ -263,7 +263,7 @@
 
     if (pickerCopy) {
       pickerCopy.textContent = enabled
-        ? 'Review the selected treatment, then use the Treatwell calendar below.'
+        ? 'The selected treatment details are open below, followed by the Treatwell calendar.'
         : 'Select a category, then tap a treatment card.';
     }
   }

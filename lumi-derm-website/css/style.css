@@ -6217,6 +6217,14 @@ body.tx-modal-active { overflow: hidden; }
   gap: clamp(0.8rem, 1.6vw, 1.15rem);
 }
 
+.booking-redesign.is-focused-booking .booking-hero-clean {
+  display: none;
+}
+
+.booking-redesign.is-focused-booking .booking-picker-section {
+  padding-top: calc(var(--header-height, 76px) + clamp(0.9rem, 2vw, 1.4rem));
+}
+
 .booking-redesign.is-focused-booking .booking-picker-head {
   justify-content: space-between;
   padding-bottom: clamp(0.3rem, 1vw, 0.65rem);
@@ -6228,10 +6236,10 @@ body.tx-modal-active { overflow: hidden; }
 
 .booking-redesign.is-focused-booking .booking-detail-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0;
+  grid-template-columns: minmax(16rem, 0.82fr) minmax(0, 1.18fr);
+  gap: clamp(1.2rem, 2.8vw, 2rem);
   min-width: 0;
-  padding: clamp(0.95rem, 2vw, 1.35rem);
+  padding: clamp(0.9rem, 2vw, 1.2rem);
   border-color: rgba(180, 123, 113, 0.16);
   border-radius: 1.35rem;
   background:
@@ -6240,21 +6248,15 @@ body.tx-modal-active { overflow: hidden; }
   box-shadow: 0 1.4rem 3.5rem rgba(78, 60, 55, 0.08);
 }
 
-.booking-redesign.is-focused-booking .booking-detail-media,
-.booking-redesign.is-focused-booking .booking-detail-lists,
-.booking-redesign.is-focused-booking .booking-detail-actions {
-  display: none;
-}
-
 .booking-redesign.is-focused-booking .booking-detail-copy {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(0.8rem, 2vw, 1.5rem);
-  align-items: end;
+  align-items: start;
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  padding: 0;
+  padding: clamp(0.2rem, 1vw, 0.55rem) clamp(0.2rem, 1.1vw, 0.7rem) clamp(0.3rem, 1.2vw, 0.75rem) 0;
 }
 
 .booking-redesign.is-focused-booking .booking-detail-copy h2 {
@@ -6273,8 +6275,8 @@ body.tx-modal-active { overflow: hidden; }
 }
 
 .booking-redesign.is-focused-booking .booking-detail-meta {
-  justify-self: end;
-  min-width: clamp(10rem, 18vw, 15rem);
+  justify-self: start;
+  min-width: min(100%, clamp(14rem, 30vw, 22rem));
   margin: 0;
   padding: 0.85rem 1rem;
   border: 1px solid rgba(180, 123, 113, 0.16);
@@ -6379,6 +6381,14 @@ body.tx-modal-active { overflow: hidden; }
 
   .booking-redesign.is-focused-booking .booking-detail-copy {
     grid-template-columns: 1fr;
+  }
+
+  .booking-redesign.is-focused-booking .booking-detail-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-redesign.is-focused-booking .booking-detail-media {
+    min-height: 12rem;
   }
 
   .booking-redesign.is-focused-booking .booking-detail-panel,

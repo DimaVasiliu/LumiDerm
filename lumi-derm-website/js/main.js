@@ -557,9 +557,12 @@ function tiWhenLabel(offer) {
 }
 
 function tiOfferHref(offer) {
-  return offer.service
-    ? 'pages/booking.html?service=' + encodeURIComponent(offer.service)
-    : 'pages/booking.html';
+  if (!offer.service) return 'pages/booking.html';
+  const params = new URLSearchParams({
+    service: offer.service,
+    from: 'offer',
+  });
+  return 'pages/booking.html?' + params.toString();
 }
 
 function tiInjectSeo(offers) {

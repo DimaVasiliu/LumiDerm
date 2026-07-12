@@ -133,6 +133,7 @@ function runApp() {
   bindSettings();
   bindGenericToasts();
   bindPublishing();
+  bindImageUpload();
   renderAll();
   loadReviewsFromJson();
   // First run (no local draft yet) -> start from the offers actually on the website.
@@ -561,8 +562,29 @@ const OFFERS_JSON_URL = "../assets/data/offers.json";                    // what
 const OFFERS_REPO_PATH = "lumi-derm-website/assets/data/offers.json";    // path inside the repo
 const GH_KEY = "lumi-derm-gh-v1";
 
+/* Accepts any of these and turns them into "owner/repo":
+     DimaVasiliu/LumiDerm
+     https://github.com/DimaVasiliu/LumiDerm
+     https://github.com/DimaVasiliu/LumiDerm.git
+     git@github.com:DimaVasiliu/LumiDerm.git                                        */
+function normalizeRepo(value) {
+  let v = String(value || "").trim();
+  if (!v) return "";
+  v = v.replace(/^git@github\.com:/i, "");
+  v = v.replace(/^https?:\/\/(www\.)?github\.com\//i, "");
+  v = v.replace(/^github\.com\//i, "");
+  v = v.replace(/\.git$/i, "");
+  v = v.replace(/^\/+|\/+$/g, "");
+  const parts = v.split("/").filter(Boolean);
+  return parts.length >= 2 ? parts[0] + "/" + parts[1] : "";
+}
+
 function getGh() {
-  try { return JSON.parse(localStorage.getItem(GH_KEY) || "{}"); } catch { return {}; }
+  try {
+    const cfg = JSON.parse(localStorage.getItem(GH_KEY) || "{}");
+    cfg.repo = normalizeRepo(cfg.repo);
+    return cfg;
+  } catch { return {}; }
 }
 function setGh(cfg) { localStorage.setItem(GH_KEY, JSON.stringify(cfg)); }
 
@@ -617,6 +639,21 @@ async function loadOffersFromSite(announce) {
   }
 }
 
+
+/* GitHub errors -> plain English the user can act on */
+function ghError(status, message) {
+  if (status === 403 || /not accessible by personal access token/i.test(message || "")) {
+    return "The token can read the repo but not write to it. On GitHub open your token and set " +
+           "Permissions \u2192 Repository permissions \u2192 Contents = \u201cRead and write\u201d, then Update token. " +
+           "(A classic token needs the \u201crepo\u201d scope.)";
+  }
+  if (status === 401) return "The token was rejected \u2014 it may be wrong or expired. Paste it again.";
+  if (status === 404) return "Could not find offers.json in that repo/branch. Check the Repository and Branch fields.";
+  if (status === 409) return "The file changed on GitHub since this page loaded. Click \u201cReload from website\u201d, redo your edit, then publish.";
+  if (status === 422) return "GitHub rejected the update (422). Try \u201cReload from website\u201d, then publish again.";
+  return message || ("GitHub said " + status + ".");
+}
+
 function setPublishStatus(message) {
   const el = document.querySelector("[data-publish-status]");
   if (el) el.textContent = message;
@@ -664,7 +701,7 @@ async function publishOffers() {
     if (current.ok) sha = (await current.json()).sha;
     else if (current.status !== 404) {
       const e = await current.json().catch(() => ({}));
-      throw new Error(e.message || ("GitHub said " + current.status));
+      throw new Error(ghError(current.status, e.message));
     }
 
     // 2. commit the new offers
@@ -678,7 +715,7 @@ async function publishOffers() {
     const put = await ghRequest(OFFERS_REPO_PATH, { method: "PUT", body: JSON.stringify(body) });
     if (!put.ok) {
       const e = await put.json().catch(() => ({}));
-      throw new Error(e.message || ("GitHub said " + put.status));
+      throw new Error(ghError(put.status, e.message));
     }
 
     state.publishedAt = new Date().toISOString();
@@ -720,12 +757,12 @@ function bindPublishing() {
     setGhStatus("Testing…");
     try {
       const res = await ghRequest(OFFERS_REPO_PATH + "?ref=" + encodeURIComponent(c.branch || "main"), { method: "GET" });
-      if (res.ok) setGhStatus("Connected. Found offers.json — publishing will work.");
+      if (res.ok) setGhStatus("Connected and offers.json found. NOTE: this only proves the token can READ. If publishing fails with 403, set Contents = \u201cRead and write\u201d on the token.");
       else if (res.status === 404) setGhStatus("Connected to the repo, but offers.json was not found at " + OFFERS_REPO_PATH + ".");
       else if (res.status === 401 || res.status === 403) setGhStatus("The token was rejected. Check it has Contents: read & write on this repo.");
       else setGhStatus("GitHub said " + res.status + ".");
     } catch (err) {
-      setGhStatus("Could not reach GitHub: " + err.message);
+      setGhStatus("Could not reach GitHub (" + err.message + "). If this says \u201cFailed to fetch\u201d, the site\u2019s security policy is blocking api.github.com \u2014 redeploy so the updated _headers file is live, then hard-refresh this page.");
     }
   });
 }
@@ -733,4 +770,91 @@ function bindPublishing() {
 function setGhStatus(message) {
   const el = document.querySelector("[data-gh-status]");
   if (el) el.textContent = message;
+}
+
+/* ---------- Image upload: photo -> repo -> website ---------- */
+const IMAGES_REPO_DIR = "lumi-derm-website/assets/images/";
+
+function safeImageName(original) {
+  const dot = original.lastIndexOf(".");
+  let base = (dot > 0 ? original.slice(0, dot) : original).toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  let ext = (dot > 0 ? original.slice(dot + 1) : "jpg").toLowerCase();
+  if (["jpg", "jpeg", "png", "webp", "avif"].indexOf(ext) === -1) ext = "jpg";
+  if (!base) base = "photo";
+  // timestamp keeps it unique so nothing is ever overwritten
+  return "offer-" + base.slice(0, 40) + "-" + Date.now().toString(36) + "." + ext;
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result);
+      resolve(result.slice(result.indexOf(",") + 1)); // strip the data: prefix
+    };
+    reader.onerror = () => reject(new Error("Could not read that file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadImage(file) {
+  const cfg = getGh();
+  if (!cfg.repo || !cfg.token) {
+    toast("Add the website connection first (Settings).");
+    goPanel("settings");
+    return null;
+  }
+  if (!/^image\//.test(file.type)) throw new Error("That file is not an image.");
+  if (file.size > 3 * 1024 * 1024) throw new Error("That image is larger than 3MB. Please use a smaller one.");
+
+  const branch = cfg.branch || "main";
+  const name = safeImageName(file.name);
+  const path = IMAGES_REPO_DIR + name;
+  const content = await fileToBase64(file);
+
+  const put = await ghRequest(path, {
+    method: "PUT",
+    body: JSON.stringify({ message: "Add offer image " + name + " (via admin)", content, branch })
+  });
+  if (!put.ok) {
+    const e = await put.json().catch(() => ({}));
+    throw new Error(ghError(put.status, e.message));
+  }
+  return name;
+}
+
+function bindImageUpload() {
+  const input = document.querySelector("[data-offer-image-upload]");
+  const status = document.querySelector("[data-image-upload-status]");
+  if (!input) return;
+
+  input.addEventListener("change", async (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    if (status) status.textContent = "Uploading " + file.name + "…";
+
+    try {
+      const name = await uploadImage(file);
+      if (!name) { if (status) status.textContent = ""; event.target.value = ""; return; }
+
+      // make it available in the dropdown and select it
+      if (imageOptions.indexOf(name) === -1) imageOptions.unshift(name);
+      renderOfferImageOptions();
+      const select = document.querySelector('[data-offer-field="image"]');
+      if (select) select.value = name;
+
+      const offer = state.offers[selectedOfferIndex];
+      if (offer) { offer.image = name; saveDraft(null); }
+      renderOfferPreview();
+      renderMedia();
+
+      if (status) status.textContent = "Uploaded and selected. The photo appears on the website about a minute after you publish.";
+      toast("Photo uploaded to the website.");
+    } catch (err) {
+      if (status) status.textContent = "Upload failed: " + err.message;
+      toast("Upload failed: " + err.message);
+    }
+    event.target.value = "";
+  });
 }

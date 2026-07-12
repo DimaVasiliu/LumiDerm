@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260712-publish1">
+    <link rel="stylesheet" href="admin.css?v=20260712-publish4">
   </head>
   <body>
     <!-- Soft lock screen (light gate only — enable Cloudflare Access for real protection) -->
@@ -139,6 +139,8 @@
                 <label>Badge<input type="text" data-offer-field="badge" placeholder="Save 15%"></label>
                 <label>Short description<textarea rows="3" data-offer-field="description"></textarea></label>
                 <label>Image<select data-offer-field="image"></select></label>
+                <label>Upload a new photo<input type="file" accept="image/*" data-offer-image-upload></label>
+                <p class="admin-help" data-image-upload-status>JPG, PNG or WebP, under 3MB. It is added to the website and selected automatically.</p>
                 <label>Links to treatment<select data-offer-field="service">
                   <option value="">— none (general booking) —</option>
                   <option value="laser-hair-removal">Laser hair removal</option>
@@ -428,6 +430,6 @@
     </div>
 
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
-    <script src="admin.js?v=20260712-publish1"></script>
+    <script src="admin.js?v=20260712-publish4"></script>
   </body>
 </html>
