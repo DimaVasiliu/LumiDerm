@@ -864,3 +864,18 @@ code {
 }
 .admin-check input { width: auto; margin: 0; }
 .admin-editor label small { font-weight: 400; opacity: 0.65; }
+
+/* ---------- Offer editor: make it obvious WHICH offer you are editing ---------- */
+.offer-editing-banner {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.9rem;
+  padding: 0.7rem 0.85rem;
+  border-left: 3px solid var(--admin-rose, #a96f68);
+  border-radius: 8px;
+  background: rgba(169, 111, 104, 0.09);
+}
+.offer-editing-banner strong { font-size: 0.95rem; }
+.offer-editing-banner span { font-size: 0.8rem; opacity: 0.75; }
+.admin-table tr.is-selected { background: rgba(169, 111, 104, 0.1); }
+.admin-table tr.is-selected td:first-child { box-shadow: inset 3px 0 0 var(--admin-rose, #a96f68); }

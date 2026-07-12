@@ -227,7 +227,9 @@ function bindOffers() {
   document.querySelector("[data-add-offer]")?.addEventListener("click", () => {
     state.offers.push({ title: "New offer", category: "Offer", price: "From £", badge: "", description: "Short offer description.", image: imageOptions[0], service: "", status: "Draft", featured: false, expires: "", note: "Ongoing offer" });
     selectedOfferIndex = state.offers.length - 1;
-    renderOffers(); saveDraft("Offer added.");
+    renderOffers();
+    saveDraft("New offer added \u2014 fill it in below, then Save changes.");
+    document.querySelector('[data-offer-field="title"]')?.focus();
   });
   document.querySelector("[data-save-offer]")?.addEventListener("click", () => {
     const offer = state.offers[selectedOfferIndex]; if (!offer) return;
@@ -236,13 +238,26 @@ function bindOffers() {
     });
     renderOffers(); saveDraft("Offer saved.");
   });
+  document.querySelector("[data-save-new-offer]")?.addEventListener("click", () => {
+    const fresh = {};
+    document.querySelectorAll("[data-offer-field]").forEach((f) => {
+      fresh[f.dataset.offerField] = f.type === "checkbox" ? f.checked : f.value;
+    });
+    if (!fresh.title || !fresh.title.trim()) { toast("Give the offer a title first."); return; }
+    fresh.featured = fresh.featured === true;
+    state.offers.push(fresh);
+    selectedOfferIndex = state.offers.length - 1;
+    renderOffers();
+    saveDraft("Added as a new offer (nothing was overwritten).");
+  });
+
   document.querySelectorAll("[data-offer-field]").forEach((f) => f.addEventListener("input", renderOfferPreview));
 }
 
 function renderOffers() {
   const table = document.querySelector("[data-offer-table]"); if (!table) return;
   table.innerHTML = state.offers.map((o, i) => `
-    <tr>
+    <tr class="${i === selectedOfferIndex ? "is-selected" : ""}">
       <td><strong>${escapeHtml(o.title)}</strong><span>${escapeHtml(o.category)}</span></td>
       <td>${escapeHtml(o.price)}</td>
       <td><span class="status-pill status-${(o.status || "").toLowerCase()}">${escapeHtml(o.status)}</span></td>
@@ -270,7 +285,14 @@ function moveOffer(i, dir) {
 }
 
 function populateOfferEditor() {
-  const offer = state.offers[selectedOfferIndex]; if (!offer) return;
+  const offer = state.offers[selectedOfferIndex];
+  const banner = document.querySelector("[data-offer-editing]");
+  if (banner) {
+    banner.textContent = offer
+      ? "Editing offer " + (selectedOfferIndex + 1) + " of " + state.offers.length + ": \u201c" + (offer.title || "Untitled") + "\u201d"
+      : "No offer selected";
+  }
+  if (!offer) return;
   document.querySelectorAll("[data-offer-field]").forEach((f) => {
     const key = f.dataset.offerField;
     if (f.type === "checkbox") f.checked = offer[key] === true;
@@ -782,8 +804,10 @@ function safeImageName(original) {
   let ext = (dot > 0 ? original.slice(dot + 1) : "jpg").toLowerCase();
   if (["jpg", "jpeg", "png", "webp", "avif"].indexOf(ext) === -1) ext = "jpg";
   if (!base) base = "photo";
+  // trim again after truncating so we never end up with a double dash
+  base = base.slice(0, 40).replace(/-+$/, "");
   // timestamp keeps it unique so nothing is ever overwritten
-  return "offer-" + base.slice(0, 40) + "-" + Date.now().toString(36) + "." + ext;
+  return "offer-" + base + "-" + Date.now().toString(36) + "." + ext;
 }
 
 function fileToBase64(file) {
