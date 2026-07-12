@@ -1,13 +1,13 @@
 {
   "offers": [
     {
-      "title": "15% off your first visit",
+      "title": "25% off your first visit",
       "category": "New client offer",
-      "description": "Your first single-session treatment, 15% off as you settle in with us.",
-      "price": "From £34",
-      "badge": "Save 15%",
-      "image": "assets/images/offer-laser-treatments-cynosure.webp",
-      "service": "laser-hair-removal",
+      "description": "Your first single-session treatment, 25% off as you settle in with us.",
+      "price": "From £45",
+      "badge": "Save 25%",
+      "image": "assets/images/offer-endospheres-therapy.webp",
+      "service": "endospheres",
       "status": "live",
       "featured": true,
       "expires": "2026-08-31",
