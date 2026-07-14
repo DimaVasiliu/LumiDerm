@@ -65,8 +65,7 @@ Run locally on 5 July 2026 without committing, pushing or deploying:
   branded 404 and the external Treatwell booking link.
 - Horizontal overflow: none detected in the browser matrix.
 - `git diff --check`: pass.
-- First-party Square reference scan: pass. An unrelated archived Instagram HTML snapshot remains
-  unchanged.
+- Former booking-provider reference scan: pass.
 - CSS lint: existing repository debt remains (938 findings); no bulk autofix was applied because it
   would rewrite unrelated design work.
 - Prettier check: existing repository baseline remains unformatted (30 files); no bulk formatter
