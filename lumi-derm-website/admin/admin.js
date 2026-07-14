@@ -274,7 +274,7 @@ function renderOffers() {
   table.querySelectorAll("[data-edit-offer]").forEach((b) => b.addEventListener("click", () => { selectedOfferIndex = +b.dataset.editOffer; populateOfferEditor(); }));
   table.querySelectorAll("[data-move-offer]").forEach((b) => b.addEventListener("click", () => moveOffer(+b.dataset.moveOffer, +b.dataset.dir)));
   table.querySelectorAll("[data-dup-offer]").forEach((b) => b.addEventListener("click", () => { const o = state.offers[+b.dataset.dupOffer]; state.offers.splice(+b.dataset.dupOffer + 1, 0, { ...o, title: o.title + " (copy)", status: "Draft" }); renderOffers(); saveDraft("Offer duplicated."); }));
-  table.querySelectorAll("[data-del-offer]").forEach((b) => b.addEventListener("click", () => { if (!confirm("Delete this offer?")) return; state.offers.splice(+b.dataset.delOffer, 1); selectedOfferIndex = 0; renderOffers(); saveDraft("Offer deleted."); }));
+  table.querySelectorAll("[data-del-offer]").forEach((b) => b.addEventListener("click", () => deleteOffer(+b.dataset.delOffer)));
   populateOfferEditor();
 }
 
@@ -703,12 +703,14 @@ async function ghRequest(path, options) {
 }
 
 /* THE BUTTON: create offers -> click Publish -> live on the homepage */
-async function publishOffers() {
+async function publishOffers(options) {
+  // NOTE: called both as a click handler (options = Event) and internally ({ silent: true })
+  const silent = !!(options && options.silent === true);
   const cfg = getGh();
   if (!cfg.repo || !cfg.token) {
     toast("Add the website connection first (Settings).");
     goPanel("settings");
-    return;
+    return false;
   }
   const button = document.querySelector("[data-publish-offers]");
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
@@ -743,13 +745,64 @@ async function publishOffers() {
     state.publishedAt = new Date().toISOString();
     saveDraft(null);
     setPublishStatus("Published. The website updates in about a minute.");
-    toast("Published — your offers will be live on the website in about a minute.");
+    if (!silent) toast("Published — your offers will be live on the website in about a minute.");
+    return true;
   } catch (err) {
     setPublishStatus("Publish failed: " + err.message);
     toast("Publish failed: " + err.message);
+    return false;
   } finally {
     if (button) { button.disabled = false; button.textContent = "Publish offers"; }
   }
+}
+
+/* ---------- Delete = actually delete (publishes the removal immediately) ---------- */
+const STOCK_IMAGES = imageOptions.slice(); // ships with the site — never delete these files
+
+async function deleteRepoImage(name) {
+  const cfg = getGh();
+  if (!cfg.repo || !cfg.token || !name) return;
+  const branch = cfg.branch || "main";
+  const path = IMAGES_REPO_DIR + name;
+  const current = await ghRequest(path + "?ref=" + encodeURIComponent(branch), { method: "GET" });
+  if (!current.ok) return; // not there, nothing to do
+  const sha = (await current.json()).sha;
+  await ghRequest(path, {
+    method: "DELETE",
+    body: JSON.stringify({ message: "Remove unused offer image " + name + " (via admin)", sha, branch })
+  });
+}
+
+async function deleteOffer(index) {
+  const offer = state.offers[index];
+  if (!offer) return;
+  const label = offer.title || "this offer";
+  if (!confirm('Delete "' + label + '"?\n\nIt will be removed from the website straight away.')) return;
+
+  const image = offer.image || "";
+
+  state.offers.splice(index, 1);
+  selectedOfferIndex = Math.max(0, Math.min(selectedOfferIndex, state.offers.length - 1));
+  renderOffers();
+  saveDraft(null);
+
+  setPublishStatus("Removing \u201c" + label + "\u201d from the website\u2026");
+  const ok = await publishOffers({ silent: true });
+  if (!ok) {
+    toast("Deleted here, but publishing failed \u2014 click \u201cPublish offers\u201d to retry.");
+    return;
+  }
+
+  // Tidy up: delete the photo too, but only if it was uploaded for this offer
+  // and no remaining offer still uses it.
+  const stillUsed = state.offers.some((o) => (o.image || "") === image);
+  const isUploaded = image && STOCK_IMAGES.indexOf(image) === -1;
+  if (isUploaded && !stillUsed) {
+    try { await deleteRepoImage(image); } catch (err) { /* non-fatal */ }
+  }
+
+  setPublishStatus("Deleted. The website updates in about a minute.");
+  toast("\u201c" + label + "\u201d deleted and removed from the website.");
 }
 
 function bindPublishing() {
