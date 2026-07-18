@@ -606,17 +606,9 @@ function tiInjectSeo(offers) {
 }
 
 async function initTreatmentIndex() {
-  const root = document.querySelector('[data-tindex]');
-  const list = root && root.querySelector('[data-tindex-list]');
-  if (!root || !list) return;
-
-  const layers = Array.from(root.querySelectorAll('[data-tindex-layer]'));
-  const badgeEl = root.querySelector('[data-tindex-badge]');
-  const priceEl = root.querySelector('[data-tindex-price]');
-  const catEl = root.querySelector('[data-tindex-cat]');
-  const capTitleEl = root.querySelector('[data-tindex-captitle]');
-  const ctaEl = root.querySelector('[data-tindex-cta]');
-  const progressEl = root.querySelector('[data-tindex-progress]');
+  const grid = document.querySelector('[data-oglr-grid]');
+  if (!grid) return;
+  const section = grid.closest('.offers-gallery-section');
   const emptyEl = document.querySelector('[data-tindex-empty]');
 
   let offers = [];
@@ -633,153 +625,140 @@ async function initTreatmentIndex() {
   live.sort((a, b) => (b.featured === true ? 1 : 0) - (a.featured === true ? 1 : 0));
 
   if (!live.length) {
-    root.hidden = true;
+    if (section) section.hidden = true;
     if (emptyEl) emptyEl.hidden = false;
     return;
   }
 
-  list.innerHTML = live.map((offer, i) => {
+  const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  grid.innerHTML = live.map((offer, i) => {
     const feat = offer.featured ? ' is-featured' : '';
     const img = tiEscape(offer.image || '');
+    const when = tiEscape(tiWhenLabel(offer));
+    const desc = tiEscape(offer.description || '');
     return (
-      '<li class="tindex-row' + feat + '" data-tindex-row' +
-      ' data-img="' + img + '" data-badge="' + tiEscape(offer.badge || '') + '"' +
-      ' data-price="' + tiEscape(offer.price || '') + '"' +
-      " style=\"--tindex-img: url('" + img + "')\">" +
-        '<a class="tindex-link" href="' + tiEscape(tiOfferHref(offer)) + '">' +
-          '<span class="tindex-num">' + String(i + 1).padStart(2, '0') + '</span>' +
-          '<span class="tindex-body">' +
-            '<span class="tindex-cat">' + tiEscape(offer.category || '') +
-              (offer.featured ? '<em class="tindex-star">Featured</em>' : '') +
+      '<article class="oglr-card' + feat + '" data-oglr-card style="--i:' + i + '">' +
+        '<button class="oglr-card-open" type="button" data-oglr-open="' + i + '"' +
+          ' aria-label="View details: ' + tiEscape(offer.title) + '">' +
+          '<span class="oglr-card-media">' +
+            (img ? '<img src="' + img + '" alt="" loading="lazy">' : '') +
+            (offer.badge ? '<span class="oglr-card-badge">' + tiEscape(offer.badge) + '</span>' : '') +
+            (offer.featured ? '<span class="oglr-card-feat"><span class="oglr-card-feat-dot" aria-hidden="true"></span>Featured</span>' : '') +
+            '<span class="oglr-card-spot" aria-hidden="true"></span>' +
+            '<span class="oglr-card-reveal">' +
+              (desc ? '<span class="oglr-card-reveal-desc">' + desc + '</span>' : '') +
+              '<span class="oglr-card-reveal-cue">View details <span aria-hidden="true">&rarr;</span></span>' +
             '</span>' +
-            '<span class="tindex-title">' + tiEscape(offer.title) + '</span>' +
-            '<span class="tindex-desc">' + tiEscape(offer.description || '') + '</span>' +
           '</span>' +
-          '<span class="tindex-meta">' +
-            '<span class="tindex-price">' + tiEscape(offer.price || '') + '</span>' +
-            '<span class="tindex-when">' + tiEscape(tiWhenLabel(offer)) + '</span>' +
+          '<span class="oglr-card-info">' +
+            '<span class="oglr-card-cat">' + tiEscape(offer.category || 'Offer') + '</span>' +
+            '<span class="oglr-card-title">' + tiEscape(offer.title) + '</span>' +
+            '<span class="oglr-card-foot">' +
+              '<span class="oglr-card-price">' + tiEscape(offer.price || '') + '</span>' +
+              (when ? '<span class="oglr-card-when">' + when + '</span>' : '') +
+            '</span>' +
           '</span>' +
-          '<span class="tindex-arrow" aria-hidden="true">&rarr;</span>' +
-        '</a>' +
-      '</li>'
+        '</button>' +
+        '<a class="oglr-card-book" href="' + tiEscape(tiOfferHref(offer)) + '">' +
+          'Book <span aria-hidden="true">&rarr;</span></a>' +
+      '</article>'
     );
   }).join('');
 
-  const rows = Array.from(list.querySelectorAll('[data-tindex-row]'));
+  const cards = Array.from(grid.querySelectorAll('[data-oglr-card]'));
 
-  // Keep the active row within the scrollable list (used during auto-advance).
-  function ensureRowVisible(row) {
-    if (list.scrollHeight <= list.clientHeight + 2) return; // not scrollable
-    const listRect = list.getBoundingClientRect();
-    const rowRect = row.getBoundingClientRect();
-    let delta = 0;
-    if (rowRect.top < listRect.top + 4) delta = rowRect.top - listRect.top - 10;
-    else if (rowRect.bottom > listRect.bottom - 4) delta = rowRect.bottom - listRect.bottom + 10;
-    if (delta) list.scrollBy({ top: delta, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-  }
-
-  // Preview panel: crossfade the image and sync the featured caption + CTA.
-  let front = 0;
-  let active = -1;
-  let timer = null;
-  function setActive(i) {
-    if (i === active || !rows[i]) return;
-    active = i;
-    const row = rows[i];
-    const offer = live[i] || {};
-    rows.forEach((r, n) => r.classList.toggle('is-active', n === i));
-    const src = row.dataset.img;
-    const back = layers[1 - front];
-    if (back) {
-      if (src && back.getAttribute('src') !== src) back.setAttribute('src', src);
-      back.classList.add('is-visible');
-      if (layers[front]) layers[front].classList.remove('is-visible');
-      front = 1 - front;
-    }
-    if (badgeEl) badgeEl.textContent = offer.badge || '';
-    if (priceEl) priceEl.textContent = offer.price || '';
-    if (catEl) catEl.textContent = offer.category || '';
-    if (capTitleEl) capTitleEl.textContent = offer.title || '';
-    if (ctaEl) {
-      ctaEl.setAttribute('href', tiOfferHref(offer));
-      ctaEl.setAttribute('aria-label', offer.title ? 'View offer: ' + offer.title : 'View offer');
-    }
-    if (timer) {
-      restartProgress(); // only animate the bar while auto-playing
-      ensureRowVisible(row); // keep the auto-highlighted row within the scroll box
-    }
-  }
-  rows.forEach((row, i) => {
-    row.addEventListener('mouseenter', () => setActive(i));
-    row.addEventListener('focusin', () => setActive(i));
-  });
-
-  // Ambient auto-advance through the visible offers. The visitor takes over by
-  // hovering/focusing the section; it never runs on touch or under reduced motion.
-  const AUTO_INTERVAL = 3800;
-  const canAuto =
-    !prefersReducedMotion && window.matchMedia('(min-width: 901px) and (hover: hover)').matches;
-  if (progressEl) progressEl.style.setProperty('--tindex-interval', AUTO_INTERVAL + 'ms');
-
-  function visibleIndices() {
-    return rows.map((_, i) => i).filter((i) => !rows[i].classList.contains('is-hidden-row'));
-  }
-  function restartProgress() {
-    if (!progressEl || prefersReducedMotion) return;
-    progressEl.classList.remove('is-running');
-    void progressEl.offsetWidth; // reflow so the animation restarts
-    progressEl.classList.add('is-running');
-  }
-  function play() {
-    if (!canAuto || timer) return;
-    const vis = visibleIndices();
-    if (vis.length < 2) return;
-    restartProgress();
-    timer = window.setInterval(() => {
-      const v = visibleIndices();
-      const pos = v.indexOf(active);
-      setActive(v[(pos + 1) % v.length]);
-    }, AUTO_INTERVAL);
-  }
-  function pause() {
-    if (timer) {
-      window.clearInterval(timer);
-      timer = null;
-    }
-    if (progressEl) progressEl.classList.remove('is-running');
-  }
-
-  if (canAuto) {
-    root.addEventListener('pointerenter', pause);
-    root.addEventListener('pointerleave', play);
-    root.addEventListener('focusin', pause);
-    root.addEventListener('focusout', (event) => {
-      if (!root.contains(event.relatedTarget)) play();
-    });
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) pause();
-      else play();
+  // Cursor-follow spotlight: paint a soft highlight under the pointer.
+  if (canHover && !prefersReducedMotion) {
+    cards.forEach((card) => {
+      const media = card.querySelector('.oglr-card-media');
+      if (!media) return;
+      card.addEventListener('pointermove', (e) => {
+        const r = media.getBoundingClientRect();
+        const x = ((e.clientX - r.left) / r.width) * 100;
+        const y = ((e.clientY - r.top) / r.height) * 100;
+        card.style.setProperty('--mx', x.toFixed(1) + '%');
+        card.style.setProperty('--my', y.toFixed(1) + '%');
+      });
     });
   }
 
-  setActive(0);
-  play();
-
-  // Size the scrollable list to the preview image so the two columns line up.
-  // On mobile the list flows naturally (CSS clears the inline height).
-  const frame = root.querySelector('.tindex-frame');
-  function matchListHeight() {
-    if (!frame) return;
-    if (window.matchMedia('(min-width: 901px)').matches) {
-      const h = Math.round(frame.getBoundingClientRect().height);
-      if (h > 0) list.style.maxHeight = h + 'px';
-    } else {
-      list.style.maxHeight = '';
-    }
+  // Staggered reveal as the grid scrolls into view.
+  if ('IntersectionObserver' in window && !prefersReducedMotion) {
+    const io = new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-in');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+    cards.forEach((card) => io.observe(card));
+  } else {
+    cards.forEach((card) => card.classList.add('is-in'));
   }
-  matchListHeight();
-  window.addEventListener('resize', matchListHeight, { passive: true });
-  if (window.requestAnimationFrame) window.requestAnimationFrame(matchListHeight);
+
+  /* ---- Detail modal ---- */
+  const modal = document.querySelector('[data-oglr-modal]');
+  if (modal) {
+    const mImg = modal.querySelector('[data-oglr-modal-img]');
+    const mBadge = modal.querySelector('[data-oglr-modal-badge]');
+    const mCat = modal.querySelector('[data-oglr-modal-cat]');
+    const mTitle = modal.querySelector('[data-oglr-modal-title]');
+    const mDesc = modal.querySelector('[data-oglr-modal-desc]');
+    const mPrice = modal.querySelector('[data-oglr-modal-price]');
+    const mWhen = modal.querySelector('[data-oglr-modal-when]');
+    const mBook = modal.querySelector('[data-oglr-modal-book]');
+    let lastFocus = null;
+
+    function openModal(i) {
+      const offer = live[i];
+      if (!offer) return;
+      lastFocus = document.activeElement;
+      if (mImg) { mImg.src = offer.image || ''; mImg.alt = offer.title || ''; }
+      if (mBadge) {
+        mBadge.textContent = offer.badge || '';
+        mBadge.hidden = !offer.badge;
+      }
+      if (mCat) mCat.textContent = offer.category || 'Offer';
+      if (mTitle) mTitle.textContent = offer.title || '';
+      if (mDesc) mDesc.textContent = offer.description || '';
+      if (mPrice) mPrice.textContent = offer.price || '';
+      if (mWhen) {
+        const when = tiWhenLabel(offer);
+        mWhen.textContent = when;
+        mWhen.hidden = !when;
+      }
+      if (mBook) mBook.setAttribute('href', tiOfferHref(offer));
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => modal.classList.add('is-open'));
+      const x = modal.querySelector('.oglr-modal-x');
+      if (x) x.focus();
+    }
+    function closeModal() {
+      modal.classList.remove('is-open');
+      document.body.style.overflow = '';
+      const done = () => {
+        modal.hidden = true;
+        modal.removeEventListener('transitionend', done);
+      };
+      if (prefersReducedMotion) done();
+      else modal.addEventListener('transitionend', done);
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+
+    cards.forEach((card) => {
+      const btn = card.querySelector('[data-oglr-open]');
+      if (btn) btn.addEventListener('click', () => openModal(Number(btn.dataset.oglrOpen)));
+    });
+    modal.querySelectorAll('[data-oglr-close]').forEach((el) =>
+      el.addEventListener('click', closeModal)
+    );
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.hidden) closeModal();
+    });
+  }
 
   tiInjectSeo(live);
 }

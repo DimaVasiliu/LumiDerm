@@ -16,8 +16,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260712-hero1">
-    <link rel="stylesheet" href="css/responsive.css?v=20260712-hero1">
+    <link rel="stylesheet" href="css/style.css?v=20260718-gallery1">
+    <link rel="stylesheet" href="css/responsive.css?v=20260718-gallery1">
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -107,42 +107,45 @@
                visitors have it paused to the poster frame by main.js. -->
         </section>
 
-        <section class="section treatment-index-section" id="offers">
+        <section class="section offers-gallery-section" id="offers">
           <div class="container">
-            <div class="tindex-head reveal" data-reveal data-animate="fade-up">
-              <p class="eyebrow">Treatments &amp; offers</p>
-              <h2>Choose your treatment plan</h2>
-            </div>
-
-            <div class="tindex reveal" data-tindex data-reveal data-animate="fade-up">
-              <div class="tindex-aside-col">
-                <a class="tindex-visual" data-tindex-cta href="pages/booking.html">
-                  <div class="tindex-frame">
-                    <img class="tindex-layer is-visible" data-tindex-layer alt="" loading="lazy">
-                    <img class="tindex-layer" data-tindex-layer alt="" loading="lazy">
-                    <span class="tindex-frame-veil"></span>
-                    <span class="tindex-progress" data-tindex-progress aria-hidden="true"></span>
-                    <span class="tindex-caption">
-                      <span class="tindex-badge" data-tindex-badge></span>
-                      <span class="tindex-cap-cat" data-tindex-cat></span>
-                      <span class="tindex-cap-title" data-tindex-captitle></span>
-                      <span class="tindex-caption-foot">
-                        <span class="tindex-bigprice" data-tindex-price></span>
-                        <span class="tindex-viewoffer">View offer <span class="tindex-viewoffer-arrow" aria-hidden="true">&rarr;</span></span>
-                      </span>
-                    </span>
-                  </div>
-                </a>
-                <div class="tindex-head-aside">
-                  <p>A curated edit of our current offers and signature treatments &mdash; preview any treatment, or open the full price list for every detail.</p>
-                  <a class="tindex-pricelink" href="pages/services.html">View full price list <span class="tindex-pricelink-arrow" aria-hidden="true">&rarr;</span></a>
-                </div>
+            <div class="oglr-head reveal" data-reveal data-animate="fade-up">
+              <div class="oglr-head-main">
+                <p class="eyebrow">Treatments &amp; offers</p>
+                <h2>What&rsquo;s on right now</h2>
+                <p class="oglr-head-lead">A living edit of our current offers and signature treatments. Hover to take a peek, open a card for the full detail, and book in a couple of taps.</p>
               </div>
-
-              <ol class="tindex-list" data-tindex-list></ol>
+              <a class="oglr-pricelink" href="pages/services.html">Full price list <span class="oglr-pricelink-arrow" aria-hidden="true">&rarr;</span></a>
             </div>
 
-            <p class="tindex-empty" data-tindex-empty hidden>No offers are running right now — explore our <a href="pages/services.html">full treatment menu &amp; prices</a>.</p>
+            <div class="oglr-grid reveal" data-oglr-grid data-reveal data-animate="fade-up" aria-live="polite"></div>
+
+            <p class="tindex-empty" data-tindex-empty hidden>No offers are running right now &mdash; explore our <a href="pages/services.html">full treatment menu &amp; prices</a>.</p>
+          </div>
+
+          <div class="oglr-modal" data-oglr-modal hidden>
+            <div class="oglr-modal-veil" data-oglr-close></div>
+            <div class="oglr-modal-card" role="dialog" aria-modal="true" aria-labelledby="oglrModalTitle">
+              <button class="oglr-modal-x" type="button" data-oglr-close aria-label="Close details">&times;</button>
+              <div class="oglr-modal-media">
+                <img data-oglr-modal-img alt="" loading="lazy">
+                <span class="oglr-modal-badge" data-oglr-modal-badge hidden></span>
+              </div>
+              <div class="oglr-modal-body">
+                <p class="oglr-modal-cat" data-oglr-modal-cat></p>
+                <h3 id="oglrModalTitle" data-oglr-modal-title></h3>
+                <p class="oglr-modal-desc" data-oglr-modal-desc></p>
+                <div class="oglr-modal-facts">
+                  <span class="oglr-modal-price" data-oglr-modal-price></span>
+                  <span class="oglr-modal-when" data-oglr-modal-when hidden></span>
+                </div>
+                <div class="oglr-modal-actions">
+                  <a class="btn btn-primary" data-oglr-modal-book href="pages/booking.html">Book this treatment</a>
+                  <a class="btn btn-secondary" href="pages/services.html">Full price list</a>
+                </div>
+                <p class="oglr-modal-note">Prices are a guide &mdash; your exact plan is confirmed at consultation.</p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -346,7 +349,7 @@
         </div>
       </footer>
     </div>
-    <script src="js/main.js?v=20260712-hero1"></script>
+    <script src="js/main.js?v=20260718-gallery1"></script>
     <script src="js/chatbot.js?v=20260710-flow1"></script>
   </body>
 </html>
