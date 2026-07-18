@@ -16,8 +16,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260718-gallery1">
-    <link rel="stylesheet" href="css/responsive.css?v=20260718-gallery1">
+    <link rel="stylesheet" href="css/style.css?v=20260718-gallery3">
+    <link rel="stylesheet" href="css/responsive.css?v=20260718-gallery3">
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -118,7 +118,17 @@
               <a class="oglr-pricelink" href="pages/services.html">Full price list <span class="oglr-pricelink-arrow" aria-hidden="true">&rarr;</span></a>
             </div>
 
+            <div class="oglr-search reveal" data-reveal data-animate="fade-up">
+              <span class="oglr-search-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
+              </span>
+              <input class="oglr-search-input" type="search" data-oglr-search placeholder="Search treatments &amp; offers&hellip;" aria-label="Search treatments and offers" autocomplete="off">
+              <button class="oglr-search-clear" type="button" data-oglr-search-clear aria-label="Clear search" hidden>&times;</button>
+            </div>
+
             <div class="oglr-grid reveal" data-oglr-grid data-reveal data-animate="fade-up" aria-live="polite"></div>
+
+            <p class="oglr-noresults" data-oglr-noresults hidden>No treatments match &ldquo;<span data-oglr-noresults-term></span>&rdquo;. Try another word, or <a href="pages/services.html">browse the full menu</a>.</p>
 
             <p class="tindex-empty" data-tindex-empty hidden>No offers are running right now &mdash; explore our <a href="pages/services.html">full treatment menu &amp; prices</a>.</p>
           </div>
@@ -349,7 +359,7 @@
         </div>
       </footer>
     </div>
-    <script src="js/main.js?v=20260718-gallery1"></script>
+    <script src="js/main.js?v=20260718-gallery3"></script>
     <script src="js/chatbot.js?v=20260710-flow1"></script>
   </body>
 </html>

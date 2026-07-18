@@ -637,8 +637,13 @@ async function initTreatmentIndex() {
     const img = tiEscape(offer.image || '');
     const when = tiEscape(tiWhenLabel(offer));
     const desc = tiEscape(offer.description || '');
+    const search = tiEscape(
+      [offer.title, offer.category, offer.description, offer.service, offer.badge]
+        .filter(Boolean).join(' ').toLowerCase()
+    );
     return (
-      '<article class="oglr-card' + feat + '" data-oglr-card style="--i:' + i + '">' +
+      '<article class="oglr-card' + feat + '" data-oglr-card style="--i:' + i + '"' +
+        ' data-oglr-search-text="' + search + '">' +
         '<button class="oglr-card-open" type="button" data-oglr-open="' + i + '"' +
           ' aria-label="View details: ' + tiEscape(offer.title) + '">' +
           '<span class="oglr-card-media">' +
@@ -696,6 +701,103 @@ async function initTreatmentIndex() {
     cards.forEach((card) => io.observe(card));
   } else {
     cards.forEach((card) => card.classList.add('is-in'));
+  }
+
+  /* ---- Live search ---- */
+  const searchInput = document.querySelector('[data-oglr-search]');
+  const searchClear = document.querySelector('[data-oglr-search-clear]');
+  const noResults = document.querySelector('[data-oglr-noresults]');
+  const noResultsTerm = document.querySelector('[data-oglr-noresults-term]');
+  let searchActive = false;
+
+  function applySearch(raw) {
+    const q = String(raw || '').trim().toLowerCase();
+    searchActive = q.length > 0;
+    let shown = 0;
+    cards.forEach((card) => {
+      const hay = card.getAttribute('data-oglr-search-text') || '';
+      const match = !q || hay.indexOf(q) !== -1;
+      card.classList.toggle('is-filtered-out', !match);
+      if (match) shown += 1;
+    });
+    if (searchClear) searchClear.hidden = !searchActive;
+    if (noResults) {
+      noResults.hidden = shown !== 0;
+      if (noResultsTerm) noResultsTerm.textContent = raw || '';
+    }
+    // While searching, stop the ambient shuffle so results hold still.
+    if (searchActive) stopShuffle();
+    else startShuffle();
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => applySearch(searchInput.value));
+  }
+  if (searchClear) {
+    searchClear.addEventListener('click', () => {
+      if (searchInput) searchInput.value = '';
+      applySearch('');
+      if (searchInput) searchInput.focus();
+    });
+  }
+
+  /* ---- Ambient FLIP shuffle ---- */
+  // Every few seconds the cards gently trade places. Pauses on hover/focus,
+  // while searching, when the tab is hidden, and never runs under reduced motion.
+  const canShuffle =
+    !prefersReducedMotion &&
+    window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 780px)').matches;
+  let shuffleTimer = null;
+  let shufflePaused = false;
+
+  function movableCards() {
+    return Array.from(grid.querySelectorAll('.oglr-card:not(.is-featured):not(.is-filtered-out)'));
+  }
+  function shuffleStep() {
+    if (shufflePaused || searchActive) return;
+    if (movableCards().length < 3) return;
+    const items = Array.from(grid.children);
+    const first = items.map((el) => el.getBoundingClientRect());
+    const mover = grid.querySelector('.oglr-card:not(.is-featured)');
+    if (!mover) return;
+    grid.appendChild(mover); // rotate one card to the end
+    const last = items.map((el) => el.getBoundingClientRect());
+    items.forEach((el, n) => {
+      const dx = first[n].left - last[n].left;
+      const dy = first[n].top - last[n].top;
+      if (dx || dy) {
+        el.style.transition = 'none';
+        el.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+      }
+    });
+    requestAnimationFrame(() => {
+      items.forEach((el) => {
+        if (el.style.transform) {
+          el.style.transition = 'transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)';
+          el.style.transform = '';
+        }
+      });
+    });
+  }
+  function startShuffle() {
+    if (!canShuffle || shuffleTimer) return;
+    shuffleTimer = window.setInterval(shuffleStep, 30000);
+  }
+  function stopShuffle() {
+    if (shuffleTimer) {
+      window.clearInterval(shuffleTimer);
+      shuffleTimer = null;
+    }
+  }
+  if (canShuffle) {
+    grid.addEventListener('pointerenter', () => { shufflePaused = true; });
+    grid.addEventListener('pointerleave', () => { shufflePaused = false; });
+    grid.addEventListener('focusin', () => { shufflePaused = true; });
+    grid.addEventListener('focusout', () => { shufflePaused = false; });
+    document.addEventListener('visibilitychange', () => {
+      shufflePaused = document.hidden;
+    });
+    startShuffle();
   }
 
   /* ---- Detail modal ---- */
