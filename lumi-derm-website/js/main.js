@@ -674,6 +674,40 @@ async function initTreatmentIndex() {
 
   const cards = Array.from(grid.querySelectorAll('[data-oglr-card]'));
 
+  // Show at most CARD_LIMIT cards, with a "Show all" button for the rest.
+  let searchActive = false;
+  const CARD_LIMIT = 9;
+  const hasExtra = cards.length > CARD_LIMIT;
+  const moreWrap = document.querySelector('[data-oglr-more]');
+  const moreBtn = document.querySelector('[data-oglr-more-btn]');
+  let expanded = false;
+  if (hasExtra) {
+    cards.forEach((card, i) => { if (i >= CARD_LIMIT) card.classList.add('is-extra'); });
+    grid.classList.add('is-collapsed');
+  }
+  function setCollapsed(collapsed) {
+    grid.classList.toggle('is-collapsed', collapsed);
+  }
+  function updateMore() {
+    if (!moreWrap || !moreBtn || !hasExtra) { if (moreWrap) moreWrap.hidden = true; return; }
+    if (searchActive) { moreWrap.hidden = true; return; }
+    moreWrap.hidden = false;
+    moreBtn.textContent = expanded ? 'Show fewer' : 'Show all ' + cards.length + ' offers';
+    moreBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  }
+  if (moreBtn) {
+    moreBtn.addEventListener('click', () => {
+      expanded = !expanded;
+      setCollapsed(!expanded);
+      updateMore();
+      if (!expanded) {
+        const sec = document.getElementById('offers');
+        if (sec) sec.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+      }
+    });
+  }
+  updateMore();
+
   // Cursor-follow spotlight: paint a soft highlight under the pointer.
   if (canHover && !prefersReducedMotion) {
     cards.forEach((card) => {
@@ -734,7 +768,6 @@ async function initTreatmentIndex() {
   const serviceWrap = document.querySelector('[data-oglr-service-links]');
   const serviceGrid = document.querySelector('[data-oglr-service-grid]');
   const serviceTerm = document.querySelector('[data-oglr-service-term]');
-  let searchActive = false;
 
   function renderServiceMatches(q) {
     if (!serviceWrap || !serviceGrid) return 0;
@@ -776,6 +809,10 @@ async function initTreatmentIndex() {
       noResults.hidden = !(searchActive && shownCards === 0 && shownServices === 0);
       if (noResultsTerm) noResultsTerm.textContent = raw || '';
     }
+    // While searching, reveal every match (ignore the show-all limit); restore
+    // the limit when the search is cleared, unless the visitor expanded it.
+    setCollapsed(!searchActive && !expanded);
+    updateMore();
     // While searching, stop the ambient shuffle so results hold still.
     if (searchActive) stopShuffle();
     else startShuffle();
@@ -801,17 +838,17 @@ async function initTreatmentIndex() {
   let shuffleTimer = null;
   let shufflePaused = false;
 
-  function movableCards() {
-    return Array.from(grid.querySelectorAll('.oglr-card:not(.is-featured):not(.is-filtered-out)'));
+  function visibleCards() {
+    // offsetParent is null for display:none cards (filtered out or over the limit).
+    return Array.from(grid.children).filter((el) => el.offsetParent !== null);
   }
   function shuffleStep() {
     if (shufflePaused || searchActive) return;
-    if (movableCards().length < 3) return;
-    const items = Array.from(grid.children);
+    const items = visibleCards();
+    const movers = items.filter((el) => !el.classList.contains('is-featured'));
+    if (movers.length < 3) return;
     const first = items.map((el) => el.getBoundingClientRect());
-    const mover = grid.querySelector('.oglr-card:not(.is-featured)');
-    if (!mover) return;
-    grid.appendChild(mover); // rotate one card to the end
+    grid.appendChild(movers[0]); // rotate one visible card to the end
     const last = items.map((el) => el.getBoundingClientRect());
     items.forEach((el, n) => {
       const dx = first[n].left - last[n].left;
