@@ -643,6 +643,7 @@ async function initTreatmentIndex() {
     );
     return (
       '<article class="oglr-card' + feat + '" data-oglr-card style="--i:' + i + '"' +
+        ' data-oglr-service="' + tiEscape(offer.service || '') + '"' +
         ' data-oglr-search-text="' + search + '">' +
         '<button class="oglr-card-open" type="button" data-oglr-open="' + i + '"' +
           ' aria-label="View details: ' + tiEscape(offer.title) + '">' +
@@ -703,26 +704,76 @@ async function initTreatmentIndex() {
     cards.forEach((card) => card.classList.add('is-in'));
   }
 
-  /* ---- Live search ---- */
+  /* ---- Live search (covers every service, not just the offer cards) ---- */
+  // The full treatment menu. Anything the clinic offers is findable here, even
+  // when there is no live offer card for it — a match links to that treatment
+  // on the booking page.
+  const SERVICES_CATALOG = [
+    { slug: 'laser-hair-removal', name: 'Laser hair removal', cat: 'Laser', kw: 'hair removal cynosure elite face body' },
+    { slug: 'laser-rejuvenation', name: 'Laser skin rejuvenation', cat: 'Laser', kw: 'rejuvenation resurfacing tone texture glow' },
+    { slug: 'vascular-treatment', name: 'Laser vascular treatment', cat: 'Laser', kw: 'vascular veins thread vein redness capillaries' },
+    { slug: 'electrolysis', name: 'Electrolysis permanent hair removal', cat: 'Apilus', kw: 'electrolysis permanent hair apilus small area' },
+    { slug: 'prp', name: 'PRP', cat: 'Regenerative', kw: 'prp platelet vampire hair skin regeneration' },
+    { slug: 'profhilo', name: 'Profhilo', cat: 'Skin boosters', kw: 'profhilo booster bio remodelling hydration' },
+    { slug: 'polynucleotides', name: 'Polynucleotides', cat: 'Bio-remodelling', kw: 'polynucleotides pn under eye skin quality' },
+    { slug: 'lip-boosters', name: 'Lip boosters', cat: 'Lip care', kw: 'lip lips filler booster hydration' },
+    { slug: 'mesotherapy', name: 'Mesotherapy', cat: 'Skin infusion', kw: 'mesotherapy meso infusion hydration glow' },
+    { slug: 'hair-loss', name: 'Hair loss treatment', cat: 'Hair support', kw: 'hair loss thinning regrowth scalp' },
+    { slug: 'facials', name: 'Facials & skin polish', cat: 'Facials', kw: 'facial fire ice led glow polish is clinical' },
+    { slug: 'facial-peels', name: 'Peels', cat: 'Skin peels', kw: 'peel glycolic salicylic azelaic exfoliation' },
+    { slug: 'microneedling', name: 'Microneedling', cat: 'Skin renewal', kw: 'microneedling needling collagen exosome' },
+    { slug: 'exosomes', name: 'Exosomes', cat: 'Skin science', kw: 'exosome regeneration repair' },
+    { slug: 'endospheres', name: 'Endospheres therapy', cat: 'Body therapy', kw: 'endospheres body lymphatic contouring cellulite drainage' },
+    { slug: 'lashes-brows', name: 'Lashes & brows', cat: 'Finishing beauty', kw: 'lash brow lift tint lamination' }
+  ].map((s) => ({ ...s, hay: (s.name + ' ' + s.cat + ' ' + s.kw).toLowerCase() }));
+
   const searchInput = document.querySelector('[data-oglr-search]');
   const searchClear = document.querySelector('[data-oglr-search-clear]');
   const noResults = document.querySelector('[data-oglr-noresults]');
   const noResultsTerm = document.querySelector('[data-oglr-noresults-term]');
+  const serviceWrap = document.querySelector('[data-oglr-service-links]');
+  const serviceGrid = document.querySelector('[data-oglr-service-grid]');
+  const serviceTerm = document.querySelector('[data-oglr-service-term]');
   let searchActive = false;
+
+  function renderServiceMatches(q) {
+    if (!serviceWrap || !serviceGrid) return 0;
+    if (!q) { serviceWrap.hidden = true; serviceGrid.innerHTML = ''; return 0; }
+    // Skip services already shown as a visible offer card.
+    const shownSlugs = cards
+      .filter((c) => !c.classList.contains('is-filtered-out'))
+      .map((c) => c.getAttribute('data-oglr-service'))
+      .filter(Boolean);
+    const matches = SERVICES_CATALOG.filter(
+      (s) => s.hay.indexOf(q) !== -1 && shownSlugs.indexOf(s.slug) === -1
+    );
+    if (!matches.length) { serviceWrap.hidden = true; serviceGrid.innerHTML = ''; return 0; }
+    serviceGrid.innerHTML = matches.map((s) =>
+      '<a class="oglr-service-link" href="pages/booking.html?service=' +
+      encodeURIComponent(s.slug) + '&from=search">' +
+      '<span class="oglr-service-link-name">' + tiEscape(s.name) + '</span>' +
+      '<span class="oglr-service-link-cat">' + tiEscape(s.cat) +
+      ' <span aria-hidden="true">&rarr;</span></span></a>'
+    ).join('');
+    if (serviceTerm) serviceTerm.textContent = q;
+    serviceWrap.hidden = false;
+    return matches.length;
+  }
 
   function applySearch(raw) {
     const q = String(raw || '').trim().toLowerCase();
     searchActive = q.length > 0;
-    let shown = 0;
+    let shownCards = 0;
     cards.forEach((card) => {
       const hay = card.getAttribute('data-oglr-search-text') || '';
       const match = !q || hay.indexOf(q) !== -1;
       card.classList.toggle('is-filtered-out', !match);
-      if (match) shown += 1;
+      if (match) shownCards += 1;
     });
+    const shownServices = renderServiceMatches(q);
     if (searchClear) searchClear.hidden = !searchActive;
     if (noResults) {
-      noResults.hidden = shown !== 0;
+      noResults.hidden = !(searchActive && shownCards === 0 && shownServices === 0);
       if (noResultsTerm) noResultsTerm.textContent = raw || '';
     }
     // While searching, stop the ambient shuffle so results hold still.
