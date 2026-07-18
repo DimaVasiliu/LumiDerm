@@ -14,6 +14,19 @@
       "note": ""
     },
     {
+      "title": "Bundle areas & save up to 30%",
+      "category": "Laser packages",
+      "description": "Combine 2–5 laser areas in one plan and save from 15% up to 30% across your course.",
+      "price": "Save up to 30%",
+      "badge": "Bundle",
+      "image": "assets/images/offer-electrolysis-apilus.webp",
+      "service": "laser-hair-removal",
+      "status": "live",
+      "featured": false,
+      "expires": "",
+      "note": "Ongoing offer"
+    },
+    {
       "title": "Summer glow: Fire & Ice + LED",
       "category": "Glow facial",
       "description": "The iconic iS Clinical facial finished with LED light therapy for instant radiance.",
@@ -66,6 +79,19 @@
       "note": "Ongoing offer"
     },
     {
+      "title": "You both get 10% off",
+      "category": "Refer a friend",
+      "description": "Refer a friend and you'll each receive 10% off your next treatment.",
+      "price": "10% each",
+      "badge": "Refer",
+      "image": "assets/images/offer-mesotherapy.webp",
+      "service": "",
+      "status": "live",
+      "featured": false,
+      "expires": "",
+      "note": "Always on"
+    },
+    {
       "title": "Microneedling + exosome glow",
       "category": "Advanced skin",
       "description": "Collagen-boosting microneedling supercharged with an exosome finish.",
@@ -79,42 +105,16 @@
       "note": "Limited time"
     },
     {
-      "title": "Laser hair removal",
-      "category": "Laser",
-      "description": "Long-term hair reduction for face and body areas with Cynosure Elite. Course-planned at your consultation.",
-      "price": "From £40",
-      "badge": "Signature",
-      "image": "assets/images/offer-laser-treatments-cynosure.webp",
-      "service": "laser-hair-removal",
+      "title": "Autumn skin reset — 20% off microneedling",
+      "category": "Advanced skin",
+      "description": "Book any microneedling session this month and save 20% — collagen-boosting renewal to bring your skin back after summer.",
+      "price": "From £120",
+      "badge": "Save 20%",
+      "image": "assets/images/offer-microneedling.webp",
+      "service": "microneedling",
       "status": "live",
       "featured": false,
-      "expires": "",
-      "note": "Patch test first"
-    },
-    {
-      "title": "Lash lift & brow shape",
-      "category": "Lashes & brows",
-      "description": "Finishing beauty treatments for a lifted, polished, natural look — no extensions needed.",
-      "price": "From £25",
-      "badge": "Loved",
-      "image": "assets/images/offer-lashes-brows.webp",
-      "service": "lashes-brows",
-      "status": "live",
-      "featured": false,
-      "expires": "",
-      "note": ""
-    },
-    {
-      "title": "Lip boosters",
-      "category": "Lip care",
-      "description": "Subtle, hydration-focused lip treatment for a fresh, natural finish. Planned with you at consultation.",
-      "price": "From £220",
-      "badge": "Popular",
-      "image": "assets/images/offer-lip-boosters.webp",
-      "service": "lip-boosters",
-      "status": "live",
-      "featured": false,
-      "expires": "",
+      "expires": "2026-07-31",
       "note": ""
     }
   ]
