@@ -419,29 +419,36 @@
 
   function offerCard(offer) {
     var img = absolute(offer.image);
+    var href =
+      BOOKING_URL + (offer.service ? "?service=" + encodeURIComponent(offer.service) : "");
     return (
-      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;background:#faf8f6;">' +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;background:#ffffff;border:1px solid #ece7e1;border-radius:8px;">' +
       "<tr>" +
       (img
-        ? '<td width="150" style="padding:0;"><img src="' +
+        ? '<td width="150" valign="top" style="padding:0;"><img src="' +
           esc(img) +
-          '" alt="" width="150" style="display:block;width:150px;height:auto;border:0;"></td>'
+          '" alt="" width="150" style="display:block;width:150px;height:auto;border:0;border-radius:8px 0 0 8px;"></td>'
         : "") +
-      '<td style="padding:20px 22px;">' +
+      '<td valign="top" style="padding:20px 22px;">' +
       (offer.badge
-        ? '<p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#c9a227;">' +
+        ? '<span style="display:inline-block;margin:0 0 10px;padding:3px 9px;font-family:Arial,Helvetica,sans-serif;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#ffffff;background:#c9a227;border-radius:3px;">' +
           esc(offer.badge) +
-          "</p>"
+          "</span>"
         : "") +
-      '<p style="margin:0 0 6px;font-family:Georgia,serif;font-size:18px;color:#1c1a18;">' +
+      '<p style="margin:0 0 6px;font-family:Georgia,serif;font-size:18px;line-height:1.3;color:#1c1a18;">' +
       esc(offer.title) +
       "</p>" +
-      '<p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#7d746b;">' +
+      '<p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:#7d746b;">' +
       esc(offer.description || "") +
       "</p>" +
-      '<p style="margin:0;font-family:Georgia,serif;font-size:16px;color:#1c1a18;">' +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
+      '<td style="font-family:Georgia,serif;font-size:17px;color:#1c1a18;">' +
       esc(offer.price || "") +
-      "</p>" +
+      "</td>" +
+      '<td align="right"><a href="' +
+      esc(href) +
+      '" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#c9a227;text-decoration:none;">Book &rarr;</a></td>' +
+      "</tr></table>" +
       "</td></tr></table>"
     );
   }
@@ -466,13 +473,16 @@
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f1ee;">' +
       '<tr><td align="center" style="padding:32px 16px;">' +
       '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:4px;">' +
+      // gold top accent
+      '<tr><td style="padding:0;height:3px;line-height:3px;font-size:0;background:#c9a227;">&nbsp;</td></tr>' +
       // header
-      '<tr><td align="center" style="padding:36px 32px 28px;border-bottom:1px solid #e8e2db;">' +
-      '<p style="margin:0;font-family:Georgia,serif;font-size:22px;letter-spacing:.16em;text-transform:uppercase;color:#1c1a18;">Lumi&nbsp;Derm</p>' +
-      '<p style="margin:8px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#a2968a;">Aesthetics &middot; London Docklands</p>' +
+      '<tr><td align="center" style="padding:38px 32px 4px;">' +
+      '<p style="margin:0;font-family:Georgia,serif;font-size:24px;letter-spacing:.18em;text-transform:uppercase;color:#1c1a18;">Lumi&nbsp;Derm</p>' +
+      '<p style="margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#a2968a;">Aesthetics &middot; London Docklands</p>' +
+      '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:20px auto 0;"><tr><td style="width:44px;height:2px;line-height:2px;font-size:0;background:#c9a227;">&nbsp;</td></tr></table>' +
       "</td></tr>" +
       // body
-      '<tr><td style="padding:40px 40px 8px;">' +
+      '<tr><td style="padding:30px 40px 8px;">' +
       (m.eyebrow
         ? '<p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#a2968a;">' +
           esc(m.eyebrow) +
@@ -485,7 +495,12 @@
         : "") +
       bodyHtml +
       (offers.length
-        ? '<div style="margin:28px 0 10px;">' + offers.map(offerCard).join("") + "</div>"
+        ? '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:30px 0 18px;"><tr>' +
+          '<td style="border-top:1px solid #ece7e1;font-size:0;line-height:0;">&nbsp;</td>' +
+          '<td style="padding:0 14px;white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#a2968a;">Featured for you</td>' +
+          '<td style="border-top:1px solid #ece7e1;font-size:0;line-height:0;">&nbsp;</td>' +
+          "</tr></table>" +
+          offers.map(offerCard).join("")
         : "") +
       // cta
       (m.ctaLabel && m.ctaUrl
@@ -501,22 +516,27 @@
       '<span style="font-family:Georgia,serif;font-size:17px;color:#1c1a18;">Iulia</span></p>' +
       "</td></tr>" +
       // footer
-      '<tr><td style="padding:36px 40px 34px;">' +
+      '<tr><td style="padding:24px 40px 38px;">' +
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' +
-      '<tr><td style="border-top:1px solid #e8e2db;padding-top:26px;">' +
-      '<p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:#7d746b;"><strong style="color:#4a443e;">Lumi Derm Aesthetics</strong><br>London Docklands</p>' +
-      '<p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:13px;">' +
+      '<tr><td align="center" style="border-top:1px solid #e8e2db;padding-top:30px;">' +
+      '<p style="margin:0 0 4px;font-family:Georgia,serif;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#1c1a18;">Lumi&nbsp;Derm</p>' +
+      '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#a2968a;">London Docklands</p>' +
+      '<p style="margin:0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:.06em;">' +
       '<a href="' +
       SITE_URL +
-      '" style="color:#7d746b;">Website</a> &middot; ' +
+      '" style="color:#7d746b;text-decoration:none;">Website</a>' +
+      '<span style="color:#d8cfc5;">&nbsp;&nbsp;&middot;&nbsp;&nbsp;</span>' +
       '<a href="' +
       BOOKING_URL +
-      '" style="color:#7d746b;">Book</a></p>' +
-      '<p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:#a2968a;">' +
-      "You're receiving this because you're a client of Lumi Derm Aesthetics and opted in to marketing.<br>" +
+      '" style="color:#7d746b;text-decoration:none;">Book</a>' +
+      '<span style="color:#d8cfc5;">&nbsp;&nbsp;&middot;&nbsp;&nbsp;</span>' +
+      '<a href="https://www.instagram.com/lumiderm_aesthetics/" style="color:#7d746b;text-decoration:none;">Instagram</a>' +
+      "</p>" +
+      '<p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:#b8ada1;">' +
+      "You're receiving this because you opted in to hear from Lumi Derm Aesthetics.<br>" +
       '<a href="' +
       unsub +
-      '" style="color:#a2968a;text-decoration:underline;">Unsubscribe</a></p>' +
+      '" style="color:#b8ada1;text-decoration:underline;">Unsubscribe</a></p>' +
       "</td></tr></table></td></tr>" +
       "</table></td></tr></table></body></html>"
     );
