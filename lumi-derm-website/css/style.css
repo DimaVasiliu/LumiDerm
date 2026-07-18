@@ -1706,6 +1706,26 @@ body:has(.price-modal-open:checked) {
   color: var(--color-muted);
 }
 
+.about-venue h2 { margin: 0.1rem 0 0.9rem; }
+.about-venue p { color: var(--color-muted); line-height: 1.7; }
+.about-venue-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.3rem;
+}
+.about-venue-grid div {
+  padding: 1rem 0 0;
+  border-top: 1px solid rgba(47, 43, 42, 0.12);
+}
+.about-venue-grid h3 {
+  margin: 0 0 0.3rem;
+  font-size: 0.95rem;
+}
+.about-venue-grid p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
 /* problem / solution + benefit + area cards */
 .about-solve-card,
 .about-benefit,

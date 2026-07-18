@@ -86,6 +86,39 @@
     line-height: 1;
   }
 
+  .about-hero .lead {
+    max-width: 100%;
+  }
+
+  .about-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem 1rem;
+    width: 100%;
+  }
+
+  .about-stat {
+    min-width: 0;
+  }
+
+  .about-stat-label {
+    font-size: 0.66rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .about-bio,
+  .about-venue {
+    min-width: 0;
+  }
+
+  .about-bio h2,
+  .about-venue h2 {
+    font-size: clamp(2.05rem, 10.5vw, 2.65rem);
+    line-height: 1.02;
+    overflow-wrap: anywhere;
+  }
+
   .simple-hero ~ .section,
   .simple-hero ~ .section-tight {
     padding-block: 1.8rem;

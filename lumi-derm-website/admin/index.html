@@ -37,6 +37,7 @@
           <button class="admin-nav-item" type="button" data-admin-panel="offers">Offers</button>
           <button class="admin-nav-item" type="button" data-admin-panel="prices">Prices</button>
           <button class="admin-nav-item" type="button" data-admin-panel="marketing">Marketing</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="sender">Send email</button>
           <button class="admin-nav-item" type="button" data-admin-panel="reviews">Reviews</button>
           <button class="admin-nav-item" type="button" data-admin-panel="media">Media</button>
           <button class="admin-nav-item" type="button" data-admin-panel="content">Pages</button>
@@ -258,9 +259,91 @@
 
             <section class="admin-card">
               <p class="admin-eyebrow">Audience and consent</p>
-              <h3>Manage recipients in the approved sending platform</h3>
-              <p>Do not copy Treatwell client records into this browser workspace. Client history and booking contacts remain in Treatwell. A separate website newsletter list should only be added later with explicit opt-in, unsubscribe handling and an approved email provider.</p>
+              <h3>Drafts here. Sending happens in “Send email”.</h3>
+              <p>This panel is a scratchpad — nothing here sends. To build and send a real campaign, use the <strong>Send email</strong> tab, which only ever emails clients who ticked the marketing opt-in in Treatwell.</p>
             </section>
+          </section>
+
+          <!-- ===================== SEND EMAIL ===================== -->
+          <section class="admin-panel" id="sender" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Campaigns</p>
+                <h2>Send an email</h2>
+                <p>Build a branded email from your published offers and send it to clients who opted in. Every email carries a working unsubscribe link automatically.</p>
+              </div>
+            </div>
+
+            <!-- Step 1 — recipients -->
+            <section class="admin-card">
+              <div class="admin-card-head">
+                <div>
+                  <p class="admin-eyebrow">Step 1</p>
+                  <h3>Who is this going to?</h3>
+                </div>
+              </div>
+              <p class="admin-help">In Treatwell go to <strong>Clients</strong> → <strong>Export</strong>. Drop that CSV file here. We read the opt-in column and <strong>discard everyone who did not consent</strong>.</p>
+              <label>Treatwell client export (.csv)<input type="file" accept=".csv,text/csv" data-recipients-file></label>
+              <div class="field-pair" data-column-map hidden>
+                <label>Email column<select data-map-field="email"></select></label>
+                <label>Name column<select data-map-field="name"></select></label>
+              </div>
+              <div class="field-pair" data-column-map-2 hidden>
+                <label>Opt-in column<select data-map-field="optin"></select></label>
+                <label>Only send to opted-in<select data-map-field="strict">
+                  <option value="yes">Yes — opted-in only (required)</option>
+                  <option value="no">No — I have consent another way</option>
+                </select></label>
+              </div>
+              <p class="admin-status" data-recipients-status>No list loaded.</p>
+            </section>
+
+            <div class="admin-layout">
+              <!-- Step 2 — compose -->
+              <section class="admin-card admin-editor">
+                <p class="admin-eyebrow">Step 2 — compose</p>
+                <label>Template<select data-mail-field="template">
+                  <option value="offers">Offer announcement</option>
+                  <option value="winback">We miss you (win-back)</option>
+                  <option value="seasonal">Seasonal promotion</option>
+                  <option value="blank">Blank</option>
+                </select></label>
+                <label>Subject line<input type="text" data-mail-field="subject" placeholder="Your first treatment at Lumi Derm — 15% off"></label>
+                <label>Preview text<span class="admin-hint">Shows next to the subject in the inbox.</span><input type="text" data-mail-field="preview"></label>
+                <label>Eyebrow<input type="text" data-mail-field="eyebrow" placeholder="New client offer"></label>
+                <label>Headline<input type="text" data-mail-field="headline" placeholder="Your first treatment, 15% off"></label>
+                <label>Message<span class="admin-hint">Use <code>{{name}}</code> to greet each client by first name.</span><textarea rows="6" data-mail-field="body"></textarea></label>
+                <div class="field-pair">
+                  <label>Button label<input type="text" data-mail-field="ctaLabel" placeholder="Book your consultation"></label>
+                  <label>Button link<input type="url" data-mail-field="ctaUrl" placeholder="https://lumidermaesthetics.com/pages/booking.html"></label>
+                </div>
+
+                <p class="admin-eyebrow" style="margin-top:1.5rem">Include offers</p>
+                <p class="admin-help">These come straight from the offers you published. Tick the ones to feature — no retyping.</p>
+                <div class="offer-picker" data-offer-picker></div>
+              </section>
+
+              <!-- Preview + send -->
+              <aside class="admin-stack">
+                <section class="admin-card">
+                  <div class="admin-card-head"><div><p class="admin-eyebrow">Live preview</p><h3>Email preview</h3></div></div>
+                  <iframe class="mail-preview" data-mail-preview title="Email preview"></iframe>
+                </section>
+
+                <section class="admin-card">
+                  <div class="admin-card-head"><div><p class="admin-eyebrow">Step 3 — send</p><h3>Test, then send</h3></div></div>
+                  <label>Send a test to<input type="email" data-test-email placeholder="you@example.com"></label>
+                  <button class="admin-button admin-button-secondary" type="button" data-send-test>Send test to me</button>
+                  <hr class="admin-rule">
+                  <label class="admin-check">
+                    <input type="checkbox" data-consent-confirm>
+                    <span>I confirm every recipient gave marketing consent, and I understand this sends real email.</span>
+                  </label>
+                  <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-send-campaign disabled>Send campaign</button>
+                  <p class="admin-status" data-send-status></p>
+                </section>
+              </aside>
+            </div>
           </section>
 
           <!-- ===================== REVIEWS ===================== -->
@@ -403,6 +486,16 @@
                 <p class="admin-help"><strong>Keep this page behind Cloudflare Access.</strong> The token is stored in this browser and only allows editing website files.</p>
               </section>
               <section class="admin-card">
+                <p class="admin-eyebrow">Email</p>
+                <h3>Sending connection</h3>
+                <label>Send key<input type="password" data-mail-field-key placeholder="paste the SEND_KEY" autocomplete="off"></label>
+                <div class="admin-actions-inline start" style="margin-top:0.8rem">
+                  <button class="admin-button admin-button-primary" type="button" data-mail-key-save>Save key</button>
+                  <button class="admin-button admin-button-secondary" type="button" data-mail-health>Test sending</button>
+                </div>
+                <p class="admin-help" data-mail-health-status>Not checked. This must match the <code>SEND_KEY</code> secret set on the Worker.</p>
+              </section>
+              <section class="admin-card">
                 <p class="admin-eyebrow">Data</p>
                 <h3>Backup &amp; restore</h3>
                 <div class="admin-actions-inline start" style="margin-top:0.8rem">
@@ -437,6 +530,7 @@
     </div>
 
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
-    <script src="admin.js?v=20260712-publish7"></script>
+    <script src="admin.js?v=20260714-mail1"></script>
+    <script src="sender.js?v=20260714-mail1"></script>
   </body>
 </html>

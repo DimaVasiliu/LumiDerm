@@ -1,11 +1,37 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  // Cloudflare Workers config for the Lumi Derm static site.
-  // Serves the contents of ./lumi-derm-website as static assets at the site root.
-  "name": "lumiderm",
-  "compatibility_date": "2026-06-28",
-  "assets": {
-    "directory": "./lumi-derm-website",
-    "not_found_handling": "404-page"
-  }
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	// Cloudflare Worker for the Lumi Derm site.
+	// Serves ./lumi-derm-website as static assets, and runs src/worker.js
+	// for /api/* routes (marketing email sending + unsubscribe).
+	"name": "lumiderm",
+	"main": "src/worker.js",
+	"compatibility_date": "2026-06-28",
+	"assets": {
+		"directory": "./lumi-derm-website",
+		"not_found_handling": "404-page",
+		"binding": "ASSETS"
+	},
+	// Unsubscribed addresses. Created with:
+	//   npx wrangler kv namespace create SUPPRESSION
+	// then paste the returned id below.
+	"kv_namespaces": [
+		{
+			"binding": "SUPPRESSION",
+			"id": "9499ca19ed66407f9c733c5decf741d0"
+		}
+	],
+	// FROM_EMAIL must be on the domain verified in Resend.
+	// REPLY_TO must be a mailbox she actually reads — info@ is the one
+	// wired to Namecheap forwarding and named in the DMARC record.
+	"vars": {
+		"FROM_EMAIL": "Lumi Derm Aesthetics <info@lumidermaesthetics.com>",
+		"REPLY_TO": "info@lumidermaesthetics.com"
+	},
+	"observability": {
+		"enabled": true
+	}
+	// Secrets are NOT stored here. Set them once with:
+	//   npx wrangler secret put RESEND_API_KEY
+	//   npx wrangler secret put SEND_KEY
+	//   npx wrangler secret put UNSUB_SECRET
 }
