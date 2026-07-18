@@ -108,12 +108,12 @@ const LUMI_KB = [
   {
     id: 'cancellation',
     keywords: ['cancel', 'cancel my', 'cancel appointment', 'cancellation', 'reschedule', 'change appointment', 'refund', 'move my'],
-    answer: "Please give us as much notice as you can if you need to reschedule or cancel. Cancellation and deposit terms are shown during booking — see our <a href=\"pages/policies.html\">policies</a> for details.",
+    answer: "Please give us at least 24 hours' notice to reschedule or cancel. Cancellations with less than 24 hours' notice, or no-shows, may be charged. Deposit terms are shown during booking — see our <a href=\"pages/policies.html\">policies</a> for details.",
   },
   {
     id: 'age',
-    keywords: ['age', 'how old', '18', 'minor', 'under 18', 'child'],
-    answer: "Our treatments are for clients aged 18 and over.",
+    keywords: ['age', 'how old', '18', 'minor', 'under 18', 'child', 'teenager', 'daughter', 'son', 'parent', 'consent', 'kid'],
+    answer: "Adults 18+ can book any treatment. Younger clients are welcome for selected treatments too — suitability is assessed with Iulia at a consultation, and under-18s need written parental consent with a parent present throughout. Injectables (anti-wrinkle, fillers, Profhilo, mesotherapy, PRP) are 18+ only, as required by UK law.",
   },
   {
     id: 'contact',
