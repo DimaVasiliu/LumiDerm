@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260720-campaigns1">
+    <link rel="stylesheet" href="admin.css?v=20260720-audit1">
   </head>
   <body>
     <!-- Soft lock screen (light gate only — enable Cloudflare Access for real protection) -->
@@ -84,7 +84,7 @@
                   <button class="quick-action" type="button" data-go="offers"><strong>Add an offer</strong><span>New homepage carousel card</span></button>
                   <button class="quick-action" type="button" data-go="sender"><strong>Send an email</strong><span>Build a campaign for your subscribers</span></button>
                   <button class="quick-action" type="button" data-go="reviews"><strong>Approve reviews</strong><span>Clear the pending queue</span></button>
-                  <button class="quick-action" type="button" data-go="prices"><strong>Update prices</strong><span>Edit treatment price groups</span></button>
+                  <button class="quick-action" type="button" data-go="prices"><strong>Draft prices</strong><span>Price changes (send to Dima to go live)</span></button>
                 </div>
               </section>
 
@@ -173,10 +173,10 @@
             <section class="admin-card guide-card">
               <h3>The other tabs <span class="guide-hint">(click a name to open it)</span></h3>
               <ul class="guide-list">
-                <li><button class="guide-link" type="button" data-go="prices">Prices</button> &mdash; edit the price lists shown on the treatments page.</li>
-                <li><button class="guide-link" type="button" data-go="reviews">Reviews</button> &mdash; approve or add the reviews shown on the site.</li>
+                <li><button class="guide-link" type="button" data-go="reviews">Reviews</button> &mdash; choose which client reviews show on the homepage, then <strong>Publish reviews</strong>. Goes live like offers.</li>
+                <li><button class="guide-link" type="button" data-go="prices">Prices</button> &mdash; draft price changes. <em>Not live-editable yet</em> &mdash; send changes to Dima to publish.</li>
                 <li><button class="guide-link" type="button" data-go="media">Media</button> &mdash; the photos available to use in offers.</li>
-                <li><button class="guide-link" type="button" data-go="content">Pages</button> &mdash; edit text on the standard pages.</li>
+                <li><button class="guide-link" type="button" data-go="content">Pages</button> &mdash; draft page text. <em>Not live-editable yet</em> &mdash; ask Dima to publish.</li>
                 <li><button class="guide-link" type="button" data-go="clients">Treatwell</button> &mdash; your booking system stays the home for bookings, payments and client records.</li>
                 <li><button class="guide-link" type="button" data-go="settings">Settings</button> &mdash; your passcode and the behind-the-scenes connections. You rarely need this.</li>
               </ul>
@@ -285,7 +285,7 @@
               <div>
                 <p class="admin-eyebrow">Treatment menu</p>
                 <h2>Prices and groups</h2>
-                <p>Keep website price groups, consultation notes and instalment wording aligned with the approved clinic list and the live Treatwell menu.</p>
+                <p><strong>Not yet live-editable.</strong> You can draft price changes here (saved in your browser), but the treatments page isn&rsquo;t wired to publish prices yet &mdash; send the changes to Dima to put them live. (On the roadmap: make this publish like Offers.)</p>
               </div>
               <button class="admin-button admin-button-primary" type="button" data-add-price-group>Add group</button>
             </div>
@@ -481,16 +481,16 @@
               <div>
                 <p class="admin-eyebrow">Reputation</p>
                 <h2>Reviews queue</h2>
-                <p>Approve what appears on the homepage, feature the strongest reviews, and prepare for Google Business Profile sync.</p>
+                <p>Choose what appears on the homepage. Mark a review <strong>Approved</strong> to show it, <strong>Featured</strong> to highlight it, or leave it Pending/Hidden to keep it off the site. Then click <strong>Publish reviews</strong> &mdash; only approved ones go live, and it updates in about a minute.</p>
               </div>
               <div class="admin-actions-inline">
-                <button class="admin-button admin-button-secondary" type="button" data-sync-google>Import Google (demo)</button>
-                <button class="admin-button admin-button-primary" type="button" data-add-review>Add review</button>
+                <button class="admin-button admin-button-secondary" type="button" data-add-review>Add review</button>
+                <button class="admin-button admin-button-primary" type="button" data-publish-reviews>Publish reviews</button>
               </div>
             </div>
             <div class="review-controls">
               <label>Filter<select data-review-filter><option value="all">All</option><option value="approved">Approved</option><option value="featured">Featured</option><option value="pending">Pending</option><option value="hidden">Hidden</option></select></label>
-              <p>Imported reviews stay <strong>pending</strong> until you approve them.</p>
+              <p>New reviews you add start as <strong>pending</strong> and stay off the site until you approve and publish them.</p>
             </div>
             <div class="admin-review-list" data-review-list></div>
           </section>
@@ -655,8 +655,8 @@
     </div>
 
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
-    <script src="admin.js?v=20260720-publish8"></script>
+    <script src="admin.js?v=20260720-audit1"></script>
     <script src="sender.js?v=20260720-campaigns1"></script>
-    <script src="subscribers.js?v=20260718-subs1"></script>
+    <script src="subscribers.js?v=20260720-audit1"></script>
   </body>
 </html>

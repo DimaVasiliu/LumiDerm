@@ -375,9 +375,70 @@ async function loadReviewsFromJson() {
     const r = await fetch("../assets/data/reviews.json", { cache: "no-store" });
     if (!r.ok) throw new Error("unavailable");
     const data = await r.json();
+    reviewsSummary = data.summary || reviewsSummary;
     state.reviews = (data.reviews || []).map((rev, i) => ({ ...rev, status: i < 10 ? "approved" : "pending", featured: i < 3 }));
     renderReviews(); updateMetrics();
   } catch { state.reviews = []; renderReviews(); }
+}
+
+// Preserve the Treatwell summary (rating/count/label) across publishes.
+let reviewsSummary = { rating: "5.0", count: 47, label: "Treatwell reviews" };
+
+/* admin reviews -> reviews.json shape (only APPROVED reviews go public, featured first) */
+function toReviewsJson() {
+  const approved = state.reviews.filter((r) => String(r.status || "").toLowerCase() === "approved");
+  approved.sort((a, b) => (b.featured === true ? 1 : 0) - (a.featured === true ? 1 : 0));
+  const reviews = approved.map((r) => ({
+    name: r.name || "",
+    initial: r.initial || (r.name || "?").charAt(0).toUpperCase(),
+    rating: Number(r.rating) || 5,
+    treatment: r.treatment || "",
+    source: r.source || "Client feedback",
+    text: r.text || ""
+  }));
+  return { summary: reviewsSummary, reviews };
+}
+
+async function publishReviews() {
+  const cfg = getGh();
+  if (!cfg.repo || !cfg.token) {
+    toast("Add the website connection first (Settings).");
+    goPanel("settings");
+    return false;
+  }
+  const button = document.querySelector("[data-publish-reviews]");
+  if (button) { button.disabled = true; button.textContent = "Publishing…"; }
+  try {
+    const branch = cfg.branch || "main";
+    const content = b64(JSON.stringify(toReviewsJson(), null, 2) + "\n");
+    let put;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      let sha;
+      const current = await ghRequest(
+        REVIEWS_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(),
+        { method: "GET" }
+      );
+      if (current.ok) sha = (await current.json()).sha;
+      else if (current.status !== 404) {
+        const e = await current.json().catch(() => ({}));
+        throw new Error(ghError(current.status, e.message));
+      }
+      const body = { message: "Update homepage reviews (via admin)", content, branch };
+      if (sha) body.sha = sha;
+      put = await ghRequest(REVIEWS_REPO_PATH, { method: "PUT", body: JSON.stringify(body) });
+      if (put.ok) break;
+      if (put.status === 409 && attempt < 2) { await new Promise((r) => setTimeout(r, 500)); continue; }
+      const e = await put.json().catch(() => ({}));
+      throw new Error(ghError(put.status, e.message));
+    }
+    toast("Published — your reviews will be live on the website in about a minute.");
+    return true;
+  } catch (err) {
+    toast("Publish failed: " + err.message);
+    return false;
+  } finally {
+    if (button) { button.disabled = false; button.textContent = "Publish reviews"; }
+  }
 }
 
 function renderReviews() {
@@ -498,6 +559,7 @@ function escapeAttr(v) { return escapeHtml(v); }
    ===================================================================== */
 const OFFERS_JSON_URL = "../assets/data/offers.json";                    // what the homepage reads
 const OFFERS_REPO_PATH = "lumi-derm-website/assets/data/offers.json";    // path inside the repo
+const REVIEWS_REPO_PATH = "lumi-derm-website/assets/data/reviews.json";  // homepage reviews feed
 const GH_KEY = "lumi-derm-gh-v1";
 
 /* Accepts any of these and turns them into "owner/repo":
@@ -732,6 +794,7 @@ async function deleteOffer(index) {
 
 function bindPublishing() {
   document.querySelector("[data-publish-offers]")?.addEventListener("click", publishOffers);
+  document.querySelector("[data-publish-reviews]")?.addEventListener("click", publishReviews);
   document.querySelector("[data-reload-offers]")?.addEventListener("click", () => {
     if (!confirm("Replace what's in the editor with the offers currently on the website?")) return;
     loadOffersFromSite(true);
