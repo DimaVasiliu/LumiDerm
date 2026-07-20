@@ -648,7 +648,7 @@ async function initTreatmentIndex() {
         '<button class="oglr-card-open" type="button" data-oglr-open="' + i + '"' +
           ' aria-label="View details: ' + tiEscape(offer.title) + '">' +
           '<span class="oglr-card-media">' +
-            (img ? '<img src="' + img + '" alt="" loading="lazy">' : '') +
+            (img ? '<img src="' + img + '" alt="' + tiEscape(offer.alt || offer.title || '') + '" loading="lazy">' : '') +
             (offer.badge ? '<span class="oglr-card-badge">' + tiEscape(offer.badge) + '</span>' : '') +
             (offer.featured ? '<span class="oglr-card-feat"><span class="oglr-card-feat-dot" aria-hidden="true"></span>Featured</span>' : '') +
             '<span class="oglr-card-spot" aria-hidden="true"></span>' +
@@ -921,7 +921,7 @@ async function initTreatmentIndex() {
       const offer = live[i];
       if (!offer) return;
       lastFocus = document.activeElement;
-      if (mImg) { mImg.src = offer.image || ''; mImg.alt = offer.title || ''; }
+      if (mImg) { mImg.src = offer.image || ''; mImg.alt = offer.alt || offer.title || ''; }
       if (mBadge) {
         mBadge.textContent = offer.badge || '';
         mBadge.hidden = !offer.badge;

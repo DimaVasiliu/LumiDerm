@@ -635,7 +635,14 @@ code {
 .price-table-edit tbody tr { border-top: 1px solid rgba(68, 52, 49, 0.07); }
 .price-table-edit td input { min-width: 68px; text-align: center; }
 
-.price-list-edit { display: grid; gap: 0.55rem; margin: 0.5rem 0; }
+.price-list-edit {
+  display: grid;
+  gap: 0.55rem;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0.5rem 0;
+  overflow: hidden;
+}
 .price-list-row {
   display: grid;
   grid-template-columns: 1fr;
@@ -645,15 +652,36 @@ code {
   padding-top: 0.55rem;
 }
 .price-list-name { font-weight: 600; font-size: 0.9rem; }
-.price-list-cost { max-width: 160px; }
+.price-list-row > * { min-width: 0; }
+.price-list-cost { max-width: 150px; }
+.price-list-small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .price-pill-edit,
 .price-note-edit { display: block; margin-top: 0.9rem; }
 .price-pill-edit small { font-weight: 400; opacity: 0.65; }
 
 @media (min-width: 900px) {
-  .admin-layout-prices { grid-template-columns: minmax(230px, 300px) 1fr; align-items: start; }
-  .price-list-row { grid-template-columns: 1fr 160px 220px; }
+  .admin-layout.admin-layout-prices {
+    grid-template-columns: minmax(260px, 0.92fr) minmax(420px, 1.08fr);
+    align-items: start;
+  }
+  .price-list-row {
+    grid-template-columns: minmax(110px, 0.9fr) minmax(92px, 140px) minmax(0, 1.1fr);
+    gap: 0.5rem;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1180px) {
+  .price-list-row {
+    grid-template-columns: minmax(0, 1fr) minmax(92px, 140px);
+  }
+  .price-list-small {
+    grid-column: 1 / -1;
+  }
 }
 
 .field-row {

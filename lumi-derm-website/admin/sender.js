@@ -631,7 +631,7 @@
       (img
         ? '<td width="150" valign="top" style="padding:0;"><img src="' +
           esc(img) +
-          '" alt="" width="150" style="display:block;width:150px;height:auto;border:0;border-radius:8px 0 0 8px;"></td>'
+          '" alt="' + esc(offer.alt || offer.title || "") + '" width="150" style="display:block;width:150px;height:auto;border:0;border-radius:8px 0 0 8px;"></td>'
         : "") +
       '<td valign="top" style="padding:20px 22px;">' +
       (offer.badge

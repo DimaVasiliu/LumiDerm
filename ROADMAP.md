@@ -32,7 +32,7 @@ Working list of what's left, in priority order. Tick items off as they ship.
 
 ## 🟢 Nice-to-have (from the admin audit)
 
-- [ ] **Image alt-text field on offers** — one input per offer, threaded into `offers.json` and the email card. Helps SEO, accessibility and email deliverability.
+- [x] **Image alt-text field on offers** ✅ Done. An "Image description" field in the offer editor is saved to `offers.json` (`alt`) and used on the homepage offer cards, the offer modal, and the email offer card — falling back to the offer title when left blank, so no image is ever alt-less. Helps SEO, accessibility and email deliverability.
 - [ ] **Scheduled sends** — "send this campaign on <date>". Needs a Cloudflare Cron Trigger + a queued-campaign table (not doable purely in the browser).
 - [ ] **Automatic birthday emails** — the birthday-month segment already works manually; automating it needs the same cron infrastructure as scheduled sends.
 - [ ] **Reorder offers by drag** (arrow reordering already exists) — optional polish.
