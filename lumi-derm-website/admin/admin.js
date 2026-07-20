@@ -218,8 +218,8 @@ function bindOffers() {
 function renderOffers() {
   const table = document.querySelector("[data-offer-table]"); if (!table) return;
   table.innerHTML = state.offers.map((o, i) => `
-    <tr class="${i === selectedOfferIndex ? "is-selected" : ""}">
-      <td><strong>${escapeHtml(o.title)}</strong><span>${escapeHtml(o.category)}</span></td>
+    <tr class="${i === selectedOfferIndex ? "is-selected" : ""}" draggable="true" data-offer-row="${i}">
+      <td><span class="drag-grip" title="Drag to reorder" aria-hidden="true">⋮⋮</span><strong>${escapeHtml(o.title)}</strong><span>${escapeHtml(o.category)}</span></td>
       <td>${escapeHtml(o.price)}</td>
       <td><span class="status-pill status-${(o.status || "").toLowerCase()}">${escapeHtml(o.status)}</span></td>
       <td>${i + 1}</td>
@@ -236,7 +236,45 @@ function renderOffers() {
   table.querySelectorAll("[data-move-offer]").forEach((b) => b.addEventListener("click", () => moveOffer(+b.dataset.moveOffer, +b.dataset.dir)));
   table.querySelectorAll("[data-dup-offer]").forEach((b) => b.addEventListener("click", () => { const o = state.offers[+b.dataset.dupOffer]; state.offers.splice(+b.dataset.dupOffer + 1, 0, { ...o, title: o.title + " (copy)", status: "Draft" }); renderOffers(); saveDraft("Offer duplicated."); }));
   table.querySelectorAll("[data-del-offer]").forEach((b) => b.addEventListener("click", () => deleteOffer(+b.dataset.delOffer)));
+  bindOfferDrag(table);
   populateOfferEditor();
+}
+
+// Drag-and-drop reordering (arrow buttons remain as a keyboard-friendly fallback).
+let offerDragFrom = null;
+function bindOfferDrag(table) {
+  table.querySelectorAll("[data-offer-row]").forEach((row) => {
+    row.addEventListener("dragstart", (e) => {
+      offerDragFrom = +row.dataset.offerRow;
+      row.classList.add("dragging");
+      if (e.dataTransfer) { e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", String(offerDragFrom)); } catch (_) { /* IE */ } }
+    });
+    row.addEventListener("dragend", () => {
+      offerDragFrom = null;
+      table.querySelectorAll(".dragging, .drag-over").forEach((el) => el.classList.remove("dragging", "drag-over"));
+    });
+    row.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+      if (!row.classList.contains("dragging")) row.classList.add("drag-over");
+    });
+    row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
+    row.addEventListener("drop", (e) => {
+      e.preventDefault();
+      reorderOffer(offerDragFrom, +row.dataset.offerRow);
+    });
+  });
+}
+
+function reorderOffer(from, to) {
+  if (from == null || to == null || isNaN(from) || isNaN(to) || from === to) return;
+  if (from < 0 || to < 0 || from >= state.offers.length || to >= state.offers.length) return;
+  const moved = state.offers.splice(from, 1)[0];
+  if (!moved) return;
+  state.offers.splice(to, 0, moved);
+  selectedOfferIndex = to;
+  renderOffers();
+  saveDraft("Order updated.");
 }
 
 function moveOffer(i, dir) {

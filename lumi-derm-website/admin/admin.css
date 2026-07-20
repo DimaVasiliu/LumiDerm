@@ -539,6 +539,20 @@ code {
   font-size: 0.88rem;
 }
 
+/* ---- Offer drag-to-reorder ---- */
+tr[data-offer-row] { cursor: grab; }
+tr[data-offer-row].dragging { opacity: 0.45; cursor: grabbing; }
+tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent); }
+.drag-grip {
+  display: inline-block;
+  margin-right: 0.5rem;
+  color: var(--admin-muted);
+  font-weight: 900;
+  letter-spacing: -2px;
+  cursor: grab;
+  user-select: none;
+}
+
 /* ---- Scheduling + birthday automation ---- */
 .schedule-when { display: block; margin: 0.2rem 0 0.6rem; }
 

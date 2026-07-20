@@ -35,7 +35,7 @@ Working list of what's left, in priority order. Tick items off as they ship.
 - [x] **Image alt-text field on offers** ✅ Done. An "Image description" field in the offer editor is saved to `offers.json` (`alt`) and used on the homepage offer cards, the offer modal, and the email offer card — falling back to the offer title when left blank, so no image is ever alt-less. Helps SEO, accessibility and email deliverability.
 - [x] **Scheduled sends** ✅ Done & verified. In Send email, tick "Schedule for later", pick a date + time; the campaign is queued in D1 and sent by the hourly Cloudflare cron. "Upcoming & recent scheduled sends" lists them with a Cancel button. (Needs migration 0004 applied + the worker redeployed — see deploy notes.)
 - [x] **Automatic birthday emails** ✅ Done & verified. A birthday-automation card (on/off switch, editable subject + HTML body, send-hour, "send me a preview") saved to D1. The hourly cron, at the chosen hour, emails each confirmed + consented subscriber whose birthday is today — once per year (tracked by `birthday_sent_year`), honouring the suppression list. Cron SQL verified with an in-memory SQLite harness (due-selection, claim idempotency, birthday matching, year-guard, settings upsert).
-- [ ] **Reorder offers by drag** (arrow reordering already exists) — optional polish.
+- [x] **Reorder offers by drag** ✅ Done. Offer rows are draggable (with a grip handle); drop to reorder and it saves. The ↑/↓ arrow buttons remain as a keyboard-friendly fallback. Reorder logic verified in all directions.
 
 ---
 
