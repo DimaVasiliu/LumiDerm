@@ -455,7 +455,7 @@ function confirmEmailHtml(firstName, confirmUrl) {
 <p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:16px;line-height:1.7;color:#4a443e;">Hi ${name},</p>
 <p style="margin:0 0 26px;font-family:Arial,sans-serif;font-size:16px;line-height:1.7;color:#4a443e;">Thanks for signing up to hear about our offers and news. Please confirm your email address so we can add you to the list.</p>
 <table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#1c1a18" style="border-radius:2px;">
-<a href="${confirmUrl}" style="display:inline-block;padding:16px 40px;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#fff;text-decoration:none;">Confirm subscription</a>
+<a href="${confirmUrl.replace(/&/g, "&amp;")}" style="display:inline-block;padding:16px 40px;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#fff;text-decoration:none;">Confirm subscription</a>
 </td></tr></table>
 <p style="margin:26px 0 0;font-family:Arial,sans-serif;font-size:13px;line-height:1.6;color:#a2968a;">If you didn't sign up, just ignore this email — nothing will happen and you won't be added.</p>
 </td></tr>
