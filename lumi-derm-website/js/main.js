@@ -545,7 +545,7 @@ async function initReviewsFeed() {
    centre gently zooms while the clinic backdrop reveals and drifts behind the track.
    Desktop only; reduced-motion / narrow screens keep the plain carousel. */
 /* ===================== Treatment Index (data-driven from offers.json) =====================
-   Offers are edited in the CMS (/cms/) which commits assets/data/offers.json to GitHub.
+   Offers are edited in the admin (/admin/) which commits assets/data/offers.json to GitHub.
    Cloudflare redeploys and the homepage picks the changes up automatically. */
 const OFFERS_SOURCE = 'assets/data/offers.json';
 
