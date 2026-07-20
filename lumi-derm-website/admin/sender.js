@@ -2,15 +2,15 @@
  * Lumi Derm — admin email sender
  * ------------------------------------------------------------------
  * Composes a branded campaign from published offers and posts it to
- * the Worker at /api/campaign/send. Consent is enforced twice: once
+ * the Access-protected Worker admin API. Consent is enforced twice: once
  * when the Treatwell CSV is parsed (non-opted-in rows are discarded),
  * and again on the server against the unsubscribe suppression list.
  */
 (function () {
   "use strict";
 
+  var ADMIN_API = "/admin/api";
   var OFFERS_URL = "../assets/data/offers.json";
-  var KEY_STORE = "lumi-derm-mail-key-v1";
   var DRAFT_STORE = "lumi-derm-mail-draft-v1";
 
   var BOOKING_URL = "https://lumidermaesthetics.com/pages/booking.html";
@@ -113,19 +113,10 @@
     var el = $(sel);
     if (el) el.hidden = hidden;
   }
-  function getKey() {
-    try {
-      return localStorage.getItem(KEY_STORE) || "";
-    } catch (err) {
-      return "";
-    }
-  }
-
   function apiJson(path, options) {
-    var key = getKey();
-    if (!key) return Promise.reject(new Error("Add the send key in Settings first."));
     var next = options || {};
-    next.headers = Object.assign({}, next.headers || {}, { "x-lumi-key": key });
+    next.credentials = "same-origin";
+    next.headers = Object.assign({}, next.headers || {});
     return fetch(path, next).then(function (res) {
       return res.json().then(function (data) {
         if (!res.ok) throw new Error(data.error || "Request failed (" + res.status + ").");
@@ -373,18 +364,10 @@
 
   function loadWebsiteSubscribers() {
     var out = $("[data-recipients-status]");
-    var key = getKey();
     state.recipients = [];
     updateSendButton();
-    if (!key) {
-      status(out, "Add the send key in Settings before loading website subscribers.", "error");
-      return;
-    }
     status(out, "Loading confirmed website subscribers…");
-    fetch("/api/subscribers", {
-      cache: "no-store",
-      headers: { "x-lumi-key": key }
-    })
+    fetch(ADMIN_API + "/subscribers", { cache: "no-store", credentials: "same-origin" })
       .then(function (res) {
         return res.json().then(function (data) {
           if (!res.ok) throw new Error(data.error || "Could not load subscribers.");
@@ -749,13 +732,10 @@
   }
 
   function postCampaign(recipients, isTest) {
-    var key = getKey();
-    if (!key) {
-      return Promise.reject(new Error("No send key. Add it in Settings → Sending connection."));
-    }
-    return fetch("/api/campaign/send", {
+    return fetch(ADMIN_API + "/campaign/send", {
       method: "POST",
-      headers: { "content-type": "application/json", "x-lumi-key": key },
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({
         subject: String(state.mail.subject || ""),
         html: buildHtml(false),
@@ -842,50 +822,37 @@
   }
 
   /* --------------------------------------------------------------- */
-  /* Settings (send key)                                               */
+  /* Settings (Cloudflare Access)                                      */
   /* --------------------------------------------------------------- */
 
   function bindSettings() {
-    var field = $("[data-mail-field-key]");
     var out = $("[data-mail-health-status]");
-    if (field) field.value = getKey();
-
-    var saveBtn = $("[data-mail-key-save]");
-    if (saveBtn) {
-      saveBtn.addEventListener("click", function () {
-        try {
-          localStorage.setItem(KEY_STORE, String((field && field.value) || "").trim());
-          status(out, "Key saved in this browser.", "ok");
-          if (state.audienceSource === "website") loadWebsiteSubscribers();
-          loadHistory();
-        } catch (err) {
-          status(out, "Could not save the key.", "error");
-        }
-      });
-    }
 
     var testBtn = $("[data-mail-health]");
     if (testBtn) {
       testBtn.addEventListener("click", function () {
         status(out, "Checking…");
-        fetch("/api/health", { cache: "no-store" })
+        fetch(ADMIN_API + "/health", { cache: "no-store", credentials: "same-origin" })
           .then(function (res) {
-            return res.json();
+            return res.json().then(function (data) {
+              if (!res.ok) throw new Error(data.error || "Access check failed.");
+              return data;
+            });
           })
           .then(function (data) {
             var missing = [];
             if (!data.resend) missing.push("RESEND_API_KEY");
-            if (!data.sendKey) missing.push("SEND_KEY");
             if (!data.unsubSecret) missing.push("UNSUB_SECRET");
             if (!data.suppression) missing.push("SUPPRESSION KV");
+            if (!data.subscribers) missing.push("SUBSCRIBERS D1");
             if (missing.length) {
               status(out, "Server is missing: " + missing.join(", ") + ".", "error");
             } else {
-              status(out, "Ready. Sending from " + (data.from || "the configured address") + ".", "ok");
+              status(out, "Ready for " + (data.adminEmail || "this Access user") + ". Sending from " + (data.from || "the configured address") + ".", "ok");
             }
           })
-          .catch(function () {
-            status(out, "No API found. Has the Worker been deployed?", "error");
+          .catch(function (err) {
+            status(out, err.message || "No admin API found. Has the Worker been deployed?", "error");
           });
       });
     }
@@ -1048,7 +1015,7 @@
     }
     var btn = $("[data-campaign-save]");
     if (btn) btn.disabled = true;
-    apiJson("/api/campaign/drafts", {
+    apiJson(ADMIN_API + "/campaign/drafts", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(campaignPayload(existingId || currentCampaignId))
@@ -1089,7 +1056,7 @@
     status($("[data-send-status]"), 'Loaded campaign "' + entry.name + '".', "ok");
   }
   function deleteCampaign(id) {
-    apiJson("/api/campaign/drafts/delete", {
+    apiJson(ADMIN_API + "/campaign/drafts/delete", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ id: id })
@@ -1106,12 +1073,8 @@
   function loadCampaigns() {
     var box = $("[data-campaign-drafts]");
     if (!box) return;
-    if (!getKey()) {
-      box.innerHTML = '<p class="admin-help">Add the send key in Settings to load saved campaigns.</p>';
-      return;
-    }
     box.innerHTML = '<p class="admin-help">Loading saved campaigns…</p>';
-    apiJson("/api/campaign/drafts", { cache: "no-store" })
+    apiJson(ADMIN_API + "/campaign/drafts", { cache: "no-store" })
       .then(function (data) {
         campaignDrafts = data.drafts || [];
         renderCampaigns();
@@ -1159,16 +1122,11 @@
 
   function loadHistory() {
     var box = $("[data-campaign-history]");
-    var key = getKey();
     if (!box) return;
-    if (!key) {
-      box.innerHTML = '<p class="admin-help">Add the send key in Settings to load send history.</p>';
-      return;
-    }
     box.innerHTML = '<p class="admin-help">Loading history…</p>';
-    fetch("/api/campaign/history", {
+    fetch(ADMIN_API + "/campaign/history", {
       cache: "no-store",
-      headers: { "x-lumi-key": key }
+      credentials: "same-origin"
     })
       .then(function (res) {
         return res.json().then(function (data) {

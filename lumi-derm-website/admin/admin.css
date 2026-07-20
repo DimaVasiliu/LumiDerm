@@ -539,53 +539,107 @@ code {
   font-size: 0.88rem;
 }
 
-.price-group-card {
-  position: relative;
+/* ---- Prices editor (treatments page) ---- */
+.admin-layout-prices { grid-template-columns: 1fr; }
+
+.price-nav {
   display: grid;
-  min-height: 170px;
-  align-content: space-between;
-  text-align: left;
+  gap: 1rem;
+  align-content: start;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
-.price-group-card.is-selected {
-  border-color: rgba(183, 123, 114, 0.48);
+.price-nav-group { display: grid; gap: 0.35rem; }
+
+.price-nav-title {
+  margin: 0 0 0.1rem;
+  color: var(--admin-accent-dark);
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.price-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(68, 52, 49, 0.12);
+  border-radius: 12px;
+  background: var(--admin-surface-strong);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.price-nav-item:hover { border-color: rgba(183, 123, 114, 0.45); }
+.price-nav-item span { font-weight: 700; }
+.price-nav-item small { color: var(--admin-muted); font-weight: 800; white-space: nowrap; }
+
+.price-nav-item.is-selected {
+  border-color: rgba(183, 123, 114, 0.6);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(246, 231, 229, 0.72)),
     var(--admin-surface-strong);
 }
 
-.price-group-card button {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  border-radius: inherit;
-  background: transparent;
-}
+.price-editor-head { margin-bottom: 0.4rem; }
+.price-editor-head h3 { margin: 0.1rem 0 0.35rem; font-family: var(--font-heading); font-size: 1.5rem; }
 
-.price-group-card small {
+.price-headline { display: block; margin: 0.6rem 0 0.4rem; }
+.price-headline small { font-weight: 400; opacity: 0.65; }
+
+.price-block-sub {
+  margin: 1.1rem 0 0.4rem;
   color: var(--admin-accent-dark);
   font-weight: 900;
-  letter-spacing: 0.14em;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.price-group-card strong {
-  display: block;
-  margin-top: 0.55rem;
-  font-family: var(--font-heading);
-  font-size: 1.7rem;
-  line-height: 1;
-}
-
-.price-group-card span {
+.price-table-edit { overflow-x: auto; }
+.price-table-edit table { width: 100%; border-collapse: collapse; }
+.price-table-edit th,
+.price-table-edit td { padding: 0.35rem 0.4rem; text-align: left; vertical-align: middle; }
+.price-table-edit thead th {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--admin-muted);
-  font-weight: 800;
+  border-bottom: 1px solid rgba(68, 52, 49, 0.12);
 }
+.price-table-edit tbody th[scope="row"] {
+  font-weight: 600;
+  font-size: 0.86rem;
+  padding-right: 0.8rem;
+}
+.price-table-edit tbody tr { border-top: 1px solid rgba(68, 52, 49, 0.07); }
+.price-table-edit td input { min-width: 68px; text-align: center; }
 
-.price-row-editor {
+.price-list-edit { display: grid; gap: 0.55rem; margin: 0.5rem 0; }
+.price-list-row {
   display: grid;
-  gap: 0.7rem;
-  margin-top: 1rem;
+  grid-template-columns: 1fr;
+  gap: 0.4rem;
+  align-items: center;
+  border-top: 1px solid rgba(68, 52, 49, 0.07);
+  padding-top: 0.55rem;
+}
+.price-list-name { font-weight: 600; font-size: 0.9rem; }
+.price-list-cost { max-width: 160px; }
+
+.price-pill-edit,
+.price-note-edit { display: block; margin-top: 0.9rem; }
+.price-pill-edit small { font-weight: 400; opacity: 0.65; }
+
+@media (min-width: 900px) {
+  .admin-layout-prices { grid-template-columns: minmax(230px, 300px) 1fr; align-items: start; }
+  .price-list-row { grid-template-columns: 1fr 160px 220px; }
 }
 
 .field-row {
@@ -1343,6 +1397,43 @@ code {
 .guide-list, .guide-steps { margin: 0.2rem 0 0.8rem; padding-left: 1.2rem; }
 .guide-list li, .guide-steps li { line-height: 1.6; margin-bottom: 0.4rem; }
 .guide-steps { counter-reset: none; }
+.guide-analysis-grid,
+.guide-todo-board {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.guide-analysis-item,
+.guide-todo-card {
+  border: 1px solid rgba(68, 52, 49, 0.1);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.58);
+}
+.guide-analysis-item strong,
+.guide-todo-card > span {
+  display: block;
+  color: var(--admin-accent-dark);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.guide-analysis-item p {
+  margin: 0.45rem 0 0;
+}
+.guide-todo-card .guide-list {
+  margin-top: 0.65rem;
+}
+.guide-todo-card .guide-list li:last-child {
+  margin-bottom: 0;
+}
+@media (min-width: 860px) {
+  .guide-analysis-grid,
+  .guide-todo-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .guide-tip, .guide-warn {
   margin: 0.6rem 0 0;
   padding: 0.8rem 1rem;

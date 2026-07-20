@@ -1,24 +1,21 @@
 /**
  * Lumi Derm — admin Subscribers tab
  * ------------------------------------------------------------------
- * Lists newsletter subscribers from the Worker (/api/subscribers),
+ * Lists newsletter subscribers from the Access-protected Worker admin API,
  * shows consent status, exports confirmed contacts to CSV (to feed the
  * email sender), and deletes a subscriber on request (right to erasure).
- * Uses the same send key as the campaign sender.
+ * Cloudflare Access protects this admin route before the API is reached.
  */
 (function () {
   "use strict";
 
-  var KEY_STORE = "lumi-derm-mail-key-v1"; // same key the sender uses
+  var ADMIN_API = "/admin/api";
 
   function $(s, r) { return (r || document).querySelector(s); }
   function esc(v) {
     return String(v == null ? "" : v)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  }
-  function getKey() {
-    try { return localStorage.getItem(KEY_STORE) || ""; } catch (e) { return ""; }
   }
   function status(msg, kind) {
     var el = $("[data-subs-status]");
@@ -103,13 +100,8 @@
   }
 
   function load() {
-    var key = getKey();
-    if (!key) {
-      status("Add your send key in Settings → Sending connection first.", "error");
-      return;
-    }
     status("Loading…");
-    fetch("/api/subscribers", { headers: { "x-lumi-key": key }, cache: "no-store" })
+    fetch(ADMIN_API + "/subscribers", { cache: "no-store", credentials: "same-origin" })
       .then(function (res) {
         return res.json().then(function (payload) {
           if (!res.ok) throw new Error(payload.error || "Could not load (" + res.status + ").");
@@ -126,10 +118,10 @@
   function del(email) {
     if (!email) return;
     if (!window.confirm("Delete " + email + " permanently? This cannot be undone.")) return;
-    var key = getKey();
-    fetch("/api/subscribers/delete", {
+    fetch(ADMIN_API + "/subscribers/delete", {
       method: "POST",
-      headers: { "content-type": "application/json", "x-lumi-key": key },
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({ email: email })
     })
       .then(function (res) { return res.json().then(function (p) {

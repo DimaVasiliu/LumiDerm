@@ -46,6 +46,5 @@
 	}
 	// Secrets are NOT stored here. Set them once with:
 	//   npx wrangler secret put RESEND_API_KEY
-	//   npx wrangler secret put SEND_KEY
 	//   npx wrangler secret put UNSUB_SECRET
 }

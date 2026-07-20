@@ -1,0 +1,1015 @@
+{
+  "groups": [
+    {
+      "title": "Laser &amp; hair removal · Cynosure Elite",
+      "treatments": [
+        {
+          "id": "laser-hair-removal",
+          "title": "Laser hair removal",
+          "sub": "Cynosure Elite · face &amp; body",
+          "headline": "from £30",
+          "service": "laser-hair-removal",
+          "bookLabel": "Book laser hair removal",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Laser hair removal at Lumi Derm uses the medical-grade Cynosure Elite system to target the pigment in each hair follicle with precisely controlled pulses of light, gradually reducing regrowth so skin stays smoother for far longer than waxing or shaving. The Elite platform is trusted, effective and suitable for a wide range of skin tones."
+            },
+            {
+              "type": "p",
+              "html": "Because hair grows in cycles, a course of sessions is needed to catch every follicle in its active growth phase. Most clients book a course of 6 or 10 sessions spaced a few weeks apart, and the price per session reduces as the course length increases. Package discounts also apply when you combine multiple areas (see below)."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> sessions are quick and most people feel only a mild, warm \"elastic snap\" sensation. You can return to normal activities straight away — simply avoid sun exposure, hot baths and tanning for a day or two. A patch test 24 hours beforehand confirms the treatment is right for your skin."
+            },
+            {
+              "type": "subhead",
+              "text": "Face"
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Area",
+                "1 session",
+                "6 sessions",
+                "10 sessions"
+              ],
+              "rows": [
+                [
+                  "Upper lip / Eyebrows / Nose / Ears",
+                  "£40",
+                  "£35",
+                  "£30"
+                ],
+                [
+                  "Chin / Side of face / Hair line",
+                  "£60",
+                  "£50",
+                  "£45"
+                ],
+                [
+                  "Neck / Jawline",
+                  "£80",
+                  "£70",
+                  "£65"
+                ],
+                [
+                  "Half face / Beard",
+                  "£100",
+                  "£85",
+                  "£80"
+                ],
+                [
+                  "Full face",
+                  "£125",
+                  "£105",
+                  "£95"
+                ]
+              ]
+            },
+            {
+              "type": "subhead",
+              "text": "Upper body"
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Area",
+                "1 session",
+                "6 sessions",
+                "10 sessions"
+              ],
+              "rows": [
+                [
+                  "Underarms / Hands &amp; fingers / Navel line",
+                  "£60",
+                  "£50",
+                  "£45"
+                ],
+                [
+                  "Chest / Abdomen / Half arms",
+                  "£100",
+                  "£85",
+                  "£80"
+                ],
+                [
+                  "Full back / Chest + Abdomen / Full arms",
+                  "£125",
+                  "£105",
+                  "£95"
+                ]
+              ]
+            },
+            {
+              "type": "subhead",
+              "text": "Lower body"
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Area",
+                "1 session",
+                "6 sessions",
+                "10 sessions"
+              ],
+              "rows": [
+                [
+                  "Bikini line / Peri-anal / Feet &amp; toes",
+                  "£60",
+                  "£50",
+                  "£45"
+                ],
+                [
+                  "Extended bikini",
+                  "£70",
+                  "£60",
+                  "£55"
+                ],
+                [
+                  "Brazilian",
+                  "£80",
+                  "£70",
+                  "£65"
+                ],
+                [
+                  "Hollywood / Buttocks",
+                  "£100",
+                  "£85",
+                  "£80"
+                ],
+                [
+                  "Lower legs / Thighs",
+                  "£120",
+                  "£105",
+                  "£95"
+                ],
+                [
+                  "Full legs",
+                  "£150",
+                  "£130",
+                  "£120"
+                ],
+                [
+                  "Full body — women",
+                  "£400",
+                  "£350",
+                  "£300"
+                ],
+                [
+                  "Full body — men",
+                  "£450",
+                  "£375",
+                  "£325"
+                ]
+              ]
+            },
+            {
+              "type": "pill",
+              "text": "Package discounts: 2 areas 15% · 3 areas 20% · 4 areas 25% · 5 areas 30%"
+            },
+            {
+              "type": "note",
+              "text": "Patch test required 24 hours before your first session (£10)."
+            }
+          ]
+        },
+        {
+          "id": "laser-rejuvenation",
+          "title": "Laser skin rejuvenation",
+          "sub": "Cynosure Elite",
+          "headline": "from £100",
+          "service": "laser-rejuvenation",
+          "bookLabel": "Book skin rejuvenation",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Laser skin rejuvenation with Cynosure Elite gently heats the deeper layers of the skin to stimulate your own natural collagen and even out tone. It helps soften the look of dullness, sun damage, redness, enlarged pores and uneven texture, revealing a brighter, fresher, more even complexion."
+            },
+            {
+              "type": "p",
+              "html": "It is a comfortable, no-downtime way to revive the face, neck and décolleté. A single session leaves skin glowing, while a course of three builds more noticeable and longer-lasting improvements in radiance and smoothness."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> mild warmth during treatment and temporary pinkness that settles within a few hours. A patch test is carried out 24 hours before your first session."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Face + Neck · 1 session",
+                  "cost": "£100",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Face + Neck · 3 sessions",
+                  "cost": "£270",
+                  "costSmall": "pay in 2 instalments"
+                },
+                {
+                  "name": "Face + Neck + Décolleté · 1 session",
+                  "cost": "£130",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Face + Neck + Décolleté · 3 sessions",
+                  "cost": "£330",
+                  "costSmall": "pay in 2 instalments"
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Patch test required 24 hours before your first session (£10)."
+            }
+          ]
+        },
+        {
+          "id": "vascular-treatment",
+          "title": "Laser vascular &amp; veins",
+          "sub": "Cynosure Elite · thread veins",
+          "headline": "from £45",
+          "service": "vascular-treatment",
+          "bookLabel": "Book vascular treatment",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Laser vascular treatment uses focused light energy to target visible facial thread veins, spider veins and small vascular blemishes. The light is absorbed by the blood within the vessel, which is then gently broken down and naturally reabsorbed by the body, helping to visibly reduce its appearance."
+            },
+            {
+              "type": "p",
+              "html": "It is ideal for the nose, cheeks and legs and can treat anything from a small isolated spot to larger areas such as both legs. Depending on the concern, a course of 2–3 sessions delivers the clearest, most even result."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> a quick warming sensation during treatment and possible short-lived redness afterwards. A patch test is required 24 hours before your first session."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Area",
+                "1 session",
+                "2 sessions",
+                "3 sessions"
+              ],
+              "rows": [
+                [
+                  "Small area (e.g. nose)",
+                  "£45",
+                  "£85",
+                  "£120"
+                ],
+                [
+                  "Medium area (e.g. face)",
+                  "£80",
+                  "£150",
+                  "£210"
+                ],
+                [
+                  "Large area (e.g. leg)",
+                  "£125",
+                  "£235",
+                  "£330"
+                ],
+                [
+                  "X-Large area (e.g. both legs)",
+                  "£180",
+                  "£340",
+                  "£480"
+                ]
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Patch test required 24 hours before your first session (£10)."
+            }
+          ]
+        },
+        {
+          "id": "electrolysis",
+          "title": "Electrolysis",
+          "sub": "Apilus · permanent hair removal",
+          "headline": "from £30",
+          "service": "electrolysis",
+          "bookLabel": "Book electrolysis",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Apilus electrolysis is the only method of truly <em>permanent</em> hair removal, and the perfect partner to laser. A very fine probe delivers a tiny current to each individual follicle, permanently disabling its ability to grow hair — so it works beautifully on fine, light, red or grey hairs and small, precise areas that laser cannot target."
+            },
+            {
+              "type": "p",
+              "html": "Because each follicle is treated individually, electrolysis suits every skin and hair type and is ideal for finishing touches, stubborn areas and delicate spots. Sessions are booked by time — 15, 30, 45 or 60 minutes — so treatment can be as brief or as thorough as you need."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> a series of sessions is needed to clear an area permanently, as hair grows in cycles. A patch test is required 24 hours before your first appointment."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "15 minutes",
+                  "cost": "£30",
+                  "costSmall": ""
+                },
+                {
+                  "name": "30 minutes",
+                  "cost": "£50",
+                  "costSmall": ""
+                },
+                {
+                  "name": "45 minutes",
+                  "cost": "£70",
+                  "costSmall": ""
+                },
+                {
+                  "name": "1 hour",
+                  "cost": "£100",
+                  "costSmall": ""
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Patch test required 24 hours before your first session (£10)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Injectables &amp; regeneration",
+      "treatments": [
+        {
+          "id": "prp",
+          "title": "PRP — Platelet Rich Plasma",
+          "sub": "Regenerative · skin &amp; hair",
+          "headline": "from £240",
+          "service": "prp",
+          "bookLabel": "Book PRP",
+          "detail": [
+            {
+              "type": "p",
+              "html": "PRP (Platelet-Rich Plasma) is a natural, regenerative treatment that harnesses your own biology. A small blood sample is taken and spun in a centrifuge to concentrate the platelets and growth factors, which are then reintroduced into the skin or scalp to stimulate repair, collagen production and circulation."
+            },
+            {
+              "type": "p",
+              "html": "For the face and body, PRP improves skin quality, glow, firmness and fine lines. For the scalp, it supports thicker, healthier hair and can help slow shedding. Because it uses your own plasma it is extremely well tolerated, and a course of 3–5 sessions delivers the most visible, lasting results."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> mild redness or small pinpoint marks that settle within a day or two. A £10 consultation confirms suitability and is redeemable against your treatment."
+            },
+            {
+              "type": "subhead",
+              "text": "PRP — face &amp; body"
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "1 session",
+                  "cost": "£240",
+                  "costSmall": ""
+                },
+                {
+                  "name": "3 sessions",
+                  "cost": "£650",
+                  "costSmall": "pay in 2 instalments"
+                },
+                {
+                  "name": "5 sessions",
+                  "cost": "£950",
+                  "costSmall": "pay in 3 instalments"
+                }
+              ]
+            },
+            {
+              "type": "subhead",
+              "text": "PRP — hair loss"
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "1 session",
+                  "cost": "£240",
+                  "costSmall": ""
+                },
+                {
+                  "name": "3 sessions",
+                  "cost": "£650",
+                  "costSmall": "pay in 2 instalments"
+                },
+                {
+                  "name": "5 sessions",
+                  "cost": "£950",
+                  "costSmall": "pay in 3 instalments"
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Consultation £10, redeemable against your treatment."
+            }
+          ]
+        },
+        {
+          "id": "profhilo",
+          "title": "Profhilo",
+          "sub": "Bio-remodelling skin booster",
+          "headline": "from £265",
+          "service": "profhilo",
+          "bookLabel": "Book Profhilo",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Profhilo is a multi-award-winning \"bio-remodelling\" injectable made from one of the purest, highest concentrations of hyaluronic acid available. Rather than adding volume like a filler, it spreads through the skin to deliver deep hydration and stimulate collagen and elastin, improving firmness, elasticity and glow from within."
+            },
+            {
+              "type": "p",
+              "html": "It is the go-to treatment for skin that looks tired, crepey or lacklustre — on the face, neck, décolleté or hands. The standard protocol is two sessions about four weeks apart, with results developing over the following weeks and typically lasting several months."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> a small number of injection points that settle quickly. A £10 consultation confirms suitability and is redeemable against your treatment."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "1 session",
+                  "cost": "£265",
+                  "costSmall": ""
+                },
+                {
+                  "name": "2 sessions",
+                  "cost": "£490",
+                  "costSmall": ""
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Consultation £10, redeemable against your treatment."
+            }
+          ]
+        },
+        {
+          "id": "polynucleotides",
+          "title": "Polynucleotides",
+          "sub": "Skin regeneration · eyes &amp; face",
+          "headline": "from £220",
+          "service": "polynucleotides",
+          "bookLabel": "Book polynucleotides",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Polynucleotides are next-generation regenerative injectables that repair and \"reboot\" the skin at a cellular level. Derived from purified natural polymers, they hydrate deeply, calm inflammation, boost elasticity and improve overall skin quality and resilience."
+            },
+            {
+              "type": "p",
+              "html": "They are especially prized for the delicate under-eye area — softening dark circles, crepiness and fine lines — as well as the face and neck. A course of three sessions gives the most complete regeneration and radiance."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> small injection points and possible short-lived puffiness. A £10 consultation confirms suitability and is redeemable against your treatment."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Eyes · 1 session",
+                  "cost": "£220",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Eyes · 3 sessions",
+                  "cost": "£600",
+                  "costSmall": "pay in 2 instalments"
+                },
+                {
+                  "name": "Face &amp; Neck · 1 session",
+                  "cost": "£230",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Face &amp; Neck · 3 sessions",
+                  "cost": "£620",
+                  "costSmall": "pay in 2 instalments"
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Consultation £10, redeemable against your treatment."
+            }
+          ]
+        },
+        {
+          "id": "mesotherapy",
+          "title": "Mesotherapy",
+          "sub": "Micro-infusion · skin &amp; hair",
+          "headline": "from £80",
+          "service": "mesotherapy",
+          "bookLabel": "Book mesotherapy",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Mesotherapy delivers a bespoke cocktail of vitamins, antioxidants, amino acids and hyaluronic acid into the surface layers of the skin through tiny micro-injections, flooding it with everything it needs to look hydrated, plump and radiant."
+            },
+            {
+              "type": "p",
+              "html": "It can be tailored to brighten tired eyes, revive the face, neck and décolleté, or nourish the scalp to support stronger, healthier hair. A course of three sessions builds the best cumulative glow."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> a light tingling during treatment and a fresh, dewy look afterwards, occasionally with mild redness. A £10 consultation confirms suitability and is redeemable against your treatment."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Eye mesotherapy · 1 session",
+                  "cost": "£80",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Eye mesotherapy · 3 sessions",
+                  "cost": "£225",
+                  "costSmall": "pay in 2 instalments"
+                },
+                {
+                  "name": "Face / Neck / Décolleté · 1 session",
+                  "cost": "£150",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Face / Neck / Décolleté · 3 sessions",
+                  "cost": "£390",
+                  "costSmall": "pay in 2 instalments"
+                },
+                {
+                  "name": "Hair mesotherapy · 1 session",
+                  "cost": "£140",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Hair mesotherapy · 3 sessions",
+                  "cost": "£390",
+                  "costSmall": "pay in 2 instalments"
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Consultation £10, redeemable against your treatment."
+            }
+          ]
+        },
+        {
+          "id": "hair-loss",
+          "title": "Hair loss treatments",
+          "sub": "Hair mesotherapy &amp; PRP",
+          "headline": "from £140",
+          "service": "hair-loss",
+          "bookLabel": "Book a hair consultation",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Hair loss treatment plans are tailored after consultation and may use scalp mesotherapy, PRP, or a staged combination of both. Mesotherapy delivers targeted nutrients into the scalp to support hair quality, while PRP uses your own concentrated platelets and growth factors to support circulation and follicle activity."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> the most suitable option and course length depend on the cause and pattern of thinning. Iulia will assess your goals and explain the recommended schedule before treatment begins."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Hair mesotherapy · 1 session",
+                  "cost": "£140",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Hair mesotherapy · 3 sessions",
+                  "cost": "£390",
+                  "costSmall": "pay in 2 instalments at the venue"
+                },
+                {
+                  "name": "PRP for hair loss · 1 session",
+                  "cost": "£240",
+                  "costSmall": ""
+                },
+                {
+                  "name": "PRP for hair loss · 3 sessions",
+                  "cost": "£650",
+                  "costSmall": "pay in 2 instalments at the venue"
+                },
+                {
+                  "name": "PRP for hair loss · 5 sessions",
+                  "cost": "£950",
+                  "costSmall": "pay in 3 instalments at the venue"
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Consultation £10, redeemable against your treatment."
+            }
+          ]
+        },
+        {
+          "id": "lip-boosters",
+          "title": "Lip boosters",
+          "sub": "SkinFill Bacio · hydration",
+          "headline": "from £220",
+          "service": "lip-boosters",
+          "bookLabel": "Book lip booster",
+          "detail": [
+            {
+              "type": "p",
+              "html": "SkinFill Bacio is a hydrating lip booster — <em>not</em> a filler. It uses hyaluronic acid to nourish and hydrate the lips from within, improving their texture, softness and natural definition for a healthy, refreshed finish, without changing your lip shape or adding obvious volume."
+            },
+            {
+              "type": "p",
+              "html": "It is the perfect choice if you want smoother, more hydrated, naturally fuller-looking lips and softened fine lip lines. A course of three sessions gives the most noticeable and lasting hydration."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> subtle results that build over the course, with minimal downtime. A £10 consultation confirms suitability and is redeemable against your treatment."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "1 session",
+                  "cost": "£220",
+                  "costSmall": ""
+                },
+                {
+                  "name": "3 sessions",
+                  "cost": "£580",
+                  "costSmall": "pay in 2 instalments"
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Consultation £10, redeemable against your treatment."
+            }
+          ]
+        },
+        {
+          "id": "exosomes",
+          "title": "Exosomes",
+          "sub": "Advanced skin regeneration",
+          "headline": "from £150",
+          "service": "exosomes",
+          "bookLabel": "Book exosomes",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Exosomes are one of the most advanced skin-regeneration treatments available. These microscopic messengers carry growth factors and peptides that signal your skin cells to repair, calm and renew, dramatically supporting recovery, tone, hydration and radiance."
+            },
+            {
+              "type": "p",
+              "html": "They are wonderful for tired, stressed, sensitised or ageing skin, and are especially powerful paired with microneedling, which helps them absorb for enhanced results on the face, neck and décolleté."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> a comfortable treatment with a luminous result as the skin recovers over the following days."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Face",
+                  "cost": "£150",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Face + Neck + Décolleté",
+                  "cost": "£200",
+                  "costSmall": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Facials, peels &amp; skin",
+      "treatments": [
+        {
+          "id": "facials",
+          "title": "Facials",
+          "sub": "iS Clinical &amp; classic facials",
+          "headline": "from £70",
+          "service": "facials",
+          "bookLabel": "Book a facial",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Our facials are fully results-driven and personalised to your skin on the day — never one-size-fits-all. After assessing your skin's condition and goals, your therapist selects the right combination of cleansing, exfoliation and active treatment, finishing with optional LED light therapy to calm and brighten."
+            },
+            {
+              "type": "p",
+              "html": "Choose the iconic Fire &amp; Ice by iS Clinical for an instant radiance reboot, a bespoke deep-cleansing facial, dermaplaning to remove fine vellus hair and dead skin for a flawless glow, or microdermabrasion to resurface and smooth texture."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> immediately fresher, brighter, smoother skin with little to no downtime — ideal before an event. A £10 consultation is redeemable against your treatment."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Fire &amp; Ice by iS Clinical + LED therapy",
+                  "cost": "£90",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Bespoke deep cleansing facial",
+                  "cost": "£100",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Dermaplaning",
+                  "cost": "£90",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Dermaplaning + LED therapy",
+                  "cost": "£100",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Microdermabrasion",
+                  "cost": "£70",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Microdermabrasion + LED therapy",
+                  "cost": "£80",
+                  "costSmall": ""
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Consultation £10, redeemable against your treatment."
+            }
+          ]
+        },
+        {
+          "id": "facial-peels",
+          "title": "Facial peels",
+          "sub": "Skin resurfacing",
+          "headline": "from £70",
+          "service": "facial-peels",
+          "bookLabel": "Book a peel",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Chemical peels use targeted acids to gently dissolve the bonds between dull, damaged surface cells, revealing the brighter, smoother, healthier skin beneath and encouraging renewal. At Lumi Derm each peel is matched to your skin type, sensitivity and goals."
+            },
+            {
+              "type": "p",
+              "html": "Glycolic brightens and smooths, salicylic targets congestion and breakouts, azelaic calms redness and pigmentation, and the advanced PRX T33 revitalises and firms with little to no visible peeling. A course of three delivers the most transformative results."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> possible mild tingling and light flaking over the following days depending on the peel. A £10 consultation is redeemable against your treatment."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Glycolic peel · 1 session",
+                  "cost": "£70",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Glycolic peel · 3 sessions",
+                  "cost": "£195",
+                  "costSmall": "pay in 2 instalments"
+                },
+                {
+                  "name": "Salicylic peel · 1 session",
+                  "cost": "£70",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Salicylic peel · 3 sessions",
+                  "cost": "£195",
+                  "costSmall": "pay in 2 instalments"
+                },
+                {
+                  "name": "Azelaic peel · 1 session",
+                  "cost": "£70",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Azelaic peel · 3 sessions",
+                  "cost": "£195",
+                  "costSmall": "pay in 2 instalments"
+                },
+                {
+                  "name": "PRX T33 peel · 1 session",
+                  "cost": "£110",
+                  "costSmall": ""
+                },
+                {
+                  "name": "PRX T33 peel · 3 sessions",
+                  "cost": "£310",
+                  "costSmall": "pay in 2 instalments"
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Consultation £10, redeemable against your treatment."
+            }
+          ]
+        },
+        {
+          "id": "microneedling",
+          "title": "Microneedling",
+          "sub": "Collagen induction",
+          "headline": "from £130",
+          "service": "microneedling",
+          "bookLabel": "Book microneedling",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Microneedling creates thousands of controlled micro-channels in the skin using a precision device. This kick-starts the body's natural healing response, flooding the area with fresh collagen and elastin to smooth texture, refine pores, soften scarring and improve overall tone and firmness."
+            },
+            {
+              "type": "p",
+              "html": "The micro-channels also allow active ingredients to absorb far more effectively, which is why we offer it with an optional PRX T33 peel or exosome boost for enhanced, faster results on the face, neck and décolleté."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> some redness, like a mild sunburn, for 24–48 hours, followed by a noticeable glow as new collagen forms over the following weeks."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Face",
+                  "cost": "£130",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Face + Neck + Décolleté",
+                  "cost": "£200",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Face + PRX T33 peel",
+                  "cost": "£150",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Face + Neck + Décolleté + PRX T33 peel",
+                  "cost": "£220",
+                  "costSmall": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Body &amp; finishing",
+      "treatments": [
+        {
+          "id": "endospheres",
+          "title": "Endospheres therapy",
+          "sub": "Lymphatic drainage · face &amp; body",
+          "headline": "from £50",
+          "service": "endospheres",
+          "bookLabel": "Book Endospheres",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Endospheres Therapy is a non-invasive face and body treatment that uses \"compressive microvibration\" — a roller of rotating spheres that gently stimulates the skin and underlying tissue. It supports lymphatic drainage, smooths the look of cellulite, improves circulation and firmness, and leaves the body feeling lighter and more toned."
+            },
+            {
+              "type": "p",
+              "html": "On the face it lifts, sculpts and drains for a more defined, refreshed appearance. Treatments can target the face, half body, full body, or full body plus face, and the price per session reduces across courses of 6 or 12. A trial session is available so you can experience it first."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> a relaxing, massage-like treatment with no downtime — a course gives the most visible contouring and smoothing results."
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Area",
+                "1 session",
+                "6 sessions",
+                "12 sessions"
+              ],
+              "rows": [
+                [
+                  "Face",
+                  "£55",
+                  "£300",
+                  "£540"
+                ],
+                [
+                  "Half body",
+                  "£80",
+                  "£450",
+                  "£800"
+                ],
+                [
+                  "Full body",
+                  "£105",
+                  "£600",
+                  "£1080"
+                ],
+                [
+                  "Full body + Face",
+                  "£120",
+                  "£690",
+                  "£1260"
+                ]
+              ]
+            },
+            {
+              "type": "pill",
+              "text": "Trial session available · £50"
+            },
+            {
+              "type": "note",
+              "text": "Consultation £10. Courses of 6 pay in 2 instalments; courses of 12 pay in 3 instalments."
+            }
+          ]
+        },
+        {
+          "id": "lashes-brows",
+          "title": "Lashes &amp; brows",
+          "sub": "LVL · lamination · lift &amp; tint",
+          "headline": "from £45",
+          "service": "lashes-brows",
+          "bookLabel": "Book lashes &amp; brows",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Our lash and brow treatments give you a polished, wake-up-and-go finish with zero daily effort. A lash lift curls and lifts your natural lashes from the root to make them look longer and more open, while a tint adds definition and depth without mascara."
+            },
+            {
+              "type": "p",
+              "html": "For brows, lamination brushes and sets the hairs into a fuller, groomed shape, and a tint deepens and defines — perfect for sparse, unruly or fair brows. Optional brow waxing tidies the shape."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> natural-looking results lasting several weeks. A complimentary patch test is required 48 hours before any lift or tint."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Brow lamination <small>shape not included</small>",
+                  "cost": "£45",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Brow lamination &amp; tint <small>shape not included</small>",
+                  "cost": "£50",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Add-on: brow waxing",
+                  "cost": "£10",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Lash lift",
+                  "cost": "£50",
+                  "costSmall": ""
+                },
+                {
+                  "name": "Lash lift &amp; tint",
+                  "cost": "£55",
+                  "costSmall": ""
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Patch test required 48 hours before (free) for any lift &amp; tint."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

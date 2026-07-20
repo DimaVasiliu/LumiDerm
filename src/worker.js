@@ -5,23 +5,27 @@
  * API for sending marketing email from the admin page.
  *
  * Routes:
- *   GET  /api/health              — is the API alive + configured?
- *   POST /api/campaign/send       — send a campaign (requires SEND_KEY)
- *   GET  /api/campaign/history    — admin: recent send history (requires SEND_KEY)
- *   GET  /api/campaign/drafts     — admin: list saved campaign drafts (requires SEND_KEY)
- *   POST /api/campaign/drafts     — admin: save campaign draft (requires SEND_KEY)
- *   POST /api/campaign/drafts/delete — admin: delete campaign draft (requires SEND_KEY)
+ *   GET  /api/health              — is the public API alive + configured?
+ *   GET  /admin/api/health        — admin: Access session + API config
+ *   POST /admin/api/campaign/send — admin: send a campaign
+ *   GET  /admin/api/campaign/history — admin: recent send history
+ *   GET  /admin/api/campaign/drafts — admin: list saved campaign drafts
+ *   POST /admin/api/campaign/drafts — admin: save campaign draft
+ *   POST /admin/api/campaign/drafts/delete — admin: delete campaign draft
  *   GET  /api/unsubscribe         — one-click unsubscribe landing page
  *   POST /api/unsubscribe         — RFC 8058 one-click unsubscribe
  *   POST /api/subscribe           — newsletter signup (double opt-in)
  *   GET  /api/subscribe/confirm   — double opt-in confirmation link
- *   GET  /api/subscribers         — admin: list subscribers (requires SEND_KEY)
- *   POST /api/subscribers/delete  — admin: erase a subscriber (requires SEND_KEY)
+ *   GET  /admin/api/subscribers   — admin: list subscribers
+ *   POST /admin/api/subscribers/delete — admin: erase a subscriber
  *
  * Secrets (set with `npx wrangler secret put NAME`):
  *   RESEND_API_KEY   — from resend.com
- *   SEND_KEY         — long random string; pasted into the admin page
  *   UNSUB_SECRET     — long random string; signs unsubscribe links
+ *
+ * Vars:
+ *   ADMIN_EMAILS     — optional comma-separated Access emails allowed for admin API.
+ *                      If omitted, any Cloudflare Access-authenticated user is accepted.
  *
  * Vars (in wrangler.jsonc):
  *   FROM_EMAIL       — e.g. "Lumi Derm Aesthetics <hello@lumidermaesthetics.com>"
@@ -39,17 +43,32 @@ const BATCH_SIZE = 100; // Resend's batch endpoint limit
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const isPublicApi = url.pathname.startsWith("/api/");
+    const isAdminApi = url.pathname.startsWith("/admin/api/");
+    const apiPath = isAdminApi ? url.pathname.replace("/admin/api", "/api") : url.pathname;
 
-    if (!url.pathname.startsWith("/api/")) {
+    if (!isPublicApi && !isAdminApi) {
       return env.ASSETS.fetch(request);
     }
 
     try {
-      if (url.pathname === "/api/health") {
+      if (apiPath === "/api/health") {
+        if (isAdminApi) {
+          const admin = authorised(request, env);
+          if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+          return json({
+            ok: true,
+            adminEmail: admin.email,
+            resend: Boolean(env.RESEND_API_KEY),
+            unsubSecret: Boolean(env.UNSUB_SECRET),
+            suppression: Boolean(env.SUPPRESSION),
+            subscribers: Boolean(env.SUBSCRIBERS),
+            from: env.FROM_EMAIL || null,
+          });
+        }
         return json({
           ok: true,
           resend: Boolean(env.RESEND_API_KEY),
-          sendKey: Boolean(env.SEND_KEY),
           unsubSecret: Boolean(env.UNSUB_SECRET),
           suppression: Boolean(env.SUPPRESSION),
           subscribers: Boolean(env.SUBSCRIBERS),
@@ -57,49 +76,49 @@ export default {
         });
       }
 
-      if (url.pathname === "/api/unsubscribe") {
+      if (apiPath === "/api/unsubscribe" && isPublicApi) {
         return handleUnsubscribe(request, env, url);
       }
 
-      if (url.pathname === "/api/campaign/send") {
+      if (apiPath === "/api/campaign/send" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
         return handleSend(request, env, url);
       }
 
-      if (url.pathname === "/api/campaign/history") {
+      if (apiPath === "/api/campaign/history" && isAdminApi) {
         return handleCampaignHistory(request, env);
       }
 
-      if (url.pathname === "/api/campaign/drafts") {
+      if (apiPath === "/api/campaign/drafts" && isAdminApi) {
         if (request.method === "GET") return handleListCampaignDrafts(request, env);
         if (request.method === "POST") return handleSaveCampaignDraft(request, env);
         return json({ error: "Use GET or POST." }, 405);
       }
 
-      if (url.pathname === "/api/campaign/drafts/delete") {
+      if (apiPath === "/api/campaign/drafts/delete" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
         return handleDeleteCampaignDraft(request, env);
       }
 
-      if (url.pathname === "/api/subscribe") {
+      if (apiPath === "/api/subscribe" && isPublicApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
         return handleSubscribe(request, env, url);
       }
 
       // Clean, mail-safe confirmation link: /api/confirm/<token> (no query string).
-      if (url.pathname.startsWith("/api/confirm/")) {
+      if (url.pathname.startsWith("/api/confirm/") && isPublicApi) {
         return handleConfirmByToken(env, url.pathname.slice("/api/confirm/".length));
       }
       // Legacy query-string confirm link (kept so older emails still work).
-      if (url.pathname === "/api/subscribe/confirm") {
+      if (apiPath === "/api/subscribe/confirm" && isPublicApi) {
         return handleConfirm(request, env, url);
       }
 
-      if (url.pathname === "/api/subscribers") {
+      if (apiPath === "/api/subscribers" && isAdminApi) {
         return handleListSubscribers(request, env);
       }
 
-      if (url.pathname === "/api/subscribers/delete") {
+      if (apiPath === "/api/subscribers/delete" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
         return handleDeleteSubscriber(request, env);
       }
@@ -116,16 +135,11 @@ export default {
 /* ------------------------------------------------------------------ */
 
 async function handleSend(request, env, url) {
-  if (!env.SEND_KEY) {
-    return json({ error: "Server not configured: SEND_KEY is missing." }, 500);
-  }
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+
   if (!env.RESEND_API_KEY) {
     return json({ error: "Server not configured: RESEND_API_KEY is missing." }, 500);
-  }
-
-  const provided = request.headers.get("x-lumi-key") || "";
-  if (!timingSafeEqual(provided, env.SEND_KEY)) {
-    return json({ error: "Unauthorised. Check the send key in Settings." }, 401);
   }
 
   let body;
@@ -284,7 +298,8 @@ async function recordCampaignSend(env, detail) {
 }
 
 async function handleCampaignHistory(request, env) {
-  if (!authorised(request, env)) return json({ error: "Unauthorised." }, 401);
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Campaign history isn't set up yet." }, 500);
 
   const { results } = await env.SUBSCRIBERS.prepare(
@@ -299,7 +314,8 @@ async function handleCampaignHistory(request, env) {
 }
 
 async function handleListCampaignDrafts(request, env) {
-  if (!authorised(request, env)) return json({ error: "Unauthorised." }, 401);
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Campaign drafts aren't set up yet." }, 500);
 
   const { results } = await env.SUBSCRIBERS.prepare(
@@ -329,7 +345,8 @@ async function handleListCampaignDrafts(request, env) {
 }
 
 async function handleSaveCampaignDraft(request, env) {
-  if (!authorised(request, env)) return json({ error: "Unauthorised." }, 401);
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Campaign drafts aren't set up yet." }, 500);
 
   let body;
@@ -364,7 +381,8 @@ async function handleSaveCampaignDraft(request, env) {
 }
 
 async function handleDeleteCampaignDraft(request, env) {
-  if (!authorised(request, env)) return json({ error: "Unauthorised." }, 401);
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Campaign drafts aren't set up yet." }, 500);
 
   let body;
@@ -587,7 +605,8 @@ async function handleConfirm(request, env, url) {
 }
 
 async function handleListSubscribers(request, env) {
-  if (!authorised(request, env)) return json({ error: "Unauthorised." }, 401);
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Signups aren't set up yet." }, 500);
 
   const { results } = await env.SUBSCRIBERS.prepare(
@@ -604,7 +623,8 @@ async function handleListSubscribers(request, env) {
 }
 
 async function handleDeleteSubscriber(request, env) {
-  if (!authorised(request, env)) return json({ error: "Unauthorised." }, 401);
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Signups aren't set up yet." }, 500);
 
   let body;
@@ -621,8 +641,30 @@ async function handleDeleteSubscriber(request, env) {
 }
 
 function authorised(request, env) {
-  const provided = request.headers.get("x-lumi-key") || "";
-  return Boolean(env.SEND_KEY) && timingSafeEqual(provided, env.SEND_KEY);
+  const email = adminEmail(request);
+  if (!email) {
+    return { ok: false, reason: "Cloudflare Access sign-in is required." };
+  }
+
+  const allowed = String(env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (allowed.length && !allowed.includes(email.toLowerCase())) {
+    return { ok: false, reason: "This Access user is not allowed to manage admin data." };
+  }
+
+  return { ok: true, email };
+}
+
+function adminEmail(request) {
+  return String(
+    request.headers.get("cf-access-authenticated-user-email") ||
+    request.headers.get("CF-Access-Authenticated-User-Email") ||
+    request.headers.get("cf-access-user-email") ||
+    ""
+  ).trim().toLowerCase();
 }
 
 function clampInt(value, min, max) {
@@ -681,7 +723,7 @@ async function buildUnsubscribeUrl(env, origin, email) {
 }
 
 async function signEmail(env, email) {
-  const secret = env.UNSUB_SECRET || env.SEND_KEY || "lumi-derm-fallback";
+  const secret = env.UNSUB_SECRET || "lumi-derm-fallback";
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),

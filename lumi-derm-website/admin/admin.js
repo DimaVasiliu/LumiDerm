@@ -24,43 +24,14 @@ const defaultOffers = [
   { title: "Facials & peels", category: "Skin polish", price: "from £70", description: "Deep cleansing, dermaplaning, microdermabrasion and tailored peels.", image: "offer-facials.webp", status: "Draft", priority: 4 }
 ];
 
-const defaultPriceGroups = [
-  { id: "laser", label: "Cynosure Elite", title: "Laser treatments", min: "from £40", rows: [
-    ["Hair removal — upper lip / eyebrows / nose / ears", "£40 / 1 · £35 each / 6 · £30 each / 10"],
-    ["Hair removal — chin / side of face / hair line", "£60 / 1 · £50 each / 6 · £45 each / 10"],
-    ["Hair removal — neck / jawline", "£80 / 1 · £70 each / 6 · £65 each / 10"],
-    ["Hair removal — half face / beard", "£100 / 1 · £85 each / 6 · £80 each / 10"],
-    ["Hair removal — full face", "£125 / 1 · £105 each / 6 · £95 each / 10"],
-    ["Hair removal — underarms / hands & fingers / navel line", "£60 / 1 · £50 each / 6 · £45 each / 10"],
-    ["Hair removal — chest / abdomen / half arms", "£100 / 1 · £85 each / 6 · £80 each / 10"],
-    ["Hair removal — full back / chest + abdomen / full arms", "£125 / 1 · £105 each / 6 · £95 each / 10"],
-    ["Hair removal — bikini line / peri-anal / feet & toes", "£60 / 1 · £50 each / 6 · £45 each / 10"],
-    ["Hair removal — extended bikini", "£70 / 1 · £60 each / 6 · £55 each / 10"],
-    ["Hair removal — Brazilian", "£80 / 1 · £70 each / 6 · £65 each / 10"],
-    ["Hair removal — Hollywood / buttocks", "£100 / 1 · £85 each / 6 · £80 each / 10"],
-    ["Hair removal — lower legs / thighs", "£120 / 1 · £105 each / 6 · £95 each / 10"],
-    ["Hair removal — full legs", "£150 / 1 · £130 each / 6 · £120 each / 10"],
-    ["Hair removal — full body women", "£400 / 1 · £350 each / 6 · £300 each / 10"],
-    ["Hair removal — full body men", "£450 / 1 · £375 each / 6 · £325 each / 10"],
-    ["Multi-area package discounts", "2 areas 15% · 3 areas 20% · 4 areas 25% · 5 areas 30%"],
-    ["Vascular — small area, e.g. nose", "£45 / 1 · £85 / 2 · £120 / 3"],
-    ["Vascular — medium area, e.g. face", "£80 / 1 · £150 / 2 · £210 / 3"],
-    ["Vascular — large area, e.g. leg", "£125 / 1 · £235 / 2 · £330 / 3"],
-    ["Vascular — extra-large area, e.g. both legs", "£180 / 1 · £340 / 2 · £480 / 3"],
-    ["Skin rejuvenation — face + neck", "£100 / 1 · £270 / 3"],
-    ["Skin rejuvenation — face + neck + decollete", "£130 / 1 · £330 / 3"],
-    ["Package instalments", "Available at the venue"]
-  ] },
-  { id: "electrolysis", label: "Apilus", title: "Electrolysis permanent hair removal", min: "from £10", rows: [["Electrolysis consultation", "£10"], ["15 minutes", "£30"], ["30 minutes", "£50"], ["60 minutes", "£100"]] },
-  { id: "boosters", label: "Injectable skin support", title: "Skin boosters", min: "from £120", rows: [["Skin boosters consultation", "£10"], ["Profhilo", "£265 / 1 session"], ["Profhilo course", "£490 / 2 sessions"], ["Polynucleotides eyes", "£220 / 1 session"]] },
-  { id: "facials", label: "Facials", title: "Facials and skin polish", min: "from £70", rows: [["Facial consultation", "£10"], ["Fire & Ice by IS Clinical + LED", "£90"], ["Bespoke deep cleansing facial", "£100"], ["Microdermabrasion", "£70"]] }
-];
+// Prices are now data-driven from assets/data/prices.json (loaded at runtime by
+// loadPricesFromJson). The treatments page is regenerated from that file on publish.
 
 const panelTitles = { dashboard: "Overview", guide: "Guide & help", offers: "Offers", prices: "Prices", sender: "Send email", subscribers: "Subscribers", reviews: "Reviews", media: "Media", content: "Pages", clients: "Treatwell", settings: "Settings" };
 
 let state = loadDraft();
 let selectedOfferIndex = 0;
-let selectedPriceGroupId = state.priceGroups[0]?.id || "laser";
+let selectedTx = { gi: 0, ti: 0 }; // selected treatment in the Prices editor (group index, treatment index)
 
 const toastRegion = document.querySelector("[data-admin-toast-region]");
 
@@ -123,6 +94,7 @@ function runApp() {
   bindImageUpload();
   renderAll();
   loadReviewsFromJson();
+  loadPricesFromJson();
   // First run (no local draft yet) -> start from the offers actually on the website.
   if (!localStorage.getItem(STORAGE_KEY)) loadOffersFromSite(false);
 }
@@ -133,14 +105,14 @@ function loadDraft() {
     const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     return {
       offers: Array.isArray(s.offers) ? s.offers : structuredClone(defaultOffers),
-      priceGroups: Array.isArray(s.priceGroups) ? s.priceGroups : structuredClone(defaultPriceGroups),
+      prices: s.prices && Array.isArray(s.prices.groups) ? s.prices : { groups: [] },
       reviews: Array.isArray(s.reviews) ? s.reviews : [],
       content: s.content || {},
       campaigns: Array.isArray(s.campaigns) ? s.campaigns : [],
       savedAt: s.savedAt || null
     };
   } catch {
-    return { offers: structuredClone(defaultOffers), priceGroups: structuredClone(defaultPriceGroups), reviews: [], content: {}, campaigns: [], savedAt: null };
+    return { offers: structuredClone(defaultOffers), prices: { groups: [] }, reviews: [], content: {}, campaigns: [], savedAt: null };
   }
 }
 
@@ -200,8 +172,9 @@ function importAll(e) {
     try {
       const data = JSON.parse(reader.result);
       state = { ...state, ...data };
-      ["offers", "priceGroups", "reviews", "campaigns"].forEach((k) => { if (!Array.isArray(state[k])) state[k] = []; });
-      selectedOfferIndex = 0;
+      ["offers", "reviews", "campaigns"].forEach((k) => { if (!Array.isArray(state[k])) state[k] = []; });
+      if (!state.prices || !Array.isArray(state.prices.groups)) state.prices = { groups: [] };
+      selectedOfferIndex = 0; selectedTx = { gi: 0, ti: 0 };
       renderAll(); saveDraft("Backup imported.");
     } catch { toast("That file could not be read as a valid backup."); }
     e.target.value = "";
@@ -303,58 +276,158 @@ function renderOfferPreview() {
     </div>`;
 }
 
-/* ---------------- Prices ---------------- */
+/* ---------------- Prices (treatments page) ----------------
+   The treatments page (pages/services.html) is generated from
+   assets/data/prices.json between the PRICES markers. Iulia edits price
+   values, instalment notes and the "from £X" headline here; the
+   descriptions and table layout are fixed. Publishing rewrites both
+   prices.json and the marked section of services.html. */
+const PRICES_JSON_URL = "../assets/data/prices.json";
+
 function bindPrices() {
-  document.querySelector("[data-add-price-group]")?.addEventListener("click", () => {
-    const id = `group-${Date.now()}`;
-    state.priceGroups.push({ id, label: "Draft group", title: "New price group", min: "from £", rows: [["New service", "£"]] });
-    selectedPriceGroupId = id; renderPrices(); saveDraft("Price group added.");
+  document.querySelector("[data-reload-prices]")?.addEventListener("click", () => {
+    if (!confirm("Replace the prices in the editor with the ones currently on the website?")) return;
+    loadPricesFromJson(true, true);
   });
-  document.querySelector("[data-add-price-row]")?.addEventListener("click", () => {
-    const g = getSelectedPriceGroup(); if (!g) return;
-    g.rows.push(["New item", "£"]); renderPriceEditor(g); saveDraft("Row added.");
-  });
-  document.querySelector("[data-delete-price-group]")?.addEventListener("click", () => {
-    if (state.priceGroups.length <= 1) { toast("Keep at least one group."); return; }
-    if (!confirm("Delete this price group?")) return;
-    state.priceGroups = state.priceGroups.filter((g) => g.id !== selectedPriceGroupId);
-    selectedPriceGroupId = state.priceGroups[0].id; renderPrices(); saveDraft("Group deleted.");
-  });
-  document.querySelector("[data-price-group-title]")?.addEventListener("change", (e) => {
-    const g = getSelectedPriceGroup(); if (!g) return; g.title = e.target.value; renderPrices(); saveDraft("Group renamed.");
-  });
+}
+
+async function loadPricesFromJson(announce, force) {
+  if (!force && state.prices && Array.isArray(state.prices.groups) && state.prices.groups.length) {
+    renderPrices(); return;
+  }
+  try {
+    const r = await fetch(PRICES_JSON_URL + "?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) throw new Error("unavailable");
+    const data = await r.json();
+    state.prices = { groups: Array.isArray(data.groups) ? data.groups : [] };
+    selectedTx = { gi: 0, ti: 0 };
+    renderPrices();
+    saveDraft(announce ? "Loaded the prices currently on the website." : null);
+    setPricesStatus("In sync with the website.");
+  } catch {
+    if (announce) toast("Could not read the website's prices file.");
+    renderPrices();
+  }
+}
+
+function setPricesStatus(message) {
+  const el = document.querySelector("[data-prices-status]"); if (el) el.textContent = message;
+}
+
+// Strip tags for plain-text contexts (e.g. building nav labels). Keeps entities.
+function stripTags(v) { return String(v == null ? "" : v).replace(/<[^>]*>/g, ""); }
+// Decode HTML entities to plain text for editing inside <input> values.
+function decodeHtml(v) { const el = document.createElement("textarea"); el.innerHTML = String(v == null ? "" : v); return el.value; }
+
+function currentTx() {
+  const g = state.prices && state.prices.groups ? state.prices.groups[selectedTx.gi] : null;
+  return g && g.treatments ? g.treatments[selectedTx.ti] : null;
 }
 
 function renderPrices() {
-  const wrap = document.querySelector("[data-price-groups]"); if (!wrap) return;
-  wrap.innerHTML = state.priceGroups.map((g) => `
-    <article class="admin-card price-group-card ${g.id === selectedPriceGroupId ? "is-selected" : ""}">
-      <div><small>${escapeHtml(g.label)}</small><strong>${escapeHtml(g.title)}</strong></div>
-      <span>${escapeHtml(g.min)} · ${g.rows.length} rows</span>
-      <button type="button" aria-label="Edit ${escapeHtml(g.title)}" data-select-price-group="${escapeHtml(g.id)}"></button>
-    </article>`).join("");
-  wrap.querySelectorAll("[data-select-price-group]").forEach((b) => b.addEventListener("click", () => { selectedPriceGroupId = b.dataset.selectPriceGroup; renderPrices(); }));
-  const g = getSelectedPriceGroup();
-  const titleInput = document.querySelector("[data-price-group-title]"); if (titleInput && g) titleInput.value = g.title;
-  renderPriceEditor(g);
-}
-
-function renderPriceEditor(group) {
-  const title = document.querySelector("[data-price-editor-title]");
-  const editor = document.querySelector("[data-price-row-editor]");
-  if (!group || !editor) return;
-  if (title) title.textContent = group.title;
-  editor.innerHTML = group.rows.map((row, i) => `
-    <div class="field-row">
-      <label>Service<input type="text" value="${escapeAttr(row[0])}" data-price-row="${i}" data-price-cell="0"></label>
-      <label>Price<input type="text" value="${escapeAttr(row[1])}" data-price-row="${i}" data-price-cell="1"></label>
-      <button class="tiny-button danger" type="button" data-remove-price-row="${i}">Remove</button>
+  const nav = document.querySelector("[data-price-nav]");
+  const editor = document.querySelector("[data-price-editor]");
+  if (!nav || !editor) return;
+  const groups = (state.prices && state.prices.groups) || [];
+  if (!groups.length) {
+    nav.innerHTML = "";
+    editor.innerHTML = '<p class="admin-hint">Loading the treatment menu&hellip; if this stays empty, click &ldquo;Reload from website&rdquo;.</p>';
+    return;
+  }
+  nav.innerHTML = groups.map((g, gi) => `
+    <div class="price-nav-group">
+      <p class="price-nav-title">${stripTags(g.title)}</p>
+      ${(g.treatments || []).map((t, ti) => `
+        <button type="button" class="price-nav-item ${gi === selectedTx.gi && ti === selectedTx.ti ? "is-selected" : ""}" data-price-pick="${gi}:${ti}">
+          <span>${stripTags(t.title)}</span><small>${escapeHtml(decodeHtml(t.headline || ""))}</small>
+        </button>`).join("")}
     </div>`).join("");
-  editor.querySelectorAll("[data-price-cell]").forEach((input) => input.addEventListener("change", () => { group.rows[+input.dataset.priceRow][+input.dataset.priceCell] = input.value; saveDraft("Price updated."); }));
-  editor.querySelectorAll("[data-remove-price-row]").forEach((b) => b.addEventListener("click", () => { group.rows.splice(+b.dataset.removePriceRow, 1); renderPriceEditor(group); renderPrices(); saveDraft("Row removed."); }));
+  nav.querySelectorAll("[data-price-pick]").forEach((b) => b.addEventListener("click", () => {
+    const parts = b.dataset.pricePick.split(":").map(Number);
+    selectedTx = { gi: parts[0], ti: parts[1] }; renderPrices();
+  }));
+  renderPriceEditor(editor);
 }
 
-function getSelectedPriceGroup() { return state.priceGroups.find((g) => g.id === selectedPriceGroupId) || state.priceGroups[0]; }
+function renderPriceEditor(editor) {
+  const t = currentTx();
+  if (!t) { editor.innerHTML = '<p class="admin-hint">Pick a treatment on the left to edit its prices.</p>'; return; }
+  const groupTitle = stripTags(state.prices.groups[selectedTx.gi].title);
+
+  let html = `
+    <div class="price-editor-head">
+      <p class="admin-eyebrow">${groupTitle}</p>
+      <h3>${stripTags(t.title)}</h3>
+      <p class="admin-hint">Change the prices, notes and the headline below. The description and table layout stay the same.</p>
+    </div>
+    <label class="price-headline">Headline price <small>the &ldquo;from &pound;&hellip;&rdquo; shown on the card</small>
+      <input type="text" value="${escapeAttr(decodeHtml(t.headline || ""))}" data-tx-headline>
+    </label>`;
+
+  (t.detail || []).forEach((b, bi) => {
+    if (b.type === "subhead") {
+      html += `<p class="price-block-sub">${stripTags(b.text)}</p>`;
+    } else if (b.type === "table") {
+      const cols = b.columns || [];
+      html += `<div class="price-table-edit"><table><thead><tr><th>Area</th>${cols.slice(1).map((c) => `<th>${stripTags(c)}</th>`).join("")}</tr></thead><tbody>`;
+      (b.rows || []).forEach((row, ri) => {
+        html += `<tr><th scope="row">${stripTags(row[0])}</th>`;
+        for (let ci = 1; ci < row.length; ci += 1) {
+          html += `<td><input type="text" value="${escapeAttr(decodeHtml(row[ci]))}" data-tx-cell="${bi}:${ri}:${ci}" aria-label="${escapeAttr(stripTags(row[0]) + " " + stripTags(cols[ci] || ""))}"></td>`;
+        }
+        html += `</tr>`;
+      });
+      html += `</tbody></table></div>`;
+    } else if (b.type === "pricelist") {
+      html += `<div class="price-list-edit">`;
+      (b.rows || []).forEach((row, ri) => {
+        html += `
+          <div class="price-list-row">
+            <span class="price-list-name">${row.name || ""}</span>
+            <input type="text" class="price-list-cost" value="${escapeAttr(decodeHtml(row.cost || ""))}" data-tx-cost="${bi}:${ri}" aria-label="Price">
+            <input type="text" class="price-list-small" value="${escapeAttr(decodeHtml(row.costSmall || ""))}" data-tx-costsmall="${bi}:${ri}" placeholder="note, e.g. pay in 2 instalments" aria-label="Instalment note">
+          </div>`;
+      });
+      html += `</div>`;
+    } else if (b.type === "pill") {
+      html += `<label class="price-pill-edit">Highlight line <small>e.g. package discounts, trial price</small><input type="text" value="${escapeAttr(decodeHtml(b.text || ""))}" data-tx-pill="${bi}"></label>`;
+    } else if (b.type === "note") {
+      html += `<label class="price-note-edit">Note<input type="text" value="${escapeAttr(decodeHtml(b.text || ""))}" data-tx-note="${bi}"></label>`;
+    }
+    // b.type === "p" (description prose) is intentionally not editable here.
+  });
+
+  editor.innerHTML = html;
+
+  editor.querySelector("[data-tx-headline]")?.addEventListener("change", (e) => {
+    t.headline = escapeHtml(e.target.value.trim()); saveDraft("Headline updated."); updateNavHeadline();
+  });
+  editor.querySelectorAll("[data-tx-cell]").forEach((inp) => inp.addEventListener("change", () => {
+    const p = inp.dataset.txCell.split(":").map(Number);
+    t.detail[p[0]].rows[p[1]][p[2]] = escapeHtml(inp.value.trim()); saveDraft("Price updated.");
+  }));
+  editor.querySelectorAll("[data-tx-cost]").forEach((inp) => inp.addEventListener("change", () => {
+    const p = inp.dataset.txCost.split(":").map(Number);
+    t.detail[p[0]].rows[p[1]].cost = escapeHtml(inp.value.trim()); saveDraft("Price updated.");
+  }));
+  editor.querySelectorAll("[data-tx-costsmall]").forEach((inp) => inp.addEventListener("change", () => {
+    const p = inp.dataset.txCostsmall.split(":").map(Number);
+    t.detail[p[0]].rows[p[1]].costSmall = escapeHtml(inp.value.trim()); saveDraft("Note updated.");
+  }));
+  editor.querySelectorAll("[data-tx-pill]").forEach((inp) => inp.addEventListener("change", () => {
+    t.detail[+inp.dataset.txPill].text = escapeHtml(inp.value.trim()); saveDraft("Highlight updated.");
+  }));
+  editor.querySelectorAll("[data-tx-note]").forEach((inp) => inp.addEventListener("change", () => {
+    t.detail[+inp.dataset.txNote].text = escapeHtml(inp.value.trim()); saveDraft("Note updated.");
+  }));
+}
+
+// Update just the selected nav item's headline label (no full re-render, keeps scroll).
+function updateNavHeadline() {
+  const t = currentTx(); if (!t) return;
+  const small = document.querySelector(`[data-price-pick="${selectedTx.gi}:${selectedTx.ti}"] small`);
+  if (small) small.textContent = decodeHtml(t.headline || "");
+}
 
 /* ---------------- Reviews ---------------- */
 function bindReviews() {
@@ -489,8 +562,8 @@ function bindSettings() {
   document.querySelector("[data-reset-admin]")?.addEventListener("click", () => {
     if (!confirm("Reset all admin drafts back to defaults? This clears your local changes.")) return;
     localStorage.removeItem(STORAGE_KEY);
-    state = loadDraft(); selectedOfferIndex = 0; selectedPriceGroupId = state.priceGroups[0]?.id;
-    renderAll(); toast("Admin reset to defaults.");
+    state = loadDraft(); selectedOfferIndex = 0; selectedTx = { gi: 0, ti: 0 };
+    renderAll(); loadPricesFromJson(false, true); toast("Admin reset to defaults.");
   });
 }
 
@@ -560,6 +633,9 @@ function escapeAttr(v) { return escapeHtml(v); }
 const OFFERS_JSON_URL = "../assets/data/offers.json";                    // what the homepage reads
 const OFFERS_REPO_PATH = "lumi-derm-website/assets/data/offers.json";    // path inside the repo
 const REVIEWS_REPO_PATH = "lumi-derm-website/assets/data/reviews.json";  // homepage reviews feed
+const PRICES_REPO_PATH = "lumi-derm-website/assets/data/prices.json";    // treatments-page prices data
+const SERVICES_REPO_PATH = "lumi-derm-website/pages/services.html";      // treatments page (rendered from prices.json)
+const PRICES_MARKERS = /(<!-- PRICES:START[\s\S]*?-->)[\s\S]*?(<!-- PRICES:END -->)/; // section rewritten on publish
 const GH_KEY = "lumi-derm-gh-v1";
 
 /* Accepts any of these and turns them into "owner/repo":
@@ -743,6 +819,80 @@ async function publishOffers(options) {
   }
 }
 
+/* ---------- Publish prices: rewrite prices.json AND the treatments page ---------- */
+function decodeB64(str) {
+  const bin = atob(String(str || "").replace(/\s/g, ""));
+  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+// Commit a whole file (create or update), retrying with a fresh sha on 409.
+async function putFileWithRetry(repoPath, contentB64, message, branch) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    let sha;
+    const current = await ghRequest(repoPath + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
+    if (current.ok) sha = (await current.json()).sha;
+    else if (current.status !== 404) { const e = await current.json().catch(() => ({})); throw new Error(ghError(current.status, e.message)); }
+    const body = { message, content: contentB64, branch };
+    if (sha) body.sha = sha;
+    const put = await ghRequest(repoPath, { method: "PUT", body: JSON.stringify(body) });
+    if (put.ok) return;
+    if (put.status === 409 && attempt < 2) { await new Promise((r) => setTimeout(r, 500)); continue; }
+    const e = await put.json().catch(() => ({}));
+    throw new Error(ghError(put.status, e.message));
+  }
+}
+
+// Read services.html, replace the marked section with freshly rendered prices, commit.
+async function publishServicesHtml(branch, renderedSection) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const current = await ghRequest(SERVICES_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
+    if (!current.ok) { const e = await current.json().catch(() => ({})); throw new Error(ghError(current.status, e.message)); }
+    const meta = await current.json();
+    const html = decodeB64(meta.content);
+    if (!PRICES_MARKERS.test(html)) throw new Error("The price markers weren’t found in services.html — ask Dima to check the page.");
+    const next = html.replace(PRICES_MARKERS, "$1\n\n" + renderedSection + "\n\n          $2");
+    const body = { message: "Update treatment prices on the treatments page (via admin)", content: b64(next), sha: meta.sha, branch };
+    const put = await ghRequest(SERVICES_REPO_PATH, { method: "PUT", body: JSON.stringify(body) });
+    if (put.ok) return;
+    if (put.status === 409 && attempt < 2) { await new Promise((r) => setTimeout(r, 500)); continue; }
+    const e = await put.json().catch(() => ({}));
+    throw new Error(ghError(put.status, e.message));
+  }
+}
+
+async function publishPrices() {
+  const cfg = getGh();
+  if (!cfg.repo || !cfg.token) { toast("Add the website connection first (Settings)."); goPanel("settings"); return false; }
+  if (typeof window.renderTreatmentLibrary !== "function") { toast("Price template didn’t load — hard-refresh the admin and try again."); return false; }
+  if (!state.prices || !(state.prices.groups || []).length) { toast("No prices loaded yet — click “Reload from website” first."); return false; }
+
+  const button = document.querySelector("[data-publish-prices]");
+  if (button) { button.disabled = true; button.textContent = "Publishing…"; }
+  setPricesStatus("Publishing to the treatments page…");
+  try {
+    const branch = cfg.branch || "main";
+    // 1) the data file (source of truth the admin reloads from)
+    const json = b64(JSON.stringify(state.prices, null, 2) + "\n");
+    await putFileWithRetry(PRICES_REPO_PATH, json, "Update prices data (via admin)", branch);
+    // 2) the rendered treatments page (what visitors + Google see)
+    const rendered = window.renderTreatmentLibrary(state.prices);
+    await publishServicesHtml(branch, rendered);
+
+    state.publishedAt = new Date().toISOString();
+    saveDraft(null);
+    setPricesStatus("Published. The treatments page updates in about a minute.");
+    toast("Published — your new prices will be live on the treatments page in about a minute.");
+    return true;
+  } catch (err) {
+    setPricesStatus("Publish failed: " + err.message);
+    toast("Publish failed: " + err.message);
+    return false;
+  } finally {
+    if (button) { button.disabled = false; button.textContent = "Publish prices"; }
+  }
+}
+
 /* ---------- Delete = actually delete (publishes the removal immediately) ---------- */
 const STOCK_IMAGES = imageOptions.slice(); // ships with the site — never delete these files
 
@@ -795,6 +945,7 @@ async function deleteOffer(index) {
 function bindPublishing() {
   document.querySelector("[data-publish-offers]")?.addEventListener("click", publishOffers);
   document.querySelector("[data-publish-reviews]")?.addEventListener("click", publishReviews);
+  document.querySelector("[data-publish-prices]")?.addEventListener("click", publishPrices);
   document.querySelector("[data-reload-offers]")?.addEventListener("click", () => {
     if (!confirm("Replace what's in the editor with the offers currently on the website?")) return;
     loadOffersFromSite(true);
