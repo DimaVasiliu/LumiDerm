@@ -742,7 +742,7 @@
       method: "POST",
       headers: { "content-type": "application/json", "x-lumi-key": key },
       body: JSON.stringify({
-        subject: String(state.mail.subject || "").replace(/\{\{name\}\}/g, "there"),
+        subject: String(state.mail.subject || ""),
         html: buildHtml(false),
         recipients: recipients,
         audienceSource: isTest === true ? "test" : state.audienceSource,

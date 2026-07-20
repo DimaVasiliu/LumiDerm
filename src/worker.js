@@ -180,14 +180,17 @@ async function handleSend(request, env, url) {
   const messages = [];
   for (const person of kept) {
     const unsubUrl = await buildUnsubscribeUrl(env, url.origin, person.email);
+    const who = firstName(person.name) || "there";
     const personalised = html
-      .replaceAll("{{name}}", escapeHtml(firstName(person.name) || "there"))
+      .replaceAll("{{name}}", escapeHtml(who))
       .replaceAll("{{unsubscribe}}", unsubUrl);
+    // Subject is a plain-text header — personalise but do not HTML-escape.
+    const personalisedSubject = subject.replaceAll("{{name}}", who);
 
     const message = {
       from,
       to: [person.email],
-      subject,
+      subject: personalisedSubject,
       html: personalised,
       headers: {
         "List-Unsubscribe": `<${unsubUrl}>`,
