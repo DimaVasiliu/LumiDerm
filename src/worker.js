@@ -18,6 +18,14 @@
  *   GET  /api/subscribe/confirm   — double opt-in confirmation link
  *   GET  /admin/api/subscribers   — admin: list subscribers
  *   POST /admin/api/subscribers/delete — admin: erase a subscriber
+ *   POST /admin/api/campaign/schedule — admin: queue a campaign for later
+ *   GET  /admin/api/campaign/scheduled — admin: list scheduled/sent queued campaigns
+ *   POST /admin/api/campaign/scheduled/cancel — admin: cancel a queued campaign
+ *   GET/POST /admin/api/settings/birthday — admin: birthday-email config
+ *   POST /admin/api/settings/birthday/test — admin: send birthday preview
+ *
+ * Cron (wrangler triggers, hourly): scheduled() sends due queued campaigns and,
+ * at the configured hour, the day's birthday emails.
  *
  * Secrets (set with `npx wrangler secret put NAME`):
  *   RESEND_API_KEY   — from resend.com
@@ -100,6 +108,31 @@ export default {
         return handleDeleteCampaignDraft(request, env);
       }
 
+      if (apiPath === "/api/campaign/schedule" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleScheduleCampaign(request, env);
+      }
+
+      if (apiPath === "/api/campaign/scheduled" && isAdminApi) {
+        return handleListScheduled(request, env);
+      }
+
+      if (apiPath === "/api/campaign/scheduled/cancel" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleCancelScheduled(request, env);
+      }
+
+      if (apiPath === "/api/settings/birthday" && isAdminApi) {
+        if (request.method === "GET") return handleGetBirthday(request, env);
+        if (request.method === "POST") return handleSetBirthday(request, env);
+        return json({ error: "Use GET or POST." }, 405);
+      }
+
+      if (apiPath === "/api/settings/birthday/test" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleTestBirthday(request, env);
+      }
+
       if (apiPath === "/api/subscribe" && isPublicApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
         return handleSubscribe(request, env, url);
@@ -127,6 +160,12 @@ export default {
     } catch (err) {
       return json({ error: (err && err.message) || "Server error." }, 500);
     }
+  },
+
+  // Hourly cron (see wrangler.jsonc triggers): send due scheduled campaigns,
+  // and — at the configured hour — the day's birthday emails.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runCron(event, env));
   },
 };
 
@@ -397,6 +436,362 @@ async function handleDeleteCampaignDraft(request, env) {
 
   await env.SUBSCRIBERS.prepare("DELETE FROM campaign_drafts WHERE id = ?1").bind(id).run();
   return json({ ok: true });
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared delivery (used by scheduled sends + birthday emails)         */
+/* ------------------------------------------------------------------ */
+
+// Clean + de-duplicate + honour suppression + personalise + send + record.
+// Returns { ok, sent, suppressed, invalid, errors }. No auth here — callers
+// (the cron, and endpoints that already checked auth) are trusted.
+async function deliverCampaign(env, origin, opts) {
+  const subject = String((opts && opts.subject) || "").trim();
+  const html = String((opts && opts.html) || "");
+  const incoming = Array.isArray(opts && opts.recipients) ? opts.recipients : [];
+  const audienceSource = String((opts && opts.audienceSource) || "scheduled").slice(0, 80);
+
+  if (!subject || !html) return { ok: false, sent: 0, suppressed: 0, invalid: 0, errors: ["Missing subject or body."] };
+  if (!env.RESEND_API_KEY) return { ok: false, sent: 0, suppressed: 0, invalid: 0, errors: ["RESEND_API_KEY missing."] };
+
+  const seen = new Set();
+  const clean = [];
+  let invalid = 0;
+  for (const row of incoming.slice(0, MAX_RECIPIENTS)) {
+    const email = String((row && row.email) || "").trim().toLowerCase();
+    if (!isEmail(email)) { invalid += 1; continue; }
+    if (seen.has(email)) continue;
+    seen.add(email);
+    clean.push({ email, name: String((row && row.name) || "").trim() });
+  }
+  if (!clean.length) return { ok: false, sent: 0, suppressed: 0, invalid, errors: ["No valid recipients."] };
+
+  const kept = [];
+  let suppressed = 0;
+  for (const person of clean) {
+    if (env.SUPPRESSION) {
+      const hit = await env.SUPPRESSION.get(suppressionKey(person.email));
+      if (hit) { suppressed += 1; continue; }
+    }
+    kept.push(person);
+  }
+  if (!kept.length) return { ok: false, sent: 0, suppressed, invalid, errors: ["All recipients have unsubscribed."] };
+
+  const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
+  const replyTo = env.REPLY_TO || null;
+  const messages = [];
+  for (const person of kept) {
+    const unsubUrl = await buildUnsubscribeUrl(env, origin, person.email);
+    const who = firstName(person.name) || "there";
+    const personalised = html.replaceAll("{{name}}", escapeHtml(who)).replaceAll("{{unsubscribe}}", unsubUrl);
+    const personalisedSubject = subject.replaceAll("{{name}}", who);
+    const message = {
+      from,
+      to: [person.email],
+      subject: personalisedSubject,
+      html: personalised,
+      headers: {
+        "List-Unsubscribe": `<${unsubUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+    };
+    if (replyTo) message.reply_to = replyTo;
+    messages.push(message);
+  }
+
+  let sent = 0;
+  const errors = [];
+  for (let i = 0; i < messages.length; i += BATCH_SIZE) {
+    const chunk = messages.slice(i, i + BATCH_SIZE);
+    const res = await fetch("https://api.resend.com/emails/batch", {
+      method: "POST",
+      headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+      body: JSON.stringify(chunk),
+    });
+    if (res.ok) sent += chunk.length;
+    else {
+      const text = await res.text();
+      errors.push(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${res.status} ${text.slice(0, 200)}`);
+    }
+  }
+
+  await recordCampaignSend(env, {
+    subject, audienceSource, isTest: false,
+    requested: incoming.length, sent, suppressed, invalid,
+    status: errors.length ? "partial" : "sent", errors,
+  });
+
+  return { ok: errors.length === 0, sent, suppressed, invalid, errors };
+}
+
+/* ------------------------------------------------------------------ */
+/* Cron: scheduled sends + birthday emails                             */
+/* ------------------------------------------------------------------ */
+
+async function runCron(event, env) {
+  const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+  try { await sendDueScheduledCampaigns(env, origin); } catch (err) { /* keep going */ }
+  try { await runBirthdayEmails(env, origin, event); } catch (err) { /* keep going */ }
+}
+
+async function sendDueScheduledCampaigns(env, origin) {
+  if (!env.SUBSCRIBERS) return;
+  const nowIso = new Date().toISOString();
+  const { results } = await env.SUBSCRIBERS.prepare(
+    `SELECT id, subject, html, audience_source, recipients
+       FROM scheduled_campaigns
+      WHERE status='queued' AND send_at <= ?1
+      ORDER BY send_at ASC LIMIT 10`
+  ).bind(nowIso).all();
+
+  for (const row of results || []) {
+    // Claim it first so an overlapping run can't send it twice.
+    const claim = await env.SUBSCRIBERS.prepare(
+      "UPDATE scheduled_campaigns SET status='sending' WHERE id=?1 AND status='queued'"
+    ).bind(row.id).run();
+    if (!claim.meta || claim.meta.changes === 0) continue;
+
+    let recips = [];
+    try { recips = JSON.parse(row.recipients || "[]"); } catch { recips = []; }
+    const result = await deliverCampaign(env, origin, {
+      subject: row.subject, html: row.html,
+      recipients: recips, audienceSource: row.audience_source || "scheduled",
+    });
+    const status = result.errors && result.errors.length ? "error" : "sent";
+    const summary = ("Sent " + (result.sent || 0) +
+      (result.suppressed ? " · " + result.suppressed + " suppressed" : "") +
+      (result.errors && result.errors.length ? " · " + result.errors.join(" | ") : "")).slice(0, 300);
+    await env.SUBSCRIBERS.prepare(
+      "UPDATE scheduled_campaigns SET status=?1, sent_at=?2, result=?3 WHERE id=?4"
+    ).bind(status, new Date().toISOString(), summary, row.id).run();
+  }
+}
+
+async function runBirthdayEmails(env, origin, event) {
+  if (!env.SUBSCRIBERS) return;
+  const cfg = await getBirthdayConfig(env);
+  if (!cfg.enabled) return;
+
+  const now = new Date(event && event.scheduledTime ? event.scheduledTime : Date.now());
+  const sendHour = Number.isInteger(cfg.hour) ? cfg.hour : 8;
+  if (now.getUTCHours() !== sendHour) return; // once a day, at the send hour (UTC)
+
+  const day = now.getUTCDate();
+  const month = now.getUTCMonth() + 1;
+  const year = now.getUTCFullYear();
+
+  const { results } = await env.SUBSCRIBERS.prepare(
+    `SELECT email, first_name FROM subscribers
+      WHERE status='confirmed' AND consent_email=1
+        AND birth_day=?1 AND birth_month=?2
+        AND (birthday_sent_year IS NULL OR birthday_sent_year < ?3)
+      LIMIT ?4`
+  ).bind(day, month, year, MAX_RECIPIENTS).all();
+
+  const people = (results || []).map((r) => ({ email: r.email, name: r.first_name || "" }));
+  if (!people.length) return;
+
+  await deliverCampaign(env, origin, {
+    subject: cfg.subject || "Happy birthday from Lumi Derm",
+    html: cfg.html || defaultBirthdayHtml(),
+    recipients: people, audienceSource: "birthday",
+  });
+
+  // Mark everyone matched (even if suppressed) so we never retry them this year.
+  for (const p of people) {
+    await env.SUBSCRIBERS.prepare(
+      "UPDATE subscribers SET birthday_sent_year=?1 WHERE email=?2"
+    ).bind(year, p.email).run();
+  }
+}
+
+async function getBirthdayConfig(env) {
+  const def = { enabled: false, subject: "Happy birthday from Lumi Derm 🎂", html: defaultBirthdayHtml(), hour: 8 };
+  if (!env.SUBSCRIBERS) return def;
+  try {
+    const row = await env.SUBSCRIBERS.prepare("SELECT value FROM app_settings WHERE key='birthday'").first();
+    if (row && row.value) {
+      const v = JSON.parse(row.value);
+      return {
+        enabled: v.enabled === true,
+        subject: typeof v.subject === "string" && v.subject ? v.subject : def.subject,
+        html: typeof v.html === "string" && v.html ? v.html : def.html,
+        hour: Number.isInteger(v.hour) ? v.hour : def.hour,
+      };
+    }
+  } catch { /* fall through to default */ }
+  return def;
+}
+
+function defaultBirthdayHtml() {
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f1ee;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ee;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:100%;background:#fff;border-radius:4px;">
+<tr><td align="center" style="padding:40px 40px 8px;">
+<p style="margin:0;font-family:Georgia,serif;font-size:22px;letter-spacing:.16em;text-transform:uppercase;color:#1c1a18;">Lumi&nbsp;Derm</p>
+</td></tr>
+<tr><td style="padding:20px 40px 8px;">
+<h1 style="margin:0 0 18px;font-family:Georgia,serif;font-weight:400;font-size:26px;color:#1c1a18;">Happy birthday, {{name}}!</h1>
+<p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:16px;line-height:1.7;color:#4a443e;">Wishing you a wonderful day from all of us at Lumi Derm. To help you celebrate, enjoy a little birthday treat on your next visit this month.</p>
+<table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#1c1a18" style="border-radius:2px;">
+<a href="https://lumidermaesthetics.com/pages/booking.html" style="display:inline-block;padding:16px 40px;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#fff;text-decoration:none;">Book your birthday treat</a>
+</td></tr></table>
+</td></tr>
+<tr><td style="padding:28px 40px 36px;">
+<p style="margin:0;border-top:1px solid #e8e2db;padding-top:22px;font-family:Arial,sans-serif;font-size:11px;line-height:1.6;color:#a2968a;">Lumi Derm Aesthetics &middot; London Docklands &middot; <a href="{{unsubscribe}}" style="color:#a2968a;">unsubscribe</a></p>
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Admin: scheduling + birthday config endpoints                       */
+/* ------------------------------------------------------------------ */
+
+async function handleScheduleCampaign(request, env) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+  if (!env.SUBSCRIBERS) return json({ error: "Scheduling isn't set up yet." }, 500);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+
+  const subject = String(body.subject || "").trim();
+  const html = String(body.html || "");
+  const recipients = Array.isArray(body.recipients) ? body.recipients : [];
+  const audienceSource = String(body.audienceSource || "scheduled").slice(0, 80);
+  const sendAtRaw = String(body.sendAt || "").trim();
+
+  if (!subject) return json({ error: "Subject is required." }, 400);
+  if (!html) return json({ error: "Email body is required." }, 400);
+  if (!recipients.length) return json({ error: "No recipients." }, 400);
+  if (recipients.length > MAX_RECIPIENTS) return json({ error: `Too many recipients (max ${MAX_RECIPIENTS}).` }, 400);
+
+  const when = new Date(sendAtRaw);
+  if (isNaN(when.getTime())) return json({ error: "Pick a valid date and time." }, 400);
+  if (when.getTime() < Date.now() - 60 * 1000) return json({ error: "That time is in the past — pick a future time." }, 400);
+
+  const cleanRecipients = recipients
+    .map((r) => ({ email: String((r && r.email) || "").trim().toLowerCase(), name: String((r && r.name) || "").trim() }))
+    .filter((r) => isEmail(r.email));
+  if (!cleanRecipients.length) return json({ error: "No valid recipients." }, 400);
+
+  await env.SUBSCRIBERS.prepare(
+    `INSERT INTO scheduled_campaigns (subject, html, audience_source, recipients, send_at, status, created_at)
+     VALUES (?1,?2,?3,?4,?5,'queued',?6)`
+  ).bind(
+    subject.slice(0, 240), html, audienceSource,
+    JSON.stringify(cleanRecipients), when.toISOString(), new Date().toISOString()
+  ).run();
+
+  return json({ ok: true, scheduledFor: when.toISOString(), recipients: cleanRecipients.length });
+}
+
+async function handleListScheduled(request, env) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+  if (!env.SUBSCRIBERS) return json({ error: "Scheduling isn't set up yet." }, 500);
+
+  const { results } = await env.SUBSCRIBERS.prepare(
+    `SELECT id, subject, audience_source, send_at, status, created_at, sent_at, result, recipients
+       FROM scheduled_campaigns
+      ORDER BY (status='queued') DESC, send_at DESC
+      LIMIT 40`
+  ).all();
+
+  const list = (results || []).map((r) => {
+    let count = 0;
+    try { count = JSON.parse(r.recipients || "[]").length; } catch { count = 0; }
+    return {
+      id: r.id, subject: r.subject, audience_source: r.audience_source,
+      send_at: r.send_at, status: r.status, created_at: r.created_at,
+      sent_at: r.sent_at, result: r.result, recipient_count: count,
+    };
+  });
+  return json({ ok: true, scheduled: list });
+}
+
+async function handleCancelScheduled(request, env) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+  if (!env.SUBSCRIBERS) return json({ error: "Scheduling isn't set up yet." }, 500);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  const id = parseInt(body.id, 10);
+  if (!id) return json({ error: "Campaign id is required." }, 400);
+
+  const res = await env.SUBSCRIBERS.prepare(
+    "UPDATE scheduled_campaigns SET status='cancelled' WHERE id=?1 AND status='queued'"
+  ).bind(id).run();
+  const changed = res.meta && res.meta.changes ? res.meta.changes : 0;
+  if (!changed) return json({ error: "That campaign has already sent or been cancelled." }, 409);
+  return json({ ok: true });
+}
+
+async function handleGetBirthday(request, env) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+  const cfg = await getBirthdayConfig(env);
+  return json({ ok: true, birthday: cfg });
+}
+
+async function handleSetBirthday(request, env) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+  if (!env.SUBSCRIBERS) return json({ error: "Settings aren't set up yet." }, 500);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+
+  const hour = clampInt(body.hour, 0, 23);
+  const cfg = {
+    enabled: body.enabled === true,
+    subject: String(body.subject || "").slice(0, 240) || "Happy birthday from Lumi Derm",
+    html: String(body.html || "") || defaultBirthdayHtml(),
+    hour: hour === null ? 8 : hour,
+  };
+  const now = new Date().toISOString();
+  await env.SUBSCRIBERS.prepare(
+    `INSERT INTO app_settings (key, value, updated_at) VALUES ('birthday', ?1, ?2)
+     ON CONFLICT(key) DO UPDATE SET value=?1, updated_at=?2`
+  ).bind(JSON.stringify(cfg), now).run();
+
+  return json({ ok: true, birthday: cfg });
+}
+
+// Send the birthday email to one address (the admin, or a supplied one) as a preview.
+async function handleTestBirthday(request, env) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+  if (!env.RESEND_API_KEY) return json({ error: "RESEND_API_KEY is missing." }, 500);
+
+  let body;
+  try { body = await request.json(); } catch { body = {}; }
+  const to = String(body.to || admin.email || "").trim().toLowerCase();
+  if (!isEmail(to)) return json({ error: "No valid address to send the test to." }, 400);
+
+  const cfg = await getBirthdayConfig(env);
+  const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+  // Preview the on-screen (possibly unsaved) content if provided, else the saved config.
+  const subjectRaw = String(body.subject || "").trim() || cfg.subject || "Happy birthday from Lumi Derm";
+  const htmlRaw = String(body.html || "") || cfg.html || defaultBirthdayHtml();
+  // Bypass suppression for a test to the admin's own inbox.
+  const unsubUrl = await buildUnsubscribeUrl(env, origin, to);
+  const who = firstName(body.name) || "there";
+  const html = htmlRaw.replaceAll("{{name}}", escapeHtml(who)).replaceAll("{{unsubscribe}}", unsubUrl);
+  const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
+  const message = { from, to: [to], subject: subjectRaw.replaceAll("{{name}}", who), html };
+  if (env.REPLY_TO) message.reply_to = env.REPLY_TO;
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+    body: JSON.stringify(message),
+  });
+  if (!res.ok) { const t = await res.text(); return json({ error: "Test send failed: " + t.slice(0, 200) }, 502); }
+  return json({ ok: true, sentTo: to });
 }
 
 /* ------------------------------------------------------------------ */

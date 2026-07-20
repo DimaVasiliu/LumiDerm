@@ -39,7 +39,15 @@
 	// wired to Namecheap forwarding and named in the DMARC record.
 	"vars": {
 		"FROM_EMAIL": "Lumi Derm Aesthetics <info@lumidermaesthetics.com>",
-		"REPLY_TO": "info@lumidermaesthetics.com"
+		"REPLY_TO": "info@lumidermaesthetics.com",
+		// Used by the scheduled (cron) sender to build unsubscribe links,
+		// since a cron run has no incoming request URL.
+		"SITE_ORIGIN": "https://lumidermaesthetics.com"
+	},
+	// Hourly cron: sends any due scheduled campaigns and, at the birthday
+	// send-hour, the day's birthday emails. Handled by scheduled() in the Worker.
+	"triggers": {
+		"crons": ["0 * * * *"]
 	},
 	"observability": {
 		"enabled": true

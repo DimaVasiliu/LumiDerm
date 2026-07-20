@@ -539,6 +539,46 @@ code {
   font-size: 0.88rem;
 }
 
+/* ---- Scheduling + birthday automation ---- */
+.schedule-when { display: block; margin: 0.2rem 0 0.6rem; }
+
+.admin-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 800;
+  color: var(--admin-muted);
+}
+.admin-switch input { width: 18px; height: 18px; accent-color: var(--admin-accent); }
+
+.scheduled-list { display: grid; gap: 0.6rem; margin-top: 0.6rem; }
+.scheduled-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border-top: 1px solid rgba(68, 52, 49, 0.09);
+  padding-top: 0.6rem;
+}
+.scheduled-item strong { display: block; font-size: 0.95rem; }
+.scheduled-item span { color: var(--admin-muted); font-size: 0.82rem; }
+.scheduled-item-actions { display: flex; align-items: center; gap: 0.5rem; flex: 0 0 auto; }
+.scheduled-item em {
+  font-style: normal;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(68, 52, 49, 0.08);
+  color: var(--admin-muted);
+}
+.scheduled-item em.sched-queued { background: rgba(183, 123, 114, 0.16); color: var(--admin-accent-dark); }
+.scheduled-item em.sched-sent { background: rgba(60, 140, 90, 0.16); color: #2f7d4f; }
+.scheduled-item em.sched-cancelled,
+.scheduled-item em.sched-error { background: rgba(190, 70, 60, 0.14); color: #b0483c; }
+
 /* ---- Auto button-link hint (email sender) ---- */
 .cta-hint { margin-top: 0.15rem; }
 .cta-hint .link-button {

@@ -761,9 +761,11 @@
     var btn = $("[data-send-campaign]");
     if (!btn) return;
     var confirmed = ($("[data-consent-confirm]") || {}).checked === true;
+    var scheduling = ($("[data-schedule-toggle]") || {}).checked === true;
     var ready =
       confirmed && state.recipients.length > 0 && String(state.mail.subject || "").trim() !== "";
     btn.disabled = !ready;
+    btn.textContent = scheduling ? "Schedule campaign" : "Send campaign";
     renderSafetyChecks();
   }
 
@@ -856,10 +858,22 @@
     var confirmBox = $("[data-consent-confirm]");
     if (confirmBox) confirmBox.addEventListener("change", updateSendButton);
 
+    var scheduleToggle = $("[data-schedule-toggle]");
+    var scheduleWhen = $("[data-schedule-when]");
+    if (scheduleToggle) {
+      scheduleToggle.addEventListener("change", function () {
+        if (scheduleWhen) scheduleWhen.hidden = !scheduleToggle.checked;
+        updateSendButton();
+      });
+    }
+    var schedReload = $("[data-scheduled-reload]");
+    if (schedReload) schedReload.addEventListener("click", loadScheduled);
+
     var sendBtn = $("[data-send-campaign]");
     if (sendBtn) {
       sendBtn.addEventListener("click", function () {
         var count = state.recipients.length;
+        if (scheduleToggle && scheduleToggle.checked) { scheduleCampaign(count); return; }
         var ok = window.confirm(
           "Send this email to " +
             count +
@@ -891,6 +905,158 @@
           });
       });
     }
+  }
+
+  /* --------------------------------------------------------------- */
+  /* Scheduling                                                        */
+  /* --------------------------------------------------------------- */
+
+  function scheduleCampaign(count) {
+    var out = $("[data-send-status]");
+    var atEl = $("[data-schedule-at]");
+    var val = atEl ? atEl.value : "";
+    if (!val) { status(out, "Pick a date and time to schedule.", "error"); return; }
+    var when = new Date(val); // datetime-local is the browser's local time
+    if (isNaN(when.getTime())) { status(out, "That date and time isn't valid.", "error"); return; }
+    if (when.getTime() < Date.now()) { status(out, "Pick a future date and time.", "error"); return; }
+    var human = when.toLocaleString();
+    if (!window.confirm("Schedule this email to " + count + " client" + (count === 1 ? "" : "s") + " for " + human + "?")) return;
+
+    var btn = $("[data-send-campaign]");
+    if (btn) btn.disabled = true;
+    status(out, "Scheduling…");
+    fetch(ADMIN_API + "/campaign/schedule", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        subject: String(state.mail.subject || ""),
+        html: buildHtml(false),
+        recipients: state.recipients,
+        audienceSource: state.audienceSource,
+        sendAt: when.toISOString()
+      })
+    })
+      .then(function (res) { return res.json().then(function (d) { if (!res.ok) throw new Error(d.error || "Could not schedule (" + res.status + ")."); return d; }); })
+      .then(function (d) {
+        status(out, "Scheduled for " + human + " — " + d.recipients + " recipient" + (d.recipients === 1 ? "" : "s") + ".", "ok");
+        loadScheduled();
+      })
+      .catch(function (err) { status(out, err.message, "error"); })
+      .then(function () { updateSendButton(); });
+  }
+
+  function loadScheduled() {
+    var box = $("[data-scheduled-list]");
+    if (!box) return;
+    fetch(ADMIN_API + "/campaign/scheduled", { cache: "no-store", credentials: "same-origin" })
+      .then(function (res) { return res.json().then(function (d) { if (!res.ok) throw new Error(d.error || "Could not load."); return d; }); })
+      .then(function (d) { renderScheduled(d.scheduled || []); })
+      .catch(function (err) { box.innerHTML = '<p class="admin-status is-error">' + esc(err.message) + "</p>"; });
+  }
+
+  function renderScheduled(list) {
+    var box = $("[data-scheduled-list]");
+    if (!box) return;
+    if (!list.length) { box.innerHTML = '<p class="admin-help">Nothing scheduled.</p>'; return; }
+    box.innerHTML = list.map(function (r) {
+      var when = formatDate(r.send_at);
+      var cancel = r.status === "queued"
+        ? '<button class="tiny-button danger" type="button" data-cancel-scheduled="' + r.id + '">Cancel</button>' : "";
+      var detail = r.status === "queued"
+        ? (r.recipient_count + " recipient" + (r.recipient_count === 1 ? "" : "s"))
+        : (r.result || r.status);
+      return '<article class="scheduled-item"><div><strong>' + esc(r.subject || "Untitled") + "</strong>" +
+        "<span>" + esc(when) + " · " + esc(detail) + "</span></div>" +
+        '<div class="scheduled-item-actions"><em class="sched-' + esc(r.status) + '">' + esc(r.status) + "</em>" + cancel + "</div></article>";
+    }).join("");
+    $$("[data-cancel-scheduled]", box).forEach(function (b) {
+      b.addEventListener("click", function () { cancelScheduled(b.getAttribute("data-cancel-scheduled")); });
+    });
+  }
+
+  function cancelScheduled(id) {
+    if (!window.confirm("Cancel this scheduled send?")) return;
+    fetch(ADMIN_API + "/campaign/scheduled/cancel", {
+      method: "POST", credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id: parseInt(id, 10) })
+    })
+      .then(function (res) { return res.json().then(function (d) { if (!res.ok) throw new Error(d.error || "Could not cancel."); return d; }); })
+      .then(function () { loadScheduled(); })
+      .catch(function (err) { status($("[data-send-status]"), err.message, "error"); });
+  }
+
+  /* --------------------------------------------------------------- */
+  /* Birthday automation                                               */
+  /* --------------------------------------------------------------- */
+
+  function populateBirthdayHours() {
+    var sel = $("[data-bday-hour]");
+    if (!sel || sel.options.length) return;
+    var html = "";
+    for (var h = 0; h < 24; h += 1) {
+      html += '<option value="' + h + '">' + (h < 10 ? "0" + h : h) + ":00</option>";
+    }
+    sel.innerHTML = html;
+  }
+
+  function loadBirthday() {
+    populateBirthdayHours();
+    fetch(ADMIN_API + "/settings/birthday", { cache: "no-store", credentials: "same-origin" })
+      .then(function (res) { return res.json().then(function (d) { if (!res.ok) throw new Error(d.error || "Could not load."); return d; }); })
+      .then(function (d) {
+        var b = d.birthday || {};
+        if ($("[data-bday-enabled]")) $("[data-bday-enabled]").checked = b.enabled === true;
+        if ($("[data-bday-subject]")) $("[data-bday-subject]").value = b.subject || "";
+        if ($("[data-bday-body]")) $("[data-bday-body]").value = b.html || "";
+        if ($("[data-bday-hour]")) $("[data-bday-hour]").value = String(typeof b.hour === "number" ? b.hour : 8);
+      })
+      .catch(function () { /* leave fields blank; defaults live on the server */ });
+  }
+
+  function saveBirthday() {
+    var out = $("[data-bday-status]");
+    var payload = {
+      enabled: ($("[data-bday-enabled]") || {}).checked === true,
+      subject: String(($("[data-bday-subject]") || {}).value || ""),
+      html: String(($("[data-bday-body]") || {}).value || ""),
+      hour: parseInt(($("[data-bday-hour]") || {}).value, 10)
+    };
+    status(out, "Saving…");
+    fetch(ADMIN_API + "/settings/birthday", {
+      method: "POST", credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+      .then(function (res) { return res.json().then(function (d) { if (!res.ok) throw new Error(d.error || "Could not save."); return d; }); })
+      .then(function (d) {
+        status(out, d.birthday && d.birthday.enabled ? "Saved — birthday emails are ON." : "Saved — birthday emails are OFF.", "ok");
+      })
+      .catch(function (err) { status(out, err.message, "error"); });
+  }
+
+  function testBirthday() {
+    var out = $("[data-bday-status]");
+    var email = String(($("[data-bday-test-email]") || {}).value || "").trim();
+    status(out, "Sending preview…");
+    fetch(ADMIN_API + "/settings/birthday/test", {
+      method: "POST", credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        to: email, name: "Ana",
+        subject: String(($("[data-bday-subject]") || {}).value || ""),
+        html: String(($("[data-bday-body]") || {}).value || "")
+      })
+    })
+      .then(function (res) { return res.json().then(function (d) { if (!res.ok) throw new Error(d.error || "Could not send."); return d; }); })
+      .then(function (d) { status(out, "Preview sent to " + d.sentTo + ". Check your inbox.", "ok"); })
+      .catch(function (err) { status(out, err.message, "error"); });
+  }
+
+  function bindBirthday() {
+    var save = $("[data-bday-save]"); if (save) save.addEventListener("click", saveBirthday);
+    var test = $("[data-bday-test]"); if (test) test.addEventListener("click", testBirthday);
   }
 
   /* --------------------------------------------------------------- */
@@ -1246,9 +1412,12 @@
     bindCompose();
     bindSending();
     bindSettings();
+    bindBirthday();
     loadOffers();
     setAudienceSource(state.audienceSource);
     loadHistory();
+    loadScheduled();
+    loadBirthday();
     if (!loadDraft()) {
       applyTemplate("offers");
     } else {

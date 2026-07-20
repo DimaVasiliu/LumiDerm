@@ -33,8 +33,8 @@ Working list of what's left, in priority order. Tick items off as they ship.
 ## 🟢 Nice-to-have (from the admin audit)
 
 - [x] **Image alt-text field on offers** ✅ Done. An "Image description" field in the offer editor is saved to `offers.json` (`alt`) and used on the homepage offer cards, the offer modal, and the email offer card — falling back to the offer title when left blank, so no image is ever alt-less. Helps SEO, accessibility and email deliverability.
-- [ ] **Scheduled sends** — "send this campaign on <date>". Needs a Cloudflare Cron Trigger + a queued-campaign table (not doable purely in the browser).
-- [ ] **Automatic birthday emails** — the birthday-month segment already works manually; automating it needs the same cron infrastructure as scheduled sends.
+- [x] **Scheduled sends** ✅ Done & verified. In Send email, tick "Schedule for later", pick a date + time; the campaign is queued in D1 and sent by the hourly Cloudflare cron. "Upcoming & recent scheduled sends" lists them with a Cancel button. (Needs migration 0004 applied + the worker redeployed — see deploy notes.)
+- [x] **Automatic birthday emails** ✅ Done & verified. A birthday-automation card (on/off switch, editable subject + HTML body, send-hour, "send me a preview") saved to D1. The hourly cron, at the chosen hour, emails each confirmed + consented subscriber whose birthday is today — once per year (tracked by `birthday_sent_year`), honouring the suppression list. Cron SQL verified with an in-memory SQLite harness (due-selection, claim idempotency, birthday matching, year-guard, settings upsert).
 - [ ] **Reorder offers by drag** (arrow reordering already exists) — optional polish.
 
 ---
@@ -65,3 +65,15 @@ Working list of what's left, in priority order. Tick items off as they ship.
 ---
 
 *Deploy rule (unchanged):* `git pull --rebase` first, then `git add -A && git commit && git push`. Never `npx wrangler deploy` — the admin commits to GitHub and Cloudflare rebuilds from there.
+
+### One-time deploy for scheduling + birthday emails (this release)
+
+1. **Apply the new database tables** (once), from `~/Desktop/LumiDerm`:
+   ```
+   npx wrangler d1 migrations apply lumidermdb --remote
+   ```
+   (Adds `scheduled_campaigns`, `app_settings`, and the `birthday_sent_year` column.)
+2. **Push as usual** — the `git push` deploys the worker and, from `wrangler.jsonc`, registers the **hourly cron** (`"crons": ["0 * * * *"]`). No `wrangler deploy` needed; Cloudflare's Git build applies it.
+3. **Check** in the Cloudflare dashboard: Workers → `lumiderm` → Triggers shows the cron. Then in the admin, open **Send email → Automatic birthday emails**, write the message, click **Send me a preview**, and only flip it **On** once you're happy.
+
+Nothing sends automatically until (a) the migration is applied, (b) the cron is live, and (c) birthday automation is switched On / a campaign is scheduled.

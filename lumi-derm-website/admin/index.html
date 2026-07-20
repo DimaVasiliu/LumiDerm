@@ -237,8 +237,9 @@
               <ol class="guide-steps">
                 <li><strong>Step 1 &mdash; Who:</strong> leave it on <em>&ldquo;My website subscribers&rdquo;</em> and your confirmed sign-ups load automatically &mdash; no files, no exporting. Want a smaller group? Use the <em>Narrow it down</em> boxes to pick people by <strong>treatment interest</strong> or <strong>birthday month</strong>. A live count shows exactly how many people will get it.</li>
                 <li><strong>Step 2 &mdash; Write:</strong> give the campaign a name (just for you), pick a template, edit the words, and tick which offers to include. Type <code>{{name}}</code> and it becomes each person&rsquo;s first name.</li>
-                <li><strong>Step 3 &mdash; Send:</strong> <em>always send a test to yourself first</em> and check it on your phone. Then tick the confirmation box and click <em>Send campaign</em>.</li>
+                <li><strong>Step 3 &mdash; Send:</strong> <em>always send a test to yourself first</em> and check it on your phone. Then tick the confirmation box and click <em>Send campaign</em>. To send later, tick <em>Schedule for later</em>, pick a date and time, and it goes out automatically &mdash; see and cancel anything waiting under <em>Upcoming scheduled sends</em>.</li>
               </ol>
+              <p class="guide-tip"><strong>Automatic birthday emails:</strong> under <em>Automatic birthday emails</em>, write the message once and flip it <em>On</em>. Everyone with a birthday on file gets it automatically on their day (once a year, only if they consented). Use <em>Send me a preview</em> to see it first.</p>
               <p class="guide-tip"><strong>Save it for later:</strong> click <em>Save current</em> under &ldquo;Saved campaigns&rdquo; to keep a campaign (words, offers and the group you chose). Reuse it anytime with <em>Load</em> &mdash; perfect for a monthly newsletter or a birthday email.</p>
               <p class="guide-tip"><strong>Emailing existing Treatwell clients instead?</strong> Switch Step 1 to <em>Treatwell client export</em> and drop in the CSV from Treatwell &mdash; or just use Treatwell&rsquo;s own Marketing tool for those. Your website subscribers are the ones that live here.</p>
               <p class="guide-warn"><strong>Important:</strong> everyone in &ldquo;My website subscribers&rdquo; already confirmed and agreed &mdash; that&rsquo;s handled for you. If you ever use a Treatwell CSV, only email people who ticked the marketing box.</p>
@@ -499,6 +500,11 @@
                     <input type="checkbox" data-consent-confirm>
                     <span>I confirm every recipient gave marketing consent, and I understand this sends real email.</span>
                   </label>
+                  <label class="admin-check">
+                    <input type="checkbox" data-schedule-toggle>
+                    <span>Schedule for later instead of sending now</span>
+                  </label>
+                  <label class="schedule-when" data-schedule-when hidden>Date &amp; time to send<input type="datetime-local" data-schedule-at></label>
                   <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-send-campaign disabled>Send campaign</button>
                   <p class="admin-status" data-send-status></p>
                   <ul class="send-safety-list" data-send-safety></ul>
@@ -524,6 +530,34 @@
                 </section>
               </aside>
             </div>
+
+            <section class="admin-card">
+              <div class="admin-card-head">
+                <div><p class="admin-eyebrow">Scheduled</p><h3>Upcoming &amp; recent scheduled sends</h3></div>
+                <button class="tiny-button" type="button" data-scheduled-reload>Reload</button>
+              </div>
+              <p class="admin-help">Campaigns queued to send automatically at a set time. Cancel any that are still waiting.</p>
+              <div class="scheduled-list" data-scheduled-list><p class="admin-help">No scheduled campaigns loaded yet.</p></div>
+            </section>
+
+            <section class="admin-card">
+              <div class="admin-card-head">
+                <div><p class="admin-eyebrow">Automation</p><h3>Automatic birthday emails</h3></div>
+                <label class="admin-switch"><input type="checkbox" data-bday-enabled><span>On</span></label>
+              </div>
+              <p class="admin-help">When this is on, each confirmed subscriber with a birthday on file is emailed automatically on their birthday. Use <code>{{name}}</code> for their first name. Only sends to people who gave consent, and never twice in a year.</p>
+              <div class="admin-editor">
+                <label>Subject<input type="text" data-bday-subject placeholder="Happy birthday from Lumi Derm"></label>
+                <label>Message (HTML email)<textarea rows="8" data-bday-body></textarea></label>
+                <label>Send at <small>(hour of day, UK time &mdash; may run an hour later in summer)</small><select data-bday-hour></select></label>
+              </div>
+              <div class="admin-actions-inline start">
+                <button class="admin-button admin-button-primary" type="button" data-bday-save>Save birthday email</button>
+                <input type="email" data-bday-test-email placeholder="you@example.com">
+                <button class="admin-button admin-button-secondary" type="button" data-bday-test>Send me a preview</button>
+              </div>
+              <p class="admin-status" data-bday-status></p>
+            </section>
           </section>
 
           <!-- ===================== SUBSCRIBERS ===================== -->
@@ -736,7 +770,7 @@
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
     <script src="admin.js?v=20260720-pages1"></script>
-    <script src="sender.js?v=20260720-autocta1"></script>
+    <script src="sender.js?v=20260720-schedule1"></script>
     <script src="subscribers.js?v=20260720-audit1"></script>
   </body>
 </html>
