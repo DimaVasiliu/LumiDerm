@@ -32,7 +32,8 @@
       headline: "",
       body: "",
       ctaLabel: "Book your consultation",
-      ctaUrl: BOOKING_URL
+      ctaUrl: BOOKING_URL,
+      ctaAuto: true          // true = button link follows the ticked offer; false = Iulia set it herself
     }
   };
   var campaignDrafts = [];
@@ -479,6 +480,7 @@
           return true;
         });
         renderOfferPicker();
+        applyAutoCta();
       })
       .catch(function () {
         var box = $("[data-offer-picker]");
@@ -523,6 +525,7 @@
         var idx = parseInt(input.getAttribute("data-offer-pick"), 10);
         if (input.checked) state.selected[idx] = true;
         else delete state.selected[idx];
+        applyAutoCta();
         renderPreview();
       });
     });
@@ -534,6 +537,63 @@
         return state.offers[parseInt(k, 10)];
       })
       .filter(Boolean);
+  }
+
+  /* ---- Auto button link from the ticked offers -------------------- */
+  function offerBookingUrl(offer) {
+    return BOOKING_URL + (offer && offer.service ? "?service=" + encodeURIComponent(offer.service) : "");
+  }
+
+  // The link the main button should use, based on the ticked offers:
+  //   exactly one offer -> that treatment's booking deep-link
+  //   zero / several     -> the general booking page
+  function autoCtaUrl() {
+    var chosen = chosenOffers();
+    if (chosen.length === 1) return offerBookingUrl(chosen[0]);
+    return BOOKING_URL;
+  }
+
+  // A friendly description of where a link points, for the hint.
+  function ctaLinkLabel(url) {
+    if (!url) return "no link set";
+    var m = /[?&]service=([^&]+)/.exec(url);
+    if (m) return "the " + decodeURIComponent(m[1]).replace(/-/g, " ") + " booking page";
+    if (/\/booking\.html/i.test(url)) return "the general booking page";
+    return url;
+  }
+
+  // Recompute the button link from the selection — unless Iulia typed her own.
+  function applyAutoCta() {
+    if (state.mail.ctaAuto !== false) {
+      state.mail.ctaUrl = autoCtaUrl();
+      var field = $('[data-mail-field="ctaUrl"]');
+      if (field) field.value = state.mail.ctaUrl;
+    }
+    updateCtaHint();
+  }
+
+  function updateCtaHint() {
+    var hint = $("[data-cta-hint]");
+    if (!hint) return;
+    var chosen = chosenOffers();
+    if (state.mail.ctaAuto === false) {
+      hint.innerHTML = "Custom link &mdash; the button opens " + esc(ctaLinkLabel(state.mail.ctaUrl)) +
+        '. <button type="button" class="link-button" data-cta-auto>Use the selected offer&rsquo;s link</button>';
+    } else if (chosen.length === 1) {
+      hint.innerHTML = "Auto &mdash; the button opens " + esc(ctaLinkLabel(state.mail.ctaUrl)) + ". Edit the link above to override.";
+    } else if (chosen.length > 1) {
+      hint.innerHTML = "Auto &mdash; several offers ticked, so the button opens the general booking page. Tick just one to deep-link to it.";
+    } else {
+      hint.innerHTML = "Auto &mdash; the button opens the general booking page. Tick one offer to point it straight at that treatment.";
+    }
+    var resetBtn = hint.querySelector("[data-cta-auto]");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", function () {
+        state.mail.ctaAuto = true;
+        applyAutoCta();
+        renderPreview();
+      });
+    }
   }
 
   /* --------------------------------------------------------------- */
@@ -881,7 +941,9 @@
     state.mail.body = t.body;
     state.mail.ctaLabel = t.ctaLabel;
     state.mail.ctaUrl = t.ctaUrl;
+    state.mail.ctaAuto = true;   // new template -> follow the ticked offer again
     syncFields();
+    applyAutoCta();
     renderPreview();
   }
 
@@ -947,6 +1009,7 @@
       field.addEventListener("input", function () {
         if (key === "template") return;
         state.mail[key] = field.value;
+        if (key === "ctaUrl") { state.mail.ctaAuto = false; updateCtaHint(); }
         renderPreview();
       });
       if (key === "template") {
@@ -1051,6 +1114,7 @@
     if (nameEl) nameEl.value = entry.name;
     syncFields();
     renderOfferPicker();
+    applyAutoCta();
     // Restore audience + segment
     if (entry.audienceSource) {
       var audience = $("[data-audience-source]");

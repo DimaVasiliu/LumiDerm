@@ -25,11 +25,8 @@ Working list of what's left, in priority order. Tick items off as they ship.
 
 ## 🟡 Then — smarter email campaigns
 
-- [ ] **Auto-set the email button link from the ticked offer/treatment.**
-  Today: in Send email, ticking an offer adds its card (with its own per-offer "Book →" deep link), but the **main campaign button** link is a single field typed by hand.
-  Want: when Iulia ticks a specific offer/treatment, the main button link **auto-fills to that treatment's booking link**, so a recipient who clicks lands directly on it — e.g. an Endospheres email → `booking.html?service=endospheres`; an "Autumn skin reset" email → the microneedling booking link; and so on. Each offer already carries a `service` (which maps to the right booking deep link), so the data's already there.
-  Behaviour: if exactly one offer is ticked → set the button link to that offer's treatment. If several are ticked → default to the general booking page (or the featured one), but let Iulia override. Show which link the button currently points to.
-  Est: small–medium (front-end only, in `sender.js`).
+- [x] **Auto-set the email button link from the ticked offer/treatment.** ✅ Done & verified.
+  In Send email, ticking exactly one offer auto-sets the main button link to that treatment's booking deep-link (e.g. Endospheres → `booking.html?service=endospheres`); zero or several ticked → the general booking page. A hint under the link field shows where the button points. Iulia can still type her own link to override, and a "Use the selected offer's link" reset switches back to auto. Auto-links pass the sender's approved-URL health check. Verified against the live offers.json (each `service` maps to the right deep-link).
 
 ---
 

@@ -539,6 +539,20 @@ code {
   font-size: 0.88rem;
 }
 
+/* ---- Auto button-link hint (email sender) ---- */
+.cta-hint { margin-top: 0.15rem; }
+.cta-hint .link-button {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--admin-accent-dark);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.cta-hint .link-button:hover { opacity: 0.8; }
+
 /* ---- Prices editor (treatments page) ---- */
 .admin-layout-prices { grid-template-columns: 1fr; }
 
