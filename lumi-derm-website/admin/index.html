@@ -261,7 +261,7 @@
                 <li><button class="guide-link" type="button" data-go="reviews">Reviews</button> &mdash; choose which client reviews show on the homepage, then <strong>Publish reviews</strong>. Goes live like offers.</li>
                 <li><button class="guide-link" type="button" data-go="prices">Prices</button> &mdash; update treatment prices and publish them to the treatments page.</li>
                 <li><button class="guide-link" type="button" data-go="media">Media</button> &mdash; the photos available to use in offers.</li>
-                <li><button class="guide-link" type="button" data-go="content">Pages</button> &mdash; draft page text. <em>Not live-editable yet</em> &mdash; ask Dima to publish.</li>
+                <li><button class="guide-link" type="button" data-go="content">Pages</button> &mdash; edit the homepage hero copy and your contact details (phone, email, address, socials), then publish. Contact changes update everywhere on the site.</li>
                 <li><button class="guide-link" type="button" data-go="clients">Treatwell</button> &mdash; your booking system stays the home for bookings, payments and client records.</li>
                 <li><button class="guide-link" type="button" data-go="settings">Settings</button> &mdash; your passcode and the behind-the-scenes connections. You rarely need this.</li>
               </ul>
@@ -597,44 +597,37 @@
             <div class="admin-section-head">
               <div>
                 <p class="admin-eyebrow">Pages</p>
-                <h2>Website content</h2>
-                <p>Draft page text here. These save in your browser for now &mdash; they don&rsquo;t change the live site yet, so ask Dima to publish page-text changes.</p>
+                <h2>Homepage text &amp; contact details</h2>
+                <p>Edit the homepage hero copy and your contact details, then <strong>Publish page text</strong>. Contact changes (phone, email, address, socials) update everywhere they appear across the site.</p>
               </div>
+              <button class="admin-button admin-button-secondary" type="button" data-reload-content>Reload from website</button>
+            </div>
+            <div class="admin-publish-bar">
+              <div>
+                <strong>Publish to the website</strong>
+                <p data-content-status>Your changes are saved in this browser only. Click publish to put them live.</p>
+              </div>
+              <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-content>Publish page text</button>
             </div>
             <div class="admin-grid admin-grid-2">
               <section class="admin-card admin-editor">
                 <p class="admin-eyebrow">Homepage hero</p>
-                <label>Headline<textarea rows="2" data-content-field="heroTitle">Advanced skin, laser &amp; body treatments</textarea></label>
-                <label>Supporting text<textarea rows="4" data-content-field="heroText">Laser treatments, electrolysis, Endospheres therapy, PRP, boosters, facials, peels and advanced skin plans shaped around your goals with Iulia.</textarea></label>
-                <button class="admin-button admin-button-primary" type="button" data-save-content>Save page draft</button>
+                <label>Eyebrow <small>small line above the headline</small><input type="text" data-content-hero="eyebrow"></label>
+                <label>Headline <small>use a new line for the line break</small><textarea rows="2" data-content-hero="title"></textarea></label>
+                <label>Supporting line<textarea rows="3" data-content-hero="lead"></textarea></label>
               </section>
               <section class="admin-card admin-editor">
-                <p class="admin-eyebrow">Clinic details</p>
-                <label>Phone<input type="text" data-content-field="phone" value="07832839298"></label>
-                <label>Email<input type="email" data-content-field="email" value="info@lumidermaesthetics.co.uk"></label>
-                <label>Address<textarea rows="3" data-content-field="address">Unit 41 Skylines Village, Limeharbour, London, E14 9TS</textarea></label>
-                <label>Instagram<input type="url" data-content-field="instagram" value="https://www.instagram.com/lumi.derm.aesthetic/"></label>
-                <button class="admin-button admin-button-primary" type="button" data-save-content>Save details</button>
-              </section>
-              <section class="admin-card">
-                <p class="admin-eyebrow">Legal</p>
-                <h3>Policy status</h3>
-                <ul class="admin-status-list">
-                  <li><span>Privacy Policy</span><strong>Live — pending solicitor review</strong></li>
-                  <li><span>Terms &amp; booking policy</span><strong>Live — confirm Treatwell cancellation rules</strong></li>
-                  <li><span>Cookie Policy</span><strong>Live — consent banner active</strong></li>
-                </ul>
-              </section>
-              <section class="admin-card">
-                <p class="admin-eyebrow">SEO</p>
-                <h3>Managed by Dima</h3>
-                <ul class="admin-status-list">
-                  <li><span>Page titles &amp; meta</span><strong>Ask Dima</strong></li>
-                  <li><span>Opening hours</span><strong>Ask Dima</strong></li>
-                  <li><span>Share image</span><strong>Ask Dima</strong></li>
-                </ul>
+                <p class="admin-eyebrow">Contact details <small>updated everywhere on the site</small></p>
+                <label>Phone<input type="text" inputmode="tel" data-content-contact="phone"></label>
+                <label>Email<input type="email" data-content-contact="email"></label>
+                <label>Address<textarea rows="2" data-content-contact="address"></textarea></label>
+                <label>Instagram link<input type="url" data-content-contact="instagramUrl"></label>
+                <label>Instagram handle <small>the @name shown as the link text</small><input type="text" data-content-contact="instagramHandle"></label>
+                <label>Facebook link<input type="url" data-content-contact="facebookUrl"></label>
+                <label>Facebook name <small>the text shown as the link</small><input type="text" data-content-contact="facebookHandle"></label>
               </section>
             </div>
+            <p class="admin-hint">Page titles, meta descriptions, opening hours and legal pages are still managed by Dima.</p>
           </section>
 
           <!-- ===================== CLIENTS ===================== -->
@@ -739,7 +732,8 @@
 
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
-    <script src="admin.js?v=20260720-prices1"></script>
+    <script src="content-template.js?v=20260720-pages1"></script>
+    <script src="admin.js?v=20260720-pages1"></script>
     <script src="sender.js?v=20260720-campaigns1"></script>
     <script src="subscribers.js?v=20260720-audit1"></script>
   </body>

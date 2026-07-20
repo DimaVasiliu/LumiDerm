@@ -17,10 +17,9 @@ Working list of what's left, in priority order. Tick items off as they ship.
   The treatments page now carries `<!-- PRICES:START/END -->` markers and is generated from `assets/data/prices.json`. In **Admin → Prices**, Iulia picks a treatment and edits its price cells, instalment notes, highlight lines and the "from £X" headline (descriptions + table layout stay fixed). **Publish prices** rewrites both `prices.json` and the marked section of `services.html` via GitHub (same machinery as Offers/Reviews, with 409-retry). Because the HTML is written into the static page, Google still sees every price — SEO preserved.
   Verified in a Node harness: parser → renderer is byte-identical to the original page; a simulated edit (price, note, headline, ampersands) round-trips to valid HTML with markers, 16 cards, booking deep-links, modal and footnote all intact.
 
-- [ ] **Make Pages text publishable (like Offers).**
-  Blocker: hero headline, clinic details, etc. are hard-coded across pages. Needs the editable bits to read from a small `content.json`.
-  Steps: pick the fields worth exposing (hero title/lead, phone, email, address, Instagram) → thread them into the pages via JS or build-time → add a **Publish page text** button → remove the "ask Dima" label.
-  Est: medium; do the highest-value fields first (contact details, hero copy).
+- [x] **Make Pages text publishable (like Offers).** ✅ Done & verified.
+  Homepage hero copy (eyebrow, headline, supporting line) is rendered from `content.json` between `<!-- HERO:START/END -->` markers in `index.html`. Contact details (phone, email, address, Instagram, Facebook) live in `content.json` too; **Publish page text** rewrites the hero markers and does an exact-string replace of the contact values across every site page, committing only the files that changed (409-retry). Publishing is a no-op when nothing changed.
+  Verified in a Node harness: hero render is byte-identical to the live block; a simulated edit (phone, email, IG handle, hero title) updated `index.html`, `policies.html` and `privacy.html` correctly, left the "Lumi Derm Aesthetics" brand text and unedited fields untouched, and removed every trace of the old values — no collisions.
 
 ---
 
@@ -58,6 +57,7 @@ Working list of what's left, in priority order. Tick items off as they ship.
 - Offers publish to GitHub from admin (with image upload, true delete, 409 retry).
 - **Reviews** publish to GitHub from admin (approved-only, featured first).
 - **Prices** publish to GitHub from admin — the treatments page is data-driven from `prices.json` and regenerated between markers on publish (SEO-safe, prices/notes/headline editable).
+- **Pages** publish to GitHub from admin — homepage hero copy (markers) + contact details (site-wide exact-string replace) editable from `content.json`, SEO-safe.
 - Website signup pop-up + double opt-in + D1 subscribers + admin Subscribers tab (with search).
 - Email campaigns: one-click subscriber audience, interest + birthday-month segments with live count, named saved drafts, per-recipient name personalisation (subject + body).
 - Cloudflare Email Routing so replies to `info@` are received.

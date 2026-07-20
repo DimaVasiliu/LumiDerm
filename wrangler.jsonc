@@ -2,7 +2,8 @@
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	// Cloudflare Worker for the Lumi Derm site.
 	// Serves ./lumi-derm-website as static assets, and runs src/worker.js
-	// for /api/* routes (marketing email sending + unsubscribe).
+	// for /api/* and /admin/api/* routes (marketing email sending,
+	// subscribers, campaign admin + unsubscribe).
 	"name": "lumiderm",
 	"main": "src/worker.js",
 	"compatibility_date": "2026-06-28",
@@ -10,10 +11,9 @@
 		"directory": "./lumi-derm-website",
 		"not_found_handling": "404-page",
 		"binding": "ASSETS",
-		// Run the Worker first for /api/* so clicked links (browser navigations,
-		// e.g. the email confirmation link) reach the Worker instead of being
-		// served the static 404 page. Everything else serves static assets directly.
-		"run_worker_first": ["/api/*"]
+		// Run the Worker first for API routes so requests return JSON instead of
+		// the static admin HTML page.
+		"run_worker_first": ["/api/*", "/admin/api/*"]
 	},
 	// Unsubscribed addresses. Created with:
 	//   npx wrangler kv namespace create SUPPRESSION

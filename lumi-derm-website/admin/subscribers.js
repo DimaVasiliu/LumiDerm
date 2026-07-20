@@ -23,6 +23,21 @@
     el.textContent = msg;
     el.className = "admin-status" + (kind ? " is-" + kind : "");
   }
+  function responseJson(res) {
+    return res.text().then(function (text) {
+      var data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (err) {
+        if (/^\s*</.test(text || "")) {
+          throw new Error("Admin API is returning a webpage instead of subscriber data. Redeploy the Worker and check /admin/api routing.");
+        }
+        throw new Error("Admin API returned invalid subscriber data.");
+      }
+      if (!res.ok) throw new Error(data.error || "Could not load (" + res.status + ").");
+      return data;
+    });
+  }
 
   var MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -103,10 +118,7 @@
     status("Loading…");
     fetch(ADMIN_API + "/subscribers", { cache: "no-store", credentials: "same-origin" })
       .then(function (res) {
-        return res.json().then(function (payload) {
-          if (!res.ok) throw new Error(payload.error || "Could not load (" + res.status + ").");
-          return payload;
-        });
+        return responseJson(res);
       })
       .then(function (data) {
         render(data);
@@ -124,8 +136,7 @@
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ email: email })
     })
-      .then(function (res) { return res.json().then(function (p) {
-        if (!res.ok) throw new Error(p.error || "Delete failed."); return p; }); })
+      .then(function (res) { return responseJson(res); })
       .then(function () { status("Deleted " + email + ".", "ok"); load(); })
       .catch(function (err) { status(err.message, "error"); });
   }

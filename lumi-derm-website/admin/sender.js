@@ -109,6 +109,21 @@
     el.textContent = message;
     el.className = "admin-status" + (kind ? " is-" + kind : "");
   }
+  function responseJson(res) {
+    return res.text().then(function (text) {
+      var data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (err) {
+        if (/^\s*</.test(text || "")) {
+          throw new Error("Admin API is returning a webpage instead of data. Redeploy the Worker and check /admin/api routing.");
+        }
+        throw new Error("Admin API returned invalid data.");
+      }
+      if (!res.ok) throw new Error(data.error || "Request failed (" + res.status + ").");
+      return data;
+    });
+  }
   function setHidden(sel, hidden) {
     var el = $(sel);
     if (el) el.hidden = hidden;
@@ -118,10 +133,7 @@
     next.credentials = "same-origin";
     next.headers = Object.assign({}, next.headers || {});
     return fetch(path, next).then(function (res) {
-      return res.json().then(function (data) {
-        if (!res.ok) throw new Error(data.error || "Request failed (" + res.status + ").");
-        return data;
-      });
+      return responseJson(res);
     });
   }
 
@@ -834,10 +846,7 @@
         status(out, "Checking…");
         fetch(ADMIN_API + "/health", { cache: "no-store", credentials: "same-origin" })
           .then(function (res) {
-            return res.json().then(function (data) {
-              if (!res.ok) throw new Error(data.error || "Access check failed.");
-              return data;
-            });
+            return responseJson(res);
           })
           .then(function (data) {
             var missing = [];

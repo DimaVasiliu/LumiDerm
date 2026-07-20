@@ -95,6 +95,7 @@ function runApp() {
   renderAll();
   loadReviewsFromJson();
   loadPricesFromJson();
+  loadContentFromJson();
   // First run (no local draft yet) -> start from the offers actually on the website.
   if (!localStorage.getItem(STORAGE_KEY)) loadOffersFromSite(false);
 }
@@ -543,12 +544,86 @@ function renderReviews() {
   }));
 }
 
-/* ---------------- Content ---------------- */
+/* ---------------- Pages (hero copy + contact details) ----------------
+   Homepage hero is rendered from content.json between the HERO markers in
+   index.html. Contact details are stored in content.json and, on publish,
+   replaced (exact-string) everywhere they appear across the site. */
+const CONTENT_JSON_URL = "../assets/data/content.json";
+const CONTACT_KEYS = ["phone", "email", "address", "instagramUrl", "instagramHandle", "facebookUrl", "facebookHandle"];
+
+// Current live values on the site (used as fallback if content.json is missing).
+const DEFAULT_CONTENT = {
+  hero: {
+    eyebrow: "Lumi Derm Aesthetics &middot; London Docklands",
+    title: "Skin confidence,<br>made personal.",
+    lead: "Advanced skin, laser and body treatments designed around your goals, your skin and your lifestyle &mdash; delivered with calm, expert-led care."
+  },
+  contact: {
+    phone: "07832839298",
+    email: "info@lumidermaesthetics.co.uk",
+    address: "Unit 41 Skylines Village, Limeharbour, London, E14 9TS",
+    instagramUrl: "https://www.instagram.com/lumi.derm.aesthetic/",
+    instagramHandle: "@lumi.derm.aesthetic",
+    facebookUrl: "https://www.facebook.com/LumiDerm",
+    facebookHandle: "LumiDerm"
+  }
+};
+
+function contentReady() { return state.content && state.content.hero && state.content.contact; }
+
 function bindContent() {
-  document.querySelectorAll("[data-save-content]").forEach((b) => b.addEventListener("click", () => {
-    document.querySelectorAll("[data-content-field]").forEach((f) => { state.content[f.dataset.contentField] = f.value; });
-    saveDraft("Page content saved.");
+  document.querySelector("[data-reload-content]")?.addEventListener("click", () => {
+    if (!confirm("Replace the text in the editor with what's currently on the website?")) return;
+    loadContentFromJson(true, true);
+  });
+  document.querySelectorAll("[data-content-hero]").forEach((f) => f.addEventListener("change", () => {
+    if (!state.content.hero) state.content.hero = {};
+    const key = f.dataset.contentHero;
+    state.content.hero[key] = key === "title"
+      ? escapeHtml(f.value).replace(/\n+/g, "<br>")
+      : escapeHtml(f.value.trim());
+    saveDraft("Hero text updated.");
   }));
+  document.querySelectorAll("[data-content-contact]").forEach((f) => f.addEventListener("change", () => {
+    if (!state.content.contact) state.content.contact = {};
+    state.content.contact[f.dataset.contentContact] = escapeHtml(f.value.trim());
+    saveDraft("Contact detail updated.");
+  }));
+}
+
+async function loadContentFromJson(announce, force) {
+  try {
+    const r = await fetch(CONTENT_JSON_URL + "?t=" + Date.now(), { cache: "no-store" });
+    if (r.ok) {
+      const data = await r.json();
+      const live = { hero: data.hero || {}, contact: data.contact || {} };
+      if (force || !contentReady()) {
+        state.content = structuredClone(live);
+        saveDraft(announce ? "Loaded the text currently on the website." : null);
+      }
+    } else if (force || !contentReady()) {
+      state.content = structuredClone(DEFAULT_CONTENT);
+      saveDraft(null);
+    }
+  } catch {
+    if (!contentReady()) state.content = structuredClone(DEFAULT_CONTENT);
+    if (announce) toast("Could not read the website's text file.");
+  }
+  renderContent();
+}
+
+function renderContent() {
+  const c = state.content || {};
+  const hero = c.hero || {}, contact = c.contact || {};
+  const setVal = (sel, val) => { const el = document.querySelector(sel); if (el) el.value = val; };
+  setVal('[data-content-hero="eyebrow"]', decodeHtml(hero.eyebrow || ""));
+  setVal('[data-content-hero="title"]', decodeHtml(String(hero.title || "").replace(/<br\s*\/?>/gi, "\n")));
+  setVal('[data-content-hero="lead"]', decodeHtml(hero.lead || ""));
+  CONTACT_KEYS.forEach((k) => setVal(`[data-content-contact="${k}"]`, decodeHtml(contact[k] || "")));
+}
+
+function setContentStatus(message) {
+  const el = document.querySelector("[data-content-status]"); if (el) el.textContent = message;
 }
 
 /* ---------------- Settings ---------------- */
@@ -563,7 +638,7 @@ function bindSettings() {
     if (!confirm("Reset all admin drafts back to defaults? This clears your local changes.")) return;
     localStorage.removeItem(STORAGE_KEY);
     state = loadDraft(); selectedOfferIndex = 0; selectedTx = { gi: 0, ti: 0 };
-    renderAll(); loadPricesFromJson(false, true); toast("Admin reset to defaults.");
+    renderAll(); loadPricesFromJson(false, true); loadContentFromJson(false, true); toast("Admin reset to defaults.");
   });
 }
 
@@ -576,6 +651,7 @@ function renderAll() {
   renderOfferImageOptions();
   renderOffers();
   renderPrices();
+  renderContent();
   renderMedia();
   renderReviews();
   updateMetrics();
@@ -636,6 +712,22 @@ const REVIEWS_REPO_PATH = "lumi-derm-website/assets/data/reviews.json";  // home
 const PRICES_REPO_PATH = "lumi-derm-website/assets/data/prices.json";    // treatments-page prices data
 const SERVICES_REPO_PATH = "lumi-derm-website/pages/services.html";      // treatments page (rendered from prices.json)
 const PRICES_MARKERS = /(<!-- PRICES:START[\s\S]*?-->)[\s\S]*?(<!-- PRICES:END -->)/; // section rewritten on publish
+const CONTENT_REPO_PATH = "lumi-derm-website/assets/data/content.json";  // hero copy + contact details
+const HERO_MARKERS = /(<!-- HERO:START[\s\S]*?-->)[\s\S]*?(<!-- HERO:END -->)/; // homepage hero block
+// Every page that may show contact details; index.html also carries the hero.
+const SITE_PAGE_PATHS = [
+  "lumi-derm-website/index.html",
+  "lumi-derm-website/pages/about.html",
+  "lumi-derm-website/pages/booking.html",
+  "lumi-derm-website/pages/contact.html",
+  "lumi-derm-website/pages/cookies.html",
+  "lumi-derm-website/pages/gallery.html",
+  "lumi-derm-website/pages/policies.html",
+  "lumi-derm-website/pages/privacy.html",
+  "lumi-derm-website/pages/services.html",
+  "lumi-derm-website/pages/terms.html",
+  "lumi-derm-website/pages/treatment.html"
+];
 const GH_KEY = "lumi-derm-gh-v1";
 
 /* Accepts any of these and turns them into "owner/repo":
@@ -893,6 +985,108 @@ async function publishPrices() {
   }
 }
 
+/* ---------- Publish page text: hero markers (home) + site-wide contact details ---------- */
+function contactOps(oldC, newC) {
+  const ops = [];
+  const plain = (o, n) => { if (o && n && o !== n) ops.push([o, n]); };
+  plain(oldC.phone, newC.phone);
+  plain(oldC.email, newC.email);
+  plain(oldC.address, newC.address);
+  plain(oldC.instagramUrl, newC.instagramUrl);
+  plain(oldC.facebookUrl, newC.facebookUrl);
+  // Handles are short; anchor them between > and < so only the visible link text is touched.
+  const anchored = (o, n) => { if (o && n && o !== n) ops.push([">" + o + "<", ">" + n + "<"]); };
+  anchored(oldC.instagramHandle, newC.instagramHandle);
+  anchored(oldC.facebookHandle, newC.facebookHandle);
+  return ops;
+}
+function applyOps(text, ops) {
+  let out = text;
+  ops.forEach((pair) => { out = out.split(pair[0]).join(pair[1]); });
+  return out;
+}
+
+// GET (fresh) -> transform -> PUT only if changed, retry on 409. Returns true if committed.
+async function commitTransformedFile(repoPath, branch, transform, message) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const current = await ghRequest(repoPath + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
+    if (!current.ok) { const e = await current.json().catch(() => ({})); throw new Error(ghError(current.status, e.message)); }
+    const meta = await current.json();
+    const before = decodeB64(meta.content);
+    const after = transform(before);
+    if (after === before) return false;
+    const body = { message, content: b64(after), sha: meta.sha, branch };
+    const put = await ghRequest(repoPath, { method: "PUT", body: JSON.stringify(body) });
+    if (put.ok) return true;
+    if (put.status === 409 && attempt < 2) { await new Promise((r) => setTimeout(r, 500)); continue; }
+    const e = await put.json().catch(() => ({}));
+    throw new Error(ghError(put.status, e.message));
+  }
+  return false;
+}
+
+async function publishContent() {
+  const cfg = getGh();
+  if (!cfg.repo || !cfg.token) { toast("Add the website connection first (Settings)."); goPanel("settings"); return false; }
+  if (typeof window.renderHero !== "function") { toast("Page template didn’t load — hard-refresh the admin and try again."); return false; }
+  if (!contentReady()) { toast("No page text loaded yet — click “Reload from website” first."); return false; }
+
+  const button = document.querySelector("[data-publish-content]");
+  if (button) { button.disabled = true; button.textContent = "Publishing…"; }
+  setContentStatus("Publishing page text…");
+  try {
+    const branch = cfg.branch || "main";
+
+    // 1) authoritative "old" values + sha from the live content.json
+    let oldContent = structuredClone(DEFAULT_CONTENT), sha;
+    const cur = await ghRequest(CONTENT_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
+    if (cur.ok) {
+      const m = await cur.json(); sha = m.sha;
+      try { const parsed = JSON.parse(decodeB64(m.content)); oldContent = { hero: parsed.hero || {}, contact: parsed.contact || {} }; } catch { /* keep default */ }
+    } else if (cur.status !== 404) { const e = await cur.json().catch(() => ({})); throw new Error(ghError(cur.status, e.message)); }
+
+    const heroChanged = JSON.stringify(oldContent.hero || {}) !== JSON.stringify(state.content.hero || {});
+    const ops = contactOps(oldContent.contact || {}, state.content.contact || {});
+    if (!heroChanged && !ops.length) {
+      setContentStatus("Nothing to publish — no changes since last time.");
+      toast("No page-text changes to publish.");
+      return true;
+    }
+
+    // 2) commit the data file (source of truth the admin reloads from)
+    const jsonBody = { message: "Update page text data (via admin)", content: b64(JSON.stringify(state.content, null, 2) + "\n"), branch };
+    if (sha) jsonBody.sha = sha;
+    const putJson = await ghRequest(CONTENT_REPO_PATH, { method: "PUT", body: JSON.stringify(jsonBody) });
+    if (!putJson.ok) { const e = await putJson.json().catch(() => ({})); throw new Error(ghError(putJson.status, e.message)); }
+
+    // 3) rewrite each page: index.html gets hero (if changed) + contact; the rest get contact only
+    const heroHtml = window.renderHero(state.content.hero || {});
+    let changed = 0;
+    for (const repoPath of SITE_PAGE_PATHS) {
+      const isHome = repoPath.endsWith("/index.html");
+      const transform = (html) => {
+        let out = html;
+        if (isHome && heroChanged && HERO_MARKERS.test(out)) out = out.replace(HERO_MARKERS, "$1\n              " + heroHtml + "\n              $2");
+        if (ops.length) out = applyOps(out, ops);
+        return out;
+      };
+      if (await commitTransformedFile(repoPath, branch, transform, "Update page text (via admin)")) changed += 1;
+    }
+
+    state.publishedAt = new Date().toISOString();
+    saveDraft(null);
+    setContentStatus("Published. The website updates in about a minute (" + changed + " page" + (changed === 1 ? "" : "s") + " updated).");
+    toast("Published — your page text will be live in about a minute.");
+    return true;
+  } catch (err) {
+    setContentStatus("Publish failed: " + err.message);
+    toast("Publish failed: " + err.message);
+    return false;
+  } finally {
+    if (button) { button.disabled = false; button.textContent = "Publish page text"; }
+  }
+}
+
 /* ---------- Delete = actually delete (publishes the removal immediately) ---------- */
 const STOCK_IMAGES = imageOptions.slice(); // ships with the site — never delete these files
 
@@ -946,6 +1140,7 @@ function bindPublishing() {
   document.querySelector("[data-publish-offers]")?.addEventListener("click", publishOffers);
   document.querySelector("[data-publish-reviews]")?.addEventListener("click", publishReviews);
   document.querySelector("[data-publish-prices]")?.addEventListener("click", publishPrices);
+  document.querySelector("[data-publish-content]")?.addEventListener("click", publishContent);
   document.querySelector("[data-reload-offers]")?.addEventListener("click", () => {
     if (!confirm("Replace what's in the editor with the offers currently on the website?")) return;
     loadOffersFromSite(true);
