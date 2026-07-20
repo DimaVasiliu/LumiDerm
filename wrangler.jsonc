@@ -42,7 +42,12 @@
 		"REPLY_TO": "info@lumidermaesthetics.com",
 		// Used by the scheduled (cron) sender to build unsubscribe links,
 		// since a cron run has no incoming request URL.
-		"SITE_ORIGIN": "https://lumidermaesthetics.com"
+		"SITE_ORIGIN": "https://lumidermaesthetics.com",
+		// Second layer of admin protection: even a valid Cloudflare Access user
+		// can only use the admin API if their email is in this list. Must match
+		// the addresses in the Access Allow policy exactly. Not a secret — these
+		// are just email addresses — so it lives here in config, not in secrets.
+		"ADMIN_EMAILS": "dima.vasiliu@yahoo.com,info@lumidermaesthetics.co.uk"
 	},
 	// Hourly cron: sends any due scheduled campaigns and, at the birthday
 	// send-hour, the day's birthday emails. Handled by scheduled() in the Worker.

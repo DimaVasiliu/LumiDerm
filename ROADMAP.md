@@ -7,7 +7,9 @@ Working list of what's left, in priority order. Tick items off as they ship.
 ## 🔴 Now — launch blocker
 
 - [x] **Enable Cloudflare Access on `/admin`.** ✅ Done & verified — `/admin` redirects to the Cloudflare Access login; homepage, booking/services pages, and the signup/confirm/unsubscribe API stay public. Scoping is correct.
-  - [ ] Confirm **Iulia's email** is in the Access Allow policy (so she isn't locked out).
+  - [x] **Confirmed Access also protects `/admin/api/*`** (not just the UI). Unauthenticated `/admin/api/health` returns nothing (Access login redirect) instead of the Worker's 401 JSON — proving Access intercepts before the Worker runs. Two layers: Access at the edge + the Worker's `authorised()` header check as backup. Public `/api/health` still returns JSON (correctly not gated).
+  - [x] **Confirmed:** Lumiderm Policy → Include → Emails (Action: Allow) contains `dima.vasiliu@yahoo.com` and `info@lumidermaesthetics.co.uk` (the clinic inbox = Iulia's login). Iulia signs in via a one-time code emailed to that inbox. Session duration 30 min; MFA off (email-OTP is the factor).
+  - [x] **Confirmed in the dashboard:** Access app destination is `lumidermaesthetics.com/admin/*` (Lumiderm Policy, Self-hosted). The `/admin/*` wildcard covers the UI, `/admin/api/*`, and even bare `/admin` — all verified intercepted by Access in live tests.
 
 ---
 
