@@ -67,6 +67,11 @@ export default {
         return handleSubscribe(request, env, url);
       }
 
+      // Clean, mail-safe confirmation link: /api/confirm/<token> (no query string).
+      if (url.pathname.startsWith("/api/confirm/")) {
+        return handleConfirmByToken(env, url.pathname.slice("/api/confirm/".length));
+      }
+      // Legacy query-string confirm link (kept so older emails still work).
       if (url.pathname === "/api/subscribe/confirm") {
         return handleConfirm(request, env, url);
       }
@@ -323,7 +328,7 @@ async function handleSubscribe(request, env, url) {
 
   // Send the double opt-in confirmation email.
   if (env.RESEND_API_KEY) {
-    const confirmUrl = `${url.origin}/api/subscribe/confirm?e=${encodeURIComponent(email)}&t=${token}`;
+    const confirmUrl = `${url.origin}/api/confirm/${token}`;
     const html = confirmEmailHtml(firstNameVal, confirmUrl);
     const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
     const message = {
@@ -348,6 +353,40 @@ async function handleSubscribe(request, env, url) {
   }
 
   return json({ ok: true, message: "Thanks! Please check your inbox to confirm." });
+}
+
+// Confirm using a single opaque token in the path — no query string, so the
+// link survives every mail client and quoted-printable encoding intact.
+async function handleConfirmByToken(env, rawToken) {
+  if (!env.SUBSCRIBERS) return htmlPage("Not available", "Signups aren't set up yet.", 500);
+
+  const token = String(rawToken || "").trim();
+  if (!token || token.length < 10) {
+    return htmlPage("Invalid link", "This confirmation link is not valid.", 400);
+  }
+
+  const row = await env.SUBSCRIBERS.prepare(
+    "SELECT email, status FROM subscribers WHERE confirm_token = ?1"
+  ).bind(token).first();
+
+  if (!row) {
+    // No pending row with this token — either already confirmed, or the link is old.
+    return htmlPage(
+      "Link already used",
+      "This confirmation link has already been used or has expired. If you're not sure you're subscribed, just sign up again.",
+      200
+    );
+  }
+
+  await env.SUBSCRIBERS.prepare(
+    "UPDATE subscribers SET status='confirmed', confirmed_at=?1, confirm_token=NULL WHERE confirm_token=?2"
+  ).bind(new Date().toISOString(), token).run();
+
+  return htmlPage(
+    "You're subscribed",
+    `Thank you — <strong>${escapeHtml(row.email)}</strong> is confirmed. You'll be first to hear about our offers.<br><br>You can unsubscribe from any email at any time.`,
+    200
+  );
 }
 
 async function handleConfirm(request, env, url) {
