@@ -45,6 +45,7 @@
   }
 
   var cache = [];
+  var searchTerm = "";
 
   function render(data) {
     cache = data.subscribers || [];
@@ -55,14 +56,27 @@
     if (c) c.textContent = counts.confirmed || 0;
     if (p) p.textContent = counts.pending || 0;
     if (u) u.textContent = counts.unsubscribed || 0;
+    renderRows();
+  }
 
+  function renderRows() {
     var body = $("[data-subs-body]");
     if (!body) return;
     if (!cache.length) {
       body.innerHTML = '<tr><td colspan="7" class="subs-empty">No subscribers yet.</td></tr>';
       return;
     }
-    body.innerHTML = cache.map(function (r) {
+    var q = searchTerm.trim().toLowerCase();
+    var rows = q
+      ? cache.filter(function (r) {
+          return (fullName(r) + " " + (r.email || "")).toLowerCase().indexOf(q) !== -1;
+        })
+      : cache;
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="7" class="subs-empty">No one matches &ldquo;' + esc(searchTerm) + '&rdquo;.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map(function (r) {
       var badge = '<span class="subs-badge subs-' + esc(r.status) + '">' + esc(r.status) + "</span>";
       var consentTitle = [
         r.consent_source ? "Source: " + r.consent_source : "",
@@ -157,6 +171,11 @@
     var exp = $("[data-subs-export]");
     if (reload) reload.addEventListener("click", load);
     if (exp) exp.addEventListener("click", exportCsv);
+    var search = $("[data-subs-search]");
+    if (search) search.addEventListener("input", function () {
+      searchTerm = search.value || "";
+      renderRows();
+    });
     // Load when the Subscribers tab is first opened.
     var navBtn = document.querySelector('[data-admin-panel="subscribers"]');
     var loadedOnce = false;

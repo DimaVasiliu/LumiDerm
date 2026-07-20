@@ -7,6 +7,8 @@
   --admin-soft: #eee4df;
   --admin-accent: #b77b72;
   --admin-accent-dark: #936258;
+  --admin-rose: #b77b72;
+  --admin-rose-deep: #936258;
   --admin-blush: #f6e7e5;
   --admin-blue: #eaf2f4;
   --admin-shadow: 0 24px 70px rgba(70, 47, 43, 0.11);
@@ -859,7 +861,8 @@ code {
 
 .admin-saved { margin: 0.35rem 0 0; color: var(--admin-muted); font-size: 0.82rem; font-weight: 700; }
 
-.status-pill.status-published { color: #2e7d54; background: rgba(76, 175, 125, 0.16); }
+.status-pill.status-published,
+.status-pill.status-live { color: #2e7d54; background: rgba(76, 175, 125, 0.16); }
 .status-pill.status-draft { color: var(--admin-accent-dark); background: var(--admin-blush); }
 .status-pill.status-hidden { color: #7a7270; background: rgba(120, 110, 108, 0.16); }
 
@@ -896,23 +899,18 @@ code {
 .admin-actions-spaced { margin-top: 0.8rem; }
 .admin-subsection-title { margin-top: 1.5rem; }
 
-.email-preview { margin-top: 0.6rem; }
-.email-frame { border: 1px solid rgba(68, 52, 49, 0.12); border-radius: 18px; padding: 1.1rem; background: #fff; }
-.email-from { display: flex; align-items: center; gap: 0.6rem; padding-bottom: 0.7rem; border-bottom: 1px solid rgba(68,52,49,0.08); }
-.email-avatar { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--admin-accent); color: #fff; font-weight: 900; font-size: 0.8rem; }
-.email-from strong { display: block; font-size: 0.92rem; }
-.email-from small { color: var(--admin-muted); font-size: 0.78rem; }
-.email-frame h4 { margin: 0.8rem 0 0.5rem; font-family: var(--font-heading); font-size: 1.25rem; }
-.email-frame p { color: var(--admin-ink); font-size: 0.92rem; }
-.email-cta { display: inline-flex; margin-top: 0.4rem; padding: 0.6rem 1.1rem; border-radius: 999px; background: var(--admin-accent); color: #fff; font-weight: 800; font-size: 0.88rem; }
-.email-foot { display: block; margin-top: 0.9rem; color: var(--admin-muted); font-size: 0.74rem; }
-
-.campaign-list { display: grid; gap: 0.55rem; margin-top: 0.6rem; }
-.campaign-item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.75rem 0.85rem; border: 1px solid rgba(68, 52, 49, 0.1); border-radius: 14px; background: rgba(255,255,255,0.7); }
-.campaign-item.is-selected { border-color: rgba(183, 123, 114, 0.5); background: linear-gradient(135deg, #fff, rgba(246,231,229,0.6)); }
-.campaign-item strong { display: block; font-size: 0.95rem; }
-.campaign-item small { color: var(--admin-muted); font-size: 0.78rem; }
-.campaign-actions { display: flex; gap: 0.35rem; }
+/* Subscriber search box */
+.subs-search-label { display: block; margin-bottom: 0.9rem; font-size: 0.8rem; font-weight: 600; }
+.subs-search {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  font: inherit;
+}
+.subs-search:focus { outline: none; border-color: var(--admin-rose); box-shadow: 0 0 0 3px rgba(183, 123, 114, 0.15); }
 
 @media (min-width: 720px) {
   .field-pair { grid-template-columns: 1fr 1fr; }
@@ -1005,6 +1003,27 @@ code {
   font-size: 0.82rem;
 }
 
+.segment-count {
+  margin-top: 0.75rem;
+  border: 1px solid rgba(183, 123, 114, 0.18);
+  border-radius: 14px;
+  padding: 0.75rem 0.85rem;
+  color: var(--admin-muted);
+  background: rgba(246, 231, 229, 0.35);
+  font-size: 0.86rem;
+}
+
+.segment-count strong {
+  color: var(--admin-ink);
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.segment-of {
+  opacity: 0.72;
+}
+
 .send-safety-list {
   display: grid;
   gap: 0.45rem;
@@ -1044,6 +1063,60 @@ code {
   display: grid;
   gap: 0.55rem;
   margin-top: 0.85rem;
+}
+
+.campaign-drafts {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.campaign-draft {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: center;
+  border: 1px solid rgba(68, 52, 49, 0.1);
+  border-radius: 14px;
+  padding: 0.75rem 0.85rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.campaign-draft-main {
+  min-width: 0;
+}
+
+.campaign-draft-main strong,
+.campaign-draft-main span,
+.campaign-draft-main small {
+  display: block;
+}
+
+.campaign-draft-main strong {
+  overflow: hidden;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.campaign-draft-main span,
+.campaign-draft-main small {
+  margin-top: 0.18rem;
+  color: var(--admin-muted);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.campaign-draft-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.tiny-danger {
+  color: #b4413a;
+  border-color: rgba(180, 65, 58, 0.26);
 }
 
 .history-item {
@@ -1177,6 +1250,29 @@ code {
 }
 .subs-stat strong { display: block; font-size: 1.6rem; line-height: 1.1; }
 .subs-stat span { font-size: 0.8rem; opacity: 0.7; }
+.subs-search-label {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+  color: var(--admin-accent-dark);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.subs-search {
+  width: min(100%, 420px);
+  border: 1px solid rgba(68, 52, 49, 0.14);
+  border-radius: 16px;
+  padding: 0.85rem 0.95rem;
+  color: var(--admin-ink);
+  background: rgba(255, 255, 255, 0.82);
+  outline: none;
+}
+.subs-search:focus {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 4px rgba(183, 123, 114, 0.12);
+}
 .admin-table-wrap { overflow-x: auto; }
 .subs-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
 .subs-table th,
@@ -1262,47 +1358,3 @@ code {
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.06);
 }
-
-/* ===================== Campaign segments & saved drafts ===================== */
-.segment-count {
-  margin-top: 0.7rem;
-  padding: 0.7rem 0.9rem;
-  border-radius: 8px;
-  background: rgba(169, 111, 104, 0.1);
-  font-size: 0.95rem;
-}
-.segment-count strong { font-size: 1.1rem; }
-.segment-of { opacity: 0.65; font-size: 0.85rem; }
-
-.campaign-drafts { display: grid; gap: 0.5rem; }
-.campaign-draft {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
-}
-.campaign-draft-main { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
-.campaign-draft-main strong { font-size: 0.9rem; }
-.campaign-draft-main span {
-  font-size: 0.78rem;
-  opacity: 0.65;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 15rem;
-}
-.campaign-draft-actions { display: flex; gap: 0.35rem; flex: none; }
-.tiny-button {
-  border: 1px solid rgba(0, 0, 0, 0.14);
-  background: #fff;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  padding: 0.3rem 0.6rem;
-  cursor: pointer;
-}
-.tiny-button:hover { background: rgba(0, 0, 0, 0.04); }
-.tiny-danger { color: #b4413a; border-color: rgba(180, 65, 58, 0.4); }
-.tiny-danger:hover { background: rgba(180, 65, 58, 0.08); }

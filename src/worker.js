@@ -8,6 +8,9 @@
  *   GET  /api/health              — is the API alive + configured?
  *   POST /api/campaign/send       — send a campaign (requires SEND_KEY)
  *   GET  /api/campaign/history    — admin: recent send history (requires SEND_KEY)
+ *   GET  /api/campaign/drafts     — admin: list saved campaign drafts (requires SEND_KEY)
+ *   POST /api/campaign/drafts     — admin: save campaign draft (requires SEND_KEY)
+ *   POST /api/campaign/drafts/delete — admin: delete campaign draft (requires SEND_KEY)
  *   GET  /api/unsubscribe         — one-click unsubscribe landing page
  *   POST /api/unsubscribe         — RFC 8058 one-click unsubscribe
  *   POST /api/subscribe           — newsletter signup (double opt-in)
@@ -65,6 +68,17 @@ export default {
 
       if (url.pathname === "/api/campaign/history") {
         return handleCampaignHistory(request, env);
+      }
+
+      if (url.pathname === "/api/campaign/drafts") {
+        if (request.method === "GET") return handleListCampaignDrafts(request, env);
+        if (request.method === "POST") return handleSaveCampaignDraft(request, env);
+        return json({ error: "Use GET or POST." }, 405);
+      }
+
+      if (url.pathname === "/api/campaign/drafts/delete") {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleDeleteCampaignDraft(request, env);
       }
 
       if (url.pathname === "/api/subscribe") {
@@ -282,6 +296,89 @@ async function handleCampaignHistory(request, env) {
   ).all();
 
   return json({ ok: true, history: results || [] });
+}
+
+async function handleListCampaignDrafts(request, env) {
+  if (!authorised(request, env)) return json({ error: "Unauthorised." }, 401);
+  if (!env.SUBSCRIBERS) return json({ error: "Campaign drafts aren't set up yet." }, 500);
+
+  const { results } = await env.SUBSCRIBERS.prepare(
+    `SELECT id, name, payload, created_at, updated_at
+     FROM campaign_drafts
+     ORDER BY updated_at DESC
+     LIMIT 100`
+  ).all();
+
+  const drafts = (results || []).map((row) => {
+    let payload = {};
+    try {
+      payload = JSON.parse(row.payload || "{}");
+    } catch {
+      payload = {};
+    }
+    return {
+      id: row.id,
+      name: row.name,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      ...payload,
+    };
+  });
+
+  return json({ ok: true, drafts });
+}
+
+async function handleSaveCampaignDraft(request, env) {
+  if (!authorised(request, env)) return json({ error: "Unauthorised." }, 401);
+  if (!env.SUBSCRIBERS) return json({ error: "Campaign drafts aren't set up yet." }, 500);
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body." }, 400);
+  }
+
+  const name = String(body.name || "").trim().slice(0, 120);
+  if (!name) return json({ error: "Campaign name is required." }, 400);
+
+  const id = String(body.id || randomId()).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80) || randomId();
+  const now = new Date().toISOString();
+  const payload = {
+    mail: safeObject(body.mail),
+    selected: safeObject(body.selected),
+    audienceSource: String(body.audienceSource || "website").slice(0, 40),
+    segment: safeObject(body.segment),
+  };
+
+  await env.SUBSCRIBERS.prepare(
+    `INSERT INTO campaign_drafts (id, name, payload, created_at, updated_at)
+     VALUES (?1, ?2, ?3, ?4, ?4)
+     ON CONFLICT(id) DO UPDATE SET
+       name=?2,
+       payload=?3,
+       updated_at=?4`
+  ).bind(id, name, JSON.stringify(payload).slice(0, 50000), now).run();
+
+  return json({ ok: true, draft: { id, name, updated_at: now, ...payload } });
+}
+
+async function handleDeleteCampaignDraft(request, env) {
+  if (!authorised(request, env)) return json({ error: "Unauthorised." }, 401);
+  if (!env.SUBSCRIBERS) return json({ error: "Campaign drafts aren't set up yet." }, 500);
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body." }, 400);
+  }
+
+  const id = String(body.id || "").trim();
+  if (!id) return json({ error: "Draft id is required." }, 400);
+
+  await env.SUBSCRIBERS.prepare("DELETE FROM campaign_drafts WHERE id = ?1").bind(id).run();
+  return json({ ok: true });
 }
 
 /* ------------------------------------------------------------------ */
@@ -538,6 +635,17 @@ function randomToken() {
   const bytes = new Uint8Array(24);
   crypto.getRandomValues(bytes);
   return base64Url(bytes.buffer);
+}
+
+function randomId() {
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  return "draft_" + base64Url(bytes.buffer);
+}
+
+function safeObject(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return value;
 }
 
 function confirmEmailHtml(firstName, confirmUrl) {

@@ -56,19 +56,11 @@ const defaultPriceGroups = [
   { id: "facials", label: "Facials", title: "Facials and skin polish", min: "from £70", rows: [["Facial consultation", "£10"], ["Fire & Ice by IS Clinical + LED", "£90"], ["Bespoke deep cleansing facial", "£100"], ["Microdermabrasion", "£70"]] }
 ];
 
-const campaignTemplates = {
-  offer: { name: "New offer announcement", audience: "Select an eligible audience in Treatwell Connect", subject: "A little something for your skin ✨", preview: "Our newest treatment offer is here", body: "Hi {first_name},\n\nWe've just added a new offer at Lumi Derm Aesthetics and wanted you to be first to know.\n\n• What it is\n• Who it's perfect for\n• How long it lasts\n\nTap below to book your slot — spaces are limited.\n\nSee you soon,\nIulia", ctaLabel: "Book now", ctaUrl: "https://lumidermaesthetics.com/pages/booking.html" },
-  newsletter: { name: "Monthly newsletter", audience: "Select an eligible audience in Treatwell Connect", subject: "Your Lumi Derm glow update", preview: "What's new this month at the clinic", body: "Hi {first_name},\n\nHere's what's new at Lumi Derm this month:\n\n• A new treatment to try\n• A skin tip from Iulia\n• This month's featured offer\n\nWe'd love to see you soon.\n\nIulia", ctaLabel: "See treatments", ctaUrl: "https://lumidermaesthetics.com/pages/services.html" },
-  birthday: { name: "Birthday treat", audience: "Select an eligible audience in Treatwell Connect", subject: "Happy birthday — a treat from Lumi Derm 🎁", preview: "A little birthday gift for you", body: "Happy birthday, {first_name}!\n\nTo celebrate, here's a little something to enjoy on your next visit this month.\n\nWith love,\nIulia at Lumi Derm", ctaLabel: "Book your treat", ctaUrl: "https://lumidermaesthetics.com/pages/booking.html" },
-  winback: { name: "We miss you (win-back)", audience: "Lapsed clients (90+ days)", subject: "We've missed you at Lumi Derm", preview: "It's been a while — here's a welcome-back offer", body: "Hi {first_name},\n\nIt's been a little while since your last visit and we'd love to see you again. Here's a welcome-back offer to make it easy.\n\nBook whenever suits you.\n\nIulia", ctaLabel: "Rebook now", ctaUrl: "https://lumidermaesthetics.com/pages/booking.html" }
-};
-
-const panelTitles = { dashboard: "Overview", guide: "Guide & help", offers: "Offers", prices: "Prices", marketing: "Marketing", sender: "Send email", subscribers: "Subscribers", reviews: "Reviews", media: "Media", content: "Pages", clients: "Treatwell", settings: "Settings" };
+const panelTitles = { dashboard: "Overview", guide: "Guide & help", offers: "Offers", prices: "Prices", sender: "Send email", subscribers: "Subscribers", reviews: "Reviews", media: "Media", content: "Pages", clients: "Treatwell", settings: "Settings" };
 
 let state = loadDraft();
 let selectedOfferIndex = 0;
 let selectedPriceGroupId = state.priceGroups[0]?.id || "laser";
-let selectedCampaignIndex = -1;
 
 const toastRegion = document.querySelector("[data-admin-toast-region]");
 
@@ -82,18 +74,16 @@ if (document.readyState === "loading") {
 function reveal(gate, shell) {
   gate.hidden = true;
   shell.hidden = false;
-  try { runApp(); console.log("[admin] app loaded"); }
+  try { runApp(); }
   catch (err) { console.error("[admin] app init error (still unlocked):", err); }
 }
 
 function initGate() {
-  console.log("[admin] initGate running, readyState:", document.readyState);
   const gate = document.querySelector("[data-admin-gate]");
   const shell = document.querySelector("[data-admin-shell]");
   if (!gate || !shell) { console.error("[admin] gate or shell element not found"); return; }
 
   if (sessionStorage.getItem(UNLOCK_KEY) === "1") {
-    console.log("[admin] session already unlocked");
     reveal(gate, shell);
     return;
   }
@@ -104,7 +94,6 @@ function initGate() {
   function tryUnlock() {
     const pass = localStorage.getItem(PASS_KEY) || DEFAULT_PASS;
     const entered = (input?.value || "").trim().toLowerCase();
-    console.log("[admin] unlock attempt — match:", entered === pass.trim().toLowerCase());
     if (entered === pass.trim().toLowerCase()) {
       sessionStorage.setItem(UNLOCK_KEY, "1");
       reveal(gate, shell);
@@ -116,7 +105,6 @@ function initGate() {
 
   const btn = document.querySelector("[data-gate-unlock]");
   const form = document.querySelector("[data-gate-form]");
-  console.log("[admin] gate elements — button:", !!btn, "form:", !!form, "input:", !!input);
   btn?.addEventListener("click", (e) => { e.preventDefault(); tryUnlock(); });
   form?.addEventListener("submit", (e) => { e.preventDefault(); tryUnlock(); });
   input?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); tryUnlock(); } });
@@ -127,7 +115,6 @@ function runApp() {
   bindTopActions();
   bindOffers();
   bindPrices();
-  bindMarketing();
   bindReviews();
   bindContent();
   bindSettings();
@@ -214,7 +201,7 @@ function importAll(e) {
       const data = JSON.parse(reader.result);
       state = { ...state, ...data };
       ["offers", "priceGroups", "reviews", "campaigns"].forEach((k) => { if (!Array.isArray(state[k])) state[k] = []; });
-      selectedOfferIndex = 0; selectedCampaignIndex = -1;
+      selectedOfferIndex = 0;
       renderAll(); saveDraft("Backup imported.");
     } catch { toast("That file could not be read as a valid backup."); }
     e.target.value = "";
@@ -369,71 +356,6 @@ function renderPriceEditor(group) {
 
 function getSelectedPriceGroup() { return state.priceGroups.find((g) => g.id === selectedPriceGroupId) || state.priceGroups[0]; }
 
-/* ---------------- Marketing: campaigns ---------------- */
-function bindMarketing() {
-  document.querySelector("[data-add-campaign]")?.addEventListener("click", () => {
-    state.campaigns.unshift({ name: "Untitled campaign", audience: "Select an eligible audience in Treatwell Connect", subject: "", preview: "", body: "", ctaLabel: "Book now", ctaUrl: "https://lumidermaesthetics.com/pages/booking.html", sendDate: "", status: "Draft", template: "" });
-    selectedCampaignIndex = 0; renderCampaigns(); populateCampaignEditor(); saveDraft("Campaign created.");
-  });
-  document.querySelector("[data-campaign-template]")?.addEventListener("change", (e) => {
-    const tpl = campaignTemplates[e.target.value]; if (!tpl) return;
-    Object.entries(tpl).forEach(([k, v]) => { const f = document.querySelector(`[data-campaign-field="${k}"]`); if (f) f.value = v; });
-    renderCampaignPreview();
-  });
-  document.querySelector("[data-save-campaign]")?.addEventListener("click", () => {
-    if (selectedCampaignIndex < 0) { state.campaigns.unshift({}); selectedCampaignIndex = 0; }
-    const c = state.campaigns[selectedCampaignIndex];
-    document.querySelectorAll("[data-campaign-field]").forEach((f) => { c[f.dataset.campaignField] = f.value; });
-    if (!c.name) c.name = c.subject || "Untitled campaign";
-    renderCampaigns(); saveDraft("Campaign saved.");
-  });
-  document.querySelector("[data-copy-campaign]")?.addEventListener("click", () => {
-    const get = (k) => document.querySelector(`[data-campaign-field="${k}"]`)?.value || "";
-    const text = `Subject: ${get("subject")}\nPreview: ${get("preview")}\n\n${get("body")}\n\n[${get("ctaLabel")}] ${get("ctaUrl")}`;
-    navigator.clipboard?.writeText(text).then(() => toast("Campaign text copied. Send it only through an approved Treatwell or email workflow."), () => toast("Copy not available in this browser."));
-  });
-  document.querySelectorAll("[data-campaign-field]").forEach((f) => f.addEventListener("input", renderCampaignPreview));
-}
-
-function renderCampaigns() {
-  const list = document.querySelector("[data-campaign-list]"); if (!list) return;
-  list.innerHTML = state.campaigns.map((c, i) => `
-    <article class="campaign-item ${i === selectedCampaignIndex ? "is-selected" : ""}">
-      <div>
-        <strong>${escapeHtml(c.name || "Untitled")}</strong>
-        <small>${escapeHtml(c.audience || "Select audience when sending")} · ${escapeHtml(c.status || "Draft")}${c.sendDate ? " · " + escapeHtml(c.sendDate) : ""}</small>
-      </div>
-      <div class="campaign-actions">
-        <button class="tiny-button" type="button" data-edit-campaign="${i}">Edit</button>
-        <button class="tiny-button" type="button" data-dup-campaign="${i}">Duplicate</button>
-        <button class="tiny-button danger" type="button" data-del-campaign="${i}">Delete</button>
-      </div>
-    </article>`).join("") || '<p class="admin-help">No campaigns yet. Click “New campaign”.</p>';
-  list.querySelectorAll("[data-edit-campaign]").forEach((b) => b.addEventListener("click", () => { selectedCampaignIndex = +b.dataset.editCampaign; renderCampaigns(); populateCampaignEditor(); }));
-  list.querySelectorAll("[data-dup-campaign]").forEach((b) => b.addEventListener("click", () => { const c = state.campaigns[+b.dataset.dupCampaign]; state.campaigns.splice(+b.dataset.dupCampaign + 1, 0, { ...c, name: (c.name || "Campaign") + " (copy)", status: "Draft" }); renderCampaigns(); saveDraft("Campaign duplicated."); }));
-  list.querySelectorAll("[data-del-campaign]").forEach((b) => b.addEventListener("click", () => { if (!confirm("Delete this campaign?")) return; state.campaigns.splice(+b.dataset.delCampaign, 1); selectedCampaignIndex = -1; renderCampaigns(); saveDraft("Campaign deleted."); }));
-}
-
-function populateCampaignEditor() {
-  const c = state.campaigns[selectedCampaignIndex]; if (!c) return;
-  document.querySelectorAll("[data-campaign-field]").forEach((f) => { f.value = c[f.dataset.campaignField] || ""; });
-  renderCampaignPreview();
-}
-
-function renderCampaignPreview() {
-  const box = document.querySelector("[data-campaign-preview]"); if (!box) return;
-  const get = (k) => document.querySelector(`[data-campaign-field="${k}"]`)?.value || "";
-  const body = escapeHtml(get("body") || "Your message will appear here.").replace(/\n/g, "<br>");
-  box.innerHTML = `
-    <div class="email-frame">
-      <div class="email-from"><span class="email-avatar">LD</span><div><strong>Lumi Derm Aesthetics</strong><small>${escapeHtml(get("preview") || "Preview text…")}</small></div></div>
-      <h4>${escapeHtml(get("subject") || "Your subject line")}</h4>
-      <p>${body}</p>
-      <span class="email-cta">${escapeHtml(get("ctaLabel") || "Book now")}</span>
-      <small class="email-foot">Audience: ${escapeHtml(get("audience") || "Select in the sending platform")} · Draft only, not sent from this admin</small>
-    </div>`;
-}
-
 /* ---------------- Reviews ---------------- */
 function bindReviews() {
   document.querySelector("[data-review-filter]")?.addEventListener("change", renderReviews);
@@ -506,7 +428,7 @@ function bindSettings() {
   document.querySelector("[data-reset-admin]")?.addEventListener("click", () => {
     if (!confirm("Reset all admin drafts back to defaults? This clears your local changes.")) return;
     localStorage.removeItem(STORAGE_KEY);
-    state = loadDraft(); selectedOfferIndex = 0; selectedPriceGroupId = state.priceGroups[0]?.id; selectedCampaignIndex = -1;
+    state = loadDraft(); selectedOfferIndex = 0; selectedPriceGroupId = state.priceGroups[0]?.id;
     renderAll(); toast("Admin reset to defaults.");
   });
 }
@@ -520,9 +442,6 @@ function renderAll() {
   renderOfferImageOptions();
   renderOffers();
   renderPrices();
-  renderCampaigns();
-  populateCampaignEditor();
-  renderCampaignPreview();
   renderMedia();
   renderReviews();
   updateMetrics();
@@ -541,18 +460,15 @@ function renderMedia() {
 }
 
 function updateMetrics() {
-  setText('[data-metric="offers-published"]', state.offers.filter((o) => o.status === "Published").length);
+  setText('[data-metric="offers-published"]', state.offers.filter((o) => String(o.status || "").toLowerCase() !== "draft").length);
   setText('[data-metric="reviews-pending"]', state.reviews.filter((r) => r.status === "pending").length);
-  setText('[data-metric="campaigns"]', state.campaigns.length);
 
   const attention = document.querySelector("[data-attention]"); if (!attention) return;
   const items = [];
   const pending = state.reviews.filter((r) => r.status === "pending").length;
   if (pending) items.push(["Reviews to approve", `${pending} pending in the queue`]);
-  const drafts = state.offers.filter((o) => o.status === "Draft").length;
+  const drafts = state.offers.filter((o) => String(o.status || "").toLowerCase() === "draft").length;
   if (drafts) items.push(["Offer drafts", `${drafts} not yet published`]);
-  const sched = state.campaigns.filter((c) => c.status === "Scheduled").length;
-  if (sched) items.push(["Scheduled campaign drafts", `${sched} ready for consent review before sending`]);
   items.push(["Protect the admin", "Enable Cloudflare Access before sharing this URL"]);
   attention.innerHTML = items.map(([t, d]) => `<li><span>${escapeHtml(t)}</span><strong>${escapeHtml(d)}</strong></li>`).join("");
 }

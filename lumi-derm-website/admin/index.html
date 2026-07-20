@@ -47,7 +47,7 @@
         </nav>
         <div class="admin-sidebar-note">
           <span>Private route</span>
-          <p>Protect this page with Cloudflare Access before launch. Changes save in this browser until a CMS/API is connected.</p>
+          <p>Protect this page with Cloudflare Access before launch. Offers &amp; reviews publish to the live site; other tabs save drafts in this browser.</p>
         </div>
       </aside>
 
@@ -62,7 +62,7 @@
             <a class="admin-button admin-button-ghost" href="../index.html" target="_blank" rel="noopener">View site</a>
             <button class="admin-button admin-button-secondary" type="button" data-import-admin>Import</button>
             <button class="admin-button admin-button-secondary" type="button" data-export-admin>Export</button>
-            <button class="admin-button admin-button-primary" type="button" data-publish-demo>Publish guide</button>
+            <button class="admin-button admin-button-primary" type="button" data-publish-demo>Publish offers</button>
             <input type="file" accept="application/json" data-import-file hidden>
           </div>
         </header>
@@ -73,7 +73,7 @@
             <div class="admin-grid admin-grid-4">
               <article class="metric-card"><span>Offers live</span><strong data-metric="offers-published">0</strong><p>Published offer cards on the homepage carousel.</p></article>
               <article class="metric-card"><span>Reviews pending</span><strong data-metric="reviews-pending">0</strong><p>Awaiting your approval before they show publicly.</p></article>
-              <article class="metric-card"><span>Campaign drafts</span><strong data-metric="campaigns">0</strong><p>Email/offer campaigns saved and ready to send.</p></article>
+              <article class="metric-card"><span>Email</span><strong>Ready</strong><p>Send campaigns to your subscribers from the Send email tab.</p></article>
               <article class="metric-card"><span>Booking system</span><strong>Treatwell</strong><p>Bookings, payments and client records stay in Treatwell Connect.</p></article>
             </div>
 
@@ -463,6 +463,7 @@
             <p class="admin-status" data-subs-status>Loading…</p>
 
             <section class="admin-card">
+              <label class="subs-search-label">Search<input type="search" class="subs-search" data-subs-search placeholder="Find by name or email…" autocomplete="off"></label>
               <div class="admin-table-wrap">
                 <table class="admin-table subs-table">
                   <thead><tr>
@@ -500,7 +501,7 @@
               <div>
                 <p class="admin-eyebrow">Assets</p>
                 <h2>Media library</h2>
-                <p>Browse local images used in offers and the gallery. Real uploads will go through the CMS or a protected Worker endpoint.</p>
+                <p>Browse the images available to use in offers. To add a new photo, use <strong>Upload your own</strong> in the Offers editor &mdash; it goes live with the offer.</p>
               </div>
               <button class="admin-button admin-button-secondary" type="button" data-demo-upload>Upload (info)</button>
             </div>
@@ -513,7 +514,7 @@
               <div>
                 <p class="admin-eyebrow">Pages</p>
                 <h2>Website content</h2>
-                <p>Edit key public content. Once the CMS layer is wired, Save publishes to the live site.</p>
+                <p>Draft page text here. These save in your browser for now &mdash; they don&rsquo;t change the live site yet, so ask Dima to publish page-text changes.</p>
               </div>
             </div>
             <div class="admin-grid admin-grid-2">
@@ -542,11 +543,11 @@
               </section>
               <section class="admin-card">
                 <p class="admin-eyebrow">SEO</p>
-                <h3>Editable later via CMS</h3>
+                <h3>Managed by Dima</h3>
                 <ul class="admin-status-list">
-                  <li><span>Page titles &amp; meta</span><strong>CMS field</strong></li>
-                  <li><span>Schema opening hours</span><strong>CMS field</strong></li>
-                  <li><span>Open Graph image</span><strong>CMS field</strong></li>
+                  <li><span>Page titles &amp; meta</span><strong>Ask Dima</strong></li>
+                  <li><span>Opening hours</span><strong>Ask Dima</strong></li>
+                  <li><span>Share image</span><strong>Ask Dima</strong></li>
                 </ul>
               </section>
             </div>
@@ -644,12 +645,8 @@
                 </ul>
               </section>
               <section class="admin-card">
-                <h3>Publishing model</h3>
-                <p>This admin saves drafts in the browser. Production options:</p>
-                <ol class="admin-steps compact">
-                  <li><strong>CMS route</strong><span>Commit content JSON to GitHub, Cloudflare redeploys.</span></li>
-                  <li><strong>API route</strong><span>Save approved content to D1/R2 via protected Workers.</span></li>
-                </ol>
+                <h3>How publishing works</h3>
+                <p>When you click Publish on Offers or Reviews, this admin commits the change to GitHub and Cloudflare rebuilds the live site &mdash; usually within a minute. Emails and subscribers run through a secure Worker + database. You never touch any of it.</p>
               </section>
             </div>
           </section>

@@ -35,6 +35,8 @@
       ctaUrl: BOOKING_URL
     }
   };
+  var campaignDrafts = [];
+  var currentCampaignId = "";
 
   var TEMPLATES = {
     offers: {
@@ -117,6 +119,19 @@
     } catch (err) {
       return "";
     }
+  }
+
+  function apiJson(path, options) {
+    var key = getKey();
+    if (!key) return Promise.reject(new Error("Add the send key in Settings first."));
+    var next = options || {};
+    next.headers = Object.assign({}, next.headers || {}, { "x-lumi-key": key });
+    return fetch(path, next).then(function (res) {
+      return res.json().then(function (data) {
+        if (!res.ok) throw new Error(data.error || "Request failed (" + res.status + ").");
+        return data;
+      });
+    });
   }
 
   /* --------------------------------------------------------------- */
@@ -903,9 +918,16 @@
 
   function saveDraft() {
     try {
+      var nameEl = $("[data-campaign-name]");
       localStorage.setItem(
         DRAFT_STORE,
-        JSON.stringify({ mail: state.mail, selected: state.selected })
+        JSON.stringify({
+          name: nameEl ? nameEl.value.trim() : "",
+          mail: state.mail,
+          selected: state.selected,
+          audienceSource: state.audienceSource,
+          segment: currentSegment()
+        })
       );
     } catch (err) {
       /* full or blocked storage — the draft is a convenience, not critical */
@@ -922,6 +944,16 @@
           state.mail[k] = saved.mail[k];
         });
         state.selected = saved.selected || {};
+        if (saved.name) {
+          var nameEl = $("[data-campaign-name]");
+          if (nameEl) nameEl.value = saved.name;
+        }
+        if (saved.audienceSource) {
+          state.audienceSource = saved.audienceSource === "csv" ? "csv" : "website";
+          var audience = $("[data-audience-source]");
+          if (audience) audience.value = state.audienceSource;
+        }
+        if (saved.segment) setSegment(saved.segment);
         return true;
       }
     } catch (err) {
@@ -931,6 +963,9 @@
   }
 
   function bindCompose() {
+    var campaignName = $("[data-campaign-name]");
+    if (campaignName) campaignName.addEventListener("input", saveDraft);
+
     $$("[data-mail-field]").forEach(function (field) {
       var key = field.getAttribute("data-mail-field");
       field.addEventListener("input", function () {
@@ -979,43 +1014,61 @@
   }
 
   /* ---- Named campaign drafts (saved in this browser) ---- */
-  var CAMPAIGN_STORE = "lumi-derm-campaigns-v1";
-
-  function loadCampaigns() {
-    try { return JSON.parse(localStorage.getItem(CAMPAIGN_STORE) || "[]"); }
-    catch (e) { return []; }
-  }
-  function storeCampaigns(list) {
-    try { localStorage.setItem(CAMPAIGN_STORE, JSON.stringify(list)); } catch (e) { /* ignore */ }
-  }
+  /* ---- Named campaign drafts (saved in D1 via the Worker) ---- */
   function currentSegment() {
     var i = $('[data-segment="interest"]');
     var m = $('[data-segment="month"]');
     return { interest: i ? i.value : "", month: m ? m.value : "" };
   }
-  function saveCampaign() {
+  function setSegment(segment) {
+    var i = $('[data-segment="interest"]');
+    var m = $('[data-segment="month"]');
+    if (i) i.value = (segment && segment.interest) || "";
+    if (m) m.value = (segment && segment.month) || "";
+  }
+  function campaignPayload(id) {
     var nameEl = $("[data-campaign-name]");
     var name = nameEl ? nameEl.value.trim() : "";
-    if (!name) { alert("Give the campaign a name first (top of Compose)."); if (nameEl) nameEl.focus(); return; }
-    var list = loadCampaigns();
-    var entry = {
-      id: "c" + Date.now().toString(36),
+    return {
+      id: id || "",
       name: name,
-      savedAt: new Date().toISOString(),
       mail: JSON.parse(JSON.stringify(state.mail)),
       selected: JSON.parse(JSON.stringify(state.selected)),
       audienceSource: state.audienceSource,
       segment: currentSegment()
     };
-    // Overwrite a same-name draft rather than duplicating.
-    list = list.filter(function (c) { return c.name.toLowerCase() !== name.toLowerCase(); });
-    list.unshift(entry);
-    storeCampaigns(list);
-    renderCampaigns();
+  }
+  function saveCampaign(existingId) {
+    var nameEl = $("[data-campaign-name]");
+    var name = nameEl ? nameEl.value.trim() : "";
+    if (!name) {
+      alert("Give the campaign a name first (top of Compose).");
+      if (nameEl) nameEl.focus();
+      return;
+    }
+    var btn = $("[data-campaign-save]");
+    if (btn) btn.disabled = true;
+    apiJson("/api/campaign/drafts", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(campaignPayload(existingId || currentCampaignId))
+    })
+      .then(function (data) {
+        if (data.draft && data.draft.id) currentCampaignId = data.draft.id;
+        status($("[data-send-status]"), "Campaign saved.", "ok");
+        loadCampaigns();
+      })
+      .catch(function (err) {
+        status($("[data-send-status]"), err.message, "error");
+      })
+      .then(function () {
+        if (btn) btn.disabled = false;
+      });
   }
   function loadCampaignById(id) {
-    var entry = loadCampaigns().filter(function (c) { return c.id === id; })[0];
+    var entry = campaignDrafts.filter(function (c) { return c.id === id; })[0];
     if (!entry) return;
+    currentCampaignId = entry.id;
     state.mail = JSON.parse(JSON.stringify(entry.mail));
     state.selected = JSON.parse(JSON.stringify(entry.selected || {}));
     var nameEl = $("[data-campaign-name]");
@@ -1029,34 +1082,61 @@
       setAudienceSource(entry.audienceSource);
     }
     if (entry.segment) {
-      var i = $('[data-segment="interest"]'); if (i) i.value = entry.segment.interest || "";
-      var m = $('[data-segment="month"]'); if (m) m.value = entry.segment.month || "";
+      setSegment(entry.segment);
       applySegment();
     }
     renderPreview();
     status($("[data-send-status]"), 'Loaded campaign "' + entry.name + '".', "ok");
   }
   function deleteCampaign(id) {
-    var list = loadCampaigns().filter(function (c) { return c.id !== id; });
-    storeCampaigns(list);
-    renderCampaigns();
+    apiJson("/api/campaign/drafts/delete", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id: id })
+    })
+      .then(function () {
+        if (currentCampaignId === id) currentCampaignId = "";
+        status($("[data-send-status]"), "Campaign deleted.", "ok");
+        loadCampaigns();
+      })
+      .catch(function (err) {
+        status($("[data-send-status]"), err.message, "error");
+      });
+  }
+  function loadCampaigns() {
+    var box = $("[data-campaign-drafts]");
+    if (!box) return;
+    if (!getKey()) {
+      box.innerHTML = '<p class="admin-help">Add the send key in Settings to load saved campaigns.</p>';
+      return;
+    }
+    box.innerHTML = '<p class="admin-help">Loading saved campaigns…</p>';
+    apiJson("/api/campaign/drafts", { cache: "no-store" })
+      .then(function (data) {
+        campaignDrafts = data.drafts || [];
+        renderCampaigns();
+      })
+      .catch(function (err) {
+        campaignDrafts = [];
+        box.innerHTML = '<p class="admin-status is-error">' + esc(err.message) + "</p>";
+      });
   }
   function renderCampaigns() {
     var box = $("[data-campaign-drafts]");
     if (!box) return;
-    var list = loadCampaigns();
-    if (!list.length) {
+    if (!campaignDrafts.length) {
       box.innerHTML = '<p class="admin-help">No saved campaigns yet.</p>';
       return;
     }
-    box.innerHTML = list.map(function (c) {
+    box.innerHTML = campaignDrafts.map(function (c) {
       var seg = [];
       if (c.segment && c.segment.interest) seg.push(esc(c.segment.interest));
       if (c.segment && c.segment.month) seg.push("month " + esc(c.segment.month));
       var sub = esc((c.mail && c.mail.subject) || "(no subject)");
       return '<div class="campaign-draft">' +
         '<div class="campaign-draft-main"><strong>' + esc(c.name) + "</strong>" +
-        '<span>' + sub + (seg.length ? " · " + seg.join(", ") : "") + "</span></div>" +
+        '<span>' + sub + (seg.length ? " · " + seg.join(", ") : "") + "</span>" +
+        '<small>Updated ' + esc(formatDate(c.updated_at || c.created_at)) + '</small></div>' +
         '<div class="campaign-draft-actions">' +
         '<button class="tiny-button" type="button" data-campaign-load="' + c.id + '">Load</button>' +
         '<button class="tiny-button tiny-danger" type="button" data-campaign-del="' + c.id + '">Delete</button>' +
@@ -1074,7 +1154,7 @@
   function bindCampaigns() {
     var saveBtn = $("[data-campaign-save]");
     if (saveBtn) saveBtn.addEventListener("click", saveCampaign);
-    renderCampaigns();
+    loadCampaigns();
   }
 
   function loadHistory() {
