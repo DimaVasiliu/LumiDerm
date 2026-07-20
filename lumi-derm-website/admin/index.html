@@ -717,15 +717,11 @@
               <section class="admin-card admin-editor">
                 <p class="admin-eyebrow">Publishing</p>
                 <h3>Website connection</h3>
-                <label>Repository <small>(owner/repo)</small><input type="text" data-gh-field="repo" placeholder="DimaVasiliu/LumiDerm"></label>
-                <label>Branch<input type="text" data-gh-field="branch" placeholder="main"></label>
-                <label>Access token<input type="password" data-gh-field="token" placeholder="github_pat_..." autocomplete="off"></label>
+                <p class="admin-help">Publishing is handled securely on the server &mdash; the GitHub access token is stored as a Cloudflare secret, not in this browser. There&rsquo;s nothing to set up here.</p>
                 <div class="admin-actions-inline start admin-actions-spaced">
-                  <button class="admin-button admin-button-primary" type="button" data-gh-save>Save connection</button>
-                  <button class="admin-button admin-button-secondary" type="button" data-gh-test>Test connection</button>
+                  <button class="admin-button admin-button-secondary" type="button" data-gh-test>Check connection</button>
                 </div>
-                <p class="admin-help" data-gh-status>Not connected. Set this up once — Iulia never needs to touch it again.</p>
-                <p class="admin-help"><strong>Keep this page behind Cloudflare Access.</strong> The token is stored in this browser and only allows editing website files.</p>
+                <p class="admin-help" data-gh-status>Checking&hellip;</p>
               </section>
               <section class="admin-card">
                 <p class="admin-eyebrow">Email</p>
@@ -769,7 +765,7 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
-    <script src="admin.js?v=20260720-nice1"></script>
+    <script src="admin.js?v=20260720-secure1"></script>
     <script src="sender.js?v=20260720-schedule1"></script>
     <script src="subscribers.js?v=20260720-audit1"></script>
   </body>

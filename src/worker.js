@@ -23,6 +23,8 @@
  *   POST /admin/api/campaign/scheduled/cancel — admin: cancel a queued campaign
  *   GET/POST /admin/api/settings/birthday — admin: birthday-email config
  *   POST /admin/api/settings/birthday/test — admin: send birthday preview
+ *   POST /admin/api/github        — admin: GitHub publish proxy (token stays server-side)
+ *   GET  /admin/api/github/health — admin: is server-side publishing configured?
  *
  * Cron (wrangler triggers, hourly): scheduled() sends due queued campaigns and,
  * at the configured hour, the day's birthday emails.
@@ -30,6 +32,9 @@
  * Secrets (set with `npx wrangler secret put NAME`):
  *   RESEND_API_KEY   — from resend.com
  *   UNSUB_SECRET     — long random string; signs unsubscribe links
+ *   GITHUB_TOKEN     — fine-grained PAT (Contents: read & write on this repo only).
+ *                      Used by the /admin/api/github publish proxy so the token is
+ *                      never stored in the browser.
  *
  * Vars:
  *   ADMIN_EMAILS     — optional comma-separated Access emails allowed for admin API.
@@ -131,6 +136,15 @@ export default {
       if (apiPath === "/api/settings/birthday/test" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
         return handleTestBirthday(request, env);
+      }
+
+      if (apiPath === "/api/github/health" && isAdminApi) {
+        return handleGithubHealth(request, env);
+      }
+
+      if (apiPath === "/api/github" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleGithubProxy(request, env);
       }
 
       if (apiPath === "/api/subscribe" && isPublicApi) {
@@ -792,6 +806,83 @@ async function handleTestBirthday(request, env) {
   });
   if (!res.ok) { const t = await res.text(); return json({ error: "Test send failed: " + t.slice(0, 200) }, 502); }
   return json({ ok: true, sentTo: to });
+}
+
+/* ------------------------------------------------------------------ */
+/* Admin: GitHub publishing proxy                                      */
+/* ------------------------------------------------------------------ */
+/* The admin publishes site data (offers/reviews/prices/page text/images)
+   by committing to GitHub. The token is a Cloudflare secret (GITHUB_TOKEN),
+   never sent to the browser. The admin calls this proxy (behind Access +
+   ADMIN_EMAILS); the Worker injects the token, owns the repo/branch, and
+   only allows writes to the site's own data + page files. */
+
+const GITHUB_PATH_ALLOW = [
+  /^lumi-derm-website\/assets\/data\/(offers|reviews|prices|content)\.json$/,
+  /^lumi-derm-website\/index\.html$/,
+  /^lumi-derm-website\/pages\/[a-z0-9-]+\.html$/,
+  /^lumi-derm-website\/assets\/images\/[A-Za-z0-9._-]+\.(webp|jpe?g|png|gif|avif)$/i,
+];
+function githubPathAllowed(path) {
+  return GITHUB_PATH_ALLOW.some((re) => re.test(path));
+}
+
+async function handleGithubHealth(request, env) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+  return json({
+    ok: true,
+    configured: Boolean(env.GITHUB_TOKEN && env.GITHUB_REPO),
+    repo: env.GITHUB_REPO || null,
+    branch: env.GITHUB_BRANCH || "main",
+  });
+}
+
+async function handleGithubProxy(request, env) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) {
+    return json({ error: "GitHub publishing isn't configured on the server yet. Ask Dima to set the GITHUB_TOKEN secret." }, 503);
+  }
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+
+  const method = String(body.method || "GET").toUpperCase();
+  if (["GET", "PUT", "DELETE"].indexOf(method) === -1) return json({ error: "Method not allowed." }, 405);
+
+  const path = String(body.path || "").replace(/^\/+/, "");
+  if (!githubPathAllowed(path)) return json({ error: "That file path is not allowed for publishing." }, 403);
+
+  const branch = env.GITHUB_BRANCH || "main";
+  let url = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/" + path;
+  const init = {
+    method,
+    headers: {
+      Authorization: "Bearer " + env.GITHUB_TOKEN,
+      Accept: "application/vnd.github+json",
+      "User-Agent": "LumiDerm-Admin-Worker",
+      "Content-Type": "application/json",
+    },
+  };
+  if (method === "GET") {
+    url += "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now();
+  } else {
+    const payload = { branch };
+    if (typeof body.message === "string") payload.message = body.message;
+    if (typeof body.content === "string") payload.content = body.content;
+    if (typeof body.sha === "string" && body.sha) payload.sha = body.sha;
+    init.body = JSON.stringify(payload);
+  }
+
+  const ghRes = await fetch(url, init);
+  // Forward GitHub's status + JSON body verbatim, so the admin's existing publish
+  // logic (sha handling, 409 retry, base64 decode) keeps working unchanged.
+  const text = await ghRes.text();
+  return new Response(text, {
+    status: ghRes.status,
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+  });
 }
 
 /* ------------------------------------------------------------------ */

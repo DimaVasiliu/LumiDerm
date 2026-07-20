@@ -82,6 +82,9 @@ function initGate() {
 }
 
 function runApp() {
+  // Purge any GitHub token left in this browser by the old client-side publisher.
+  // Publishing is now server-side (Cloudflare secret); the browser holds nothing.
+  try { localStorage.removeItem("lumi-derm-gh-v1"); } catch (e) { /* ignore */ }
   bindNavigation();
   bindTopActions();
   bindOffers();
@@ -512,16 +515,14 @@ function toReviewsJson() {
 }
 
 async function publishReviews() {
-  const cfg = getGh();
-  if (!cfg.repo || !cfg.token) {
-    toast("Add the website connection first (Settings).");
-    goPanel("settings");
+  if (!ghReady) {
+    toast("Publishing isn't set up on the server yet — ask Dima.");
     return false;
   }
   const button = document.querySelector("[data-publish-reviews]");
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
   try {
-    const branch = cfg.branch || "main";
+    const branch = "main";
     const content = b64(JSON.stringify(toReviewsJson(), null, 2) + "\n");
     let put;
     for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -766,33 +767,27 @@ const SITE_PAGE_PATHS = [
   "lumi-derm-website/pages/terms.html",
   "lumi-derm-website/pages/treatment.html"
 ];
-const GH_KEY = "lumi-derm-gh-v1";
+/* Publishing goes through the Worker proxy (/admin/api/github), which injects
+   the GitHub token from a Cloudflare secret. Nothing sensitive is stored in the
+   browser any more — the repo/branch/token all live server-side. */
+const GH_PROXY = "/admin/api/github";
+const GH_HEALTH = "/admin/api/github/health";
+let ghReady = true; // optimistic; refined by the server health check below
 
-/* Accepts any of these and turns them into "owner/repo":
-     DimaVasiliu/LumiDerm
-     https://github.com/DimaVasiliu/LumiDerm
-     https://github.com/DimaVasiliu/LumiDerm.git
-     git@github.com:DimaVasiliu/LumiDerm.git                                        */
-function normalizeRepo(value) {
-  let v = String(value || "").trim();
-  if (!v) return "";
-  v = v.replace(/^git@github\.com:/i, "");
-  v = v.replace(/^https?:\/\/(www\.)?github\.com\//i, "");
-  v = v.replace(/^github\.com\//i, "");
-  v = v.replace(/\.git$/i, "");
-  v = v.replace(/^\/+|\/+$/g, "");
-  const parts = v.split("/").filter(Boolean);
-  return parts.length >= 2 ? parts[0] + "/" + parts[1] : "";
-}
-
-function getGh() {
+async function checkGithubHealth() {
   try {
-    const cfg = JSON.parse(localStorage.getItem(GH_KEY) || "{}");
-    cfg.repo = normalizeRepo(cfg.repo);
-    return cfg;
-  } catch { return {}; }
+    const res = await fetch(GH_HEALTH, { cache: "no-store", credentials: "same-origin" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { ghReady = false; setGhStatus(data.error || ("Could not check publishing (" + res.status + ").")); return; }
+    ghReady = data.configured === true;
+    setGhStatus(ghReady
+      ? "Connected — publishing is handled securely on the server (" + (data.repo || "repo") + " · " + (data.branch || "main") + ")."
+      : "Not set up yet: Dima needs to add the GitHub token as a Cloudflare secret (see the guide).");
+  } catch (err) {
+    ghReady = false;
+    setGhStatus("Could not reach the server: " + err.message);
+  }
 }
-function setGh(cfg) { localStorage.setItem(GH_KEY, JSON.stringify(cfg)); }
 
 /* admin shape -> offers.json shape (exactly what the homepage expects) */
 function toOffersJson(offers) {
@@ -851,12 +846,10 @@ async function loadOffersFromSite(announce) {
 /* GitHub errors -> plain English the user can act on */
 function ghError(status, message) {
   if (status === 403 || /not accessible by personal access token/i.test(message || "")) {
-    return "The token can read the repo but not write to it. On GitHub open your token and set " +
-           "Permissions \u2192 Repository permissions \u2192 Contents = \u201cRead and write\u201d, then Update token. " +
-           "(A classic token needs the \u201crepo\u201d scope.)";
+    return "The server\u2019s GitHub token can read the repo but can\u2019t write to it. Dima: set the token\u2019s Contents permission to \u201cRead and write\u201d, then update the GITHUB_TOKEN secret.";
   }
-  if (status === 401) return "The token was rejected \u2014 it may be wrong or expired. Paste it again.";
-  if (status === 404) return "Could not find offers.json in that repo/branch. Check the Repository and Branch fields.";
+  if (status === 401) return "The server\u2019s GitHub token was rejected \u2014 it may be expired. Dima: rotate the GITHUB_TOKEN secret.";
+  if (status === 404) return "Could not find that file in the repo. If this keeps happening, tell Dima.";
   if (status === 409) return "The file changed on GitHub since this page loaded. Click \u201cReload from website\u201d, redo your edit, then publish.";
   if (status === 422) return "GitHub rejected the update (422). Try \u201cReload from website\u201d, then publish again.";
   return message || ("GitHub said " + status + ".");
@@ -874,29 +867,38 @@ function b64(str) {
   return btoa(bin);
 }
 
+/* Calls the Worker proxy instead of api.github.com directly. The Worker holds
+   the token (Cloudflare secret) and owns the repo/branch. We keep the same
+   call shape (path + {method, body}) so every publish routine works unchanged;
+   the Worker forwards GitHub's status + JSON body verbatim. */
 async function ghRequest(path, options) {
-  const cfg = getGh();
-  const res = await fetch("https://api.github.com/repos/" + cfg.repo + "/contents/" + path, {
-    cache: "no-store", // always read the current sha, never a cached one
-    ...options,
-    headers: {
-      Authorization: "Bearer " + cfg.token,
-      Accept: "application/vnd.github+json",
-      "Content-Type": "application/json",
-      ...(options && options.headers)
-    }
+  options = options || {};
+  const method = options.method || "GET";
+  const cleanPath = String(path).split("?")[0]; // drop ?ref/&_= — the Worker owns branch
+  const payload = { method, path: cleanPath };
+  if (options.body) {
+    try {
+      const b = JSON.parse(options.body);
+      if (b.message != null) payload.message = b.message;
+      if (b.content != null) payload.content = b.content;
+      if (b.sha != null) payload.sha = b.sha;
+    } catch { /* non-JSON body — nothing to forward */ }
+  }
+  return fetch(GH_PROXY, {
+    method: "POST",
+    credentials: "same-origin",
+    cache: "no-store",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload)
   });
-  return res;
 }
 
 /* THE BUTTON: create offers -> click Publish -> live on the homepage */
 async function publishOffers(options) {
   // NOTE: called both as a click handler (options = Event) and internally ({ silent: true })
   const silent = !!(options && options.silent === true);
-  const cfg = getGh();
-  if (!cfg.repo || !cfg.token) {
-    toast("Add the website connection first (Settings).");
-    goPanel("settings");
+  if (!ghReady) {
+    toast("Publishing isn't set up on the server yet — ask Dima.");
     return false;
   }
   const button = document.querySelector("[data-publish-offers]");
@@ -904,7 +906,7 @@ async function publishOffers(options) {
   setPublishStatus("Publishing to the website…");
 
   try {
-    const branch = cfg.branch || "main";
+    const branch = "main";
     const content = b64(JSON.stringify({ offers: toOffersJson(state.offers) }, null, 2) + "\n");
 
     // Read the current sha and commit — retrying with a fresh sha on 409, which
@@ -994,8 +996,7 @@ async function publishServicesHtml(branch, renderedSection) {
 }
 
 async function publishPrices() {
-  const cfg = getGh();
-  if (!cfg.repo || !cfg.token) { toast("Add the website connection first (Settings)."); goPanel("settings"); return false; }
+  if (!ghReady) { toast("Publishing isn't set up on the server yet — ask Dima."); return false; }
   if (typeof window.renderTreatmentLibrary !== "function") { toast("Price template didn’t load — hard-refresh the admin and try again."); return false; }
   if (!state.prices || !(state.prices.groups || []).length) { toast("No prices loaded yet — click “Reload from website” first."); return false; }
 
@@ -1003,7 +1004,7 @@ async function publishPrices() {
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
   setPricesStatus("Publishing to the treatments page…");
   try {
-    const branch = cfg.branch || "main";
+    const branch = "main";
     // 1) the data file (source of truth the admin reloads from)
     const json = b64(JSON.stringify(state.prices, null, 2) + "\n");
     await putFileWithRetry(PRICES_REPO_PATH, json, "Update prices data (via admin)", branch);
@@ -1066,8 +1067,7 @@ async function commitTransformedFile(repoPath, branch, transform, message) {
 }
 
 async function publishContent() {
-  const cfg = getGh();
-  if (!cfg.repo || !cfg.token) { toast("Add the website connection first (Settings)."); goPanel("settings"); return false; }
+  if (!ghReady) { toast("Publishing isn't set up on the server yet — ask Dima."); return false; }
   if (typeof window.renderHero !== "function") { toast("Page template didn’t load — hard-refresh the admin and try again."); return false; }
   if (!contentReady()) { toast("No page text loaded yet — click “Reload from website” first."); return false; }
 
@@ -1075,7 +1075,7 @@ async function publishContent() {
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
   setContentStatus("Publishing page text…");
   try {
-    const branch = cfg.branch || "main";
+    const branch = "main";
 
     // 1) authoritative "old" values + sha from the live content.json
     let oldContent = structuredClone(DEFAULT_CONTENT), sha;
@@ -1131,9 +1131,8 @@ async function publishContent() {
 const STOCK_IMAGES = imageOptions.slice(); // ships with the site — never delete these files
 
 async function deleteRepoImage(name) {
-  const cfg = getGh();
-  if (!cfg.repo || !cfg.token || !name) return;
-  const branch = cfg.branch || "main";
+  if (!ghReady || !name) return;
+  const branch = "main";
   const path = IMAGES_REPO_DIR + name;
   const current = await ghRequest(path + "?ref=" + encodeURIComponent(branch), { method: "GET" });
   if (!current.ok) return; // not there, nothing to do
@@ -1186,34 +1185,11 @@ function bindPublishing() {
     loadOffersFromSite(true);
   });
 
-  // GitHub connection (one-time setup)
-  const cfg = getGh();
-  document.querySelectorAll("[data-gh-field]").forEach((f) => { f.value = cfg[f.dataset.ghField] || ""; });
-  if (cfg.repo && cfg.token) setGhStatus("Connected to " + cfg.repo + " (" + (cfg.branch || "main") + ").");
+  // Publishing is handled server-side (the token is a Cloudflare secret). We only
+  // check the server is configured — there's nothing to enter in the browser.
+  checkGithubHealth();
 
-  document.querySelector("[data-gh-save]")?.addEventListener("click", () => {
-    const next = {};
-    document.querySelectorAll("[data-gh-field]").forEach((f) => { next[f.dataset.ghField] = f.value.trim(); });
-    if (!next.branch) next.branch = "main";
-    setGh(next);
-    setGhStatus("Saved. Use “Test connection” to check it works.");
-    toast("Website connection saved.");
-  });
-
-  document.querySelector("[data-gh-test]")?.addEventListener("click", async () => {
-    const c = getGh();
-    if (!c.repo || !c.token) { setGhStatus("Fill in the repository and token first."); return; }
-    setGhStatus("Testing…");
-    try {
-      const res = await ghRequest(OFFERS_REPO_PATH + "?ref=" + encodeURIComponent(c.branch || "main"), { method: "GET" });
-      if (res.ok) setGhStatus("Connected and offers.json found. NOTE: this only proves the token can READ. If publishing fails with 403, set Contents = \u201cRead and write\u201d on the token.");
-      else if (res.status === 404) setGhStatus("Connected to the repo, but offers.json was not found at " + OFFERS_REPO_PATH + ".");
-      else if (res.status === 401 || res.status === 403) setGhStatus("The token was rejected. Check it has Contents: read & write on this repo.");
-      else setGhStatus("GitHub said " + res.status + ".");
-    } catch (err) {
-      setGhStatus("Could not reach GitHub (" + err.message + "). If this says \u201cFailed to fetch\u201d, the site\u2019s security policy is blocking api.github.com \u2014 redeploy so the updated _headers file is live, then hard-refresh this page.");
-    }
-  });
+  document.querySelector("[data-gh-test]")?.addEventListener("click", checkGithubHealth);
 }
 
 function setGhStatus(message) {
@@ -1250,16 +1226,14 @@ function fileToBase64(file) {
 }
 
 async function uploadImage(file) {
-  const cfg = getGh();
-  if (!cfg.repo || !cfg.token) {
-    toast("Add the website connection first (Settings).");
-    goPanel("settings");
+  if (!ghReady) {
+    toast("Publishing isn't set up on the server yet — ask Dima.");
     return null;
   }
   if (!/^image\//.test(file.type)) throw new Error("That file is not an image.");
   if (file.size > 3 * 1024 * 1024) throw new Error("That image is larger than 3MB. Please use a smaller one.");
 
-  const branch = cfg.branch || "main";
+  const branch = "main";
   const name = safeImageName(file.name);
   const path = IMAGES_REPO_DIR + name;
   const content = await fileToBase64(file);

@@ -47,7 +47,11 @@
 		// can only use the admin API if their email is in this list. Must match
 		// the addresses in the Access Allow policy exactly. Not a secret — these
 		// are just email addresses — so it lives here in config, not in secrets.
-		"ADMIN_EMAILS": "dima.vasiliu@yahoo.com,info@lumidermaesthetics.co.uk"
+		"ADMIN_EMAILS": "dima.vasiliu@yahoo.com,info@lumidermaesthetics.co.uk",
+		// GitHub repo the admin publishes to. The token itself is the GITHUB_TOKEN
+		// secret (never here). Repo/branch aren't secrets, so they live in config.
+		"GITHUB_REPO": "DimaVasiliu/LumiDerm",
+		"GITHUB_BRANCH": "main"
 	},
 	// Hourly cron: sends any due scheduled campaigns and, at the birthday
 	// send-hour, the day's birthday emails. Handled by scheduled() in the Worker.
