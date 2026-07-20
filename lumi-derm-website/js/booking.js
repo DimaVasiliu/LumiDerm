@@ -225,6 +225,10 @@
   const pickerTitle = document.querySelector('#booking-picker-title');
   const pickerCopy = document.querySelector('[data-booking-picker-copy]');
   const changeButton = document.querySelector('[data-booking-change]');
+  // Treatwell's embedded widget always opens the full venue menu — it can't be
+  // deep-linked to a single treatment — so we name the chosen treatment here to
+  // make picking the right one in the calendar effortless.
+  const widgetHint = document.querySelector('[data-booking-widget-hint]');
 
   if (!cardsRoot || !detail) return;
 
@@ -289,6 +293,9 @@
     if (fields.aftercare) fields.aftercare.innerHTML = listItems(service.aftercare);
     if (fields.bookButton) fields.bookButton.textContent = 'Book in calendar';
     if (fields.serviceLink) fields.serviceLink.href = `services.html#${service.slug}`;
+    if (widgetHint) {
+      widgetHint.textContent = `In the Treatwell calendar below, choose “${service.title}”, then pick your appointment time and confirm securely without leaving this page.`;
+    }
 
     cardsRoot.querySelectorAll('[data-service-card]').forEach((card) => {
       const isActive = card.dataset.serviceCard === service.slug;

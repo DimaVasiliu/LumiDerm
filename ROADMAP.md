@@ -43,7 +43,7 @@ Working list of what's left, in priority order. Tick items off as they ship.
 
 - [ ] **Add the ICO registration number** once it comes through — `pages/privacy.html`, replace the `data-ico-number` placeholder text.
 - [ ] **Confirm real offer content & prices** with Iulia (some are still placeholder promos).
-- [ ] **Verify the Treatwell booking widget deep-links** to a specific treatment (so `?service=…` actually pre-selects it on Treatwell's side).
+- [x] **Verify the Treatwell booking widget deep-links to a specific treatment.** ✅ Verified — it does **not**, and there's no supported way to make it. Treatwell's embeddable widget only accepts the venue's full-menu URL (`/place/523733/menu/`); their docs describe no per-treatment parameter, the embed script reads only `data-widget-url`, the widget is a client-rendered app, and the public venue page's services are JS buttons with no unique deep-link URLs. So `?service=…` pre-selects the treatment on **our** page (detail panel + prep/aftercare) but can't carry into Treatwell. Mitigation shipped: the booking page now **names the chosen treatment** in the calendar instruction ("In the Treatwell calendar, choose *Endospheres therapy*…") so the manual re-select is effortless. If Treatwell ever exposes a deep-link param, wiring our `service` slugs to it would be a small change.
 - [ ] Decide whether saved campaign drafts should sync across devices (currently per-browser).
 
 ---
