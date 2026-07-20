@@ -63,7 +63,7 @@ const campaignTemplates = {
   winback: { name: "We miss you (win-back)", audience: "Lapsed clients (90+ days)", subject: "We've missed you at Lumi Derm", preview: "It's been a while — here's a welcome-back offer", body: "Hi {first_name},\n\nIt's been a little while since your last visit and we'd love to see you again. Here's a welcome-back offer to make it easy.\n\nBook whenever suits you.\n\nIulia", ctaLabel: "Rebook now", ctaUrl: "https://lumidermaesthetics.com/pages/booking.html" }
 };
 
-const panelTitles = { dashboard: "Overview", offers: "Offers", prices: "Prices", marketing: "Marketing", reviews: "Reviews", media: "Media", content: "Pages", clients: "Treatwell", settings: "Settings" };
+const panelTitles = { dashboard: "Overview", guide: "Guide & help", offers: "Offers", prices: "Prices", marketing: "Marketing", sender: "Send email", subscribers: "Subscribers", reviews: "Reviews", media: "Media", content: "Pages", clients: "Treatwell", settings: "Settings" };
 
 let state = loadDraft();
 let selectedOfferIndex = 0;

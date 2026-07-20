@@ -1203,3 +1203,62 @@ code {
   color: var(--admin-muted);
   font-size: 0.72rem;
 }
+
+/* ===================== GUIDE & HELP PANEL ===================== */
+.guide-card { margin-bottom: 1rem; }
+.guide-card h3 { margin: 0 0 0.6rem; font-size: 1.15rem; }
+.guide-card p { line-height: 1.65; margin: 0 0 0.7rem; }
+.guide-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.4rem;
+}
+.guide-card-head h3 { margin: 0; }
+.guide-hint { font-size: 0.8rem; font-weight: 400; opacity: 0.55; }
+.guide-jump {
+  flex: none;
+  border: 1px solid var(--admin-rose, #a96f68);
+  background: transparent;
+  color: var(--admin-rose, #a96f68);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.guide-jump:hover { background: var(--admin-rose, #a96f68); color: #fff; }
+.guide-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--admin-rose, #a96f68);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.guide-link:hover { color: var(--admin-rose-deep, #8a564f); }
+.guide-list, .guide-steps { margin: 0.2rem 0 0.8rem; padding-left: 1.2rem; }
+.guide-list li, .guide-steps li { line-height: 1.6; margin-bottom: 0.4rem; }
+.guide-steps { counter-reset: none; }
+.guide-tip, .guide-warn {
+  margin: 0.6rem 0 0;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.guide-tip { background: rgba(169, 111, 104, 0.1); }
+.guide-warn { background: rgba(201, 162, 39, 0.14); }
+.guide-card code {
+  font-size: 0.86em;
+  padding: 0.12em 0.4em;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.06);
+}

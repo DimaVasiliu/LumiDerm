@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260720-forms1">
+    <link rel="stylesheet" href="admin.css?v=20260720-guide1">
   </head>
   <body>
     <!-- Soft lock screen (light gate only — enable Cloudflare Access for real protection) -->
@@ -34,6 +34,7 @@
         </a>
         <nav class="admin-nav" data-admin-nav>
           <button class="admin-nav-item is-active" type="button" data-admin-panel="dashboard">Overview</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="guide">Guide &amp; help</button>
           <button class="admin-nav-item" type="button" data-admin-panel="offers">Offers</button>
           <button class="admin-nav-item" type="button" data-admin-panel="prices">Prices</button>
           <button class="admin-nav-item" type="button" data-admin-panel="marketing">Marketing</button>
@@ -95,12 +96,112 @@
             </div>
 
             <section class="admin-card">
-              <div class="admin-card-head"><div><p class="admin-eyebrow">Getting started</p><h2>How this works</h2></div></div>
+              <div class="admin-card-head"><div><p class="admin-eyebrow">Getting started</p><h2>How this works</h2></div><button class="guide-jump" type="button" data-go="guide">Open the full guide &rarr;</button></div>
               <ol class="admin-steps compact">
-                <li><strong>Edit anything here</strong><span>Offers, prices, reviews, marketing and page text. Everything saves automatically in this browser.</span></li>
-                <li><strong>Export a backup</strong><span>Use Export (top right) to download a JSON backup, or Import to restore one.</span></li>
-                <li><strong>Publishing</strong><span>For now changes are drafts. Once the CMS/API is connected, Save will publish to the live site.</span></li>
+                <li><strong>Edit anything here</strong><span>Offers, prices, reviews and page text. Everything saves as you go in this browser.</span></li>
+                <li><strong>Click Publish</strong><span>On the Offers tab, Publish offers puts your changes on the live website in about a minute.</span></li>
+                <li><strong>New here?</strong><span>Open the <strong>Guide &amp; help</strong> tab for a plain-language walkthrough of everything.</span></li>
               </ol>
+            </section>
+          </section>
+
+          <!-- ===================== GUIDE & HELP ===================== -->
+          <section class="admin-panel" id="guide" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Your handbook</p>
+                <h2>Guide &amp; help</h2>
+                <p>Everything you can do here, in plain language. Nothing you click can break the website &mdash; take your time and explore.</p>
+              </div>
+            </div>
+
+            <section class="admin-card guide-card">
+              <h3>The big picture</h3>
+              <p>This is your <strong>control room</strong> for the website. From here you add offers, send emails, and manage your mailing list &mdash; all from your browser. You never need any special software, and you never need to ask a developer to make everyday changes.</p>
+              <p>Whenever you change something and click <strong>Publish</strong>, the website updates itself in about a minute. That&rsquo;s it. You edit, you publish, you wait a minute, it&rsquo;s live.</p>
+              <p class="guide-tip"><strong>Good to know:</strong> your edits are saved in this browser as you go. Clicking <strong>Publish</strong> is what actually puts them on the live website for the public to see.</p>
+            </section>
+
+            <section class="admin-card guide-card">
+              <div class="guide-card-head"><h3>Offers &mdash; the cards on your homepage</h3><button class="guide-jump" type="button" data-go="offers">Open Offers &rarr;</button></div>
+              <p>The <strong>Offers</strong> tab controls the treatment/offer cards visitors see on the homepage.</p>
+              <ul class="guide-list">
+                <li><strong>Add an offer:</strong> click <em>Add offer</em>, fill in the boxes, then <em>Save as new offer</em>.</li>
+                <li><strong>Edit an offer:</strong> click it in the list, change the boxes, then <em>Save changes</em>.</li>
+                <li><strong>Delete an offer:</strong> open it and use delete &mdash; it disappears from the website too once published.</li>
+                <li>When you&rsquo;re happy, click <strong>Publish offers</strong>. Live in about a minute.</li>
+              </ul>
+              <p>What each box means:</p>
+              <ul class="guide-list">
+                <li><strong>Title</strong> &mdash; the big name, e.g. &ldquo;15% off your first visit&rdquo;.</li>
+                <li><strong>Category</strong> &mdash; the small label above the title, e.g. &ldquo;New client offer&rdquo;.</li>
+                <li><strong>Description</strong> &mdash; a sentence or two explaining the offer.</li>
+                <li><strong>Price</strong> &mdash; e.g. &ldquo;From £70&rdquo;, &ldquo;£90&rdquo;, or &ldquo;Save up to 30%&rdquo;.</li>
+                <li><strong>Badge</strong> &mdash; the little tag on the picture, e.g. &ldquo;Trial&rdquo;, &ldquo;New&rdquo;, &ldquo;Save 15%&rdquo;.</li>
+                <li><strong>Image</strong> &mdash; pick one from the list, or <em>upload your own photo</em>.</li>
+                <li><strong>Links to treatment</strong> &mdash; choose the matching treatment so the &ldquo;Book&rdquo; button takes people straight to it.</li>
+                <li><strong>Status</strong> &mdash; <em>Live</em> shows it; <em>Draft</em> hides it while you work on it.</li>
+                <li><strong>End date</strong> &mdash; optional. After this date the offer disappears from the website by itself.</li>
+                <li><strong>Featured</strong> &mdash; tick to make it the big highlighted card at the top.</li>
+              </ul>
+              <p class="guide-tip"><strong>Tip:</strong> not sure about an offer yet? Set it to <strong>Draft</strong> &mdash; it saves but stays hidden from the public until you switch it to Live.</p>
+            </section>
+
+            <section class="admin-card guide-card">
+              <div class="guide-card-head"><h3>Send email &mdash; message your clients</h3><button class="guide-jump" type="button" data-go="sender">Open Send email &rarr;</button></div>
+              <p>This is how you email offers and news to clients who agreed to hear from you.</p>
+              <ol class="guide-steps">
+                <li><strong>Get your list:</strong> in Treatwell, go to Clients &rarr; Export, and download the CSV file.</li>
+                <li><strong>Step 1 &mdash; Who:</strong> drop that file into the box. It automatically keeps only the people who agreed to marketing and ignores the rest.</li>
+                <li><strong>Step 2 &mdash; Write:</strong> pick a template, edit the words, and tick which offers to include. Type <code>{{name}}</code> and it becomes each person&rsquo;s first name.</li>
+                <li><strong>Step 3 &mdash; Send:</strong> <em>always send a test to yourself first</em> and check it on your phone. Then tick the confirmation box and click <em>Send campaign</em>.</li>
+              </ol>
+              <p class="guide-warn"><strong>Important:</strong> only ever email people who ticked the marketing box in Treatwell. The tool protects you by removing everyone else, but never turn that off.</p>
+            </section>
+
+            <section class="admin-card guide-card">
+              <div class="guide-card-head"><h3>Subscribers &mdash; people who joined from the website</h3><button class="guide-jump" type="button" data-go="subscribers">Open Subscribers &rarr;</button></div>
+              <p>When someone signs up through the pop-up on your website, they appear here after they confirm by email.</p>
+              <ul class="guide-list">
+                <li><strong>Confirmed</strong> = they clicked the confirmation email and can be emailed.</li>
+                <li><strong>Pending</strong> = they signed up but haven&rsquo;t confirmed yet, so don&rsquo;t email them.</li>
+                <li><strong>Export confirmed (CSV)</strong> downloads your consented sign-ups, ready to drop into the <em>Send email</em> tab.</li>
+                <li><strong>Delete</strong> removes someone forever &mdash; use this if a person ever asks to be removed.</li>
+              </ul>
+            </section>
+
+            <section class="admin-card guide-card">
+              <h3>The other tabs <span class="guide-hint">(click a name to open it)</span></h3>
+              <ul class="guide-list">
+                <li><button class="guide-link" type="button" data-go="prices">Prices</button> &mdash; edit the price lists shown on the treatments page.</li>
+                <li><button class="guide-link" type="button" data-go="marketing">Marketing</button> &mdash; a scratchpad to draft email wording before you send it in Send email.</li>
+                <li><button class="guide-link" type="button" data-go="reviews">Reviews</button> &mdash; approve or add the reviews shown on the site.</li>
+                <li><button class="guide-link" type="button" data-go="media">Media</button> &mdash; the photos available to use in offers.</li>
+                <li><button class="guide-link" type="button" data-go="content">Pages</button> &mdash; edit text on the standard pages.</li>
+                <li><button class="guide-link" type="button" data-go="clients">Treatwell</button> &mdash; your booking system stays the home for bookings, payments and client records.</li>
+                <li><button class="guide-link" type="button" data-go="settings">Settings</button> &mdash; your passcode and the behind-the-scenes connections. You rarely need this.</li>
+              </ul>
+            </section>
+
+            <section class="admin-card guide-card">
+              <h3>Golden rules</h3>
+              <ul class="guide-list">
+                <li><strong>Nothing here can break the website.</strong> Explore freely.</li>
+                <li><strong>Publish, then wait a minute.</strong> Changes aren&rsquo;t live until you click Publish, and it takes about a minute to appear.</li>
+                <li><strong>Test emails on yourself first</strong> &mdash; every single time.</li>
+                <li><strong>Only email people who agreed.</strong> The tools keep you safe if you let them.</li>
+                <li><strong>If a photo looks missing right after publishing,</strong> wait a minute and refresh &mdash; it&rsquo;s just catching up.</li>
+              </ul>
+            </section>
+
+            <section class="admin-card guide-card">
+              <h3>If something doesn&rsquo;t look right</h3>
+              <ul class="guide-list">
+                <li><strong>Change didn&rsquo;t appear?</strong> Did you click <em>Publish</em>? Then wait a minute and refresh the website page (hold Shift and click reload).</li>
+                <li><strong>&ldquo;Publishing failed&rdquo;?</strong> Try Publish again &mdash; it usually works on the second try. If it keeps failing, tell Dima.</li>
+                <li><strong>Email won&rsquo;t send?</strong> Check the <em>Send email</em> tab has a green &ldquo;Ready&rdquo; and that you ticked the confirmation box.</li>
+                <li><strong>Still stuck?</strong> Nothing you did is broken &mdash; just message Dima and describe what you clicked.</li>
+              </ul>
             </section>
           </section>
 
