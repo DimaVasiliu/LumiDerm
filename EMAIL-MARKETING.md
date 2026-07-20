@@ -140,25 +140,7 @@ Copy/paste and adjust. Replace `[Name]` with Connect's personalisation field. **
 
 ---
 
-## 5. Refer a friend
-
-**Subject:** You both get 10% off
-**Preview:** A thank you for sending someone our way.
-
-> Hi [Name],
->
-> Most of our new clients come from someone they trust — which is the nicest compliment we could get.
->
-> **Refer a friend and you'll each get 10% off your next treatment.** Just ask them to mention your name when they book.
->
-> **Share the clinic →** https://lumidermaesthetics.com
->
-> Thank you,
-> Iulia — Lumi Derm Aesthetics
-
----
-
-## 6. Birthday
+## 5. Birthday
 
 **Subject:** Happy birthday, [Name] 🎂
 **Preview:** A little something from us.

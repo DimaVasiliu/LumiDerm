@@ -14,19 +14,6 @@
       "note": ""
     },
     {
-      "title": "Bundle areas & save up to 30%",
-      "category": "Laser packages",
-      "description": "Combine 2–5 laser areas in one plan and save from 15% up to 30% across your course.",
-      "price": "Save up to 30%",
-      "badge": "Bundle",
-      "image": "assets/images/offer-electrolysis-apilus.webp",
-      "service": "laser-hair-removal",
-      "status": "live",
-      "featured": false,
-      "expires": "",
-      "note": "Ongoing offer"
-    },
-    {
       "title": "Summer glow: Fire & Ice + LED",
       "category": "Glow facial",
       "description": "The iconic iS Clinical facial finished with LED light therapy for instant radiance.",
@@ -77,19 +64,6 @@
       "featured": false,
       "expires": "",
       "note": "Ongoing offer"
-    },
-    {
-      "title": "You both get 10% off",
-      "category": "Refer a friend",
-      "description": "Refer a friend and you'll each receive 10% off your next treatment.",
-      "price": "10% each",
-      "badge": "Refer",
-      "image": "assets/images/offer-mesotherapy.webp",
-      "service": "",
-      "status": "live",
-      "featured": false,
-      "expires": "",
-      "note": "Always on"
     },
     {
       "title": "Microneedling + exosome glow",

@@ -38,6 +38,7 @@
           <button class="admin-nav-item" type="button" data-admin-panel="prices">Prices</button>
           <button class="admin-nav-item" type="button" data-admin-panel="marketing">Marketing</button>
           <button class="admin-nav-item" type="button" data-admin-panel="sender">Send email</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="subscribers">Subscribers</button>
           <button class="admin-nav-item" type="button" data-admin-panel="reviews">Reviews</button>
           <button class="admin-nav-item" type="button" data-admin-panel="media">Media</button>
           <button class="admin-nav-item" type="button" data-admin-panel="content">Pages</button>
@@ -346,6 +347,40 @@
             </div>
           </section>
 
+          <!-- ===================== SUBSCRIBERS ===================== -->
+          <section class="admin-panel" id="subscribers" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Mailing list</p>
+                <h2>Subscribers</h2>
+                <p>People who signed up through the website and confirmed by email. Only <strong>confirmed</strong> subscribers have valid marketing consent.</p>
+              </div>
+              <div class="admin-actions-inline start">
+                <button class="admin-button admin-button-secondary" type="button" data-subs-reload>Reload</button>
+                <button class="admin-button admin-button-primary" type="button" data-subs-export>Export confirmed (CSV)</button>
+              </div>
+            </div>
+
+            <div class="subs-stats" data-subs-stats>
+              <div class="subs-stat"><strong data-subs-count-confirmed>0</strong><span>Confirmed</span></div>
+              <div class="subs-stat"><strong data-subs-count-pending>0</strong><span>Pending</span></div>
+              <div class="subs-stat"><strong data-subs-count-unsub>0</strong><span>Unsubscribed</span></div>
+            </div>
+
+            <p class="admin-status" data-subs-status>Loading…</p>
+
+            <section class="admin-card">
+              <div class="admin-table-wrap">
+                <table class="admin-table subs-table">
+                  <thead><tr>
+                    <th>Name</th><th>Email</th><th>Status</th><th>Consent</th><th>Birthday</th><th>Interest</th><th></th>
+                  </tr></thead>
+                  <tbody data-subs-body></tbody>
+                </table>
+              </div>
+            </section>
+          </section>
+
           <!-- ===================== REVIEWS ===================== -->
           <section class="admin-panel" id="reviews" data-admin-section>
             <div class="admin-section-head">
@@ -532,5 +567,6 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="admin.js?v=20260714-mail1"></script>
     <script src="sender.js?v=20260718-mail2"></script>
+    <script src="subscribers.js?v=20260718-subs1"></script>
   </body>
 </html>

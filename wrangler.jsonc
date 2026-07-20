@@ -20,6 +20,16 @@
 			"id": "9499ca19ed66407f9c733c5decf741d0"
 		}
 	],
+	// Newsletter subscribers (personal data). Apply the schema with:
+	//   npx wrangler d1 migrations apply lumidermdb --remote
+	"d1_databases": [
+		{
+			"binding": "SUBSCRIBERS",
+			"database_name": "lumidermdb",
+			"database_id": "0263c49f-0baa-416b-a885-b80e21ab54b2",
+			"migrations_dir": "migrations"
+		}
+	],
 	// FROM_EMAIL must be on the domain verified in Resend.
 	// REPLY_TO must be a mailbox she actually reads — info@ is the one
 	// wired to Namecheap forwarding and named in the DMARC record.
