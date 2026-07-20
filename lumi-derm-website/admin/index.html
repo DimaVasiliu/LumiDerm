@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260720-guide1">
+    <link rel="stylesheet" href="admin.css?v=20260720-campaigns1">
   </head>
   <body>
     <!-- Soft lock screen (light gate only — enable Cloudflare Access for real protection) -->
@@ -37,7 +37,6 @@
           <button class="admin-nav-item" type="button" data-admin-panel="guide">Guide &amp; help</button>
           <button class="admin-nav-item" type="button" data-admin-panel="offers">Offers</button>
           <button class="admin-nav-item" type="button" data-admin-panel="prices">Prices</button>
-          <button class="admin-nav-item" type="button" data-admin-panel="marketing">Marketing</button>
           <button class="admin-nav-item" type="button" data-admin-panel="sender">Send email</button>
           <button class="admin-nav-item" type="button" data-admin-panel="subscribers">Subscribers</button>
           <button class="admin-nav-item" type="button" data-admin-panel="reviews">Reviews</button>
@@ -83,7 +82,7 @@
                 <div class="admin-card-head"><div><p class="admin-eyebrow">Quick actions</p><h2>Jump straight in</h2></div></div>
                 <div class="quick-actions">
                   <button class="quick-action" type="button" data-go="offers"><strong>Add an offer</strong><span>New homepage carousel card</span></button>
-                  <button class="quick-action" type="button" data-go="marketing"><strong>Draft an offer email</strong><span>Prepare approved campaign copy</span></button>
+                  <button class="quick-action" type="button" data-go="sender"><strong>Send an email</strong><span>Build a campaign for your subscribers</span></button>
                   <button class="quick-action" type="button" data-go="reviews"><strong>Approve reviews</strong><span>Clear the pending queue</span></button>
                   <button class="quick-action" type="button" data-go="prices"><strong>Update prices</strong><span>Edit treatment price groups</span></button>
                 </div>
@@ -148,15 +147,16 @@
             </section>
 
             <section class="admin-card guide-card">
-              <div class="guide-card-head"><h3>Send email &mdash; message your clients</h3><button class="guide-jump" type="button" data-go="sender">Open Send email &rarr;</button></div>
-              <p>This is how you email offers and news to clients who agreed to hear from you.</p>
+              <div class="guide-card-head"><h3>Send email &mdash; message your subscribers</h3><button class="guide-jump" type="button" data-go="sender">Open Send email &rarr;</button></div>
+              <p>This is how you email offers and news to people who joined your list. It&rsquo;s three simple steps.</p>
               <ol class="guide-steps">
-                <li><strong>Get your list:</strong> in Treatwell, go to Clients &rarr; Export, and download the CSV file.</li>
-                <li><strong>Step 1 &mdash; Who:</strong> drop that file into the box. It automatically keeps only the people who agreed to marketing and ignores the rest.</li>
-                <li><strong>Step 2 &mdash; Write:</strong> pick a template, edit the words, and tick which offers to include. Type <code>{{name}}</code> and it becomes each person&rsquo;s first name.</li>
+                <li><strong>Step 1 &mdash; Who:</strong> leave it on <em>&ldquo;My website subscribers&rdquo;</em> and your confirmed sign-ups load automatically &mdash; no files, no exporting. Want a smaller group? Use the <em>Narrow it down</em> boxes to pick people by <strong>treatment interest</strong> or <strong>birthday month</strong>. A live count shows exactly how many people will get it.</li>
+                <li><strong>Step 2 &mdash; Write:</strong> give the campaign a name (just for you), pick a template, edit the words, and tick which offers to include. Type <code>{{name}}</code> and it becomes each person&rsquo;s first name.</li>
                 <li><strong>Step 3 &mdash; Send:</strong> <em>always send a test to yourself first</em> and check it on your phone. Then tick the confirmation box and click <em>Send campaign</em>.</li>
               </ol>
-              <p class="guide-warn"><strong>Important:</strong> only ever email people who ticked the marketing box in Treatwell. The tool protects you by removing everyone else, but never turn that off.</p>
+              <p class="guide-tip"><strong>Save it for later:</strong> click <em>Save current</em> under &ldquo;Saved campaigns&rdquo; to keep a campaign (words, offers and the group you chose). Reuse it anytime with <em>Load</em> &mdash; perfect for a monthly newsletter or a birthday email.</p>
+              <p class="guide-tip"><strong>Emailing existing Treatwell clients instead?</strong> Switch Step 1 to <em>Treatwell client export</em> and drop in the CSV from Treatwell &mdash; or just use Treatwell&rsquo;s own Marketing tool for those. Your website subscribers are the ones that live here.</p>
+              <p class="guide-warn"><strong>Important:</strong> everyone in &ldquo;My website subscribers&rdquo; already confirmed and agreed &mdash; that&rsquo;s handled for you. If you ever use a Treatwell CSV, only email people who ticked the marketing box.</p>
             </section>
 
             <section class="admin-card guide-card">
@@ -174,7 +174,6 @@
               <h3>The other tabs <span class="guide-hint">(click a name to open it)</span></h3>
               <ul class="guide-list">
                 <li><button class="guide-link" type="button" data-go="prices">Prices</button> &mdash; edit the price lists shown on the treatments page.</li>
-                <li><button class="guide-link" type="button" data-go="marketing">Marketing</button> &mdash; a scratchpad to draft email wording before you send it in Send email.</li>
                 <li><button class="guide-link" type="button" data-go="reviews">Reviews</button> &mdash; approve or add the reviews shown on the site.</li>
                 <li><button class="guide-link" type="button" data-go="media">Media</button> &mdash; the photos available to use in offers.</li>
                 <li><button class="guide-link" type="button" data-go="content">Pages</button> &mdash; edit text on the standard pages.</li>
@@ -304,68 +303,6 @@
             </section>
           </section>
 
-          <!-- ===================== MARKETING ===================== -->
-          <section class="admin-panel" id="marketing" data-admin-section>
-            <div class="admin-section-head">
-              <div>
-                <p class="admin-eyebrow">Email &amp; SMS</p>
-                <h2>Marketing campaigns</h2>
-                <p>Prepare approved campaign copy here. Sending happens only through a communication feature enabled in Treatwell Connect or another owner-approved email service with valid consent and unsubscribe handling.</p>
-              </div>
-              <button class="admin-button admin-button-primary" type="button" data-add-campaign>New campaign</button>
-            </div>
-            <div class="admin-layout">
-              <section class="admin-card admin-editor">
-                <p class="admin-eyebrow">Campaign editor</p>
-                <label>Start from a template<select data-campaign-field="template" data-campaign-template>
-                  <option value="">Blank</option>
-                  <option value="offer">New offer announcement</option>
-                  <option value="newsletter">Monthly newsletter</option>
-                  <option value="birthday">Birthday treat</option>
-                  <option value="winback">We miss you (win-back)</option>
-                </select></label>
-                <label>Campaign name<input type="text" data-campaign-field="name"></label>
-                <label>Audience<select data-campaign-field="audience">
-                  <option>Select an eligible audience in Treatwell Connect</option>
-                  <option>Website newsletter subscribers only</option>
-                </select></label>
-                <label>Email subject<input type="text" data-campaign-field="subject"></label>
-                <label>Preview text<input type="text" data-campaign-field="preview"></label>
-                <label>Message<textarea rows="6" data-campaign-field="body"></textarea></label>
-                <div class="field-pair">
-                  <label>Button label<input type="text" data-campaign-field="ctaLabel"></label>
-                  <label>Button link<input type="url" data-campaign-field="ctaUrl"></label>
-                </div>
-                <div class="field-pair">
-                  <label>Send date<input type="date" data-campaign-field="sendDate"></label>
-                  <label>Status<select data-campaign-field="status"><option>Draft</option><option>Scheduled</option><option>Sent</option></select></label>
-                </div>
-                <div class="admin-actions-inline start">
-                  <button class="admin-button admin-button-primary" type="button" data-save-campaign>Save campaign</button>
-                  <button class="admin-button admin-button-secondary" type="button" data-copy-campaign>Copy text</button>
-                  <a class="admin-button admin-button-ghost" href="https://connect.treatwell.co.uk/" target="_blank" rel="noopener noreferrer">Open Treatwell Connect</a>
-                </div>
-                <p class="admin-help">Drafts save in this browser and do not send anything. Before sending, verify that the chosen Treatwell communication feature is enabled and that every recipient has valid marketing consent.</p>
-              </section>
-              <aside class="admin-stack">
-                <section class="admin-card">
-                  <div class="admin-card-head"><div><p class="admin-eyebrow">Live preview</p><h3>Email preview</h3></div></div>
-                  <div class="email-preview" data-campaign-preview></div>
-                </section>
-                <section class="admin-card">
-                  <div class="admin-card-head"><div><p class="admin-eyebrow">Saved</p><h3>Campaign drafts</h3></div></div>
-                  <div class="campaign-list" data-campaign-list></div>
-                </section>
-              </aside>
-            </div>
-
-            <section class="admin-card">
-              <p class="admin-eyebrow">Audience and consent</p>
-              <h3>Drafts here. Sending happens in “Send email”.</h3>
-              <p>This panel is a scratchpad — nothing here sends. To build and send a real campaign, use the <strong>Send email</strong> tab, which only ever emails clients who ticked the marketing opt-in in Treatwell.</p>
-            </section>
-          </section>
-
           <!-- ===================== SEND EMAIL ===================== -->
           <section class="admin-panel" id="sender" data-admin-section>
             <div class="admin-section-head">
@@ -386,9 +323,36 @@
               </div>
               <p class="admin-help">In Treatwell go to <strong>Clients</strong> → <strong>Export</strong>. Drop that CSV file here. We read the opt-in column and <strong>discard everyone who did not consent</strong>.</p>
               <label>Audience source<select data-audience-source>
-                <option value="website">Confirmed website subscribers</option>
+                <option value="website">My website subscribers (no file needed)</option>
                 <option value="csv">Treatwell client export (.csv)</option>
               </select></label>
+
+              <!-- Segments (website subscribers only) -->
+              <div data-segment-controls hidden>
+                <p class="admin-eyebrow admin-subsection-title">Narrow it down (optional)</p>
+                <div class="field-pair">
+                  <label>Interested in<select data-segment="interest">
+                    <option value="">Everyone</option>
+                    <option value="Laser hair removal">Laser hair removal</option>
+                    <option value="Skin &amp; boosters">Skin &amp; boosters</option>
+                    <option value="Facials &amp; peels">Facials &amp; peels</option>
+                    <option value="Body &amp; contouring">Body &amp; contouring</option>
+                    <option value="Lashes &amp; brows">Lashes &amp; brows</option>
+                    <option value="Not sure yet">Not sure yet</option>
+                  </select></label>
+                  <label>Birthday month<select data-segment="month">
+                    <option value="">Any month</option>
+                    <option value="1">January</option><option value="2">February</option>
+                    <option value="3">March</option><option value="4">April</option>
+                    <option value="5">May</option><option value="6">June</option>
+                    <option value="7">July</option><option value="8">August</option>
+                    <option value="9">September</option><option value="10">October</option>
+                    <option value="11">November</option><option value="12">December</option>
+                  </select></label>
+                </div>
+                <div class="segment-count" data-segment-count hidden></div>
+              </div>
+
               <div data-csv-recipient-controls hidden>
                 <label>Treatwell client export (.csv)<input type="file" accept=".csv,text/csv" data-recipients-file></label>
               </div>
@@ -411,6 +375,7 @@
               <!-- Step 2 — compose -->
               <section class="admin-card admin-editor">
                 <p class="admin-eyebrow">Step 2 — compose</p>
+                <label>Campaign name <span class="admin-hint">Just for you — to save &amp; find it later.</span><input type="text" data-campaign-name placeholder="e.g. August laser offer"></label>
                 <label>Template<select data-mail-field="template">
                   <option value="offers">Offer announcement</option>
                   <option value="winback">We miss you (win-back)</option>
@@ -451,6 +416,15 @@
                   <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-send-campaign disabled>Send campaign</button>
                   <p class="admin-status" data-send-status></p>
                   <ul class="send-safety-list" data-send-safety></ul>
+                </section>
+
+                <section class="admin-card">
+                  <div class="admin-card-head">
+                    <div><p class="admin-eyebrow">Drafts</p><h3>Saved campaigns</h3></div>
+                    <button class="tiny-button" type="button" data-campaign-save>Save current</button>
+                  </div>
+                  <p class="admin-help">Save the current email (words, offers and segment) to reuse later.</p>
+                  <div class="campaign-drafts" data-campaign-drafts></div>
                 </section>
 
                 <section class="admin-card">
@@ -685,7 +659,7 @@
 
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="admin.js?v=20260720-publish8"></script>
-    <script src="sender.js?v=20260718-mail2"></script>
+    <script src="sender.js?v=20260720-campaigns1"></script>
     <script src="subscribers.js?v=20260718-subs1"></script>
   </body>
 </html>

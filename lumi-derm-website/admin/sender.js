@@ -20,6 +20,7 @@
     offers: [],
     selected: {},          // index -> true
     recipients: [],        // [{ email, name }]
+    allSubs: [],           // full confirmed subscriber rows (for segmenting)
     csvRows: [],
     csvHeaders: [],
     audienceSource: "website",
@@ -376,36 +377,71 @@
         });
       })
       .then(function (data) {
-        var list = (data.subscribers || []).filter(function (row) {
+        // Keep the full confirmed+consented list; segments filter it live.
+        state.allSubs = (data.subscribers || []).filter(function (row) {
           return row.status === "confirmed" && Number(row.consent_email) === 1;
         });
-        state.recipients = list.map(function (row) {
-          return {
-            email: row.email,
-            name: [row.first_name, row.last_name].filter(Boolean).join(" ")
-          };
-        });
-        status(
-          out,
-          state.recipients.length + " confirmed website subscriber" + (state.recipients.length === 1 ? "" : "s") + " ready.",
-          state.recipients.length ? "ok" : "error"
-        );
-        updateSendButton();
+        applySegment();
       })
       .catch(function (err) {
+        state.allSubs = [];
         status(out, err.message, "error");
         updateSendButton();
       });
   }
 
+  // Filter the loaded subscribers by the chosen segment (interest / birthday month)
+  // and update the live recipient count.
+  function applySegment() {
+    if (state.audienceSource !== "website") return;
+    var interestSel = $('[data-segment="interest"]');
+    var monthSel = $('[data-segment="month"]');
+    var interest = interestSel ? interestSel.value : "";
+    var month = monthSel ? parseInt(monthSel.value, 10) : NaN;
+
+    var filtered = (state.allSubs || []).filter(function (row) {
+      if (interest && String(row.interest || "") !== interest) return false;
+      if (!isNaN(month) && Number(row.birth_month) !== month) return false;
+      return true;
+    });
+
+    state.recipients = filtered.map(function (row) {
+      return {
+        email: row.email,
+        name: [row.first_name, row.last_name].filter(Boolean).join(" ")
+      };
+    });
+
+    var total = (state.allSubs || []).length;
+    var count = $("[data-segment-count]");
+    if (count) {
+      var segmenting = interest || !isNaN(month);
+      count.hidden = false;
+      count.innerHTML =
+        "<strong>" + state.recipients.length + "</strong> " +
+        (state.recipients.length === 1 ? "person" : "people") +
+        (segmenting ? " match this segment" : " on your list") +
+        (segmenting ? ' <span class="segment-of">(of ' + total + " total)</span>" : "");
+    }
+    status(
+      $("[data-recipients-status]"),
+      state.recipients.length + " recipient" + (state.recipients.length === 1 ? "" : "s") + " ready to send to.",
+      state.recipients.length ? "ok" : "error"
+    );
+    updateSendButton();
+  }
+
   function setAudienceSource(source) {
     state.audienceSource = source === "csv" ? "csv" : "website";
-    setHidden("[data-csv-recipient-controls]", state.audienceSource !== "csv");
+    var isWebsite = state.audienceSource === "website";
+    setHidden("[data-csv-recipient-controls]", isWebsite);
+    setHidden("[data-segment-controls]", !isWebsite);
     setHidden("[data-column-map]", true);
     setHidden("[data-column-map-2]", true);
     setHidden("[data-csv-preview]", true);
+    setHidden("[data-segment-count]", true);
     state.recipients = [];
-    if (state.audienceSource === "website") {
+    if (isWebsite) {
       loadWebsiteSubscribers();
     } else {
       status($("[data-recipients-status]"), "Choose a Treatwell CSV export to build the recipient list.");
@@ -931,8 +967,114 @@
       });
     }
 
+    // Segment filters re-filter the already-loaded subscribers.
+    $$("[data-segment]").forEach(function (sel) {
+      sel.addEventListener("change", applySegment);
+    });
+
     var historyBtn = $("[data-history-reload]");
     if (historyBtn) historyBtn.addEventListener("click", loadHistory);
+
+    bindCampaigns();
+  }
+
+  /* ---- Named campaign drafts (saved in this browser) ---- */
+  var CAMPAIGN_STORE = "lumi-derm-campaigns-v1";
+
+  function loadCampaigns() {
+    try { return JSON.parse(localStorage.getItem(CAMPAIGN_STORE) || "[]"); }
+    catch (e) { return []; }
+  }
+  function storeCampaigns(list) {
+    try { localStorage.setItem(CAMPAIGN_STORE, JSON.stringify(list)); } catch (e) { /* ignore */ }
+  }
+  function currentSegment() {
+    var i = $('[data-segment="interest"]');
+    var m = $('[data-segment="month"]');
+    return { interest: i ? i.value : "", month: m ? m.value : "" };
+  }
+  function saveCampaign() {
+    var nameEl = $("[data-campaign-name]");
+    var name = nameEl ? nameEl.value.trim() : "";
+    if (!name) { alert("Give the campaign a name first (top of Compose)."); if (nameEl) nameEl.focus(); return; }
+    var list = loadCampaigns();
+    var entry = {
+      id: "c" + Date.now().toString(36),
+      name: name,
+      savedAt: new Date().toISOString(),
+      mail: JSON.parse(JSON.stringify(state.mail)),
+      selected: JSON.parse(JSON.stringify(state.selected)),
+      audienceSource: state.audienceSource,
+      segment: currentSegment()
+    };
+    // Overwrite a same-name draft rather than duplicating.
+    list = list.filter(function (c) { return c.name.toLowerCase() !== name.toLowerCase(); });
+    list.unshift(entry);
+    storeCampaigns(list);
+    renderCampaigns();
+  }
+  function loadCampaignById(id) {
+    var entry = loadCampaigns().filter(function (c) { return c.id === id; })[0];
+    if (!entry) return;
+    state.mail = JSON.parse(JSON.stringify(entry.mail));
+    state.selected = JSON.parse(JSON.stringify(entry.selected || {}));
+    var nameEl = $("[data-campaign-name]");
+    if (nameEl) nameEl.value = entry.name;
+    syncFields();
+    renderOfferPicker();
+    // Restore audience + segment
+    if (entry.audienceSource) {
+      var audience = $("[data-audience-source]");
+      if (audience) audience.value = entry.audienceSource;
+      setAudienceSource(entry.audienceSource);
+    }
+    if (entry.segment) {
+      var i = $('[data-segment="interest"]'); if (i) i.value = entry.segment.interest || "";
+      var m = $('[data-segment="month"]'); if (m) m.value = entry.segment.month || "";
+      applySegment();
+    }
+    renderPreview();
+    status($("[data-send-status]"), 'Loaded campaign "' + entry.name + '".', "ok");
+  }
+  function deleteCampaign(id) {
+    var list = loadCampaigns().filter(function (c) { return c.id !== id; });
+    storeCampaigns(list);
+    renderCampaigns();
+  }
+  function renderCampaigns() {
+    var box = $("[data-campaign-drafts]");
+    if (!box) return;
+    var list = loadCampaigns();
+    if (!list.length) {
+      box.innerHTML = '<p class="admin-help">No saved campaigns yet.</p>';
+      return;
+    }
+    box.innerHTML = list.map(function (c) {
+      var seg = [];
+      if (c.segment && c.segment.interest) seg.push(esc(c.segment.interest));
+      if (c.segment && c.segment.month) seg.push("month " + esc(c.segment.month));
+      var sub = esc((c.mail && c.mail.subject) || "(no subject)");
+      return '<div class="campaign-draft">' +
+        '<div class="campaign-draft-main"><strong>' + esc(c.name) + "</strong>" +
+        '<span>' + sub + (seg.length ? " · " + seg.join(", ") : "") + "</span></div>" +
+        '<div class="campaign-draft-actions">' +
+        '<button class="tiny-button" type="button" data-campaign-load="' + c.id + '">Load</button>' +
+        '<button class="tiny-button tiny-danger" type="button" data-campaign-del="' + c.id + '">Delete</button>' +
+        "</div></div>";
+    }).join("");
+    $$("[data-campaign-load]", box).forEach(function (b) {
+      b.addEventListener("click", function () { loadCampaignById(b.getAttribute("data-campaign-load")); });
+    });
+    $$("[data-campaign-del]", box).forEach(function (b) {
+      b.addEventListener("click", function () {
+        if (window.confirm("Delete this saved campaign?")) deleteCampaign(b.getAttribute("data-campaign-del"));
+      });
+    });
+  }
+  function bindCampaigns() {
+    var saveBtn = $("[data-campaign-save]");
+    if (saveBtn) saveBtn.addEventListener("click", saveCampaign);
+    renderCampaigns();
   }
 
   function loadHistory() {

@@ -1262,3 +1262,47 @@ code {
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.06);
 }
+
+/* ===================== Campaign segments & saved drafts ===================== */
+.segment-count {
+  margin-top: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  background: rgba(169, 111, 104, 0.1);
+  font-size: 0.95rem;
+}
+.segment-count strong { font-size: 1.1rem; }
+.segment-of { opacity: 0.65; font-size: 0.85rem; }
+
+.campaign-drafts { display: grid; gap: 0.5rem; }
+.campaign-draft {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+}
+.campaign-draft-main { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.campaign-draft-main strong { font-size: 0.9rem; }
+.campaign-draft-main span {
+  font-size: 0.78rem;
+  opacity: 0.65;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 15rem;
+}
+.campaign-draft-actions { display: flex; gap: 0.35rem; flex: none; }
+.tiny-button {
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: #fff;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+}
+.tiny-button:hover { background: rgba(0, 0, 0, 0.04); }
+.tiny-danger { color: #b4413a; border-color: rgba(180, 65, 58, 0.4); }
+.tiny-danger:hover { background: rgba(180, 65, 58, 0.08); }
