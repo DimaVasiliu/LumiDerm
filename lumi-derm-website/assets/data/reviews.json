@@ -2,8 +2,7 @@
   "summary": {
     "rating": "5.0",
     "count": 47,
-    "label": "Treatwell reviews",
-    "note": "Public Treatwell rating and review count, with displayed entries kept as a curated local summary feed until automated review sync is connected."
+    "label": "Treatwell reviews"
   },
   "reviews": [
     {
@@ -29,6 +28,22 @@
       "treatment": "Lash Lift",
       "source": "Client feedback",
       "text": "I was slightly late but Iulia was accommodating and efficient, so we finished the procedure on time. I love the result!"
+    },
+    {
+      "name": "Narona",
+      "initial": "N",
+      "rating": 5,
+      "treatment": "Facial Treatment",
+      "source": "Treatwell",
+      "text": "A calm, professional experience with attentive care and a refreshed feeling after the visit."
+    },
+    {
+      "name": "Clare",
+      "initial": "C",
+      "rating": 5,
+      "treatment": "Electrolysis",
+      "source": "Treatwell",
+      "text": "Precise treatment in a welcoming studio, with friendly service and a confident finish."
     },
     {
       "name": "Maria",
@@ -133,22 +148,6 @@
       "treatment": "Laser Hair Removal",
       "source": "Treatwell",
       "text": "A friendly and reassuring appointment with careful treatment and clear guidance throughout."
-    },
-    {
-      "name": "Narona",
-      "initial": "N",
-      "rating": 5,
-      "treatment": "Facial Treatment",
-      "source": "Treatwell",
-      "text": "A calm, professional experience with attentive care and a refreshed feeling after the visit."
-    },
-    {
-      "name": "Clare",
-      "initial": "C",
-      "rating": 5,
-      "treatment": "Electrolysis",
-      "source": "Treatwell",
-      "text": "Precise treatment in a welcoming studio, with friendly service and a confident finish."
     },
     {
       "name": "Roisin",
