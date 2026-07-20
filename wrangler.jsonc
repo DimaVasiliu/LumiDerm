@@ -9,7 +9,11 @@
 	"assets": {
 		"directory": "./lumi-derm-website",
 		"not_found_handling": "404-page",
-		"binding": "ASSETS"
+		"binding": "ASSETS",
+		// Run the Worker first for /api/* so clicked links (browser navigations,
+		// e.g. the email confirmation link) reach the Worker instead of being
+		// served the static 404 page. Everything else serves static assets directly.
+		"run_worker_first": ["/api/*"]
 	},
 	// Unsubscribed addresses. Created with:
 	//   npx wrangler kv namespace create SUPPRESSION
