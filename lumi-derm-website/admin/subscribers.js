@@ -64,8 +64,12 @@
     }
     body.innerHTML = cache.map(function (r) {
       var badge = '<span class="subs-badge subs-' + esc(r.status) + '">' + esc(r.status) + "</span>";
+      var consentTitle = [
+        r.consent_source ? "Source: " + r.consent_source : "",
+        r.consent_wording ? "Wording: " + r.consent_wording : ""
+      ].filter(Boolean).join("\n");
       var consent = r.consent_email
-        ? '<span title="Consented ' + esc(whenLabel(r)) + '">Yes &middot; ' + esc(whenLabel(r)) + "</span>"
+        ? '<span class="subs-consent" title="' + esc(consentTitle || ("Consented " + whenLabel(r))) + '">Yes &middot; ' + esc(whenLabel(r)) + '<small>' + esc(r.consent_source || "website") + '</small></span>'
         : "No";
       return "<tr>" +
         "<td>" + esc(fullName(r) || "—") + "</td>" +

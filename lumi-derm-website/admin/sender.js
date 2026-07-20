@@ -22,6 +22,7 @@
     recipients: [],        // [{ email, name }]
     csvRows: [],
     csvHeaders: [],
+    audienceSource: "website",
     mail: {
       template: "offers",
       subject: "",
@@ -104,6 +105,10 @@
     if (!el) return;
     el.textContent = message;
     el.className = "admin-status" + (kind ? " is-" + kind : "");
+  }
+  function setHidden(sel, hidden) {
+    var el = $(sel);
+    if (el) el.hidden = hidden;
   }
   function getKey() {
     try {
@@ -248,6 +253,7 @@
       $("[data-column-map-2]").hidden = false;
 
       buildRecipients();
+      renderCsvPreview();
     };
 
     reader.readAsText(file);
@@ -313,6 +319,98 @@
     }
 
     updateSendButton();
+  }
+
+  function renderCsvPreview() {
+    var box = $("[data-csv-preview]");
+    if (!box) return;
+    if (!state.csvHeaders.length || !state.csvRows.length) {
+      box.hidden = true;
+      box.innerHTML = "";
+      return;
+    }
+
+    var emailCol = parseInt(($('[data-map-field="email"]') || {}).value, 10);
+    var nameCol = parseInt(($('[data-map-field="name"]') || {}).value, 10);
+    var optCol = parseInt(($('[data-map-field="optin"]') || {}).value, 10);
+    var strict = ($('[data-map-field="strict"]') || {}).value !== "no";
+
+    var rows = state.csvRows.slice(0, 5).map(function (row) {
+      var opted = !strict ? "Allowed manually" : optCol >= 0 && looksConsented(row[optCol]) ? "Yes" : "No";
+      return (
+        "<tr>" +
+        "<td>" + esc(emailCol >= 0 ? row[emailCol] || "" : "") + "</td>" +
+        "<td>" + esc(nameCol >= 0 ? row[nameCol] || "" : "") + "</td>" +
+        "<td>" + esc(opted) + "</td>" +
+        "</tr>"
+      );
+    }).join("");
+
+    box.hidden = false;
+    box.innerHTML =
+      '<p class="admin-eyebrow">CSV preview</p>' +
+      '<div class="admin-table-wrap"><table class="admin-table csv-preview-table">' +
+      "<thead><tr><th>Email</th><th>Name</th><th>Marketing opt-in</th></tr></thead>" +
+      "<tbody>" + rows + "</tbody></table></div>" +
+      '<p class="admin-help">Showing the first 5 rows with the selected column mapping.</p>';
+  }
+
+  function loadWebsiteSubscribers() {
+    var out = $("[data-recipients-status]");
+    var key = getKey();
+    state.recipients = [];
+    updateSendButton();
+    if (!key) {
+      status(out, "Add the send key in Settings before loading website subscribers.", "error");
+      return;
+    }
+    status(out, "Loading confirmed website subscribers…");
+    fetch("/api/subscribers", {
+      cache: "no-store",
+      headers: { "x-lumi-key": key }
+    })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok) throw new Error(data.error || "Could not load subscribers.");
+          return data;
+        });
+      })
+      .then(function (data) {
+        var list = (data.subscribers || []).filter(function (row) {
+          return row.status === "confirmed" && Number(row.consent_email) === 1;
+        });
+        state.recipients = list.map(function (row) {
+          return {
+            email: row.email,
+            name: [row.first_name, row.last_name].filter(Boolean).join(" ")
+          };
+        });
+        status(
+          out,
+          state.recipients.length + " confirmed website subscriber" + (state.recipients.length === 1 ? "" : "s") + " ready.",
+          state.recipients.length ? "ok" : "error"
+        );
+        updateSendButton();
+      })
+      .catch(function (err) {
+        status(out, err.message, "error");
+        updateSendButton();
+      });
+  }
+
+  function setAudienceSource(source) {
+    state.audienceSource = source === "csv" ? "csv" : "website";
+    setHidden("[data-csv-recipient-controls]", state.audienceSource !== "csv");
+    setHidden("[data-column-map]", true);
+    setHidden("[data-column-map-2]", true);
+    setHidden("[data-csv-preview]", true);
+    state.recipients = [];
+    if (state.audienceSource === "website") {
+      loadWebsiteSubscribers();
+    } else {
+      status($("[data-recipients-status]"), "Choose a Treatwell CSV export to build the recipient list.");
+      updateSendButton();
+    }
   }
 
   /* --------------------------------------------------------------- */
@@ -560,6 +658,43 @@
     var ready =
       confirmed && state.recipients.length > 0 && String(state.mail.subject || "").trim() !== "";
     btn.disabled = !ready;
+    renderSafetyChecks();
+  }
+
+  function safetyChecks() {
+    var checks = [];
+    var subject = String(state.mail.subject || "").trim();
+    var ctaUrl = String(state.mail.ctaUrl || "").trim();
+    var html = buildHtml(false);
+    checks.push({
+      ok: Boolean(subject),
+      text: subject ? "Subject line is set." : "Add a subject line before sending."
+    });
+    checks.push({
+      ok: state.recipients.length > 0,
+      text: state.recipients.length ? state.recipients.length + " recipient" + (state.recipients.length === 1 ? "" : "s") + " loaded." : "Load an audience before sending."
+    });
+    checks.push({
+      ok: /\{\{unsubscribe\}\}/.test(html),
+      text: "Unsubscribe token is included."
+    });
+    checks.push({
+      ok: !ctaUrl || /^https:\/\/(lumidermaesthetics\.com|www\.treatwell\.co\.uk)\//i.test(ctaUrl),
+      text: ctaUrl ? "Button link points to an approved Lumi/Treatwell URL." : "No button link set."
+    });
+    checks.push({
+      ok: state.audienceSource === "website" || ($('[data-map-field="strict"]') || {}).value !== "no",
+      text: state.audienceSource === "website" ? "Audience uses confirmed website consent." : "Treatwell CSV is restricted to opted-in rows."
+    });
+    return checks;
+  }
+
+  function renderSafetyChecks() {
+    var list = $("[data-send-safety]");
+    if (!list) return;
+    list.innerHTML = safetyChecks().map(function (check) {
+      return '<li class="' + (check.ok ? "is-ok" : "is-warn") + '">' + esc(check.text) + "</li>";
+    }).join("");
   }
 
   function postCampaign(recipients, isTest) {
@@ -574,6 +709,7 @@
         subject: String(state.mail.subject || "").replace(/\{\{name\}\}/g, "there"),
         html: buildHtml(false),
         recipients: recipients,
+        audienceSource: isTest === true ? "test" : state.audienceSource,
         test: isTest === true
       })
     }).then(function (res) {
@@ -642,6 +778,7 @@
             } else {
               status(out, msg, "ok");
             }
+            loadHistory();
           })
           .catch(function (err) {
             status(out, err.message, "error");
@@ -668,6 +805,8 @@
         try {
           localStorage.setItem(KEY_STORE, String((field && field.value) || "").trim());
           status(out, "Key saved in this browser.", "ok");
+          if (state.audienceSource === "website") loadWebsiteSubscribers();
+          loadHistory();
         } catch (err) {
           status(out, "Could not save the key.", "error");
         }
@@ -778,8 +917,71 @@
     }
 
     $$("[data-map-field]").forEach(function (select) {
-      select.addEventListener("change", buildRecipients);
+      select.addEventListener("change", function () {
+        buildRecipients();
+        renderCsvPreview();
+      });
     });
+
+    var audience = $("[data-audience-source]");
+    if (audience) {
+      audience.value = state.audienceSource;
+      audience.addEventListener("change", function () {
+        setAudienceSource(audience.value);
+      });
+    }
+
+    var historyBtn = $("[data-history-reload]");
+    if (historyBtn) historyBtn.addEventListener("click", loadHistory);
+  }
+
+  function loadHistory() {
+    var box = $("[data-campaign-history]");
+    var key = getKey();
+    if (!box) return;
+    if (!key) {
+      box.innerHTML = '<p class="admin-help">Add the send key in Settings to load send history.</p>';
+      return;
+    }
+    box.innerHTML = '<p class="admin-help">Loading history…</p>';
+    fetch("/api/campaign/history", {
+      cache: "no-store",
+      headers: { "x-lumi-key": key }
+    })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok) throw new Error(data.error || "Could not load history.");
+          return data;
+        });
+      })
+      .then(function (data) {
+        var rows = data.history || [];
+        if (!rows.length) {
+          box.innerHTML = '<p class="admin-help">No campaigns have been sent yet.</p>';
+          return;
+        }
+        box.innerHTML = rows.slice(0, 8).map(function (row) {
+          var count = Number(row.sent_count || 0);
+          var label = row.is_test ? "Test" : row.audience_source === "website" ? "Website subscribers" : "Treatwell CSV";
+          return (
+            '<article class="history-item">' +
+            '<div><strong>' + esc(row.subject || "Untitled") + '</strong>' +
+            '<span>' + esc(label) + " · " + count + " sent · " + esc(formatDate(row.created_at)) + '</span></div>' +
+            '<em class="' + (row.status === "sent" ? "is-ok" : "is-warn") + '">' + esc(row.status || "sent") + '</em>' +
+            '</article>'
+          );
+        }).join("");
+      })
+      .catch(function (err) {
+        box.innerHTML = '<p class="admin-status is-error">' + esc(err.message) + "</p>";
+      });
+  }
+
+  function formatDate(value) {
+    var date = new Date(value);
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) + " " +
+      date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   }
 
   /* --------------------------------------------------------------- */
@@ -792,6 +994,8 @@
     bindSending();
     bindSettings();
     loadOffers();
+    setAudienceSource(state.audienceSource);
+    loadHistory();
     if (!loadDraft()) {
       applyTemplate("offers");
     } else {

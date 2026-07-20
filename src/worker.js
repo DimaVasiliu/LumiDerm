@@ -7,6 +7,7 @@
  * Routes:
  *   GET  /api/health              — is the API alive + configured?
  *   POST /api/campaign/send       — send a campaign (requires SEND_KEY)
+ *   GET  /api/campaign/history    — admin: recent send history (requires SEND_KEY)
  *   GET  /api/unsubscribe         — one-click unsubscribe landing page
  *   POST /api/unsubscribe         — RFC 8058 one-click unsubscribe
  *   POST /api/subscribe           — newsletter signup (double opt-in)
@@ -60,6 +61,10 @@ export default {
       if (url.pathname === "/api/campaign/send") {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
         return handleSend(request, env, url);
+      }
+
+      if (url.pathname === "/api/campaign/history") {
+        return handleCampaignHistory(request, env);
       }
 
       if (url.pathname === "/api/subscribe") {
@@ -120,6 +125,7 @@ async function handleSend(request, env, url) {
   const html = String(body.html || "");
   const isTest = body.test === true;
   const incoming = Array.isArray(body.recipients) ? body.recipients : [];
+  const audienceSource = String(body.audienceSource || (isTest ? "test" : "manual")).slice(0, 80);
 
   if (!subject) return json({ error: "Subject is required." }, 400);
   if (!html) return json({ error: "Email body is required." }, 400);
@@ -212,13 +218,67 @@ async function handleSend(request, env, url) {
     }
   }
 
-  return json({
+  const payload = {
     ok: errors.length === 0,
     sent,
     suppressed,
     invalid,
     errors,
+  };
+
+  await recordCampaignSend(env, {
+    subject,
+    audienceSource,
+    isTest,
+    requested: incoming.length,
+    sent,
+    suppressed,
+    invalid,
+    status: errors.length ? "partial" : "sent",
+    errors,
   });
+
+  return json(payload);
+}
+
+async function recordCampaignSend(env, detail) {
+  if (!env.SUBSCRIBERS) return;
+  try {
+    await env.SUBSCRIBERS.prepare(
+      `INSERT INTO campaign_sends
+        (subject, audience_source, is_test, requested_count, sent_count, suppressed_count,
+         invalid_count, status, error_summary, created_at)
+       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+    ).bind(
+      String(detail.subject || "").slice(0, 240),
+      String(detail.audienceSource || "manual").slice(0, 80),
+      detail.isTest ? 1 : 0,
+      detail.requested || 0,
+      detail.sent || 0,
+      detail.suppressed || 0,
+      detail.invalid || 0,
+      String(detail.status || "sent").slice(0, 24),
+      (detail.errors || []).join(" | ").slice(0, 1000),
+      new Date().toISOString()
+    ).run();
+  } catch (err) {
+    // History is useful, but a logging failure must not block a real email send.
+  }
+}
+
+async function handleCampaignHistory(request, env) {
+  if (!authorised(request, env)) return json({ error: "Unauthorised." }, 401);
+  if (!env.SUBSCRIBERS) return json({ error: "Campaign history isn't set up yet." }, 500);
+
+  const { results } = await env.SUBSCRIBERS.prepare(
+    `SELECT id, subject, audience_source, is_test, requested_count, sent_count,
+            suppressed_count, invalid_count, status, error_summary, created_at
+     FROM campaign_sends
+     ORDER BY created_at DESC
+     LIMIT 50`
+  ).all();
+
+  return json({ ok: true, history: results || [] });
 }
 
 /* ------------------------------------------------------------------ */
@@ -432,7 +492,7 @@ async function handleListSubscribers(request, env) {
 
   const { results } = await env.SUBSCRIBERS.prepare(
     `SELECT email, first_name, last_name, birth_day, birth_month, interest,
-            status, consent_email, consent_source, created_at, confirmed_at, unsubscribed_at
+            status, consent_email, consent_wording, consent_source, created_at, confirmed_at, unsubscribed_at
      FROM subscribers ORDER BY created_at DESC`
   ).all();
 

@@ -988,6 +988,113 @@ code {
   font-weight: 500;
 }
 
+.csv-preview {
+  margin-top: 1rem;
+  border: 1px solid rgba(68, 52, 49, 0.1);
+  border-radius: 16px;
+  padding: 0.9rem;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.csv-preview .admin-eyebrow {
+  margin-bottom: 0.55rem;
+}
+
+.csv-preview-table {
+  min-width: 520px;
+  font-size: 0.82rem;
+}
+
+.send-safety-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.send-safety-list li {
+  position: relative;
+  padding-left: 1.25rem;
+  color: var(--admin-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.send-safety-list li::before {
+  position: absolute;
+  left: 0;
+  top: 0.1rem;
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 50%;
+  content: "";
+  background: rgba(180, 65, 58, 0.22);
+}
+
+.send-safety-list li.is-ok::before {
+  background: rgba(47, 122, 77, 0.26);
+}
+
+.send-safety-list li.is-warn {
+  color: #8f4b43;
+}
+
+.campaign-history {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.history-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: start;
+  border: 1px solid rgba(68, 52, 49, 0.1);
+  border-radius: 14px;
+  padding: 0.75rem 0.85rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.history-item strong,
+.history-item span {
+  display: block;
+}
+
+.history-item strong {
+  overflow: hidden;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-item span {
+  margin-top: 0.2rem;
+  color: var(--admin-muted);
+  font-size: 0.74rem;
+}
+
+.history-item em {
+  border-radius: 999px;
+  padding: 0.22rem 0.52rem;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.history-item em.is-ok {
+  color: #2f7a4d;
+  background: rgba(47, 122, 77, 0.14);
+}
+
+.history-item em.is-warn {
+  color: #9a7b16;
+  background: rgba(201, 162, 39, 0.16);
+}
+
 .admin-hint {
   display: block;
   font-size: 0.78rem;
@@ -1088,3 +1195,11 @@ code {
 .subs-pending { background: rgba(201, 162, 39, 0.16); color: #9a7b16; }
 .subs-unsubscribed { background: rgba(180, 65, 58, 0.12); color: #b4413a; }
 .subs-del { color: #b4413a; font-size: 0.78rem; }
+.subs-consent {
+  display: grid;
+  gap: 0.1rem;
+}
+.subs-consent small {
+  color: var(--admin-muted);
+  font-size: 0.72rem;
+}

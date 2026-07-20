@@ -284,7 +284,13 @@
                 </div>
               </div>
               <p class="admin-help">In Treatwell go to <strong>Clients</strong> → <strong>Export</strong>. Drop that CSV file here. We read the opt-in column and <strong>discard everyone who did not consent</strong>.</p>
-              <label>Treatwell client export (.csv)<input type="file" accept=".csv,text/csv" data-recipients-file></label>
+              <label>Audience source<select data-audience-source>
+                <option value="website">Confirmed website subscribers</option>
+                <option value="csv">Treatwell client export (.csv)</option>
+              </select></label>
+              <div data-csv-recipient-controls hidden>
+                <label>Treatwell client export (.csv)<input type="file" accept=".csv,text/csv" data-recipients-file></label>
+              </div>
               <div class="field-pair" data-column-map hidden>
                 <label>Email column<select data-map-field="email"></select></label>
                 <label>Name column<select data-map-field="name"></select></label>
@@ -296,6 +302,7 @@
                   <option value="no">No — I have consent another way</option>
                 </select></label>
               </div>
+              <div class="csv-preview" data-csv-preview hidden></div>
               <p class="admin-status" data-recipients-status>No list loaded.</p>
             </section>
 
@@ -342,6 +349,17 @@
                   </label>
                   <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-send-campaign disabled>Send campaign</button>
                   <p class="admin-status" data-send-status></p>
+                  <ul class="send-safety-list" data-send-safety></ul>
+                </section>
+
+                <section class="admin-card">
+                  <div class="admin-card-head">
+                    <div><p class="admin-eyebrow">History</p><h3>Recent sends</h3></div>
+                    <button class="tiny-button" type="button" data-history-reload>Reload</button>
+                  </div>
+                  <div class="campaign-history" data-campaign-history>
+                    <p class="admin-help">No history loaded yet.</p>
+                  </div>
                 </section>
               </aside>
             </div>
