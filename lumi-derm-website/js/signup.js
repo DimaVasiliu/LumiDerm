@@ -60,9 +60,12 @@
               '<label>Last name<input type="text" name="last_name" autocomplete="family-name"></label>' +
             '</div>' +
             '<label>Email*<input type="email" name="email" required autocomplete="email" inputmode="email"></label>' +
-            '<div class="signup-row">' +
-              '<label>Birthday<select name="birth_day">' + dayOptions() + '</select></label>' +
-              '<label><span class="signup-hide">Birth month</span><select name="birth_month">' + monthOptions() + '</select></label>' +
+            '<div class="signup-field">' +
+              '<span class="signup-field-label">Birthday <em>(optional)</em></span>' +
+              '<div class="signup-row">' +
+                '<select name="birth_day" aria-label="Birth day">' + dayOptions() + '</select>' +
+                '<select name="birth_month" aria-label="Birth month">' + monthOptions() + '</select>' +
+              '</div>' +
             '</div>' +
             '<label>I\'m interested in<select name="interest">' +
               '<option value="">Choose (optional)</option>' +

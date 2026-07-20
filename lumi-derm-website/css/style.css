@@ -6760,7 +6760,17 @@ body.tx-modal-active { overflow: hidden; }
 }
 .signup-form { display: flex; flex-direction: column; gap: 0.55rem; }
 .signup-row { display: flex; gap: 0.55rem; }
-.signup-row > label { flex: 1; min-width: 0; }
+.signup-row > label,
+.signup-row > select,
+.signup-row > input { flex: 1 1 0; min-width: 0; width: 100%; }
+.signup-field { display: flex; flex-direction: column; gap: 0.22rem; }
+.signup-field-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-charcoal);
+}
+.signup-field-label em { font-style: normal; font-weight: 400; opacity: 0.55; }
 .signup-form label {
   display: flex;
   flex-direction: column;
