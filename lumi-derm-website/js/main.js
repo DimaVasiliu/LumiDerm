@@ -674,16 +674,26 @@ async function initTreatmentIndex() {
 
   const cards = Array.from(grid.querySelectorAll('[data-oglr-card]'));
 
-  // Show at most CARD_LIMIT cards, with a "Show all" button for the rest.
+  // Show a limited number of cards, with a "Show all" button for the rest.
+  // Fewer on mobile (endless card-scrolling is tiring), more on desktop.
   let searchActive = false;
-  const CARD_LIMIT = 9;
-  const hasExtra = cards.length > CARD_LIMIT;
+  const DESKTOP_LIMIT = 9;
+  const MOBILE_LIMIT = 3; // featured + 2
   const moreWrap = document.querySelector('[data-oglr-more]');
   const moreBtn = document.querySelector('[data-oglr-more-btn]');
   let expanded = false;
-  if (hasExtra) {
-    cards.forEach((card, i) => { if (i >= CARD_LIMIT) card.classList.add('is-extra'); });
-    grid.classList.add('is-collapsed');
+  let hasExtra = false;
+
+  function cardLimit() {
+    return window.matchMedia('(max-width: 768px)').matches ? MOBILE_LIMIT : DESKTOP_LIMIT;
+  }
+  function applyLimit() {
+    const limit = cardLimit();
+    hasExtra = cards.length > limit;
+    cards.forEach((card, i) => card.classList.toggle('is-extra', hasExtra && i >= limit));
+    if (!hasExtra) expanded = false;
+    setCollapsed(hasExtra && !expanded && !searchActive);
+    updateMore();
   }
   function setCollapsed(collapsed) {
     grid.classList.toggle('is-collapsed', collapsed);
@@ -698,7 +708,7 @@ async function initTreatmentIndex() {
   if (moreBtn) {
     moreBtn.addEventListener('click', () => {
       expanded = !expanded;
-      setCollapsed(!expanded);
+      setCollapsed(hasExtra && !expanded);
       updateMore();
       if (!expanded) {
         const sec = document.getElementById('offers');
@@ -706,7 +716,13 @@ async function initTreatmentIndex() {
       }
     });
   }
-  updateMore();
+  applyLimit();
+  // Re-evaluate the limit when the viewport crosses the mobile/desktop breakpoint.
+  var limitResizeTimer = null;
+  window.addEventListener('resize', function () {
+    window.clearTimeout(limitResizeTimer);
+    limitResizeTimer = window.setTimeout(applyLimit, 200);
+  }, { passive: true });
 
   // Cursor-follow spotlight: paint a soft highlight under the pointer.
   if (canHover && !prefersReducedMotion) {
@@ -811,7 +827,7 @@ async function initTreatmentIndex() {
     }
     // While searching, reveal every match (ignore the show-all limit); restore
     // the limit when the search is cleared, unless the visitor expanded it.
-    setCollapsed(!searchActive && !expanded);
+    setCollapsed(hasExtra && !searchActive && !expanded);
     updateMore();
     // While searching, stop the ambient shuffle so results hold still.
     if (searchActive) stopShuffle();

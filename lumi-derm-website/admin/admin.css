@@ -50,8 +50,13 @@ a {
   color: inherit;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .admin-shell {
   display: grid;
+  min-width: 0;
   min-height: 100vh;
 }
 
@@ -62,6 +67,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  min-width: 0;
   padding: 1rem;
   border-bottom: 1px solid rgba(68, 52, 49, 0.1);
   background: rgba(255, 252, 249, 0.92);
@@ -72,6 +78,7 @@ a {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
   text-decoration: none;
 }
 
@@ -106,6 +113,8 @@ a {
 .admin-nav {
   display: flex;
   gap: 0.4rem;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   padding-bottom: 0.15rem;
 }
@@ -139,6 +148,7 @@ a {
 
 .admin-main {
   width: min(100%, 1500px);
+  min-width: 0;
   margin: 0 auto;
   padding: 1rem;
 }
@@ -150,6 +160,7 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  min-width: 0;
 }
 
 .admin-topbar {
@@ -261,6 +272,7 @@ p {
 .admin-layout {
   display: grid;
   gap: 1rem;
+  min-width: 0;
   margin-top: 1rem;
 }
 
@@ -273,6 +285,7 @@ p {
 
 .admin-card,
 .metric-card {
+  min-width: 0;
   border: 1px solid rgba(68, 52, 49, 0.1);
   border-radius: var(--admin-radius);
   background: var(--admin-surface);
@@ -411,7 +424,17 @@ p {
   gap: 0.85rem;
 }
 
+.admin-card:not(.admin-editor) > label {
+  margin-top: 0.9rem;
+}
+
+.admin-card:not(.admin-editor) .field-pair {
+  margin-top: 0.85rem;
+}
+
 .admin-editor label,
+.admin-card > label,
+.admin-card .field-pair > label,
 .review-controls label,
 .field-row label {
   display: grid;
@@ -423,11 +446,17 @@ p {
   text-transform: uppercase;
 }
 
-.admin-editor input,
+.admin-editor input:not([type="checkbox"]),
 .admin-editor select,
 .admin-editor textarea,
+.admin-card > label > input:not([type="checkbox"]),
+.admin-card > label > select,
+.admin-card > label > textarea,
+.admin-card .field-pair input:not([type="checkbox"]),
+.admin-card .field-pair select,
+.admin-card .field-pair textarea,
 .review-controls select,
-.field-row input {
+.field-row input:not([type="checkbox"]) {
   width: 100%;
   border: 1px solid rgba(68, 52, 49, 0.14);
   border-radius: 16px;
@@ -439,13 +468,67 @@ p {
   outline: none;
 }
 
-.admin-editor input:focus,
+.admin-editor input:not([type="checkbox"]):focus,
 .admin-editor select:focus,
 .admin-editor textarea:focus,
+.admin-card > label > input:not([type="checkbox"]):focus,
+.admin-card > label > select:focus,
+.admin-card > label > textarea:focus,
+.admin-card .field-pair input:not([type="checkbox"]):focus,
+.admin-card .field-pair select:focus,
+.admin-card .field-pair textarea:focus,
 .review-controls select:focus,
-.field-row input:focus {
+.field-row input:not([type="checkbox"]):focus {
   border-color: var(--admin-accent);
   box-shadow: 0 0 0 4px rgba(183, 123, 114, 0.12);
+}
+
+.admin-editor select,
+.admin-card > label > select,
+.admin-card .field-pair select,
+.review-controls select {
+  appearance: none;
+  min-height: 50px;
+  padding-right: 2.75rem;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--admin-accent-dark) 50%) calc(100% - 1.25rem) 50% / 0.42rem 0.42rem no-repeat,
+    linear-gradient(135deg, var(--admin-accent-dark) 50%, transparent 50%) calc(100% - 0.98rem) 50% / 0.42rem 0.42rem no-repeat,
+    rgba(255, 255, 255, 0.86);
+}
+
+.admin-editor textarea,
+.admin-card > label > textarea,
+.admin-card .field-pair textarea {
+  min-height: 132px;
+  resize: vertical;
+}
+
+.admin-editor input[type="file"],
+.admin-card > label > input[type="file"],
+.admin-card .field-pair input[type="file"] {
+  min-height: 54px;
+  padding: 0.42rem;
+  cursor: pointer;
+}
+
+.admin-editor input[type="file"]::file-selector-button,
+.admin-card > label > input[type="file"]::file-selector-button,
+.admin-card .field-pair input[type="file"]::file-selector-button {
+  min-height: 40px;
+  margin-right: 0.7rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 0.95rem;
+  color: #fff;
+  background: var(--admin-accent);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-editor input[type="date"],
+.admin-card > label > input[type="date"],
+.admin-card .field-pair input[type="date"] {
+  min-height: 50px;
 }
 
 .admin-help,
@@ -810,6 +893,8 @@ code {
 .field-pair { display: grid; gap: 0.85rem; }
 .admin-stack { display: grid; gap: 1rem; align-content: start; }
 .admin-actions-inline.start { justify-content: flex-start; }
+.admin-actions-spaced { margin-top: 0.8rem; }
+.admin-subsection-title { margin-top: 1.5rem; }
 
 .email-preview { margin-top: 0.6rem; }
 .email-frame { border: 1px solid rgba(68, 52, 49, 0.12); border-radius: 18px; padding: 1.1rem; background: #fff; }
@@ -860,7 +945,11 @@ code {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  color: var(--admin-ink);
   font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .admin-check input { width: auto; margin: 0; }
 .admin-editor label small { font-weight: 400; opacity: 0.65; }
@@ -927,13 +1016,17 @@ code {
   margin-top: 0.7rem;
 }
 .offer-pick {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
   gap: 0.7rem;
   padding: 0.75rem 0.9rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
+  color: var(--admin-ink);
   cursor: pointer;
+  letter-spacing: 0;
+  text-transform: none;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 .offer-pick:hover { border-color: rgba(169, 111, 104, 0.5); }
@@ -941,9 +1034,14 @@ code {
   border-color: var(--admin-rose, #a96f68);
   background: rgba(169, 111, 104, 0.07);
 }
-.offer-pick input { width: auto; margin: 0.2rem 0 0; flex: none; }
+.offer-pick input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0.2rem 0 0;
+  accent-color: var(--admin-accent);
+}
 .offer-pick-body { display: flex; flex-direction: column; gap: 0.15rem; }
-.offer-pick-body strong { font-size: 0.92rem; font-weight: 600; }
+.offer-pick-body strong { color: var(--admin-accent-dark); font-size: 0.92rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
 .offer-pick-body em { font-style: normal; font-size: 0.8rem; opacity: 0.65; }
 
 /* Email preview */

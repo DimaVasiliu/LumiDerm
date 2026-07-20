@@ -4811,6 +4811,26 @@ body.tx-modal-active { overflow: hidden; }
 @keyframes heroRise { to { opacity: 1; transform: none; } }
 @keyframes heroArrow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
 
+/* ---- Mobile hero polish (keeps the video, tidies the layout) ---- */
+@media (max-width: 768px) {
+  .hero-cinematic { min-height: 88vh; min-height: 88svh; }
+  /* Warmer, bottom-weighted overlay so centred text stays crisp on a portrait crop */
+  .hero-cinematic .hero-overlay {
+    background:
+      linear-gradient(180deg, rgba(28, 18, 14, 0.42) 0%, rgba(30, 20, 16, 0.14) 34%, rgba(26, 17, 13, 0.52) 78%, rgba(22, 14, 11, 0.82) 100%),
+      linear-gradient(115deg, rgba(200, 160, 128, 0.12) 0%, transparent 60%);
+  }
+  .hero-cinematic .hero-inner { padding-inline: 1.4rem; }
+  .hero-cinematic .hero-content { max-width: 100%; }
+  .hero-cinematic .hero-title { font-size: clamp(2.6rem, 12vw, 3.5rem); line-height: 1.02; }
+  .hero-cinematic .hero-lead { font-size: 1.02rem; }
+  .hero-cinematic .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-cinematic .hero-actions .btn { width: 100%; text-align: center; }
+  /* Keep the footer trust line clear of the floating chat bubble */
+  .hero-cinematic .hero-footer { gap: 0.8rem; padding-bottom: 0.4rem; }
+  .hero-cinematic .hero-scroll { display: none; }
+}
+
 /* ---- Hero right-side treatment showcase (auto-advancing image carousel) ---- */
 .hero-showcase {
   position: absolute;
