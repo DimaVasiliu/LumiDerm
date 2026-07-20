@@ -90,6 +90,19 @@
       "featured": false,
       "expires": "2026-07-28",
       "note": ""
+    },
+    {
+      "title": "50% off your 5th visit.",
+      "category": "Offer",
+      "description": "Short offer description.",
+      "price": "From £60",
+      "badge": "50%",
+      "image": "assets/images/offer-360-f-499519801-prgbzm0xrfryznvfuwrwem10-mrteom04.jpg",
+      "service": "",
+      "status": "live",
+      "featured": false,
+      "expires": "2026-07-23",
+      "note": "Ongoing offer"
     }
   ]
 }
