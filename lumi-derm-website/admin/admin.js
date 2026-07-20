@@ -306,7 +306,7 @@ function renderOfferPreview() {
   const get = (k) => document.querySelector(`[data-offer-field="${k}"]`)?.value || "";
   box.innerHTML = `
     <div class="offer-preview-card">
-      <img src="../assets/images/${escapeAttr(get("image"))}" alt="" onerror="this.style.display='none'">
+      <img src="../assets/images/${escapeAttr(get("image"))}" alt="" data-hide-on-error>
       <div>
         <span>${escapeHtml(get("category") || "Category")}</span>
         <strong>${escapeHtml(get("title") || "Offer title")}</strong>
@@ -537,7 +537,7 @@ function renderOfferImageOptions() {
 function renderMedia() {
   const grid = document.querySelector("[data-media-grid]"); if (!grid) return;
   grid.innerHTML = imageOptions.map((img) => `
-    <article class="media-item"><img src="../assets/images/${escapeAttr(img)}" alt="" loading="lazy" onerror="this.closest('.media-item').style.opacity=0.4"><div><strong>${escapeHtml(img)}</strong><small>Local asset</small></div></article>`).join("");
+    <article class="media-item"><img src="../assets/images/${escapeAttr(img)}" alt="" loading="lazy" data-dim-on-error><div><strong>${escapeHtml(img)}</strong><small>Local asset</small></div></article>`).join("");
 }
 
 function updateMetrics() {
@@ -691,6 +691,7 @@ function b64(str) {
 async function ghRequest(path, options) {
   const cfg = getGh();
   const res = await fetch("https://api.github.com/repos/" + cfg.repo + "/contents/" + path, {
+    cache: "no-store", // always read the current sha, never a cached one
     ...options,
     headers: {
       Authorization: "Bearer " + cfg.token,
@@ -718,26 +719,34 @@ async function publishOffers(options) {
 
   try {
     const branch = cfg.branch || "main";
+    const content = b64(JSON.stringify({ offers: toOffersJson(state.offers) }, null, 2) + "\n");
 
-    // 1. current file (need its sha to update it)
-    let sha;
-    const current = await ghRequest(OFFERS_REPO_PATH + "?ref=" + encodeURIComponent(branch), { method: "GET" });
-    if (current.ok) sha = (await current.json()).sha;
-    else if (current.status !== 404) {
-      const e = await current.json().catch(() => ({}));
-      throw new Error(ghError(current.status, e.message));
-    }
+    // Read the current sha and commit — retrying with a fresh sha on 409, which
+    // happens when GitHub served a stale sha (cache) or the file moved on.
+    let put;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      // 1. current file sha (cache-busted so it's never stale)
+      let sha;
+      const current = await ghRequest(
+        OFFERS_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(),
+        { method: "GET" }
+      );
+      if (current.ok) sha = (await current.json()).sha;
+      else if (current.status !== 404) {
+        const e = await current.json().catch(() => ({}));
+        throw new Error(ghError(current.status, e.message));
+      }
 
-    // 2. commit the new offers
-    const body = {
-      message: "Update homepage offers (via admin)",
-      content: b64(JSON.stringify({ offers: toOffersJson(state.offers) }, null, 2) + "\n"),
-      branch
-    };
-    if (sha) body.sha = sha;
+      // 2. commit the new offers
+      const body = { message: "Update homepage offers (via admin)", content, branch };
+      if (sha) body.sha = sha;
 
-    const put = await ghRequest(OFFERS_REPO_PATH, { method: "PUT", body: JSON.stringify(body) });
-    if (!put.ok) {
+      put = await ghRequest(OFFERS_REPO_PATH, { method: "PUT", body: JSON.stringify(body) });
+      if (put.ok) break;
+      if (put.status === 409 && attempt < 2) {
+        await new Promise((r) => setTimeout(r, 500)); // brief pause, then re-read sha
+        continue;
+      }
       const e = await put.json().catch(() => ({}));
       throw new Error(ghError(put.status, e.message));
     }
@@ -935,3 +944,20 @@ function bindImageUpload() {
     event.target.value = "";
   });
 }
+
+/* CSP-safe image error handling (replaces inline onerror attributes).
+   Broken thumbnails hide/dim gracefully without inline scripts. */
+document.addEventListener(
+  "error",
+  function (e) {
+    var t = e.target;
+    if (!t || t.tagName !== "IMG") return;
+    if (t.hasAttribute("data-hide-on-error")) {
+      t.style.display = "none";
+    } else if (t.hasAttribute("data-dim-on-error")) {
+      var item = t.closest(".media-item");
+      if (item) item.style.opacity = "0.4";
+    }
+  },
+  true // capture phase — image 'error' events don't bubble
+);
