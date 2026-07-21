@@ -661,9 +661,10 @@
     );
   }
 
-  function buildHtml(forPreview) {
-    var m = state.mail;
-    var offers = chosenOffers();
+  // Build the branded email from any mail-like object (used by campaigns AND the
+  // birthday automation), so nobody has to touch raw HTML.
+  function renderEmail(m, forPreview, offers) {
+    offers = offers || [];
     var unsub = forPreview ? "#" : "{{unsubscribe}}";
     var greeting = forPreview ? "Sarah" : "{{name}}";
 
@@ -753,6 +754,11 @@
       "</td></tr></table></td></tr>" +
       "</table></td></tr></table></body></html>"
     );
+  }
+
+  // Campaign email = the composer's mail + its ticked offers.
+  function buildHtml(forPreview) {
+    return renderEmail(state.mail, forPreview, chosenOffers());
   }
 
   function renderPreview() {
@@ -1052,27 +1058,64 @@
     sel.innerHTML = html;
   }
 
+  var BDAY_DEFAULTS = {
+    subject: "Happy birthday from Lumi Derm 🎂",
+    headline: "Happy birthday, {{name}}!",
+    body: "Wishing you a wonderful day from all of us at Lumi Derm. To help you celebrate, enjoy a little birthday treat on your next visit this month.",
+    ctaLabel: "Book your birthday treat",
+    ctaUrl: BOOKING_URL
+  };
+
+  function bdayVal(sel) { var el = $(sel); return el ? String(el.value || "") : ""; }
+
+  // Build a mail-like object from the friendly birthday fields.
+  function birthdayMail() {
+    return {
+      subject: bdayVal("[data-bday-subject]") || BDAY_DEFAULTS.subject,
+      preview: "",
+      eyebrow: "",
+      headline: bdayVal("[data-bday-headline]") || BDAY_DEFAULTS.headline,
+      body: bdayVal("[data-bday-message]") || BDAY_DEFAULTS.body,
+      ctaLabel: bdayVal("[data-bday-ctalabel]") || BDAY_DEFAULTS.ctaLabel,
+      ctaUrl: bdayVal("[data-bday-ctaurl]") || BDAY_DEFAULTS.ctaUrl,
+      heroImage: ""
+    };
+  }
+
+  function updateBirthdayPreview() {
+    var frame = $("[data-bday-preview]");
+    if (frame) frame.srcdoc = renderEmail(birthdayMail(), true, []);
+  }
+
   function loadBirthday() {
     populateBirthdayHours();
     fetch(ADMIN_API + "/settings/birthday", { cache: "no-store", credentials: "same-origin" })
       .then(function (res) { return responseJson(res); })
       .then(function (d) {
         var b = d.birthday || {};
+        var f = b.fields || {};
+        var set = function (sel, v) { var el = $(sel); if (el) el.value = v; };
         if ($("[data-bday-enabled]")) $("[data-bday-enabled]").checked = b.enabled === true;
-        if ($("[data-bday-subject]")) $("[data-bday-subject]").value = b.subject || "";
-        if ($("[data-bday-body]")) $("[data-bday-body]").value = b.html || "";
-        if ($("[data-bday-hour]")) $("[data-bday-hour]").value = String(typeof b.hour === "number" ? b.hour : 8);
+        set("[data-bday-subject]", b.subject || BDAY_DEFAULTS.subject);
+        set("[data-bday-headline]", f.headline || BDAY_DEFAULTS.headline);
+        set("[data-bday-message]", f.body || BDAY_DEFAULTS.body);
+        set("[data-bday-ctalabel]", f.ctaLabel || BDAY_DEFAULTS.ctaLabel);
+        set("[data-bday-ctaurl]", f.ctaUrl || BDAY_DEFAULTS.ctaUrl);
+        set("[data-bday-hour]", String(typeof b.hour === "number" ? b.hour : 8));
+        updateBirthdayPreview();
       })
-      .catch(function () { /* leave fields blank; defaults live on the server */ });
+      .catch(function () { updateBirthdayPreview(); });
   }
 
   function saveBirthday() {
     var out = $("[data-bday-status]");
+    var mail = birthdayMail();
     var payload = {
       enabled: ($("[data-bday-enabled]") || {}).checked === true,
-      subject: String(($("[data-bday-subject]") || {}).value || ""),
-      html: String(($("[data-bday-body]") || {}).value || ""),
-      hour: parseInt(($("[data-bday-hour]") || {}).value, 10)
+      subject: mail.subject,
+      hour: parseInt(($("[data-bday-hour]") || {}).value, 10),
+      html: renderEmail(mail, false, []),          // branded HTML with {{name}}/{{unsubscribe}}
+      fields: { headline: mail.headline, body: mail.body, ctaLabel: mail.ctaLabel, ctaUrl: mail.ctaUrl }
     };
     status(out, "Saving…");
     fetch(ADMIN_API + "/settings/birthday", {
@@ -1090,15 +1133,12 @@
   function testBirthday() {
     var out = $("[data-bday-status]");
     var email = String(($("[data-bday-test-email]") || {}).value || "").trim();
+    var mail = birthdayMail();
     status(out, "Sending preview…");
     fetch(ADMIN_API + "/settings/birthday/test", {
       method: "POST", credentials: "same-origin",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        to: email, name: "Ana",
-        subject: String(($("[data-bday-subject]") || {}).value || ""),
-        html: String(($("[data-bday-body]") || {}).value || "")
-      })
+      body: JSON.stringify({ to: email, name: "Ana", subject: mail.subject, html: renderEmail(mail, false, []) })
     })
       .then(function (res) { return responseJson(res); })
       .then(function (d) { status(out, "Preview sent to " + d.sentTo + ". Check your inbox.", "ok"); })
@@ -1108,6 +1148,10 @@
   function bindBirthday() {
     var save = $("[data-bday-save]"); if (save) save.addEventListener("click", saveBirthday);
     var test = $("[data-bday-test]"); if (test) test.addEventListener("click", testBirthday);
+    ["[data-bday-subject]", "[data-bday-headline]", "[data-bday-message]", "[data-bday-ctalabel]", "[data-bday-ctaurl]"].forEach(function (sel) {
+      var el = $(sel);
+      if (el) el.addEventListener("input", updateBirthdayPreview);
+    });
   }
 
   /* --------------------------------------------------------------- */

@@ -673,8 +673,18 @@ async function runBirthdayEmails(env, origin, event) {
   }
 }
 
+const DEFAULT_BIRTHDAY_FIELDS = {
+  headline: "Happy birthday, {{name}}!",
+  body: "Wishing you a wonderful day from all of us at Lumi Derm. To help you celebrate, enjoy a little birthday treat on your next visit this month.",
+  ctaLabel: "Book your birthday treat",
+  ctaUrl: "https://lumidermaesthetics.com/pages/booking.html",
+};
+
 async function getBirthdayConfig(env) {
-  const def = { enabled: false, subject: "Happy birthday from Lumi Derm 🎂", html: defaultBirthdayHtml(), hour: 8 };
+  const def = {
+    enabled: false, subject: "Happy birthday from Lumi Derm 🎂",
+    html: defaultBirthdayHtml(), hour: 8, fields: { ...DEFAULT_BIRTHDAY_FIELDS },
+  };
   if (!env.SUBSCRIBERS) return def;
   try {
     const row = await env.SUBSCRIBERS.prepare("SELECT value FROM app_settings WHERE key='birthday'").first();
@@ -685,6 +695,7 @@ async function getBirthdayConfig(env) {
         subject: typeof v.subject === "string" && v.subject ? v.subject : def.subject,
         html: typeof v.html === "string" && v.html ? v.html : def.html,
         hour: Number.isInteger(v.hour) ? v.hour : def.hour,
+        fields: (v.fields && typeof v.fields === "object") ? { ...DEFAULT_BIRTHDAY_FIELDS, ...v.fields } : { ...DEFAULT_BIRTHDAY_FIELDS },
       };
     }
   } catch { /* fall through to default */ }
@@ -820,11 +831,18 @@ async function handleSetBirthday(request, env) {
   try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
 
   const hour = clampInt(body.hour, 0, 23);
+  const inFields = (body.fields && typeof body.fields === "object") ? body.fields : {};
   const cfg = {
     enabled: body.enabled === true,
     subject: String(body.subject || "").slice(0, 240) || "Happy birthday from Lumi Derm",
     html: String(body.html || "") || defaultBirthdayHtml(),
     hour: hour === null ? 8 : hour,
+    fields: {
+      headline: String(inFields.headline || DEFAULT_BIRTHDAY_FIELDS.headline).slice(0, 240),
+      body: String(inFields.body || DEFAULT_BIRTHDAY_FIELDS.body).slice(0, 2000),
+      ctaLabel: String(inFields.ctaLabel || DEFAULT_BIRTHDAY_FIELDS.ctaLabel).slice(0, 120),
+      ctaUrl: String(inFields.ctaUrl || DEFAULT_BIRTHDAY_FIELDS.ctaUrl).slice(0, 400),
+    },
   };
   const now = new Date().toISOString();
   await env.SUBSCRIBERS.prepare(

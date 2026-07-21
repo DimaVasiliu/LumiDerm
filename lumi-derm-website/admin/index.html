@@ -555,11 +555,22 @@
                 <div><p class="admin-eyebrow">Automation</p><h3>Automatic birthday emails</h3></div>
                 <label class="admin-switch"><input type="checkbox" data-bday-enabled><span>On</span></label>
               </div>
-              <p class="admin-help">When this is on, each confirmed subscriber with a birthday on file is emailed automatically on their birthday. Use <code>{{name}}</code> for their first name. Only sends to people who gave consent, and never twice in a year.</p>
-              <div class="admin-editor">
-                <label>Subject<input type="text" data-bday-subject placeholder="Happy birthday from Lumi Derm"></label>
-                <label>Message (HTML email)<textarea rows="8" data-bday-body></textarea></label>
-                <label>Send at <small>(hour of day, UK time &mdash; may run an hour later in summer)</small><select data-bday-hour></select></label>
+              <p class="admin-help">When this is on, each confirmed subscriber with a birthday on file is emailed automatically on their birthday. Type <code>{{name}}</code> and it becomes their first name. Only sends to people who gave consent, and never twice in a year.</p>
+              <div class="admin-grid admin-grid-2">
+                <div class="admin-editor">
+                  <label>Subject<input type="text" data-bday-subject placeholder="Happy birthday from Lumi Derm"></label>
+                  <label>Headline<input type="text" data-bday-headline placeholder="Happy birthday, {{name}}!"></label>
+                  <label>Message<textarea rows="4" data-bday-message placeholder="Wishing you a wonderful day…"></textarea></label>
+                  <div class="field-pair">
+                    <label>Button label<input type="text" data-bday-ctalabel placeholder="Book your birthday treat"></label>
+                    <label>Button link<input type="url" data-bday-ctaurl placeholder="https://lumidermaesthetics.com/pages/booking.html"></label>
+                  </div>
+                  <label>Send at <small>(hour of day, UK time &mdash; may run an hour later in summer)</small><select data-bday-hour></select></label>
+                </div>
+                <div class="admin-card">
+                  <p class="admin-eyebrow">Live preview</p>
+                  <iframe class="mail-preview" data-bday-preview title="Birthday email preview"></iframe>
+                </div>
               </div>
               <div class="admin-actions-inline start">
                 <button class="admin-button admin-button-primary" type="button" data-bday-save>Save birthday email</button>
@@ -805,7 +816,7 @@
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
     <script src="admin.js?v=20260721-media2"></script>
-    <script src="sender.js?v=20260721-media1"></script>
+    <script src="sender.js?v=20260721-bday1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>
 </html>
