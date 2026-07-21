@@ -109,6 +109,8 @@ function runApp() {
   loadMedia();
   loadBirthdays();
   loadReviewSubmissions();
+  loadAlerts();
+  document.querySelector("[data-alerts-reload]")?.addEventListener("click", loadAlerts);
   // First run (no local draft yet) -> start from the offers actually on the website.
   if (!localStorage.getItem(STORAGE_KEY)) loadOffersFromSite(false);
 }
@@ -1042,6 +1044,10 @@ const CONTACT_KEYS = ["phone", "email", "address", "instagramUrl", "instagramHan
 
 // Current live values on the site (used as fallback if content.json is missing).
 const DEFAULT_CONTENT = {
+  seo: {
+    title: "Lumi Derm Aesthetics | Advanced Beauty & Skin Treatments",
+    description: "Lumi Derm Aesthetics offers laser treatments, electrolysis, Endospheres therapy, PRP, skin boosters, facials, peels, microneedling, exosomes, lashes and brows."
+  },
   hero: {
     eyebrow: "Lumi Derm Aesthetics &middot; London Docklands",
     title: "Skin confidence,<br>made personal.",
@@ -1084,6 +1090,11 @@ function bindContent() {
     state.content.contact[f.dataset.contentContact] = escapeHtml(f.value.trim());
     saveDraft("Contact detail updated.");
   }));
+  document.querySelectorAll("[data-content-seo]").forEach((f) => f.addEventListener("change", () => {
+    if (!state.content.seo) state.content.seo = {};
+    state.content.seo[f.dataset.contentSeo] = escapeHtml(f.value.trim());
+    saveDraft("SEO detail updated.");
+  }));
 }
 
 async function loadContentFromJson(announce, force) {
@@ -1091,7 +1102,7 @@ async function loadContentFromJson(announce, force) {
     const r = await fetch(CONTENT_JSON_URL + "?t=" + Date.now(), { cache: "no-store" });
     if (r.ok) {
       const data = await r.json();
-      const live = { hero: data.hero || {}, contact: data.contact || {} };
+      const live = { seo: data.seo || {}, hero: data.hero || {}, contact: data.contact || {} };
       if (force || !contentReady()) {
         state.content = structuredClone(live);
         saveDraft(announce ? "Loaded the text currently on the website." : null);
@@ -1109,8 +1120,10 @@ async function loadContentFromJson(announce, force) {
 
 function renderContent() {
   const c = state.content || {};
-  const hero = c.hero || {}, contact = c.contact || {};
+  const hero = c.hero || {}, contact = c.contact || {}, seo = c.seo || {};
   const setVal = (sel, val) => { const el = document.querySelector(sel); if (el) el.value = val; };
+  setVal('[data-content-seo="title"]', decodeHtml(seo.title || ""));
+  setVal('[data-content-seo="description"]', decodeHtml(seo.description || ""));
   setVal('[data-content-hero="eyebrow"]', decodeHtml(hero.eyebrow || ""));
   setVal('[data-content-hero="title"]', decodeHtml(String(hero.title || "").replace(/<br\s*\/?>/gi, "\n")));
   setVal('[data-content-hero="lead"]', decodeHtml(hero.lead || ""));
@@ -1293,10 +1306,33 @@ async function ldPrepareImageUpload(file, opts = {}) {
 }
 window.ldPrepareImageUpload = ldPrepareImageUpload;
 
+// Where is this uploaded image used? Offers are counted structurally; email
+// banners and campaign drafts are found by scanning their saved draft stores.
+function findMediaUsage(key) {
+  const item = mediaCache.find((m) => m.key === key);
+  const url = item ? item.url : "/media/" + key;
+  const uses = [];
+  const offerCount = state.offers.filter((o) => String(o.image || "") === url).length;
+  if (offerCount) uses.push(offerCount + " offer" + (offerCount > 1 ? "s" : ""));
+  try {
+    const mailDraft = localStorage.getItem("lumi-derm-mail-draft-v1") || "";
+    if (mailDraft.indexOf(url) !== -1) uses.push("an email draft");
+  } catch { /* ignore */ }
+  try {
+    const content = JSON.stringify(state.content || {});
+    if (content.indexOf(url) !== -1) uses.push("page text");
+  } catch { /* ignore */ }
+  return uses;
+}
+
 async function deleteMedia(key) {
+  const uses = findMediaUsage(key);
+  const usageLine = uses.length
+    ? "This image is currently used by " + uses.join(" and ") + ". Deleting it will leave a blank space there until you pick another image. "
+    : "This image doesn't appear to be used anywhere right now. ";
   const ok = await ldConfirm({
-    title: "Delete this image?",
-    body: "Permanently delete this uploaded image. Any offer or email still using it will stop showing it. This can't be undone.",
+    title: uses.length ? "Delete an image that's in use?" : "Delete this image?",
+    body: usageLine + "Permanently delete this uploaded image? This can't be undone.",
     confirmLabel: "Delete image",
     danger: true
   });
@@ -1451,6 +1487,7 @@ const SERVICES_REPO_PATH = "lumi-derm-website/pages/services.html";      // trea
 const PRICES_MARKERS = /(<!-- PRICES:START[\s\S]*?-->)[\s\S]*?(<!-- PRICES:END -->)/; // section rewritten on publish
 const CONTENT_REPO_PATH = "lumi-derm-website/assets/data/content.json";  // hero copy + contact details
 const HERO_MARKERS = /(<!-- HERO:START[\s\S]*?-->)[\s\S]*?(<!-- HERO:END -->)/; // homepage hero block
+const SEO_MARKERS = /(<!-- SEO:START[\s\S]*?-->)[\s\S]*?(<!-- SEO:END -->)/;    // homepage <head> title + meta description
 // Every page that may show contact details; index.html also carries the hero.
 const SITE_PAGE_PATHS = [
   "lumi-derm-website/index.html",
@@ -1820,12 +1857,13 @@ async function publishContent() {
     const cur = await ghRequest(CONTENT_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
     if (cur.ok) {
       const m = await cur.json(); sha = m.sha;
-      try { const parsed = JSON.parse(decodeB64(m.content)); oldContent = { hero: parsed.hero || {}, contact: parsed.contact || {} }; } catch { /* keep default */ }
+      try { const parsed = JSON.parse(decodeB64(m.content)); oldContent = { seo: parsed.seo || {}, hero: parsed.hero || {}, contact: parsed.contact || {} }; } catch { /* keep default */ }
     } else if (cur.status !== 404) { const e = await cur.json().catch(() => ({})); throw new Error(ghError(cur.status, e.message)); }
 
     const heroChanged = JSON.stringify(oldContent.hero || {}) !== JSON.stringify(state.content.hero || {});
+    const seoChanged = JSON.stringify(oldContent.seo || {}) !== JSON.stringify(state.content.seo || {});
     const ops = contactOps(oldContent.contact || {}, state.content.contact || {});
-    if (!heroChanged && !ops.length) {
+    if (!heroChanged && !seoChanged && !ops.length) {
       setContentStatus("Nothing to publish — no changes since last time.");
       toast("No page-text changes to publish.");
       return true;
@@ -1837,13 +1875,15 @@ async function publishContent() {
     const putJson = await ghRequest(CONTENT_REPO_PATH, { method: "PUT", body: JSON.stringify(jsonBody) });
     if (!putJson.ok) { const e = await putJson.json().catch(() => ({})); throw new Error(ghError(putJson.status, e.message)); }
 
-    // 3) rewrite each page: index.html gets hero (if changed) + contact; the rest get contact only
+    // 3) rewrite each page: index.html gets SEO (head) + hero + contact; the rest get contact only
     const heroHtml = window.renderHero(state.content.hero || {});
+    const seoHtml = typeof window.renderSeo === "function" ? window.renderSeo(state.content.seo || {}) : null;
     let changed = 0;
     for (const repoPath of SITE_PAGE_PATHS) {
       const isHome = repoPath.endsWith("/index.html");
       const transform = (html) => {
         let out = html;
+        if (isHome && seoChanged && seoHtml && SEO_MARKERS.test(out)) out = out.replace(SEO_MARKERS, "$1\n    " + seoHtml + "\n    $2");
         if (isHome && heroChanged && HERO_MARKERS.test(out)) out = out.replace(HERO_MARKERS, "$1\n              " + heroHtml + "\n              $2");
         if (ops.length) out = applyOps(out, ops);
         return out;
@@ -2065,6 +2105,7 @@ async function loadSystemStatus() {
     const d = await ldReadJson(res);
     adminRole = d.role || "owner";
     applyRoleControls();
+    renderRolePanel(d);
     const dep = d.deploy;
     const ls = d.lastSend;
     const rows = [
@@ -2084,6 +2125,38 @@ async function loadSystemStatus() {
     box.innerHTML = '<li><span>Could not load status</span><strong>' + escapeHtml(ldFriendlyError(err)) + "</strong></li>";
     renderOnboardingChecklist(null);
   }
+}
+
+function renderRolePanel(d) {
+  const box = document.querySelector("[data-role-panel]");
+  if (!box) return;
+  const role = d && d.role ? d.role : "owner";
+  const isOwner = role === "owner";
+  // [label, ownerCan, assistantCan]
+  const caps = [
+    ["Edit drafts (offers, prices, page text)", true, true],
+    ["View analytics, history and status", true, true],
+    ["Publish changes to the website", true, false],
+    ["Send or schedule campaigns", true, false],
+    ["Approve, publish or moderate reviews", true, false],
+    ["View, import, export or delete subscribers", true, false],
+    ["Upload or delete media", true, false],
+    ["Record booking / revenue attribution", true, false],
+  ];
+  const yn = (v) => v
+    ? '<span class="cap-yes">✓ Yes</span>'
+    : '<span class="cap-no">✗ No</span>';
+  const rows = caps.map((c) => {
+    const allowed = isOwner ? c[1] : c[2];
+    return '<li class="' + (allowed ? "cap-on" : "cap-off") + '"><span>' + escapeHtml(c[0]) + "</span>" + yn(allowed) + "</li>";
+  }).join("");
+  box.innerHTML =
+    '<p class="role-who">Signed in as <strong>' + escapeHtml(d && d.adminEmail || "—") + "</strong>" +
+    ' · <span class="role-badge role-' + escapeAttr(role) + '">' + escapeHtml(isOwner ? "Owner" : "Assistant") + "</span></p>" +
+    '<p class="admin-help">' + (isOwner
+      ? "You have full access to everything below."
+      : "You can edit drafts. Publishing, sending, deleting and exports are owner-only.") + "</p>" +
+    '<ul class="role-caps">' + rows + "</ul>";
 }
 
 function renderOnboardingChecklist(d) {
@@ -2128,6 +2201,32 @@ function applyRoleControls() {
   if (assistant && !roleToastShown) {
     roleToastShown = true;
     toast("Assistant role active: drafts can be edited, but sending, publishing, deleting and exports require owner access.");
+  }
+}
+
+/* ---------------- Dashboard alerts ---------------- */
+async function loadAlerts() {
+  const card = document.querySelector("[data-alerts-card]");
+  const box = document.querySelector("[data-alerts-list]");
+  if (!box) return;
+  try {
+    const res = await fetch("/admin/api/alerts", { cache: "no-store", credentials: "same-origin" });
+    const data = await ldReadJson(res);
+    const alerts = data.alerts || [];
+    if (!alerts.length) { if (card) card.hidden = true; return; }
+    if (card) card.hidden = false;
+    box.innerHTML = alerts.map((a) => {
+      const lvl = a.level === "error" ? "is-error" : a.level === "warn" ? "is-warn" : "is-info";
+      const btn = a.tab ? '<button class="tiny-button" type="button" data-alert-go="' + escapeAttr(a.tab) + '">Open</button>' : "";
+      return '<div class="alert-item ' + lvl + '"><div><strong>' + escapeHtml(a.title) + "</strong><span>" + escapeHtml(a.detail || "") + "</span></div>" + btn + "</div>";
+    }).join("");
+    box.querySelectorAll("[data-alert-go]").forEach((b) => b.addEventListener("click", () => {
+      const nav = document.querySelector('[data-admin-panel="' + b.dataset.alertGo + '"]');
+      if (nav) nav.click();
+    }));
+  } catch (err) {
+    if (card) card.hidden = false;
+    box.innerHTML = '<div class="alert-item is-error"><div><strong>Couldn\'t load alerts</strong><span>' + escapeHtml(ldFriendlyError(err)) + "</span></div></div>";
   }
 }
 

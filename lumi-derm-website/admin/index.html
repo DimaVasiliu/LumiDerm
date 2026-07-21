@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260721-analytics1">
+    <link rel="stylesheet" href="admin.css?v=20260721-upgrades1">
   </head>
   <body>
     <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
@@ -77,6 +77,14 @@
               <article class="metric-card"><span>Email</span><strong>Ready</strong><p>Send campaigns to your subscribers from the Send email tab.</p></article>
               <article class="metric-card"><span>Booking system</span><strong>Treatwell</strong><p>Bookings, payments and client records stay in Treatwell Connect.</p></article>
             </div>
+
+            <section class="admin-card alerts-card" data-alerts-card hidden>
+              <div class="admin-card-head">
+                <div><p class="admin-eyebrow">Alerts</p><h2>Needs your attention</h2></div>
+                <button class="tiny-button" type="button" data-alerts-reload>Refresh</button>
+              </div>
+              <div class="alerts-list" data-alerts-list></div>
+            </section>
 
             <section class="admin-card">
               <div class="admin-card-head">
@@ -738,6 +746,11 @@
                 <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-content>Publish page text</button>
               </div>
             </div>
+            <section class="admin-card admin-editor">
+              <p class="admin-eyebrow">Search engines (SEO) <small>how the homepage appears in Google and when shared</small></p>
+              <label>Page title <small>shown as the blue link in Google &mdash; aim for ~55&ndash;60 characters</small><input type="text" data-content-seo="title" maxlength="70"></label>
+              <label>Meta description <small>the grey summary under the title &mdash; aim for ~150&ndash;160 characters</small><textarea rows="3" data-content-seo="description" maxlength="180"></textarea></label>
+            </section>
             <div class="admin-grid admin-grid-2">
               <section class="admin-card admin-editor">
                 <p class="admin-eyebrow">Homepage hero</p>
@@ -782,6 +795,18 @@
                 <a class="admin-button admin-button-secondary" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/" target="_blank" rel="noopener noreferrer">View public listing</a>
               </article>
               <article class="admin-card">
+                <p class="admin-eyebrow">Reputation</p>
+                <h3>Treatwell reviews</h3>
+                <p>See the reviews clients have left on your Treatwell listing. These feed the rating shown on your homepage.</p>
+                <a class="admin-button admin-button-secondary" href="https://www.treatwell.co.uk/place/lumi-derm-aesthetics/#reviews" target="_blank" rel="noopener noreferrer">Open review listing</a>
+              </article>
+              <article class="admin-card">
+                <p class="admin-eyebrow">Test</p>
+                <h3>Booking test page</h3>
+                <p>Open the booking page the website sends customers to, exactly as a client sees it, to check the flow works.</p>
+                <a class="admin-button admin-button-secondary" href="../pages/booking.html" target="_blank" rel="noopener noreferrer">Open booking page</a>
+              </article>
+              <article class="admin-card">
                 <p class="admin-eyebrow">Partner support</p>
                 <h3>Treatwell help</h3>
                 <p>Request the official website widget and confirm review, campaign and service-link options enabled for this account.</p>
@@ -806,6 +831,11 @@
               <ul class="system-status" data-system-status>
                 <li><span>Checking&hellip;</span></li>
               </ul>
+            </section>
+
+            <section class="admin-card">
+              <div class="admin-card-head"><div><p class="admin-eyebrow">Access</p><h3>Your role &amp; permissions</h3></div></div>
+              <div class="role-panel" data-role-panel><p class="admin-help">Checking&hellip;</p></div>
             </section>
 
             <section class="admin-card">
@@ -900,8 +930,8 @@
 
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
-    <script src="content-template.js?v=20260720-pages1"></script>
-    <script src="admin.js?v=20260721-exportlabels1"></script>
+    <script src="content-template.js?v=20260721-seo1"></script>
+    <script src="admin.js?v=20260721-upgrades1"></script>
     <script src="sender.js?v=20260721-analytics1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>

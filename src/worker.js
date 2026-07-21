@@ -227,6 +227,9 @@ export default {
       if (apiPath === "/api/deploy-status" && isAdminApi) {
         return handleDeployStatus(request, env);
       }
+      if (apiPath === "/api/alerts" && isAdminApi) {
+        return handleAlerts(request, env);
+      }
 
       if (apiPath === "/api/github" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
@@ -1028,6 +1031,26 @@ async function handleReviewSubmit(request, env) {
   if (text.length < 4) return json({ error: "Please write a short review." }, 400);
 
   const ip = request.headers.get("cf-connecting-ip") || "";
+  // Rate limit: at most 5 submissions per IP per hour, and block exact duplicate
+  // text from the same IP, to blunt spam. (Honeypot above handles naive bots.)
+  if (ip) {
+    try {
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const recent = await env.SUBSCRIBERS.prepare(
+        "SELECT COUNT(*) AS c FROM review_submissions WHERE ip=?1 AND created_at >= ?2"
+      ).bind(ip, since).first();
+      if (recent && recent.c >= 5) {
+        return json({ error: "Thanks! You've sent a few reviews already — please try again later." }, 429);
+      }
+      const dupe = await env.SUBSCRIBERS.prepare(
+        "SELECT COUNT(*) AS c FROM review_submissions WHERE ip=?1 AND text=?2 AND created_at >= ?3"
+      ).bind(ip, text, new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()).first();
+      if (dupe && dupe.c > 0) {
+        return json({ ok: true, message: "Thank you! Your review has been sent to us for approval." });
+      }
+    } catch { /* if the check fails, don't block a genuine submission */ }
+  }
+
   await env.SUBSCRIBERS.prepare(
     `INSERT INTO review_submissions (name, rating, treatment, text, email, status, ip, created_at)
      VALUES (?1,?2,?3,?4,?5,'pending',?6,?7)`
@@ -1676,6 +1699,61 @@ async function handleDeployStatus(request, env) {
   } catch (err) {
     return json({ ok: true, configured: true, commit: null, deploy, error: (err && err.message) || "Network error." });
   }
+}
+
+// Dashboard alerts: things that need attention, computed from live data.
+async function handleAlerts(request, env) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+  if (!env.SUBSCRIBERS) return json({ ok: true, alerts: [] });
+  const alerts = [];
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+
+  // Missing D1 migration: probe artifacts from the most recent migrations.
+  let migrationsOk = true;
+  const probes = [
+    "SELECT pref_offers FROM subscribers LIMIT 1",
+    "SELECT id FROM reviews LIMIT 1",
+    "SELECT id FROM revisions LIMIT 1",
+    "SELECT topic FROM campaign_sends LIMIT 1",
+  ];
+  for (const q of probes) {
+    try { await env.SUBSCRIBERS.prepare(q).all(); } catch { migrationsOk = false; }
+  }
+  if (!migrationsOk) {
+    alerts.push({ level: "error", title: "Database update needed", detail: "A recent feature needs its database migration applied. Ask Dima to run the latest D1 migrations." });
+  }
+
+  // Campaign send problems in the last 7 days.
+  try {
+    const row = await env.SUBSCRIBERS.prepare(
+      "SELECT COUNT(*) AS c FROM campaign_sends WHERE is_test=0 AND status IN ('partial','error','failed') AND created_at >= ?1"
+    ).bind(new Date(Date.now() - 7 * 864e5).toISOString()).first();
+    if (row && row.c) alerts.push({ level: "error", title: row.c + " campaign" + (row.c > 1 ? "s" : "") + " had send problems", detail: "Check Send email → recent campaigns for details.", tab: "sender" });
+  } catch { /* ignore */ }
+
+  // Campaign scheduled to go out today.
+  try {
+    const { results } = await env.SUBSCRIBERS.prepare(
+      "SELECT subject, send_at FROM scheduled_campaigns WHERE status='queued' AND substr(send_at,1,10)=?1 ORDER BY send_at ASC LIMIT 5"
+    ).bind(todayStr).all();
+    (results || []).forEach((r) => alerts.push({ level: "info", title: "Campaign scheduled today", detail: '"' + (r.subject || "Untitled") + '" at ' + String(r.send_at || "").slice(11, 16), tab: "sender" }));
+  } catch { /* ignore */ }
+
+  // Birthday automation switched off.
+  try {
+    const cfg = await getBirthdayConfig(env);
+    if (!cfg.enabled) alerts.push({ level: "warn", title: "Birthday automation is off", detail: "Automatic birthday emails won't send. Turn it on in Send email → Birthdays.", tab: "sender" });
+  } catch { /* ignore */ }
+
+  // New website reviews awaiting moderation.
+  try {
+    const row = await env.SUBSCRIBERS.prepare("SELECT COUNT(*) AS c FROM review_submissions WHERE status='pending'").first();
+    if (row && row.c) alerts.push({ level: "info", title: row.c + " new review" + (row.c > 1 ? "s" : "") + " to check", detail: "Approve or reject them in the Reviews tab.", tab: "reviews" });
+  } catch { /* ignore */ }
+
+  return json({ ok: true, alerts, checkedAt: now.toISOString() });
 }
 
 async function handleGithubProxy(request, env) {
