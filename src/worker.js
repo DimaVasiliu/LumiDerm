@@ -371,6 +371,7 @@ async function handleSend(request, env, url) {
   const isTest = body.test === true;
   const incoming = Array.isArray(body.recipients) ? body.recipients : [];
   const audienceSource = String(body.audienceSource || (isTest ? "test" : "manual")).slice(0, 80);
+  const topic = String(body.topic || "").trim().toLowerCase();
 
   if (!subject) return json({ error: "Subject is required." }, 400);
   if (!html) return json({ error: "Email body is required." }, 400);
@@ -419,12 +420,19 @@ async function handleSend(request, env, url) {
     return json({ error: "Everyone on this list has unsubscribed.", sent: 0, suppressed }, 400);
   }
 
+  // Respect topic opt-ins, pause and the monthly cap (test sends bypass this).
+  const pref = await filterByPreferences(env, kept, { topic, isTest });
+  const audience = pref.kept;
+  if (!audience.length) {
+    return json({ error: "No one left after preferences (paused, topic turned off, or once-a-month cap).", sent: 0, suppressed, skipped: { paused: pref.paused, topicOut: pref.topicOut, capped: pref.capped } }, 400);
+  }
+
   const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <hello@lumidermaesthetics.com>";
   const replyTo = env.REPLY_TO || null;
   const campaignId = isTest ? "test_" + randomId() : "cmp_" + randomId();
 
   const messages = [];
-  for (const person of kept) {
+  for (const person of audience) {
     const unsubUrl = await buildUnsubscribeUrl(env, url.origin, person.email, campaignId);
     const preferencesUrl = await buildPreferencesUrl(env, url.origin, person.email);
     const who = firstName(person.name) || "there";
@@ -470,12 +478,15 @@ async function handleSend(request, env, url) {
     }
   }
 
+  if (!isTest && sent > 0) await markEmailed(env, audience.map((p) => p.email));
+
   const payload = {
     ok: errors.length === 0,
     sent,
     suppressed,
     invalid,
     errors,
+    skipped: { paused: pref.paused, topicOut: pref.topicOut, capped: pref.capped },
   };
   if (errors.length) {
     await recordCampaignEvent(env, { campaignId, eventType: "failed", detail: errors.join(" | ").slice(0, 500) });
@@ -672,6 +683,70 @@ async function handleDeleteCampaignDraft(request, env) {
 // Clean + de-duplicate + honour suppression + personalise + send + record.
 // Returns { ok, sent, suppressed, invalid, errors }. No auth here — callers
 // (the cron, and endpoints that already checked auth) are trusted.
+/* ---- Subscriber preferences: topic / pause / monthly cap enforcement ---- */
+function topicColumn(topic) {
+  return ({ offers: "pref_offers", skintips: "pref_skintips", news: "pref_news", birthday: "pref_birthday" })[topic] || null;
+}
+
+// Load preference rows for a set of emails into a Map keyed by lowercase email.
+async function loadPreferenceMap(env, emails) {
+  const map = new Map();
+  if (!env.SUBSCRIBERS || !emails.length) return map;
+  const uniq = [...new Set(emails.map((e) => String(e || "").toLowerCase()).filter(Boolean))];
+  for (let i = 0; i < uniq.length; i += 100) {
+    const chunk = uniq.slice(i, i + 100);
+    const ph = chunk.map((_, j) => "?" + (j + 1)).join(",");
+    try {
+      const { results } = await env.SUBSCRIBERS.prepare(
+        `SELECT email, pref_offers, pref_skintips, pref_news, pref_birthday, pref_frequency, pause_until, last_emailed_at
+           FROM subscribers WHERE email IN (${ph})`
+      ).bind(...chunk).all();
+      (results || []).forEach((r) => map.set(String(r.email).toLowerCase(), r));
+    } catch { /* columns may not exist pre-migration — treat as no preferences */ }
+  }
+  return map;
+}
+
+// Filter recipients by their preferences. Test sends bypass everything. Returns
+// the kept list plus counts of who was skipped and why (for reporting).
+async function filterByPreferences(env, people, opts) {
+  opts = opts || {};
+  if (opts.isTest) return { kept: people, paused: 0, topicOut: 0, capped: 0 };
+  const map = await loadPreferenceMap(env, people.map((p) => p.email));
+  if (!map.size) return { kept: people, paused: 0, topicOut: 0, capped: 0 };
+  const nowMs = Date.now();
+  const col = topicColumn(opts.topic);
+  const monthMs = 30 * 24 * 60 * 60 * 1000;
+  const kept = [];
+  let paused = 0, topicOut = 0, capped = 0;
+  for (const p of people) {
+    const r = map.get(String(p.email).toLowerCase());
+    if (r) {
+      if (r.pause_until && Date.parse(r.pause_until) > nowMs) { paused += 1; continue; }
+      if (col && Number(r[col]) === 0) { topicOut += 1; continue; }
+      if (String(r.pref_frequency) === "monthly" && r.last_emailed_at && (nowMs - Date.parse(r.last_emailed_at)) < monthMs) { capped += 1; continue; }
+    }
+    kept.push(p);
+  }
+  return { kept, paused, topicOut, capped };
+}
+
+// Stamp last_emailed_at after a real send so the monthly cap works next time.
+async function markEmailed(env, emails) {
+  if (!env.SUBSCRIBERS || !emails.length) return;
+  const now = new Date().toISOString();
+  const uniq = [...new Set(emails.map((e) => String(e || "").toLowerCase()).filter(Boolean))];
+  for (let i = 0; i < uniq.length; i += 100) {
+    const chunk = uniq.slice(i, i + 100);
+    const ph = chunk.map((_, j) => "?" + (j + 2)).join(",");
+    try {
+      await env.SUBSCRIBERS.prepare(
+        `UPDATE subscribers SET last_emailed_at=?1 WHERE email IN (${ph})`
+      ).bind(now, ...chunk).run();
+    } catch { /* pre-migration: ignore */ }
+  }
+}
+
 async function deliverCampaign(env, origin, opts) {
   const subject = String((opts && opts.subject) || "").trim();
   const html = String((opts && opts.html) || "");
@@ -704,11 +779,20 @@ async function deliverCampaign(env, origin, opts) {
   }
   if (!kept.length) return { ok: false, sent: 0, suppressed, invalid, errors: ["All recipients have unsubscribed."] };
 
+  // Honour topic opt-ins, pause, and the monthly frequency cap. Birthday sends
+  // pass skipPreferenceFilter — their own opt-in + pause is already applied and
+  // a birthday greeting shouldn't be blocked by the monthly cap.
+  const pref = (opts && opts.skipPreferenceFilter)
+    ? { kept, paused: 0, topicOut: 0, capped: 0 }
+    : await filterByPreferences(env, kept, { topic: opts && opts.topic, isTest: false });
+  const audience = pref.kept;
+  if (!audience.length) return { ok: false, sent: 0, suppressed, invalid, errors: ["No recipients after preferences (paused, topic off, or frequency cap)."] };
+
   const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
   const replyTo = env.REPLY_TO || null;
   const campaignId = "cmp_" + randomId();
   const messages = [];
-  for (const person of kept) {
+  for (const person of audience) {
     const unsubUrl = await buildUnsubscribeUrl(env, origin, person.email, campaignId);
     const preferencesUrl = await buildPreferencesUrl(env, origin, person.email);
     const who = firstName(person.name) || "there";
@@ -748,6 +832,8 @@ async function deliverCampaign(env, origin, opts) {
     }
   }
 
+  if (sent > 0) await markEmailed(env, audience.map((p) => p.email));
+
   await recordCampaignSend(env, {
     subject, audienceSource, isTest: false,
     requested: incoming.length, sent, suppressed, invalid,
@@ -757,7 +843,7 @@ async function deliverCampaign(env, origin, opts) {
     await recordCampaignEvent(env, { campaignId, eventType: "failed", detail: errors.join(" | ").slice(0, 500) });
   }
 
-  return { ok: errors.length === 0, sent, suppressed, invalid, errors, campaignId };
+  return { ok: errors.length === 0, sent, suppressed, invalid, errors, campaignId, skipped: { paused: pref.paused, topicOut: pref.topicOut, capped: pref.capped } };
 }
 
 /* ------------------------------------------------------------------ */
@@ -774,7 +860,7 @@ async function sendDueScheduledCampaigns(env, origin) {
   if (!env.SUBSCRIBERS) return;
   const nowIso = new Date().toISOString();
   const { results } = await env.SUBSCRIBERS.prepare(
-    `SELECT id, subject, html, audience_source, recipients
+    `SELECT id, subject, html, audience_source, recipients, topic
        FROM scheduled_campaigns
       WHERE status='queued' AND send_at <= ?1
       ORDER BY send_at ASC LIMIT 10`
@@ -792,6 +878,7 @@ async function sendDueScheduledCampaigns(env, origin) {
     const result = await deliverCampaign(env, origin, {
       subject: row.subject, html: row.html,
       recipients: recips, audienceSource: row.audience_source || "scheduled",
+      topic: row.topic || "",
     });
     const status = result.errors && result.errors.length ? "error" : "sent";
     const summary = ("Sent " + (result.sent || 0) +
@@ -816,13 +903,16 @@ async function runBirthdayEmails(env, origin, event) {
   const month = now.getUTCMonth() + 1;
   const year = now.getUTCFullYear();
 
+  const nowIso = now.toISOString();
   const { results } = await env.SUBSCRIBERS.prepare(
     `SELECT email, first_name FROM subscribers
       WHERE status='confirmed' AND consent_email=1
         AND birth_day=?1 AND birth_month=?2
         AND (birthday_sent_year IS NULL OR birthday_sent_year < ?3)
+        AND pref_birthday=1
+        AND (pause_until IS NULL OR pause_until <= ?5)
       LIMIT ?4`
-  ).bind(day, month, year, MAX_RECIPIENTS).all();
+  ).bind(day, month, year, MAX_RECIPIENTS, nowIso).all();
 
   const people = (results || []).map((r) => ({ email: r.email, name: r.first_name || "" }));
   if (!people.length) return;
@@ -830,7 +920,7 @@ async function runBirthdayEmails(env, origin, event) {
   await deliverCampaign(env, origin, {
     subject: cfg.subject || "Happy birthday from Lumi Derm",
     html: cfg.html || defaultBirthdayHtml(),
-    recipients: people, audienceSource: "birthday",
+    recipients: people, audienceSource: "birthday", skipPreferenceFilter: true,
   });
 
   // Mark everyone matched (even if suppressed) so we never retry them this year.
@@ -1173,7 +1263,7 @@ async function handleBirthdaysSend(request, env) {
     subject: cfg.subject || "Happy birthday from Lumi Derm",
     html: cfg.html || defaultBirthdayHtml(),
     recipients: [{ email: row.email, name: row.first_name || "" }],
-    audienceSource: "birthday-manual",
+    audienceSource: "birthday-manual", skipPreferenceFilter: true,
   });
   if (!result.sent) return json({ error: (result.errors && result.errors[0]) || "Could not send." }, 502);
 
@@ -1243,6 +1333,7 @@ async function handleScheduleCampaign(request, env) {
   const html = String(body.html || "");
   const recipients = Array.isArray(body.recipients) ? body.recipients : [];
   const audienceSource = String(body.audienceSource || "scheduled").slice(0, 80);
+  const topic = String(body.topic || "").trim().toLowerCase().slice(0, 40);
   const sendAtRaw = String(body.sendAt || "").trim();
 
   if (!subject) return json({ error: "Subject is required." }, 400);
@@ -1260,11 +1351,11 @@ async function handleScheduleCampaign(request, env) {
   if (!cleanRecipients.length) return json({ error: "No valid recipients." }, 400);
 
   await env.SUBSCRIBERS.prepare(
-    `INSERT INTO scheduled_campaigns (subject, html, audience_source, recipients, send_at, status, created_at)
-     VALUES (?1,?2,?3,?4,?5,'queued',?6)`
+    `INSERT INTO scheduled_campaigns (subject, html, audience_source, recipients, send_at, status, created_at, topic)
+     VALUES (?1,?2,?3,?4,?5,'queued',?6,?7)`
   ).bind(
     subject.slice(0, 240), html, audienceSource,
-    JSON.stringify(cleanRecipients), when.toISOString(), new Date().toISOString()
+    JSON.stringify(cleanRecipients), when.toISOString(), new Date().toISOString(), topic || null
   ).run();
 
   await logAudit(env, request, {
@@ -1715,12 +1806,17 @@ async function handlePreferencesGet(request, env, url) {
   if (env.SUBSCRIBERS) {
     try {
       row = await env.SUBSCRIBERS.prepare(
-        `SELECT email, first_name, last_name, birth_day, birth_month, interest, status, consent_email
+        `SELECT email, first_name, last_name, birth_day, birth_month, interest, status, consent_email,
+                pref_offers, pref_skintips, pref_news, pref_birthday, pref_frequency, pause_until
            FROM subscribers WHERE email=?1`
       ).bind(email).first();
     } catch { row = null; }
   }
 
+  const on = (v) => row ? Number(v) === 1 : true; // default opted-in for unknown/new
+  const pauseMonths = row && row.pause_until && Date.parse(row.pause_until) > Date.now()
+    ? Math.max(1, Math.round((Date.parse(row.pause_until) - Date.now()) / (30 * 24 * 60 * 60 * 1000)))
+    : 0;
   return preferencesPage({
     email,
     token,
@@ -1730,6 +1826,12 @@ async function handlePreferencesGet(request, env, url) {
     month: row && row.birth_month,
     interest: row && row.interest,
     subscribed: !row || (row.status === "confirmed" && Number(row.consent_email) === 1),
+    offers: on(row && row.pref_offers),
+    skintips: on(row && row.pref_skintips),
+    news: on(row && row.pref_news),
+    birthday: on(row && row.pref_birthday),
+    frequency: (row && row.pref_frequency) === "monthly" ? "monthly" : "any",
+    pauseMonths,
   });
 }
 
@@ -1749,21 +1851,36 @@ async function handlePreferencesPost(request, env) {
   const birthDay = clampInt(form.get("birth_day"), 1, 31);
   const birthMonth = clampInt(form.get("birth_month"), 1, 12);
   const subscribed = form.get("subscribed") === "1";
+  // Topic opt-ins, frequency cap and pause.
+  const prefOffers = form.get("pref_offers") === "1" ? 1 : 0;
+  const prefSkintips = form.get("pref_skintips") === "1" ? 1 : 0;
+  const prefNews = form.get("pref_news") === "1" ? 1 : 0;
+  const prefBirthday = form.get("pref_birthday") === "1" ? 1 : 0;
+  const prefFrequency = String(form.get("pref_frequency") || "any") === "monthly" ? "monthly" : "any";
+  const pauseMonths = clampInt(form.get("pause_months"), 1, 12);
+  const pauseUntil = pauseMonths ? new Date(Date.now() + pauseMonths * 30 * 24 * 60 * 60 * 1000).toISOString() : null;
 
   if (subscribed) {
     await env.SUBSCRIBERS.prepare(
       `INSERT INTO subscribers
          (email, first_name, last_name, birth_day, birth_month, interest, status,
-          consent_email, consent_wording, consent_source, confirm_token, created_at, confirmed_at, unsubscribed_at)
-       VALUES (?1,?2,?3,?4,?5,?6,'confirmed',1,'Updated in email preference centre','preference centre',NULL,?7,?7,NULL)
+          consent_email, consent_wording, consent_source, confirm_token, created_at, confirmed_at, unsubscribed_at,
+          pref_offers, pref_skintips, pref_news, pref_birthday, pref_frequency, pause_until)
+       VALUES (?1,?2,?3,?4,?5,?6,'confirmed',1,'Updated in email preference centre','preference centre',NULL,?7,?7,NULL,
+               ?8,?9,?10,?11,?12,?13)
        ON CONFLICT(email) DO UPDATE SET
          first_name=?2, last_name=?3, birth_day=?4, birth_month=?5, interest=?6,
          status='confirmed', consent_email=1, consent_source='preference centre',
          consent_wording='Updated in email preference centre', confirmed_at=COALESCE(confirmed_at, ?7),
-         unsubscribed_at=NULL`
-    ).bind(email, firstNameVal, lastNameVal, birthDay, birthMonth, interest, now).run();
+         unsubscribed_at=NULL,
+         pref_offers=?8, pref_skintips=?9, pref_news=?10, pref_birthday=?11, pref_frequency=?12, pause_until=?13`
+    ).bind(email, firstNameVal, lastNameVal, birthDay, birthMonth, interest, now,
+           prefOffers, prefSkintips, prefNews, prefBirthday, prefFrequency, pauseUntil).run();
     if (env.SUPPRESSION) await env.SUPPRESSION.delete(suppressionKey(email));
-    return htmlPage("Preferences saved", "Your email preferences have been updated. You can change them again from any Lumi Derm email.", 200);
+    const note = pauseUntil
+      ? "Your preferences are saved and emails are paused for now. You can resume any time from this page."
+      : "Your email preferences have been updated. You can change them again from any Lumi Derm email.";
+    return htmlPage("Preferences saved", note, 200);
   }
 
   if (env.SUPPRESSION) {
@@ -2368,6 +2485,9 @@ function preferencesPage(data) {
   .check input{width:auto;margin-top:4px;}
   button{border:0;background:#1c1a18;color:#fff;padding:15px 28px;border-radius:3px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;cursor:pointer;}
   small{display:block;color:#8c8178;margin-top:16px;line-height:1.6;}
+  .prefs{margin:22px 0 6px;padding:18px 18px 6px;border:1px solid #ece5de;border-radius:8px;background:#faf7f3;}
+  .prefs-title{font-size:13px;font-weight:800;color:#756b63;margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em;}
+  .prefs .check{margin:12px 0;}
   @media (max-width:620px){body{padding:12px}.card{margin:12px auto;padding:28px 22px}.row{grid-template-columns:1fr}}
 </style></head>
 <body><form class="card" method="post" action="/api/preferences">
@@ -2382,9 +2502,33 @@ function preferencesPage(data) {
   </div>
   <label>Treatment interest</label><select name="interest">${interestOptions}</select>
   <label>Birthday</label><div class="row"><select name="birth_day">${dayOptions.join("")}</select><select name="birth_month">${monthOptions}</select></div>
-  <label class="check"><input type="checkbox" name="subscribed" value="1"${data.subscribed ? " checked" : ""}> <span>Send me Lumi Derm offers, news and useful treatment updates by email.</span></label>
+
+  <label class="check"><input type="checkbox" name="subscribed" value="1"${data.subscribed ? " checked" : ""}> <span><strong>Keep me subscribed</strong> to Lumi Derm marketing emails.</span></label>
+
+  <div class="prefs">
+    <p class="prefs-title">What would you like to hear about?</p>
+    <label class="check"><input type="checkbox" name="pref_offers" value="1"${data.offers ? " checked" : ""}> <span>Offers &amp; promotions</span></label>
+    <label class="check"><input type="checkbox" name="pref_skintips" value="1"${data.skintips ? " checked" : ""}> <span>Skin tips &amp; treatment advice</span></label>
+    <label class="check"><input type="checkbox" name="pref_news" value="1"${data.news ? " checked" : ""}> <span>Clinic news &amp; updates</span></label>
+    <label class="check"><input type="checkbox" name="pref_birthday" value="1"${data.birthday ? " checked" : ""}> <span>Birthday treats</span></label>
+  </div>
+
+  <label>How often?</label>
+  <select name="pref_frequency">
+    <option value="any"${data.frequency === "any" ? " selected" : ""}>Any time — send me everything I chose</option>
+    <option value="monthly"${data.frequency === "monthly" ? " selected" : ""}>At most once a month</option>
+  </select>
+
+  <label>Pause all emails</label>
+  <select name="pause_months">
+    <option value=""${!data.pauseMonths ? " selected" : ""}>Don't pause</option>
+    <option value="1"${data.pauseMonths === 1 ? " selected" : ""}>Pause for 1 month</option>
+    <option value="3"${data.pauseMonths === 3 ? " selected" : ""}>Pause for 3 months</option>
+    <option value="6"${data.pauseMonths === 6 ? " selected" : ""}>Pause for 6 months</option>
+  </select>
+
   <button type="submit">Save preferences</button>
-  <small>This page is personalised from the link in your email. You can unsubscribe from any campaign at any time.</small>
+  <small>This page is personalised from the link in your email. Appointment messages are separate and always sent. You can unsubscribe completely at any time by unticking “Keep me subscribed”.</small>
 </form></body></html>`;
   return new Response(body, {
     status: 200,

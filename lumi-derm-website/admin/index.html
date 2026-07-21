@@ -492,6 +492,11 @@
                   <option value="blank">Blank</option>
                 </select></label>
                 <label>Subject line<input type="text" data-mail-field="subject" placeholder="Your first treatment at Lumi Derm — 15% off"></label>
+                <label>Topic<span class="admin-hint">Only subscribers who want this topic (and aren't paused or over their monthly limit) receive it.</span><select data-mail-field="topic">
+                  <option value="offers">Offers &amp; promotions</option>
+                  <option value="skintips">Skin tips &amp; advice</option>
+                  <option value="news">Clinic news &amp; updates</option>
+                </select></label>
                 <label>Preview text<span class="admin-hint">Shows next to the subject in the inbox.</span><input type="text" data-mail-field="preview"></label>
                 <label>Eyebrow<input type="text" data-mail-field="eyebrow" placeholder="New client offer"></label>
                 <label>Headline<input type="text" data-mail-field="headline" placeholder="Your first treatment, 15% off"></label>
@@ -897,7 +902,7 @@
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
     <script src="admin.js?v=20260721-deploy1"></script>
-    <script src="sender.js?v=20260721-bday1"></script>
+    <script src="sender.js?v=20260721-topics1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>
 </html>

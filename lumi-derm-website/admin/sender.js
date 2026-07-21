@@ -26,6 +26,7 @@
     audienceSource: "website",
     mail: {
       template: "offers",
+      topic: "offers",       // preference category: offers | skintips | news
       subject: "",
       preview: "",
       eyebrow: "",
@@ -879,6 +880,7 @@
         html: buildHtml(false),
         recipients: recipients,
         audienceSource: isTest === true ? "test" : state.audienceSource,
+        topic: String(state.mail.topic || "offers"),
         test: isTest === true
       })
     }).then(function (res) { return responseJson(res); });
@@ -946,6 +948,13 @@
             .then(function (data) {
               var msg = "Sent to " + data.sent + " client" + (data.sent === 1 ? "" : "s") + ".";
               if (data.suppressed) msg += " " + data.suppressed + " skipped (unsubscribed).";
+              if (data.skipped) {
+                var s = data.skipped, parts = [];
+                if (s.topicOut) parts.push(s.topicOut + " didn't want this topic");
+                if (s.paused) parts.push(s.paused + " paused");
+                if (s.capped) parts.push(s.capped + " over monthly limit");
+                if (parts.length) msg += " " + parts.join(", ") + ".";
+              }
               if (data.errors && data.errors.length) {
                 status(out, msg + " Some batches failed: " + data.errors.join(" | "), "error");
               } else {
@@ -1042,6 +1051,7 @@
           html: buildHtml(false),
           recipients: state.recipients,
           audienceSource: state.audienceSource,
+          topic: String(state.mail.topic || "offers"),
           sendAt: when.toISOString()
         })
       })

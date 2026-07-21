@@ -290,11 +290,11 @@ function initReviewGsap() {
   const quote = section.querySelector('[data-review-animate="quote"]');
   const stars = section.querySelector('.review-score-panel span[aria-hidden]');
 
-  gsap.set([main, score, quote].filter(Boolean), { y: 24 });
-  if (stars) gsap.set(stars, { letterSpacing: '0.22em' });
+  gsap.set([main, score, quote].filter(Boolean), { y: 10 });
+  if (stars) gsap.set(stars, { letterSpacing: '0.16em' });
 
   const timeline = gsap.timeline({
-    defaults: { ease: 'power3.out', duration: 0.9 },
+    defaults: { ease: 'power3.out', duration: 0.62 },
     scrollTrigger: window.ScrollTrigger
       ? {
           trigger: section,
@@ -306,11 +306,11 @@ function initReviewGsap() {
 
   timeline
     .to(main, { y: 0 })
-    .to(score, { y: 0 }, '-=0.52')
-    .to(quote, { y: 0 }, '-=0.58');
+    .to(score, { y: 0 }, '-=0.38')
+    .to(quote, { y: 0 }, '-=0.42');
 
   if (stars) {
-    timeline.to(stars, { letterSpacing: '0.12em', duration: 0.7 }, '-=0.65');
+    timeline.to(stars, { letterSpacing: '0.08em', duration: 0.5 }, '-=0.42');
   }
 
   if (!window.ScrollTrigger) timeline.play(0);
