@@ -33,7 +33,8 @@
       body: "",
       ctaLabel: "Book your consultation",
       ctaUrl: BOOKING_URL,
-      ctaAuto: true          // true = button link follows the ticked offer; false = Iulia set it herself
+      ctaAuto: true,         // true = button link follows the ticked offer; false = Iulia set it herself
+      heroImage: ""          // optional banner image URL (/media/... in R2)
     }
   };
   var campaignDrafts = [];
@@ -680,6 +681,11 @@
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f1ee;">' +
       '<tr><td align="center" style="padding:32px 16px;">' +
       '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:4px;">' +
+      // optional banner image
+      (m.heroImage
+        ? '<tr><td style="padding:0;font-size:0;line-height:0;"><img src="' + esc(absolute(m.heroImage)) +
+          '" width="600" alt="" style="display:block;width:100%;max-width:600px;height:auto;border:0;border-radius:4px 4px 0 0;"></td></tr>'
+        : "") +
       // gold top accent
       '<tr><td style="padding:0;height:3px;line-height:3px;font-size:0;background:#c9a227;">&nbsp;</td></tr>' +
       // header
@@ -752,6 +758,7 @@
   function renderPreview() {
     var frame = $("[data-mail-preview]");
     if (frame) frame.srcdoc = buildHtml(true);
+    updateBannerUI();
     saveDraft();
     updateSendButton();
   }
@@ -897,6 +904,53 @@
         });
       });
     }
+  }
+
+  /* --------------------------------------------------------------- */
+  /* Banner image (optional, stored in R2)                             */
+  /* --------------------------------------------------------------- */
+
+  function updateBannerUI() {
+    var img = $("[data-mail-banner-preview]");
+    var clear = $("[data-mail-banner-clear]");
+    var url = state.mail.heroImage || "";
+    if (img) {
+      if (url) { img.src = url; img.hidden = false; } else { img.hidden = true; img.removeAttribute("src"); }
+    }
+    if (clear) clear.hidden = !url;
+  }
+
+  function bindBanner() {
+    var uploadBtn = $("[data-mail-banner-upload]");
+    var fileInput = $("[data-mail-banner-file]");
+    var clearBtn = $("[data-mail-banner-clear]");
+    var statusEl = $("[data-mail-banner-status]");
+    if (uploadBtn && fileInput) uploadBtn.addEventListener("click", function () { fileInput.click(); });
+    if (fileInput) fileInput.addEventListener("change", function () {
+      var file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      if (!/^image\//.test(file.type || "")) { status(statusEl, "That file is not an image.", "error"); fileInput.value = ""; return; }
+      if (file.size > 6 * 1024 * 1024) { status(statusEl, "That image is larger than 6MB.", "error"); fileInput.value = ""; return; }
+      status(statusEl, "Uploading…");
+      var form = new FormData();
+      form.append("file", file, file.name);
+      fetch(ADMIN_API + "/media/upload", { method: "POST", credentials: "same-origin", body: form })
+        .then(function (res) { return responseJson(res); })
+        .then(function (d) {
+          state.mail.heroImage = d.url || "";
+          status(statusEl, "Banner added.", "ok");
+          updateBannerUI();
+          renderPreview();
+        })
+        .catch(function (err) { status(statusEl, "Upload failed: " + friendly(err), "error"); })
+        .then(function () { fileInput.value = ""; });
+    });
+    if (clearBtn) clearBtn.addEventListener("click", function () {
+      state.mail.heroImage = "";
+      updateBannerUI();
+      renderPreview();
+      status(statusEl, "", "");
+    });
   }
 
   /* --------------------------------------------------------------- */
@@ -1405,6 +1459,7 @@
     if (!document.getElementById("sender")) return;
     bindCompose();
     bindSending();
+    bindBanner();
     bindSettings();
     bindBirthday();
     loadOffers();

@@ -571,6 +571,12 @@ code {
 .ld-modal-body { margin: 0 0 1.2rem; color: var(--admin-ink); line-height: 1.6; }
 .ld-modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; flex-wrap: wrap; }
 
+/* ---- Media library + email banner ---- */
+.media-item { position: relative; }
+.media-item .tiny-button.danger { position: absolute; top: 8px; right: 8px; }
+.mail-banner-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.4rem; }
+.mail-banner-thumb { width: 96px; height: 58px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(68, 52, 49, 0.14); }
+
 /* ---- System status ---- */
 .system-status { display: grid; gap: 0.7rem; margin: 0.6rem 0 0; padding: 0; list-style: none; }
 .system-status li {

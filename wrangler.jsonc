@@ -13,7 +13,7 @@
 		"binding": "ASSETS",
 		// Run the Worker first for API routes so requests return JSON instead of
 		// the static admin HTML page.
-		"run_worker_first": ["/api/*", "/admin/api/*"]
+		"run_worker_first": ["/api/*", "/admin/api/*", "/media/*"]
 	},
 	// Unsubscribed addresses. Created with:
 	//   npx wrangler kv namespace create SUPPRESSION
@@ -32,6 +32,15 @@
 			"database_name": "lumidermdb",
 			"database_id": "0263c49f-0baa-416b-a885-b80e21ab54b2",
 			"migrations_dir": "migrations"
+		}
+	],
+	// Uploaded images (offer photos, email banners). Create the bucket once with:
+	//   npx wrangler r2 bucket create lumiderm-media
+	// Served publicly by the Worker at /media/<key>.
+	"r2_buckets": [
+		{
+			"binding": "MEDIA",
+			"bucket_name": "lumiderm-media"
 		}
 	],
 	// FROM_EMAIL must be on the domain verified in Resend.

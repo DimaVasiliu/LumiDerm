@@ -95,10 +95,12 @@ function runApp() {
   bindGenericToasts();
   bindPublishing();
   bindImageUpload();
+  bindMedia();
   renderAll();
   loadReviewsFromJson();
   loadPricesFromJson();
   loadContentFromJson();
+  loadMedia();
   // First run (no local draft yet) -> start from the offers actually on the website.
   if (!localStorage.getItem(STORAGE_KEY)) loadOffersFromSite(false);
 }
@@ -308,7 +310,7 @@ function renderOfferPreview() {
   const get = (k) => document.querySelector(`[data-offer-field="${k}"]`)?.value || "";
   box.innerHTML = `
     <div class="offer-preview-card">
-      <img src="../assets/images/${escapeAttr(get("image"))}" alt="" data-hide-on-error>
+      <img src="${escapeAttr(imageSrc(get("image")))}" alt="" data-hide-on-error>
       <div>
         <span>${escapeHtml(get("category") || "Category")}</span>
         <strong>${escapeHtml(get("title") || "Offer title")}</strong>
@@ -711,13 +713,128 @@ function renderAll() {
 
 function renderOfferImageOptions() {
   const select = document.querySelector('[data-offer-field="image"]'); if (!select) return;
-  select.innerHTML = imageOptions.map((img) => `<option value="${escapeHtml(img)}">${escapeHtml(img)}</option>`).join("");
+  const offer = state.offers[selectedOfferIndex];
+  const wanted = offer ? String(offer.image || "") : "";
+  const opts = [];
+  mediaCache.forEach((m) => opts.push([m.url, "Uploaded — " + m.key.replace(/^uploads\//, "")]));
+  imageOptions.forEach((img) => opts.push([img, img]));
+  // Keep the current offer's image selectable even if it isn't in either list.
+  if (wanted && !opts.some((o) => o[0] === wanted)) opts.unshift([wanted, "Current — " + wanted.replace(/^.*\//, "")]);
+  select.innerHTML = opts.map((o) => `<option value="${escapeAttr(o[0])}">${escapeHtml(o[1])}</option>`).join("");
+  if (wanted) select.value = wanted;
+}
+
+/* ---------------- Media library (R2 uploads + stock assets) ---------------- */
+const MEDIA_API = "/admin/api/media";
+let mediaCache = []; // [{ key, url, size, uploaded }] from R2
+
+// Resolve an image value to a usable src. Uploaded images are "/media/..." (root
+// absolute); stock ones are bare filenames under assets/images/.
+function imageSrc(image) {
+  const v = String(image || "");
+  if (!v) return "";
+  if (/^https?:\/\//i.test(v) || v.startsWith("/")) return v;      // full URL or /media/...
+  if (v.startsWith("assets/")) return "../" + v;                    // assets/images/x
+  return "../assets/images/" + v;                                   // bare filename
+}
+
+// offers.json image value: keep full URLs + /media paths as-is; bare filenames go under assets/images/.
+function normalizeOfferImage(v) {
+  v = String(v || "");
+  if (!v) return "";
+  if (/^https?:\/\//i.test(v) || v.startsWith("/")) return v;
+  if (v.startsWith("assets/")) return v;
+  return "assets/images/" + v;
 }
 
 function renderMedia() {
   const grid = document.querySelector("[data-media-grid]"); if (!grid) return;
-  grid.innerHTML = imageOptions.map((img) => `
-    <article class="media-item"><img src="../assets/images/${escapeAttr(img)}" alt="" loading="lazy" data-dim-on-error><div><strong>${escapeHtml(img)}</strong><small>Local asset</small></div></article>`).join("");
+  const uploaded = mediaCache.map((m) => `
+    <article class="media-item">
+      <img src="${escapeAttr(m.url)}" alt="" loading="lazy" data-dim-on-error>
+      <div><strong>${escapeHtml(m.key.replace(/^uploads\//, ""))}</strong><small>Uploaded${m.size ? " · " + Math.round(m.size / 1024) + "KB" : ""}</small></div>
+      <button class="tiny-button danger" type="button" data-media-del="${escapeAttr(m.key)}">Delete</button>
+    </article>`).join("");
+  const stock = imageOptions.map((img) => `
+    <article class="media-item"><img src="../assets/images/${escapeAttr(img)}" alt="" loading="lazy" data-dim-on-error><div><strong>${escapeHtml(img)}</strong><small>Stock image</small></div></article>`).join("");
+  grid.innerHTML = uploaded + stock;
+  grid.querySelectorAll("[data-media-del]").forEach((b) => b.addEventListener("click", () => deleteMedia(b.dataset.mediaDel)));
+}
+
+function setMediaStatus(msg, kind) {
+  const el = document.querySelector("[data-media-status]");
+  if (!el) return;
+  el.textContent = msg || "";
+  el.className = "admin-status" + (kind ? " is-" + kind : "");
+}
+
+async function loadMedia() {
+  try {
+    const res = await fetch(MEDIA_API, { cache: "no-store", credentials: "same-origin" });
+    const data = await ldReadJson(res);
+    mediaCache = data.media || [];
+    renderMedia();
+    renderOfferImageOptions();
+  } catch (err) {
+    setMediaStatus(ldFriendlyError(err), "error");
+  }
+}
+
+// Upload a File to R2 via the Worker. Returns the /media URL, or null on failure.
+async function uploadMedia(file) {
+  if (!file) return null;
+  if (!/^image\//.test(file.type || "")) { setMediaStatus("That file is not an image.", "error"); return null; }
+  if (file.size > 6 * 1024 * 1024) { setMediaStatus("That image is larger than 6MB — please use a smaller one.", "error"); return null; }
+  setMediaStatus("Uploading " + file.name + "…");
+  const form = new FormData();
+  form.append("file", file, file.name);
+  try {
+    const res = await fetch(MEDIA_API + "/upload", { method: "POST", credentials: "same-origin", body: form });
+    const data = await ldReadJson(res);
+    setMediaStatus("Uploaded.", "ok");
+    await loadMedia();
+    return data.url || null;
+  } catch (err) {
+    setMediaStatus("Upload failed: " + ldFriendlyError(err), "error");
+    return null;
+  }
+}
+
+async function deleteMedia(key) {
+  const ok = await ldConfirm({
+    title: "Delete this image?",
+    body: "Permanently delete this uploaded image. Any offer or email still using it will stop showing it. This can't be undone.",
+    confirmLabel: "Delete image",
+    danger: true
+  });
+  if (!ok) return;
+  try {
+    const res = await fetch(MEDIA_API + "/delete", {
+      method: "POST", credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ key })
+    });
+    await ldReadJson(res);
+    setMediaStatus("Deleted.", "ok");
+    await loadMedia();
+  } catch (err) {
+    setMediaStatus("Delete failed: " + ldFriendlyError(err), "error");
+  }
+}
+
+function bindMedia() {
+  const btn = document.querySelector("[data-media-upload-btn]");
+  const input = document.querySelector("[data-media-upload]");
+  if (btn && input) btn.addEventListener("click", () => input.click());
+  if (input) input.addEventListener("change", async () => {
+    const file = input.files && input.files[0];
+    if (file) await uploadMedia(file);
+    input.value = "";
+  });
+  // Load the library the first time the Media tab is opened.
+  const nav = document.querySelector('[data-admin-panel="media"]');
+  let loaded = false;
+  if (nav) nav.addEventListener("click", () => { if (!loaded) { loaded = true; loadMedia(); } });
 }
 
 function updateMetrics() {
@@ -912,7 +1029,7 @@ function toOffersJson(offers) {
     description: o.description || "",
     price: o.price || "",
     badge: o.badge || "",
-    image: !o.image ? "" : (o.image.startsWith("assets/") ? o.image : "assets/images/" + o.image),
+    image: normalizeOfferImage(o.image),
     alt: o.alt || "",
     service: o.service || "",
     status: String(o.status || "live").toLowerCase() === "draft" ? "draft" : "live",
@@ -1453,22 +1570,21 @@ function bindImageUpload() {
     if (status) status.textContent = "Uploading " + file.name + "…";
 
     try {
-      const name = await uploadImage(file);
-      if (!name) { if (status) status.textContent = ""; event.target.value = ""; return; }
+      // Uploads now go to R2 (returns a /media/... URL). loadMedia() inside
+      // uploadMedia refreshes the media cache + the offer image options.
+      const url = await uploadMedia(file);
+      if (!url) { if (status) status.textContent = "Upload failed."; event.target.value = ""; return; }
 
-      // make it available in the dropdown and select it
-      if (imageOptions.indexOf(name) === -1) imageOptions.unshift(name);
       renderOfferImageOptions();
       const select = document.querySelector('[data-offer-field="image"]');
-      if (select) select.value = name;
+      if (select) select.value = url;
 
       const offer = state.offers[selectedOfferIndex];
-      if (offer) { offer.image = name; saveDraft(null); }
+      if (offer) { offer.image = url; saveDraft(null); }
       renderOfferPreview();
-      renderMedia();
 
-      if (status) status.textContent = "Uploaded and selected. The photo appears on the website about a minute after you publish.";
-      toast("Photo uploaded to the website.");
+      if (status) status.textContent = "Uploaded and selected. Publish the offer to put it live.";
+      toast("Photo uploaded.");
     } catch (err) {
       if (status) status.textContent = "Upload failed: " + ldFriendlyError(err);
       toast("Upload failed: " + ldFriendlyError(err));

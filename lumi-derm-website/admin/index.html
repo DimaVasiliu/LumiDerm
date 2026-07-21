@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260721-ux1">
+    <link rel="stylesheet" href="admin.css?v=20260721-media1">
   </head>
   <body>
     <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
@@ -479,6 +479,16 @@
                 </div>
                 <p class="admin-hint cta-hint" data-cta-hint></p>
 
+                <p class="admin-eyebrow admin-subsection-title">Banner image</p>
+                <p class="admin-help">Optional &mdash; shown across the top of the email. Upload a new one or it goes live with the send.</p>
+                <div class="mail-banner-row">
+                  <img class="mail-banner-thumb" data-mail-banner-preview alt="" hidden>
+                  <button class="admin-button admin-button-secondary" type="button" data-mail-banner-upload>Upload banner</button>
+                  <button class="tiny-button danger" type="button" data-mail-banner-clear hidden>Remove</button>
+                  <input type="file" accept="image/*" data-mail-banner-file hidden>
+                  <span class="admin-status" data-mail-banner-status></span>
+                </div>
+
                 <p class="admin-eyebrow admin-subsection-title">Include offers</p>
                 <p class="admin-help">These come straight from the offers you published. Tick the ones to feature — no retyping.</p>
                 <div class="offer-picker" data-offer-picker></div>
@@ -621,10 +631,14 @@
               <div>
                 <p class="admin-eyebrow">Assets</p>
                 <h2>Media library</h2>
-                <p>Browse the images available to use in offers. To add a new photo, use <strong>Upload your own</strong> in the Offers editor &mdash; it goes live with the offer.</p>
+                <p>Upload your own photos to use in offers, page content and email campaigns. Uploaded images are stored securely and get a stable link that works everywhere &mdash; including email.</p>
               </div>
-              <button class="admin-button admin-button-secondary" type="button" data-demo-upload>Upload (info)</button>
+              <div class="admin-actions-inline start">
+                <button class="admin-button admin-button-primary" type="button" data-media-upload-btn>Upload image</button>
+                <input type="file" accept="image/*" data-media-upload hidden>
+              </div>
             </div>
+            <p class="admin-status" data-media-status></p>
             <div class="media-grid" data-media-grid></div>
           </section>
 
@@ -790,8 +804,8 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
-    <script src="admin.js?v=20260721-ux1"></script>
-    <script src="sender.js?v=20260721-ux1"></script>
+    <script src="admin.js?v=20260721-media1"></script>
+    <script src="sender.js?v=20260721-media1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>
 </html>

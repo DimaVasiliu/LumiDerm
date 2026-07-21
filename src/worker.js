@@ -27,6 +27,13 @@
  *   GET  /admin/api/github/health — admin: is server-side publishing configured?
  *   GET  /admin/api/audit         — admin: recent audit-log entries
  *   POST /admin/api/audit         — admin: record a client-only action (e.g. CSV export)
+ *   GET  /media/<key>             — public: serve an uploaded image from R2
+ *   POST /admin/api/media/upload  — admin: upload an image to R2 (multipart)
+ *   GET  /admin/api/media         — admin: list uploaded images
+ *   POST /admin/api/media/delete  — admin: delete an uploaded image
+ *
+ * R2:
+ *   MEDIA            — uploaded images (offer photos, email banners, etc.).
  *
  * D1 also stores an admin_audit_log (who/what/when) — see logAudit().
  *
@@ -63,6 +70,11 @@ export default {
     const isPublicApi = url.pathname.startsWith("/api/");
     const isAdminApi = url.pathname.startsWith("/admin/api/");
     const apiPath = isAdminApi ? url.pathname.replace("/admin/api", "/api") : url.pathname;
+
+    // Public image serving from R2 (offers, pages, emails all use /media/<key>).
+    if (url.pathname.startsWith("/media/")) {
+      return handleMediaServe(request, env, url);
+    }
 
     if (!isPublicApi && !isAdminApi) {
       return env.ASSETS.fetch(request);
@@ -168,6 +180,18 @@ export default {
         if (request.method === "GET") return handleAuditList(request, env);
         if (request.method === "POST") return handleAuditLogClient(request, env);
         return json({ error: "Use GET or POST." }, 405);
+      }
+
+      if (apiPath === "/api/media" && isAdminApi) {
+        return handleMediaList(request, env);
+      }
+      if (apiPath === "/api/media/upload" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleMediaUpload(request, env);
+      }
+      if (apiPath === "/api/media/delete" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleMediaDelete(request, env);
       }
 
       if (apiPath === "/api/subscribe" && isPublicApi) {
@@ -1028,6 +1052,88 @@ async function lastSuccessfulSend(env) {
     if (!row) return null;
     return { subject: row.subject, sent: row.sent_count, at: row.created_at };
   } catch (err) { return null; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Media library (Cloudflare R2)                                       */
+/* ------------------------------------------------------------------ */
+// Uploaded images live in R2 under "uploads/". They're served publicly at
+// /media/<key> (used by offer cards, page content, and email campaigns).
+
+const MEDIA_PREFIX = "uploads/";
+const MEDIA_MAX_BYTES = 6 * 1024 * 1024; // 6MB
+
+function extFromType(type) {
+  const map = { "image/jpeg": "jpg", "image/jpg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "image/avif": "avif" };
+  return map[String(type).toLowerCase()] || "img";
+}
+function randHex(bytes) {
+  const a = new Uint8Array(bytes);
+  crypto.getRandomValues(a);
+  return Array.from(a).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Public: serve an image from R2 with long cache headers.
+async function handleMediaServe(request, env, url) {
+  if (!env.MEDIA) return new Response("Media storage not configured.", { status: 404 });
+  const key = decodeURIComponent(url.pathname.slice("/media/".length));
+  if (!key || key.indexOf("..") !== -1 || !key.startsWith(MEDIA_PREFIX)) {
+    return new Response("Not found.", { status: 404 });
+  }
+  const obj = await env.MEDIA.get(key);
+  if (!obj) return new Response("Not found.", { status: 404 });
+  const headers = new Headers();
+  obj.writeHttpMetadata(headers);
+  if (!headers.get("content-type")) headers.set("content-type", "application/octet-stream");
+  headers.set("cache-control", "public, max-age=31536000, immutable");
+  if (obj.httpEtag) headers.set("etag", obj.httpEtag);
+  return new Response(obj.body, { headers });
+}
+
+// Admin: upload an image (multipart/form-data, field "file") to R2.
+async function handleMediaUpload(request, env) {
+  if (!env.MEDIA) return json({ error: "Media storage isn't set up yet. Ask Dima to create the R2 bucket." }, 503);
+  const ctype = request.headers.get("content-type") || "";
+  if (ctype.indexOf("multipart/form-data") === -1) return json({ error: "Upload must be multipart/form-data." }, 400);
+
+  let form;
+  try { form = await request.formData(); } catch { return json({ error: "Could not read the upload." }, 400); }
+  const file = form.get("file");
+  if (!file || typeof file === "string") return json({ error: "No image file was sent." }, 400);
+  const type = file.type || "";
+  if (!/^image\//i.test(type)) return json({ error: "That file is not an image." }, 400);
+  if (file.size > MEDIA_MAX_BYTES) return json({ error: "That image is larger than 6MB — please use a smaller one." }, 400);
+
+  const key = MEDIA_PREFIX + Date.now().toString(36) + "-" + randHex(4) + "." + extFromType(type);
+  const buf = await file.arrayBuffer();
+  await env.MEDIA.put(key, buf, { httpMetadata: { contentType: type, cacheControl: "public, max-age=31536000, immutable" } });
+  await logAudit(env, request, { action: "media.upload", detail: key + " (" + Math.round(file.size / 1024) + "KB)", status: "ok" });
+
+  const origin = new URL(request.url).origin;
+  return json({ ok: true, key, url: "/media/" + key, absoluteUrl: origin + "/media/" + key });
+}
+
+// Admin: list uploaded images (newest first).
+async function handleMediaList(request, env) {
+  if (!env.MEDIA) return json({ ok: true, media: [], configured: false });
+  const listing = await env.MEDIA.list({ prefix: MEDIA_PREFIX, limit: 1000 });
+  const media = (listing.objects || []).map((o) => ({
+    key: o.key, url: "/media/" + o.key, size: o.size, uploaded: o.uploaded,
+  }));
+  media.sort((a, b) => new Date(b.uploaded).getTime() - new Date(a.uploaded).getTime());
+  return json({ ok: true, media, configured: true });
+}
+
+// Admin: delete an uploaded image.
+async function handleMediaDelete(request, env) {
+  if (!env.MEDIA) return json({ error: "Media storage isn't set up yet." }, 503);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  const key = String(body.key || "");
+  if (!key.startsWith(MEDIA_PREFIX) || key.indexOf("..") !== -1) return json({ error: "That image can't be deleted." }, 400);
+  await env.MEDIA.delete(key);
+  await logAudit(env, request, { action: "media.delete", detail: key, status: "ok" });
+  return json({ ok: true });
 }
 
 /* ------------------------------------------------------------------ */
