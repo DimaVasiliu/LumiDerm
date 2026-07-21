@@ -335,8 +335,8 @@ function bindTopActions() {
 }
 
 function exportAll() {
-  download(`lumi-admin-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(state, null, 2), "application/json");
-  toast("Backup exported.");
+  download(`lumi-content-drafts-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(state, null, 2), "application/json");
+  toast("Content drafts backup exported (no personal data).");
 }
 
 function importAll(e) {
@@ -345,9 +345,9 @@ function importAll(e) {
   reader.onload = async () => {
     try {
       const ok = await ldConfirm({
-        title: "Import admin backup?",
-        body: "This replaces the local drafts in this browser with the backup file. You can use Undo local edit straight after if it was the wrong file.",
-        confirmLabel: "Import backup"
+        title: "Import content drafts?",
+        body: "This replaces your website content drafts (offers, prices, reviews, page text) in this browser with the file. Subscribers and personal data are not affected. You can use Undo local edit straight after if it was the wrong file.",
+        confirmLabel: "Import content drafts"
       });
       if (!ok) { e.target.value = ""; return; }
       const data = JSON.parse(reader.result);
@@ -355,7 +355,7 @@ function importAll(e) {
       ["offers", "reviews", "campaigns"].forEach((k) => { if (!Array.isArray(state[k])) state[k] = []; });
       if (!state.prices || !Array.isArray(state.prices.groups)) state.prices = { groups: [] };
       selectedOfferIndex = 0; selectedTx = { gi: 0, ti: 0 };
-      renderAll(); saveDraft("Backup imported.");
+      renderAll(); saveDraft("Content drafts imported.");
     } catch { toast("That file could not be read as a valid backup."); }
     e.target.value = "";
   };

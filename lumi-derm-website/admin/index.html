@@ -61,8 +61,8 @@
           <div class="admin-topbar-actions">
             <a class="admin-button admin-button-ghost" href="../index.html" target="_blank" rel="noopener">View site</a>
             <button class="admin-button admin-button-secondary" type="button" data-undo-local>Undo local edit</button>
-            <button class="admin-button admin-button-secondary" type="button" data-import-admin>Import</button>
-            <button class="admin-button admin-button-secondary" type="button" data-export-admin>Export</button>
+            <button class="admin-button admin-button-secondary" type="button" data-import-admin title="Import a website content-drafts backup (offers, prices, reviews, page text). Not subscribers.">Import drafts</button>
+            <button class="admin-button admin-button-secondary" type="button" data-export-admin title="Download a backup of your website content drafts (offers, prices, reviews, page text). Not subscribers or personal data.">Export drafts</button>
             <button class="admin-button admin-button-primary" type="button" data-publish-demo>Publish offers</button>
             <input type="file" accept="application/json" data-import-file hidden>
           </div>
@@ -845,14 +845,14 @@
                 <p class="admin-help" data-mail-health-status>Not checked. You must be signed in through Cloudflare Access.</p>
               </section>
               <section class="admin-card">
-                <p class="admin-eyebrow">Data</p>
-                <h3>Backup &amp; restore</h3>
+                <p class="admin-eyebrow">Website content</p>
+                <h3>Content drafts backup</h3>
                 <div class="admin-actions-inline start admin-actions-spaced">
-                  <button class="admin-button admin-button-secondary" type="button" data-export-admin>Export all</button>
-                  <button class="admin-button admin-button-secondary" type="button" data-import-admin>Import</button>
+                  <button class="admin-button admin-button-secondary" type="button" data-export-admin>Export content drafts (JSON)</button>
+                  <button class="admin-button admin-button-secondary" type="button" data-import-admin>Import content drafts</button>
                   <button class="admin-button admin-button-ghost" type="button" data-reset-admin>Reset to defaults</button>
                 </div>
-                <p class="admin-help">Export downloads a JSON backup of everything in this admin. Reset clears local drafts.</p>
+                <p class="admin-help">Backs up your <strong>website content drafts only</strong> — offers, prices, reviews, page text and email drafts held in this browser. It does <strong>not</strong> include subscribers or any personal data. To back up subscribers, use <strong>Export confirmed (CSV)</strong> in the <em>Subscribers</em> tab. Reset clears local content drafts.</p>
               </section>
               <section class="admin-card">
                 <h3>Integration checklist</h3>
@@ -901,7 +901,7 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
-    <script src="admin.js?v=20260721-deploy1"></script>
+    <script src="admin.js?v=20260721-exportlabels1"></script>
     <script src="sender.js?v=20260721-analytics1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>
