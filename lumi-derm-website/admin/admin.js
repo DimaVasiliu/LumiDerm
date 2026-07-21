@@ -100,7 +100,7 @@ function runApp() {
   bindImageUpload();
   bindMedia();
   renderAll();
-  loadReviewsFromJson();
+  loadReviews();
   loadPricesFromJson();
   loadContentFromJson();
   loadMedia();
@@ -591,7 +591,7 @@ function bindReviews() {
     f.addEventListener("input", () => {
       const k = f.dataset.reviewSummary;
       reviewsSummary[k] = k === "count" ? (parseInt(f.value, 10) || 0) : f.value;
-      saveDraft(null);
+      persistReviews(null);
     });
   });
   document.querySelector("[data-review-sub-reload]")?.addEventListener("click", loadReviewSubmissions);
@@ -659,10 +659,10 @@ function importSubmission(id) {
     rating: Number(s.rating) || 5, treatment: s.treatment || "", source: "Website",
     text: s.text || "", status: "pending", featured: false,
   });
-  saveDraft("Added to reviews (pending — approve then publish).");
   renderReviews();
+  persistReviews(null);
   resolveSubmission(id, "imported");
-  toast("Added to your reviews. Approve it, then Publish.");
+  toast("Added to your reviews as Pending. Click Approve to show it on the homepage.");
 }
 
 async function rejectSubmission(id) {
@@ -687,82 +687,94 @@ async function resolveSubmission(id, action) {
   } catch (err) { toast(ldFriendlyError(err)); }
 }
 
-async function loadReviewsFromJson() {
-  if (state.reviews.length) { renderReviews(); return; }
+// Reviews are now served live from D1 by the Worker. Approve / hide / feature
+// take effect on the homepage immediately — no publish, no deploy.
+async function loadReviews() {
   try {
-    const r = await fetch("../assets/data/reviews.json", { cache: "no-store" });
-    if (!r.ok) throw new Error("unavailable");
-    const data = await r.json();
-    reviewsSummary = data.summary || reviewsSummary;
-    // Reviews in reviews.json are the ones already live on the site → approved.
+    const res = await fetch("/admin/api/reviews", { cache: "no-store", credentials: "same-origin" });
+    const data = await ldReadJson(res);
+    if (data.summary && Object.keys(data.summary).length) reviewsSummary = data.summary;
     state.reviews = (data.reviews || []).map((rev) => ({
       name: rev.name || "", initial: rev.initial || (rev.name || "?").charAt(0).toUpperCase(),
       rating: Number(rev.rating) || 5, treatment: rev.treatment || "",
       source: rev.source || "Client feedback", text: rev.text || "",
-      status: "approved", featured: rev.featured === true,
+      status: rev.status || "pending", featured: rev.featured === true,
     }));
     renderReviewSummaryFields();
     renderReviews(); updateMetrics();
-  } catch { state.reviews = []; renderReviews(); }
+    saveDraft(null); // keep a local cache so the tab still opens if offline
+  } catch (err) {
+    // Fall back to whatever is cached locally.
+    renderReviewSummaryFields();
+    renderReviews();
+    toast(ldFriendlyError(err));
+  }
 }
-
-// Preserve the Treatwell summary (rating/count/label) across publishes.
+// Preserve the Treatwell summary (rating/count/label).
 let reviewsSummary = { rating: "5.0", count: 47, label: "Treatwell reviews" };
 
-/* admin reviews -> reviews.json shape (only APPROVED reviews go public, featured first) */
-function toReviewsJson() {
-  const approved = state.reviews.filter((r) => String(r.status || "").toLowerCase() === "approved");
-  approved.sort((a, b) => (b.featured === true ? 1 : 0) - (a.featured === true ? 1 : 0));
-  const reviews = approved.map((r) => ({
-    name: r.name || "",
-    initial: r.initial || (r.name || "?").charAt(0).toUpperCase(),
-    rating: Number(r.rating) || 5,
-    treatment: r.treatment || "",
-    source: r.source || "Client feedback",
-    text: r.text || "",
-    featured: r.featured === true
-  }));
-  return { summary: reviewsSummary, reviews };
+// Full review set (all statuses) sent to the Worker, which stores it in D1 and
+// serves only the approved ones (featured first) to the homepage.
+function reviewsPayload() {
+  return {
+    summary: reviewsSummary,
+    reviews: state.reviews.map((r) => ({
+      name: r.name || "",
+      initial: r.initial || (r.name || "?").charAt(0).toUpperCase(),
+      rating: Number(r.rating) || 5,
+      treatment: r.treatment || "",
+      source: r.source || "Client feedback",
+      text: r.text || "",
+      status: r.status || "pending",
+      featured: r.featured === true,
+    })),
+  };
 }
 
-async function publishReviews() {
-  if (!ghReady) {
-    toast("Publishing isn't set up on the server yet — ask Dima.");
-    return false;
-  }
-  const button = document.querySelector("[data-publish-reviews]");
-  if (button) { button.disabled = true; button.textContent = "Publishing…"; }
+let reviewSaveTimer = null;
+// Debounced auto-save: every approve/hide/feature/edit persists to D1 and goes live.
+function scheduleSaveReviews() {
+  clearTimeout(reviewSaveTimer);
+  setReviewSaveState("saving");
+  reviewSaveTimer = setTimeout(saveReviewsNow, 700);
+}
+async function saveReviewsNow() {
+  clearTimeout(reviewSaveTimer);
   try {
-    const branch = "main";
-    const content = b64(JSON.stringify(toReviewsJson(), null, 2) + "\n");
-    let put;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      let sha;
-      const current = await ghRequest(
-        REVIEWS_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(),
-        { method: "GET" }
-      );
-      if (current.ok) sha = (await current.json()).sha;
-      else if (current.status !== 404) {
-        const e = await current.json().catch(() => ({}));
-        throw new Error(ghError(current.status, e.message));
-      }
-      const body = { message: "Update homepage reviews (via admin)", content, branch };
-      if (sha) body.sha = sha;
-      put = await ghRequest(REVIEWS_REPO_PATH, { method: "PUT", body: JSON.stringify(body) });
-      if (put.ok) break;
-      if (put.status === 409 && attempt < 2) { await new Promise((r) => setTimeout(r, 500)); continue; }
-      const e = await put.json().catch(() => ({}));
-      throw new Error(ghError(put.status, e.message));
-    }
-    toast("Published — your reviews will be live on the website in about a minute.");
+    const res = await fetch("/admin/api/reviews/save", {
+      method: "POST", credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(reviewsPayload()),
+    });
+    await ldReadJson(res);
+    setReviewSaveState("saved");
     return true;
   } catch (err) {
-    toast("Publish failed: " + ldFriendlyError(err));
+    setReviewSaveState("error");
+    toast(ldFriendlyError(err));
     return false;
-  } finally {
-    if (button) { button.disabled = false; button.textContent = "Publish reviews"; }
   }
+}
+// Called from the review handlers instead of the old saveDraft/publish flow.
+function persistReviews(message) {
+  saveDraft(null);      // local cache + undo + metrics
+  scheduleSaveReviews(); // live to the homepage
+  if (message) toast(message);
+}
+function setReviewSaveState(state) {
+  const btn = document.querySelector("[data-publish-reviews]");
+  if (!btn) return;
+  if (state === "saving") { btn.disabled = true; btn.textContent = "Saving…"; }
+  else if (state === "saved") { btn.disabled = false; btn.textContent = "Saved ✓ — homepage is live"; setTimeout(() => { btn.textContent = "Save now"; }, 2200); }
+  else if (state === "error") { btn.disabled = false; btn.textContent = "Save now"; }
+}
+
+// Reviews now save to D1 automatically and go live instantly. This button just
+// flushes any pending auto-save immediately, for peace of mind.
+async function publishReviews() {
+  const ok = await saveReviewsNow();
+  if (ok) toast("Saved — your reviews are live on the homepage now.");
+  return ok;
 }
 
 function reviewFilterValue(sel) { const el = document.querySelector(sel); return el ? el.value : ""; }
@@ -830,9 +842,17 @@ function renderReviews() {
 
   list.querySelectorAll("[data-review-action]").forEach((b) => b.addEventListener("click", () => {
     const review = state.reviews[+b.dataset.reviewIndex]; if (!review) return;
-    if (b.dataset.reviewAction === "featured") review.featured = !review.featured;
-    else review.status = b.dataset.reviewAction;
-    renderReviews(); saveDraft("Review updated.");
+    const action = b.dataset.reviewAction;
+    if (action === "featured") {
+      review.featured = !review.featured;
+      // Featuring a review implies it should be visible.
+      if (review.featured && review.status !== "approved") review.status = "approved";
+    } else {
+      review.status = action;
+      // A hidden review can't also be featured.
+      if (action === "hidden") review.featured = false;
+    }
+    renderReviews(); persistReviews(null);
   }));
   list.querySelectorAll("[data-review-edit]").forEach((b) => b.addEventListener("click", () => openReviewEditor(+b.dataset.reviewEdit)));
   list.querySelectorAll("[data-review-del]").forEach((b) => b.addEventListener("click", () => deleteReview(+b.dataset.reviewDel)));
@@ -842,14 +862,14 @@ async function deleteReview(index) {
   const r = state.reviews[index]; if (!r) return;
   const ok = await ldConfirm({
     title: "Delete this review?",
-    body: 'Permanently remove the review from "' + (r.name || "this client") + '". If it was live, it disappears from the site on your next Publish. This can\'t be undone.',
+    body: 'Permanently remove the review from "' + (r.name || "this client") + '". If it was live, it disappears from the homepage right away. This can\'t be undone.',
     confirmLabel: "Delete review",
     danger: true
   });
   if (!ok) return;
   state.reviews.splice(index, 1);
   renderReviews();
-  saveDraft("Review deleted.");
+  persistReviews("Review deleted.");
 }
 
 // Modal form to add or edit a review's content.
@@ -905,10 +925,12 @@ function openReviewEditor(index) {
       featured: q("[data-rev-featured]").checked,
       status: isNew ? "pending" : (r.status || "pending"),
     };
+    // Featured implies visible; never leave a featured review hidden.
+    if (updated.featured && updated.status === "hidden") updated.status = "approved";
     if (isNew) state.reviews.unshift(updated);
     else state.reviews[index] = { ...r, ...updated };
     renderReviews();
-    saveDraft(isNew ? "Review added (pending — approve then publish)." : "Review updated.");
+    persistReviews(isNew ? "Review added (pending — approve it to show on the homepage)." : "Review updated.");
     close();
   });
   (document.querySelector(".admin-main") || document.body).appendChild(back);

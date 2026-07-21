@@ -18,7 +18,10 @@
  *   POST /api/preferences         — save subscriber preferences
  *   GET  /api/click               — tracked campaign-link redirect
  *   POST /api/subscribe           — newsletter signup (double opt-in)
+ *   GET  /api/reviews             — public: live homepage reviews (approved, featured first)
  *   POST /api/reviews             — public: submit a client review (pending moderation)
+ *   GET  /admin/api/reviews       — admin: all reviews + summary (manager UI)
+ *   POST /admin/api/reviews/save  — admin: replace reviews + summary (instant, live)
  *   GET  /admin/api/reviews/submissions — admin: pending website review submissions
  *   POST /admin/api/reviews/submissions/resolve — admin: import/reject a submission
  *   GET  /api/subscribe/confirm   — double opt-in confirmation link
@@ -227,6 +230,14 @@ export default {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
         return handleReviewResolve(request, env);
       }
+      if (apiPath === "/api/reviews" && isAdminApi) {
+        if (request.method === "GET") return handleAdminReviewsList(env);
+        return json({ error: "Use GET." }, 405);
+      }
+      if (apiPath === "/api/reviews/save" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleAdminReviewsSave(request, env);
+      }
 
       if (apiPath === "/api/birthdays" && isAdminApi) {
         const owner = requireOwner(request, env, "view birthday subscriber data");
@@ -262,8 +273,9 @@ export default {
       }
 
       if (apiPath === "/api/reviews" && isPublicApi) {
-        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        return handleReviewSubmit(request, env);
+        if (request.method === "GET") return handlePublicReviews(env);
+        if (request.method === "POST") return handleReviewSubmit(request, env);
+        return json({ error: "Use GET or POST." }, 405);
       }
 
       // Clean, mail-safe confirmation link: /api/confirm/<token> (no query string).
@@ -865,6 +877,105 @@ async function handleReviewResolve(request, env) {
   const changed = res.meta && res.meta.changes ? res.meta.changes : 0;
   await logAudit(env, request, { action: action === "imported" ? "review.imported" : "review.rejected", detail: "submission " + id, status: "ok" });
   return json({ ok: true, changed });
+}
+
+/* ------------------------------------------------------------------ */
+/* Live reviews served from D1 (approve/hide/feature is instant)       */
+/* ------------------------------------------------------------------ */
+
+async function readReviewSummary(env) {
+  const summary = { rating: "5.0", count: 47, label: "Treatwell reviews" };
+  try {
+    const { results } = await env.SUBSCRIBERS.prepare("SELECT key, value FROM review_meta").all();
+    (results || []).forEach((row) => {
+      if (row.key === "count") summary.count = parseInt(row.value, 10) || summary.count;
+      else if (row.key === "rating" || row.key === "label") summary[row.key] = row.value;
+    });
+  } catch { /* table may not exist yet */ }
+  return summary;
+}
+
+// Public: the homepage review feed. Only approved reviews, featured first.
+async function handlePublicReviews(env) {
+  if (!env.SUBSCRIBERS) return json({ summary: {}, reviews: [] });
+  try {
+    const summary = await readReviewSummary(env);
+    const { results } = await env.SUBSCRIBERS.prepare(
+      `SELECT name, initial, rating, treatment, source, text, featured
+         FROM reviews WHERE status='approved'
+        ORDER BY featured DESC, sort_order ASC, id ASC`
+    ).all();
+    const reviews = (results || []).map((r) => ({
+      name: r.name || "", initial: r.initial || (r.name || "?").charAt(0).toUpperCase(),
+      rating: Number(r.rating) || 5, treatment: r.treatment || "",
+      source: r.source || "Client feedback", text: r.text || "",
+      featured: r.featured === 1 || r.featured === true,
+    }));
+    return json({ summary, reviews });
+  } catch {
+    return json({ summary: {}, reviews: [] });
+  }
+}
+
+// Admin: every review (all statuses) + the summary badge, for the manager UI.
+async function handleAdminReviewsList(env) {
+  if (!env.SUBSCRIBERS) return json({ ok: true, summary: {}, reviews: [] });
+  const summary = await readReviewSummary(env);
+  const { results } = await env.SUBSCRIBERS.prepare(
+    `SELECT id, name, initial, rating, treatment, source, text, status, featured
+       FROM reviews ORDER BY sort_order ASC, id ASC`
+  ).all();
+  const reviews = (results || []).map((r) => ({
+    id: r.id, name: r.name || "", initial: r.initial || "",
+    rating: Number(r.rating) || 5, treatment: r.treatment || "",
+    source: r.source || "Client feedback", text: r.text || "",
+    status: r.status || "pending", featured: r.featured === 1 || r.featured === true,
+  }));
+  return json({ ok: true, summary, reviews });
+}
+
+// Admin: replace the whole review set + summary in one transaction. Instant + live.
+async function handleAdminReviewsSave(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Reviews aren't set up yet." }, 500);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  const list = Array.isArray(body.reviews) ? body.reviews : [];
+  const summary = body.summary || {};
+
+  const stmts = [env.SUBSCRIBERS.prepare("DELETE FROM reviews")];
+  const insert = env.SUBSCRIBERS.prepare(
+    `INSERT INTO reviews (name, initial, rating, treatment, source, text, status, featured, sort_order, created_at)
+     VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+  );
+  list.forEach((r, i) => {
+    const name = String(r.name || "").slice(0, 80);
+    const status = ["approved", "pending", "hidden"].indexOf(r.status) === -1 ? "pending" : r.status;
+    stmts.push(insert.bind(
+      name,
+      String(r.initial || name.charAt(0).toUpperCase() || "?").slice(0, 2),
+      clampInt(r.rating, 1, 5) || 5,
+      String(r.treatment || "").slice(0, 80),
+      String(r.source || "Client feedback").slice(0, 80),
+      String(r.text || "").slice(0, 1500),
+      status,
+      r.featured === true ? 1 : 0,
+      i,
+      new Date().toISOString()
+    ));
+  });
+  // Summary badge
+  ["rating", "count", "label"].forEach((k) => {
+    if (summary[k] != null) {
+      stmts.push(env.SUBSCRIBERS.prepare(
+        "INSERT INTO review_meta (key, value) VALUES (?1, ?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value"
+      ).bind(k, String(summary[k])));
+    }
+  });
+
+  await env.SUBSCRIBERS.batch(stmts);
+  const live = list.filter((r) => r.status === "approved").length;
+  await logAudit(env, request, { action: "reviews.saved", detail: list.length + " reviews (" + live + " live)", status: "ok" });
+  return json({ ok: true, saved: list.length, live });
 }
 
 // Confirmed + consented subscribers whose birthday is today or within the next 7 days.
