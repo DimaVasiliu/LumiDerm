@@ -734,7 +734,7 @@
       BOOKING_URL +
       '" style="color:#7d746b;text-decoration:none;">Book</a>' +
       '<span style="color:#d8cfc5;">&nbsp;&nbsp;&middot;&nbsp;&nbsp;</span>' +
-      '<a href="https://www.instagram.com/lumiderm_aesthetics/" style="color:#7d746b;text-decoration:none;">Instagram</a>' +
+      '<a href="https://www.instagram.com/lumi.derm.aesthetic/" style="color:#7d746b;text-decoration:none;">Instagram</a>' +
       "</p>" +
       '<p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:#b8ada1;">' +
       "You're receiving this because you opted in to hear from Lumi Derm Aesthetics.<br>" +

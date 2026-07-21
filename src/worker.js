@@ -1166,6 +1166,10 @@ async function handleConfirmByToken(env, rawToken) {
     "UPDATE subscribers SET status='confirmed', confirmed_at=?1, confirm_token=NULL WHERE confirm_token=?2"
   ).bind(new Date().toISOString(), token).run();
 
+  // A completed double opt-in is a fresh, deliberate consent (only the mailbox
+  // owner can click the link), so clear any prior unsubscribe suppression.
+  if (env.SUPPRESSION) { try { await env.SUPPRESSION.delete(suppressionKey(row.email)); } catch (err) { /* non-fatal */ } }
+
   await logAudit(env, null, { actor: row.email, action: "subscriber.optin", detail: "double opt-in confirmed", status: "ok" });
 
   return htmlPage(
@@ -1204,6 +1208,9 @@ async function handleConfirm(request, env, url) {
   await env.SUBSCRIBERS.prepare(
     "UPDATE subscribers SET status='confirmed', confirmed_at=?1, confirm_token=NULL WHERE email=?2"
   ).bind(new Date().toISOString(), email).run();
+
+  if (env.SUPPRESSION) { try { await env.SUPPRESSION.delete(suppressionKey(email)); } catch (err) { /* non-fatal */ } }
+  await logAudit(env, null, { actor: email, action: "subscriber.optin", detail: "double opt-in confirmed (legacy link)", status: "ok" });
 
   return htmlPage(
     "You're subscribed",

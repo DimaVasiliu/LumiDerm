@@ -15,8 +15,10 @@
   var SEEN_KEY = "lumiSignupSeen";     // dismissed the prompt
   var DONE_KEY = "lumiSubscribed";     // completed signup
   var DELAY_MS = 15000;                // homepage: show after ~15s
+  // MUST match the visible checkbox label below, word for word — ICO requires the
+  // consent record to show exactly "what they were told".
   var CONSENT_WORDING =
-    "Yes, email me Lumi Derm Aesthetics offers and news. I understand I can unsubscribe at any time.";
+    "Yes, email me offers and news. I can unsubscribe anytime. See our privacy notice.";
 
   var MONTHS = ["January","February","March","April","May","June",
     "July","August","September","October","November","December"];
