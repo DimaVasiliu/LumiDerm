@@ -774,15 +774,44 @@ const GH_PROXY = "/admin/api/github";
 const GH_HEALTH = "/admin/api/github/health";
 let ghReady = true; // optimistic; refined by the server health check below
 
-async function checkGithubHealth() {
+// probe === true does a live GitHub call (button); otherwise it's the cheap
+// page-load check that only reports whether the server secret is set.
+async function checkGithubHealth(probe) {
+  const live = probe === true;
+  setGhStatus(live ? "Checking the connection live…" : "Checking…");
   try {
-    const res = await fetch(GH_HEALTH, { cache: "no-store", credentials: "same-origin" });
+    const res = await fetch(GH_HEALTH + (live ? "?probe=1" : ""), { cache: "no-store", credentials: "same-origin" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { ghReady = false; setGhStatus(data.error || ("Could not check publishing (" + res.status + ").")); return; }
+
     ghReady = data.configured === true;
-    setGhStatus(ghReady
-      ? "Connected — publishing is handled securely on the server (" + (data.repo || "repo") + " · " + (data.branch || "main") + ")."
-      : "Not set up yet: Dima needs to add the GitHub token as a Cloudflare secret (see the guide).");
+    if (!ghReady) {
+      setGhStatus("Not set up yet: Dima needs to add the GitHub token as a Cloudflare secret (see the guide).");
+      return;
+    }
+    const where = (data.repo || "repo") + " · " + (data.branch || "main");
+
+    if (!data.probed) {
+      setGhStatus("Set up on the server (" + where + "). Click “Check connection” to test it live.");
+      return;
+    }
+    if (!data.reachable) {
+      const s = data.status;
+      let m;
+      if (s === 401 || s === 403) m = "GitHub rejected the token (" + s + "). It may be wrong, expired, or lack access — Dima: update the GITHUB_TOKEN secret.";
+      else if (s === 404) m = "Repo not found or not visible to the token. Check GITHUB_REPO (" + (data.repo || "?") + ").";
+      else m = "GitHub error" + (s ? " (" + s + ")" : "") + (data.error ? ": " + data.error : ".");
+      ghReady = false;
+      setGhStatus("✗ " + m);
+      return;
+    }
+    if (data.canWrite === false) {
+      setGhStatus("Connected, but the token is read-only — publishing will fail. Dima: set Contents to “Read and write” and update the secret.");
+    } else if (data.canWrite === true) {
+      setGhStatus("✓ Connected and working — the token can read and write " + where + ".");
+    } else {
+      setGhStatus("✓ Connected — reached " + where + " successfully. Write access is confirmed on your first publish.");
+    }
   } catch (err) {
     ghReady = false;
     setGhStatus("Could not reach the server: " + err.message);
@@ -1189,7 +1218,7 @@ function bindPublishing() {
   // check the server is configured — there's nothing to enter in the browser.
   checkGithubHealth();
 
-  document.querySelector("[data-gh-test]")?.addEventListener("click", checkGithubHealth);
+  document.querySelector("[data-gh-test]")?.addEventListener("click", () => checkGithubHealth(true));
 }
 
 function setGhStatus(message) {

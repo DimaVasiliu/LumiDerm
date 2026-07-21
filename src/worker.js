@@ -830,12 +830,36 @@ function githubPathAllowed(path) {
 async function handleGithubHealth(request, env) {
   const admin = authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
-  return json({
-    ok: true,
-    configured: Boolean(env.GITHUB_TOKEN && env.GITHUB_REPO),
-    repo: env.GITHUB_REPO || null,
-    branch: env.GITHUB_BRANCH || "main",
-  });
+
+  const configured = Boolean(env.GITHUB_TOKEN && env.GITHUB_REPO);
+  const base = { ok: true, configured, repo: env.GITHUB_REPO || null, branch: env.GITHUB_BRANCH || "main" };
+
+  // Cheap check (page load): just report whether the secret + repo are set.
+  const url = new URL(request.url);
+  if (url.searchParams.get("probe") !== "1" || !configured) return json(base);
+
+  // Live probe (button): actually call GitHub with the token to confirm it works
+  // and can write. Reading the repo object returns a permissions.push flag for the
+  // token — a non-destructive way to verify write access.
+  try {
+    const res = await fetch("https://api.github.com/repos/" + env.GITHUB_REPO, {
+      headers: {
+        Authorization: "Bearer " + env.GITHUB_TOKEN,
+        Accept: "application/vnd.github+json",
+        "User-Agent": "LumiDerm-Admin-Worker",
+      },
+    });
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const canWrite = data && data.permissions ? Boolean(data.permissions.push || data.permissions.admin) : null;
+      return json({ ...base, probed: true, reachable: true, status: res.status, canWrite });
+    }
+    let message = "";
+    try { message = (await res.json()).message || ""; } catch { /* ignore */ }
+    return json({ ...base, probed: true, reachable: false, status: res.status, error: message });
+  } catch (err) {
+    return json({ ...base, probed: true, reachable: false, error: (err && err.message) || "Network error." });
+  }
 }
 
 async function handleGithubProxy(request, env) {

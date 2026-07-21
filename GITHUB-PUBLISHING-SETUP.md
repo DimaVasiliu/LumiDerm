@@ -59,12 +59,13 @@ git push origin main
 ## 4. Check it works
 
 1. Open the admin → **Settings**. Under **Publishing → Website connection**, click
-   **Check connection**. It should say *"Connected — publishing is handled securely on
-   the server (DimaVasiliu/LumiDerm · main)."*
+   **Check connection**. This runs a **live test** — the Worker actually calls GitHub
+   with the token and reports back:
+   - *"✓ Connected and working — the token can read and write DimaVasiliu/LumiDerm (main)."* → all good.
+   - *"Connected, but the token is read-only…"* → the token is missing **Contents: Read and write**. Fix the token permission and re-run `wrangler secret put GITHUB_TOKEN`.
+   - *"GitHub rejected the token (401/403)…"* → wrong or expired token; set the secret again.
+   - *"Not set up yet…"* → the `GITHUB_TOKEN` secret is missing; redo step 2 and redeploy.
 2. Make a tiny edit (e.g. an offer) and **Publish**. It should go live as before.
-
-If Check connection says *"Not set up yet"*, the `GITHUB_TOKEN` secret is missing —
-redo step 2 and redeploy.
 
 ---
 
