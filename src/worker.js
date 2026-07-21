@@ -8,7 +8,9 @@
  *   GET  /api/health              — is the public API alive + configured?
  *   GET  /admin/api/health        — admin: Access session + API config
  *   POST /admin/api/campaign/send — admin: send a campaign
- *   GET  /admin/api/campaign/history — admin: recent send history
+ *   GET  /admin/api/campaign/history — admin: recent send history (with unique clicks, CTR, attribution)
+ *   GET  /admin/api/campaign/analytics?id= — admin: per-link clicks for one campaign
+ *   POST /admin/api/campaign/attribution — admin: record bookings/revenue for a campaign
  *   GET  /admin/api/campaign/drafts — admin: list saved campaign drafts
  *   POST /admin/api/campaign/drafts — admin: save campaign draft
  *   POST /admin/api/campaign/drafts/delete — admin: delete campaign draft
@@ -160,6 +162,16 @@ export default {
 
       if (apiPath === "/api/campaign/history" && isAdminApi) {
         return handleCampaignHistory(request, env);
+      }
+
+      if (apiPath === "/api/campaign/analytics" && isAdminApi) {
+        return handleCampaignAnalytics(request, env, url);
+      }
+      if (apiPath === "/api/campaign/attribution" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "record booking/revenue attribution");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
+        return handleCampaignAttribution(request, env);
       }
 
       if (apiPath === "/api/campaign/drafts" && isAdminApi) {
@@ -503,6 +515,7 @@ async function handleSend(request, env, url) {
     status: errors.length ? "partial" : "sent",
     errors,
     campaignId,
+    topic,
   });
 
   await logAudit(env, request, {
@@ -520,8 +533,8 @@ async function recordCampaignSend(env, detail) {
     await env.SUBSCRIBERS.prepare(
       `INSERT INTO campaign_sends
         (subject, audience_source, is_test, requested_count, sent_count, suppressed_count,
-         invalid_count, status, error_summary, created_at, campaign_id)
-       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)`
+         invalid_count, status, error_summary, created_at, campaign_id, topic)
+       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
     ).bind(
       String(detail.subject || "").slice(0, 240),
       String(detail.audienceSource || "manual").slice(0, 80),
@@ -533,7 +546,8 @@ async function recordCampaignSend(env, detail) {
       String(detail.status || "sent").slice(0, 24),
       (detail.errors || []).join(" | ").slice(0, 1000),
       new Date().toISOString(),
-      String(detail.campaignId || "").slice(0, 80)
+      String(detail.campaignId || "").slice(0, 80),
+      detail.topic ? String(detail.topic).slice(0, 40) : null
     ).run();
   } catch (err) {
     try {
@@ -566,13 +580,17 @@ async function handleCampaignHistory(request, env) {
   let results;
   try {
     ({ results } = await env.SUBSCRIBERS.prepare(
-      `SELECT s.id, s.campaign_id, s.subject, s.audience_source, s.is_test, s.requested_count, s.sent_count,
+      `SELECT s.id, s.campaign_id, s.subject, s.audience_source, s.topic, s.is_test, s.requested_count, s.sent_count,
               s.suppressed_count, s.invalid_count, s.status, s.error_summary, s.created_at,
               COALESCE(SUM(CASE WHEN e.event_type='click' THEN 1 ELSE 0 END), 0) AS click_count,
+              COUNT(DISTINCT CASE WHEN e.event_type='click' THEN e.email END) AS unique_clicks,
+              COALESCE(SUM(CASE WHEN e.event_type='click' AND e.detail LIKE '%booking%' THEN 1 ELSE 0 END), 0) AS booking_clicks,
               COALESCE(SUM(CASE WHEN e.event_type='unsubscribe' THEN 1 ELSE 0 END), 0) AS unsubscribe_count,
-              COALESCE(SUM(CASE WHEN e.event_type='failed' THEN 1 ELSE 0 END), 0) AS failed_count
+              COALESCE(SUM(CASE WHEN e.event_type='failed' THEN 1 ELSE 0 END), 0) AS failed_count,
+              a.bookings AS bookings, a.revenue AS revenue
        FROM campaign_sends s
        LEFT JOIN campaign_events e ON e.campaign_id = s.campaign_id
+       LEFT JOIN campaign_attribution a ON a.campaign_id = s.campaign_id
        GROUP BY s.id
        ORDER BY s.created_at DESC
        LIMIT 50`
@@ -588,6 +606,54 @@ async function handleCampaignHistory(request, env) {
   }
 
   return json({ ok: true, history: results || [] });
+}
+
+// Per-campaign detail: which links were clicked, and by how many unique people.
+async function handleCampaignAnalytics(request, env, url) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+  if (!env.SUBSCRIBERS) return json({ error: "Analytics aren't set up yet." }, 500);
+  const campaignId = String(url.searchParams.get("id") || "").slice(0, 80);
+  if (!campaignId) return json({ error: "Missing campaign id." }, 400);
+
+  const { results: links } = await env.SUBSCRIBERS.prepare(
+    `SELECT detail AS url, COUNT(*) AS clicks, COUNT(DISTINCT email) AS unique_clicks
+       FROM campaign_events
+      WHERE campaign_id=?1 AND event_type='click'
+      GROUP BY detail ORDER BY clicks DESC LIMIT 50`
+  ).bind(campaignId).all();
+
+  const totals = await env.SUBSCRIBERS.prepare(
+    `SELECT COUNT(*) AS total_clicks,
+            COUNT(DISTINCT CASE WHEN event_type='click' THEN email END) AS unique_clicks,
+            COALESCE(SUM(CASE WHEN event_type='unsubscribe' THEN 1 ELSE 0 END),0) AS unsubscribes
+       FROM campaign_events WHERE campaign_id=?1`
+  ).bind(campaignId).first();
+
+  const attribution = await env.SUBSCRIBERS.prepare(
+    "SELECT bookings, revenue, note FROM campaign_attribution WHERE campaign_id=?1"
+  ).bind(campaignId).first();
+
+  return json({ ok: true, links: links || [], totals: totals || {}, attribution: attribution || null });
+}
+
+// Save the bookings + revenue a campaign is credited with (manual attribution).
+async function handleCampaignAttribution(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Not set up yet." }, 500);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  const campaignId = String(body.campaign_id || "").slice(0, 80);
+  if (!campaignId) return json({ error: "Missing campaign id." }, 400);
+  const bookings = Math.max(0, parseInt(body.bookings, 10) || 0);
+  const revenue = Math.max(0, Number(body.revenue) || 0);
+  const note = String(body.note || "").slice(0, 300);
+  await env.SUBSCRIBERS.prepare(
+    `INSERT INTO campaign_attribution (campaign_id, bookings, revenue, note, updated_at)
+     VALUES (?1,?2,?3,?4,?5)
+     ON CONFLICT(campaign_id) DO UPDATE SET bookings=?2, revenue=?3, note=?4, updated_at=?5`
+  ).bind(campaignId, bookings, revenue, note, new Date().toISOString()).run();
+  await logAudit(env, request, { action: "campaign.attribution", detail: campaignId + " → " + bookings + " bookings, £" + revenue, status: "ok" });
+  return json({ ok: true, bookings, revenue });
 }
 
 async function handleListCampaignDrafts(request, env) {
@@ -838,6 +904,7 @@ async function deliverCampaign(env, origin, opts) {
     subject, audienceSource, isTest: false,
     requested: incoming.length, sent, suppressed, invalid,
     status: errors.length ? "partial" : "sent", errors, campaignId,
+    topic: (opts && opts.topic) || null,
   });
   if (errors.length) {
     await recordCampaignEvent(env, { campaignId, eventType: "failed", detail: errors.join(" | ").slice(0, 500) });

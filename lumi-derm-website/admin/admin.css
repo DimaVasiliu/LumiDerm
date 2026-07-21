@@ -1901,3 +1901,21 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
 .deploy-row > strong { text-align: right; font-weight: 800; }
 .deploy-row .status-dot { margin-right: 0.4rem; vertical-align: middle; }
 .deploy-row a { color: var(--admin-accent-dark); text-decoration: underline; }
+
+/* ---- Campaign analytics (rich history + per-campaign details) ---- */
+.history-rich { grid-template-columns: minmax(0, 1fr) auto; row-gap: 0.6rem; }
+.history-main { min-width: 0; }
+.history-sub { margin-top: 0.2rem; color: var(--admin-muted); font-size: 0.74rem; }
+.history-metrics { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; margin-top: 0.5rem; }
+.history-metrics .hm { display: inline; margin: 0; color: var(--admin-muted); font-size: 0.76rem; white-space: nowrap; }
+.history-metrics .hm b { color: var(--admin-ink); font-weight: 900; }
+.history-metrics .hm-rev b, .history-metrics .hm-rev { color: var(--admin-accent-dark); }
+.history-side { display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; }
+.history-details { grid-column: 1 / -1; border-top: 1px solid rgba(68, 52, 49, 0.1); margin-top: 0.4rem; padding-top: 0.7rem; }
+.camp-detail-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+@media (min-width: 720px) { .camp-detail-grid { grid-template-columns: 1.3fr 1fr; } }
+.link-clicks { list-style: none; margin: 0.3rem 0 0; padding: 0; display: grid; gap: 0.35rem; }
+.link-clicks li { display: flex; justify-content: space-between; gap: 0.8rem; border-top: 1px solid rgba(68, 52, 49, 0.08); padding-top: 0.35rem; font-size: 0.8rem; }
+.link-clicks li span { color: var(--admin-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-clicks li strong { color: var(--admin-ink); font-weight: 900; white-space: nowrap; }
+.attr-status { display: inline-block; margin-left: 0.6rem; font-size: 0.78rem; color: var(--admin-muted); }

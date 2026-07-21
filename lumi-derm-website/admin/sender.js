@@ -1524,40 +1524,115 @@
     var box = $("[data-campaign-history]");
     if (!box) return;
     box.innerHTML = '<p class="admin-help">Loading history…</p>';
-    fetch(ADMIN_API + "/campaign/history", {
-      cache: "no-store",
-      credentials: "same-origin"
-    })
-      .then(function (res) {
-        return responseJson(res);
-      })
+    fetch(ADMIN_API + "/campaign/history", { cache: "no-store", credentials: "same-origin" })
+      .then(function (res) { return responseJson(res); })
       .then(function (data) {
-        var rows = data.history || [];
-        if (!rows.length) {
-          box.innerHTML = '<p class="admin-help">No campaigns have been sent yet.</p>';
-          return;
-        }
-        box.innerHTML = rows.slice(0, 8).map(function (row) {
-          var count = Number(row.sent_count || 0);
-          var label = row.is_test ? "Test" : row.audience_source === "website" ? "Website subscribers" : "Treatwell CSV";
-          var metrics = [
-            count + " sent",
-            Number(row.failed_count || 0) + " failed",
-            Number(row.unsubscribe_count || 0) + " unsubscribed",
-            Number(row.click_count || 0) + " clicks"
-          ].join(" · ");
-          return (
-            '<article class="history-item">' +
-            '<div><strong>' + esc(row.subject || "Untitled") + '</strong>' +
-            '<span>' + esc(label) + " · " + esc(metrics) + " · " + esc(formatDate(row.created_at)) + '</span></div>' +
-            '<em class="' + (row.status === "sent" ? "is-ok" : "is-warn") + '">' + esc(row.status || "sent") + '</em>' +
-            '</article>'
-          );
-        }).join("");
+        var rows = (data.history || []).filter(function (r) { return !r.is_test; });
+        if (!rows.length) { box.innerHTML = '<p class="admin-help">No campaigns have been sent yet.</p>'; return; }
+        box.innerHTML = rows.slice(0, 12).map(renderHistoryRow).join("");
+        box.querySelectorAll("[data-camp-details]").forEach(function (b) {
+          b.addEventListener("click", function () { toggleCampaignDetails(b.getAttribute("data-camp-details")); });
+        });
       })
-      .catch(function (err) {
-        box.innerHTML = '<p class="admin-status is-error">' + esc(friendly(err)) + "</p>";
-      });
+      .catch(function (err) { box.innerHTML = '<p class="admin-status is-error">' + esc(friendly(err)) + "</p>"; });
+  }
+
+  function segmentLabel(row) {
+    var aud = row.audience_source === "website" ? "Website" : row.audience_source === "csv" ? "Treatwell CSV" : (row.audience_source || "manual");
+    return aud + (row.topic ? " · " + row.topic : "");
+  }
+
+  function renderHistoryRow(row) {
+    var sent = Number(row.sent_count || 0);
+    var uniq = Number(row.unique_clicks || 0);
+    var ctr = sent > 0 ? Math.round((uniq / sent) * 1000) / 10 : 0;
+    var bookings = row.bookings != null ? Number(row.bookings) : null;
+    var revenue = row.revenue != null ? Number(row.revenue) : null;
+    var m = [
+      "<span class='hm'><b>" + sent + "</b> sent</span>",
+      "<span class='hm'><b>" + uniq + "</b> unique clicks</span>",
+      "<span class='hm'><b>" + ctr + "%</b> CTR</span>",
+      "<span class='hm'><b>" + Number(row.booking_clicks || 0) + "</b> booking clicks</span>",
+      "<span class='hm'><b>" + Number(row.unsubscribe_count || 0) + "</b> unsub</span>",
+      "<span class='hm'><b>" + Number(row.failed_count || 0) + "</b> failed</span>"
+    ];
+    if (bookings != null || revenue != null) {
+      m.push("<span class='hm hm-rev'><b>" + (bookings || 0) + "</b> bookings · £" + (revenue || 0) + "</span>");
+    }
+    var cid = row.campaign_id || "";
+    return (
+      '<article class="history-item history-rich">' +
+        '<div class="history-main">' +
+          "<strong>" + esc(row.subject || "Untitled") + "</strong>" +
+          '<span class="history-sub">' + esc(segmentLabel(row)) + " · " + esc(formatDate(row.created_at)) + "</span>" +
+          '<div class="history-metrics">' + m.join("") + "</div>" +
+        "</div>" +
+        '<div class="history-side">' +
+          '<em class="' + (row.status === "sent" ? "is-ok" : "is-warn") + '">' + esc(row.status || "sent") + "</em>" +
+          (cid ? '<button class="tiny-button" type="button" data-camp-details="' + esc(cid) + '">Details</button>' : "") +
+        "</div>" +
+        (cid ? '<div class="history-details" data-camp-detail-box="' + esc(cid) + '" hidden></div>' : "") +
+      "</article>"
+    );
+  }
+
+  function toggleCampaignDetails(cid) {
+    var box = document.querySelector('[data-camp-detail-box="' + cid + '"]');
+    if (!box) return;
+    if (!box.hasAttribute("hidden")) { box.setAttribute("hidden", ""); return; }
+    box.removeAttribute("hidden");
+    box.innerHTML = '<p class="admin-help">Loading…</p>';
+    fetch(ADMIN_API + "/campaign/analytics?id=" + encodeURIComponent(cid), { cache: "no-store", credentials: "same-origin" })
+      .then(function (res) { return responseJson(res); })
+      .then(function (d) { box.innerHTML = renderCampaignDetails(d); bindAttribution(box, cid); })
+      .catch(function (err) { box.innerHTML = '<p class="admin-status is-error">' + esc(friendly(err)) + "</p>"; });
+  }
+
+  function prettyUrl(u) {
+    try { var x = new URL(u); return x.hostname.replace(/^www\./, "") + x.pathname; } catch (e) { return String(u || ""); }
+  }
+
+  function renderCampaignDetails(d) {
+    var links = d.links || [];
+    var linkRows = links.length
+      ? links.map(function (l) { return "<li><span>" + esc(prettyUrl(l.url)) + "</span><strong>" + Number(l.unique_clicks || 0) + " / " + Number(l.clicks || 0) + "</strong></li>"; }).join("")
+      : "<li><span>No link clicks recorded yet.</span></li>";
+    var a = d.attribution || {};
+    return (
+      '<div class="camp-detail-grid">' +
+        '<div><p class="admin-eyebrow">Links clicked (unique / total)</p><ul class="link-clicks">' + linkRows + "</ul></div>" +
+        '<div><p class="admin-eyebrow">Bookings &amp; revenue</p>' +
+          "<label>Bookings attributed<input type='number' min='0' data-attr-bookings value='" + (a.bookings != null ? Number(a.bookings) : "") + "'></label>" +
+          "<label>Revenue (£)<input type='number' min='0' step='0.01' data-attr-revenue value='" + (a.revenue != null ? Number(a.revenue) : "") + "'></label>" +
+          "<label>Note<input type='text' data-attr-note value='" + esc(a.note || "") + "' placeholder='e.g. 3 laser packages'></label>" +
+          "<button class='admin-button admin-button-secondary' type='button' data-attr-save>Save attribution</button>" +
+          "<span class='attr-status' data-attr-status></span>" +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  function bindAttribution(box, cid) {
+    var btn = box.querySelector("[data-attr-save]");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      var s = box.querySelector("[data-attr-status]");
+      var payload = {
+        campaign_id: cid,
+        bookings: parseInt((box.querySelector("[data-attr-bookings]") || {}).value, 10) || 0,
+        revenue: Number((box.querySelector("[data-attr-revenue]") || {}).value) || 0,
+        note: String((box.querySelector("[data-attr-note]") || {}).value || "")
+      };
+      if (s) s.textContent = "Saving…";
+      fetch(ADMIN_API + "/campaign/attribution", {
+        method: "POST", credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+        .then(function (res) { return responseJson(res); })
+        .then(function () { if (s) s.textContent = "Saved ✓"; loadHistory(); })
+        .catch(function (err) { if (s) s.textContent = friendly(err); });
+    });
   }
 
   function formatDate(value) {
