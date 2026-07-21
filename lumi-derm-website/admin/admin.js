@@ -35,6 +35,8 @@ let selectedOfferIndex = 0;
 let selectedTx = { gi: 0, ti: 0 }; // selected treatment in the Prices editor (group index, treatment index)
 let undoStack = [];
 let adminRole = "owner";
+let roleLoaded = false;
+let roleToastShown = false;
 
 const toastRegion = document.querySelector("[data-admin-toast-region]");
 
@@ -88,6 +90,7 @@ function runApp() {
   // Purge any GitHub token left in this browser by the old client-side publisher.
   // Publishing is now server-side (Cloudflare secret); the browser holds nothing.
   try { localStorage.removeItem("lumi-derm-gh-v1"); } catch (e) { /* ignore */ }
+  loadRole(); // learn role immediately after unlock and apply it globally
   bindNavigation();
   bindTopActions();
   bindOffers();
@@ -1956,6 +1959,27 @@ async function sendBirthdayTo(email, btn) {
   }
 }
 
+// Learn the signed-in admin's role right after unlock and lock the whole UI down
+// accordingly, so an assistant never sees controls that would fail server-side.
+// Runs on every tab, not just Settings.
+async function loadRole() {
+  try {
+    const res = await fetch("/admin/api/health", { cache: "no-store", credentials: "same-origin" });
+    const d = await ldReadJson(res);
+    adminRole = d.role || "owner";
+  } catch {
+    // Keep the default on a transient failure — the server still enforces every
+    // owner-only action regardless of what the UI shows.
+  }
+  roleLoaded = true;
+  applyRoleControls();
+  // Re-hide owner-only review submissions now that the role is known.
+  if (adminRole === "assistant") {
+    const card = document.querySelector("[data-review-submissions-card]");
+    if (card) card.hidden = true;
+  }
+}
+
 async function loadSystemStatus() {
   const box = document.querySelector("[data-system-status]");
   if (!box) return;
@@ -2026,7 +2050,10 @@ function applyRoleControls() {
       }
     });
   });
-  if (assistant) toast("Assistant role active: drafts can be edited, but sending, publishing, deleting and exports require owner access.");
+  if (assistant && !roleToastShown) {
+    roleToastShown = true;
+    toast("Assistant role active: drafts can be edited, but sending, publishing, deleting and exports require owner access.");
+  }
 }
 
 async function loadAuditLog() {
