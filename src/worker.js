@@ -103,6 +103,7 @@ export default {
             suppression: Boolean(env.SUPPRESSION),
             subscribers: Boolean(env.SUBSCRIBERS),
             github: Boolean(env.GITHUB_TOKEN && env.GITHUB_REPO),
+            media: Boolean(env.MEDIA),
             from: env.FROM_EMAIL || null,
             deploy: deployInfo(env),
             lastSend: await lastSuccessfulSend(env),

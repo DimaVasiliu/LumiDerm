@@ -1472,6 +1472,7 @@ async function loadSystemStatus() {
       ["Email (Resend)", d.resend ? "Connected" : "Not connected", !!d.resend],
       ["Unsubscribe suppression", d.suppression ? "Connected" : "Not connected", !!d.suppression],
       ["Publishing (GitHub)", d.github ? "Connected" : "Not set up", !!d.github],
+      ["Image storage (R2)", d.media ? "Connected" : "Not set up", !!d.media],
       ["Sending from", escapeHtml(d.from || "—"), !!d.from],
       ["Last deploy", dep && (dep.tag || dep.id) ? escapeHtml((dep.tag || dep.id) + (dep.timestamp ? " · " + auditWhen(dep.timestamp) : "")) : "unknown", dep ? true : null],
       ["Last successful send", ls ? escapeHtml('“' + ls.subject + '” — ' + ls.sent + " sent · " + auditWhen(ls.at)) : "none yet", ls ? true : null],
