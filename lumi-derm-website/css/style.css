@@ -2179,38 +2179,46 @@ body:has(.price-modal-open:checked) {
 }
 
 .review-strip {
-  display: grid;
-  gap: 0.8rem;
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  text-align: center;
+  gap: 0.9rem;
   width: 100vw;
   margin-inline: calc(50% - 50vw);
-  padding: clamp(0.9rem, 3vw, 1.15rem) max(1rem, calc((100vw - var(--container)) / 2));
-  border: 1px solid rgba(169, 111, 104, 0.16);
-  border-right: 0;
-  border-left: 0;
-  border-radius: 0;
+  padding: clamp(1.6rem, 4vw, 2.4rem) max(1rem, calc((100vw - var(--container)) / 2));
+  border-top: 1px solid rgba(169, 111, 104, 0.16);
+  border-bottom: 1px solid rgba(169, 111, 104, 0.16);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(255, 253, 249, 0.62)),
-    radial-gradient(circle at 100% 0%, rgba(242, 216, 217, 0.38), transparent 48%);
+    radial-gradient(circle at 50% 0%, rgba(242, 216, 217, 0.34), transparent 62%);
   box-shadow: 0 12px 34px rgba(61, 45, 47, 0.06);
 }
 
+.review-strip-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .review-strip .eyebrow {
-  margin-bottom: 0.18rem;
-  font-size: 0.62rem;
+  margin-bottom: 0;
+  font-size: 0.66rem;
 }
 
 .review-strip h2 {
-  font-size: clamp(1.25rem, 7vw, 1.85rem);
-  line-height: 1;
+  font-size: clamp(1.5rem, 4vw, 2.15rem);
+  line-height: 1.05;
 }
 
 .review-strip-meta {
-  display: flex;
-  gap: 0.38rem;
+  display: inline-flex;
+  gap: 0.45rem;
   align-items: center;
+  justify-content: center;
   color: var(--color-rose-deep);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 900;
   white-space: nowrap;
 }
@@ -2218,21 +2226,24 @@ body:has(.price-modal-open:checked) {
 .review-strip-meta strong {
   color: var(--color-charcoal);
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   line-height: 1;
 }
 
 .review-strip-meta small {
   color: var(--color-muted);
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 800;
 }
 
 .review-strip-quote {
+  max-width: 44ch;
+  margin: 0;
   color: var(--color-muted);
-  font-size: 0.86rem;
-  font-weight: 700;
-  line-height: 1.4;
+  font-size: 0.95rem;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .review-modal-open {
@@ -6951,10 +6962,19 @@ body.tx-modal-active { overflow: hidden; }
 .review-strip-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 0.15rem;
 }
 
 .review-form-panel { max-width: 520px; }
+
+.review-modal-subtitle {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  opacity: 0.8;
+}
 
 .review-hp {
   position: absolute !important;
