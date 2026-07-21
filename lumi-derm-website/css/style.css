@@ -2179,20 +2179,54 @@ body:has(.price-modal-open:checked) {
 }
 
 .review-strip {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 0.9rem;
+  gap: 0.7rem;
   width: 100vw;
   margin-inline: calc(50% - 50vw);
-  padding: clamp(1.6rem, 4vw, 2.4rem) max(1rem, calc((100vw - var(--container)) / 2));
+  padding: clamp(1.5rem, 3.4vw, 2.1rem) max(1.25rem, calc((100vw - var(--container)) / 2));
   border-top: 1px solid rgba(169, 111, 104, 0.16);
   border-bottom: 1px solid rgba(169, 111, 104, 0.16);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(255, 253, 249, 0.62)),
-    radial-gradient(circle at 50% 0%, rgba(242, 216, 217, 0.34), transparent 62%);
+    radial-gradient(120% 150% at 50% -30%, rgba(242, 216, 217, 0.5), transparent 55%),
+    radial-gradient(70% 130% at 6% 130%, rgba(234, 242, 244, 0.62), transparent 62%),
+    radial-gradient(70% 130% at 94% 130%, rgba(246, 231, 229, 0.6), transparent 62%),
+    linear-gradient(135deg, #fffdf9, #fbf6f1);
   box-shadow: 0 12px 34px rgba(61, 45, 47, 0.06);
+}
+
+/* Oversized decorative quotation mark filling the horizontal space. */
+.review-strip::before {
+  content: "\201C";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -54%);
+  font-family: var(--font-heading);
+  font-size: clamp(11rem, 26vw, 20rem);
+  line-height: 1;
+  color: rgba(183, 123, 114, 0.06);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.review-strip > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Short rose flourish under the heading for structure. */
+.review-strip-copy::after {
+  content: "";
+  width: 46px;
+  height: 2px;
+  margin-top: 0.55rem;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(183, 123, 114, 0.85), transparent);
 }
 
 .review-strip-copy {
@@ -2244,6 +2278,37 @@ body:has(.price-modal-open:checked) {
   font-style: italic;
   font-weight: 600;
   line-height: 1.5;
+}
+
+/* Staggered scroll-in: children rise + fade when the band enters view. */
+@media (prefers-reduced-motion: no-preference) {
+  .review-strip[data-reveal] > * {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 640ms ease, transform 640ms ease;
+  }
+  .review-strip[data-reveal].is-visible > * {
+    opacity: 1;
+    transform: none;
+  }
+  .review-strip.is-visible > *:nth-child(1) { transition-delay: 0.06s; }
+  .review-strip.is-visible > *:nth-child(2) { transition-delay: 0.16s; }
+  .review-strip.is-visible > *:nth-child(3) { transition-delay: 0.26s; }
+  .review-strip.is-visible > *:nth-child(4) { transition-delay: 0.36s; }
+
+  .review-strip-meta span[aria-hidden] {
+    background: linear-gradient(90deg, var(--color-rose-deep) 0%, #d8a39b 45%, var(--color-rose-deep) 60%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: reviewStarsSheen 3.6s ease-in-out 0.6s infinite;
+  }
+}
+
+@keyframes reviewStarsSheen {
+  0%, 100% { background-position: 120% 0; }
+  50% { background-position: -20% 0; }
 }
 
 .review-modal-open {
