@@ -101,6 +101,7 @@ function runApp() {
   loadPricesFromJson();
   loadContentFromJson();
   loadMedia();
+  loadBirthdays();
   // First run (no local draft yet) -> start from the offers actually on the website.
   if (!localStorage.getItem(STORAGE_KEY)) loadOffersFromSite(false);
 }
@@ -164,6 +165,7 @@ function bindTopActions() {
   document.querySelectorAll("[data-import-admin]").forEach((b) => b.addEventListener("click", () => document.querySelector("[data-import-file]").click()));
   document.querySelector("[data-import-file]")?.addEventListener("change", importAll);
   document.querySelector("[data-publish-demo]")?.addEventListener("click", () => { goPanel("offers"); publishOffers(); });
+  document.querySelector("[data-birthday-reload]")?.addEventListener("click", loadBirthdays);
 }
 
 function exportAll() {
@@ -843,6 +845,7 @@ function updateMetrics() {
 
   const attention = document.querySelector("[data-attention]"); if (!attention) return;
   const items = [];
+  if (birthdaysToday) items.push(["Birthday today 🎂", birthdaysToday + " subscriber" + (birthdaysToday === 1 ? "" : "s") + " — send from the Birthdays card"]);
   const pending = state.reviews.filter((r) => r.status === "pending").length;
   if (pending) items.push(["Reviews to approve", `${pending} pending in the queue`]);
   const drafts = state.offers.filter((o) => String(o.status || "").toLowerCase() === "draft").length;
@@ -1454,6 +1457,75 @@ function auditWhen(iso) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso || "";
   return d.toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+/* ---------- Birthday reminders (dashboard) ---------- */
+const BIRTHDAY_API = "/admin/api/birthdays";
+const MONTHS_SHORT = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+let birthdaysToday = 0;
+let birthdayToastShown = false;
+
+function birthdayWhen(days) { return days === 0 ? "Today" : days === 1 ? "Tomorrow" : "in " + days + " days"; }
+
+async function loadBirthdays() {
+  const box = document.querySelector("[data-birthday-list]");
+  if (!box) return;
+  try {
+    const res = await fetch(BIRTHDAY_API, { cache: "no-store", credentials: "same-origin" });
+    const data = await ldReadJson(res);
+    const list = data.birthdays || [];
+    renderBirthdays(list);
+    birthdaysToday = data.today || 0;
+    updateMetrics();
+    if (birthdaysToday > 0 && !birthdayToastShown) {
+      birthdayToastShown = true;
+      const names = list.filter((b) => b.daysUntil === 0).map((b) => b.name || b.email.split("@")[0]);
+      toast("🎂 Birthday today: " + names.join(", "));
+    }
+  } catch (err) {
+    box.innerHTML = '<p class="admin-status is-error">' + escapeHtml(ldFriendlyError(err)) + "</p>";
+  }
+}
+
+function renderBirthdays(list) {
+  const box = document.querySelector("[data-birthday-list]");
+  if (!box) return;
+  if (!list.length) { box.innerHTML = '<p class="admin-help">No birthdays in the next 7 days.</p>'; return; }
+  box.innerHTML = list.map((b) => {
+    const date = b.birth_day + " " + (MONTHS_SHORT[b.birth_month] || "");
+    const when = birthdayWhen(b.daysUntil);
+    let action;
+    if (b.alreadySent) action = '<span class="birthday-sent">Sent ✓</span>';
+    else if (b.daysUntil === 0) action = '<button class="tiny-button primary" type="button" data-birthday-send="' + escapeAttr(b.email) + '">Send birthday email</button>';
+    else action = '<span class="birthday-note">' + escapeHtml(when) + "</span>";
+    return '<div class="birthday-item' + (b.daysUntil === 0 ? " is-today" : "") + '">' +
+      "<div><strong>" + escapeHtml(b.name || b.email) + "</strong><span>" + escapeHtml(date + " · " + when) + "</span></div>" +
+      action + "</div>";
+  }).join("");
+  box.querySelectorAll("[data-birthday-send]").forEach((btn) => btn.addEventListener("click", () => sendBirthdayTo(btn.dataset.birthdaySend, btn)));
+}
+
+async function sendBirthdayTo(email, btn) {
+  const ok = await ldConfirm({
+    title: "Send birthday email?",
+    body: "Send the birthday email to " + email + " now? (This also stops the automation from sending them a duplicate today.)",
+    confirmLabel: "Send birthday email"
+  });
+  if (!ok) return;
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch(BIRTHDAY_API + "/send", {
+      method: "POST", credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+    await ldReadJson(res);
+    toast("Birthday email sent to " + email + ".");
+    loadBirthdays();
+  } catch (err) {
+    toast(ldFriendlyError(err));
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function loadSystemStatus() {

@@ -31,6 +31,8 @@
  *   POST /admin/api/media/upload  — admin: upload an image to R2 (multipart)
  *   GET  /admin/api/media         — admin: list uploaded images
  *   POST /admin/api/media/delete  — admin: delete an uploaded image
+ *   GET  /admin/api/birthdays     — admin: subscribers with a birthday today / soon
+ *   POST /admin/api/birthdays/send — admin: send the birthday email to one person
  *
  * R2:
  *   MEDIA            — uploaded images (offer photos, email banners, etc.).
@@ -181,6 +183,14 @@ export default {
         if (request.method === "GET") return handleAuditList(request, env);
         if (request.method === "POST") return handleAuditLogClient(request, env);
         return json({ error: "Use GET or POST." }, 405);
+      }
+
+      if (apiPath === "/api/birthdays" && isAdminApi) {
+        return handleBirthdaysList(request, env);
+      }
+      if (apiPath === "/api/birthdays/send" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleBirthdaysSend(request, env);
       }
 
       if (apiPath === "/api/media" && isAdminApi) {
@@ -679,6 +689,72 @@ const DEFAULT_BIRTHDAY_FIELDS = {
   ctaLabel: "Book your birthday treat",
   ctaUrl: "https://lumidermaesthetics.com/pages/booking.html",
 };
+
+// Confirmed + consented subscribers whose birthday is today or within the next 7 days.
+async function handleBirthdaysList(request, env) {
+  if (!env.SUBSCRIBERS) return json({ ok: true, birthdays: [], today: 0 });
+  const { results } = await env.SUBSCRIBERS.prepare(
+    `SELECT email, first_name, birth_day, birth_month, birthday_sent_year
+       FROM subscribers
+      WHERE status='confirmed' AND consent_email=1
+        AND birth_day IS NOT NULL AND birth_month IS NOT NULL
+      LIMIT 3000`
+  ).all();
+
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const startOfToday = Date.UTC(year, now.getUTCMonth(), now.getUTCDate());
+  const WINDOW = 7;
+  const list = [];
+  for (const r of results || []) {
+    const bd = Number(r.birth_day), bm = Number(r.birth_month);
+    if (!bd || !bm || bm < 1 || bm > 12 || bd < 1 || bd > 31) continue;
+    let occ = Date.UTC(year, bm - 1, bd);
+    if (occ < startOfToday) occ = Date.UTC(year + 1, bm - 1, bd);
+    const daysUntil = Math.round((occ - startOfToday) / 86400000);
+    if (daysUntil <= WINDOW) {
+      list.push({
+        email: r.email, name: r.first_name || "",
+        birth_day: bd, birth_month: bm, daysUntil,
+        alreadySent: Number(r.birthday_sent_year) === year,
+      });
+    }
+  }
+  list.sort((a, b) => a.daysUntil - b.daysUntil || String(a.name).localeCompare(String(b.name)));
+  return json({ ok: true, birthdays: list, today: list.filter((x) => x.daysUntil === 0).length });
+}
+
+// Send the birthday email to a single subscriber (from the reminder), mark the year.
+async function handleBirthdaysSend(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Not set up yet." }, 500);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  const email = String(body.email || "").trim().toLowerCase();
+  if (!isEmail(email)) return json({ error: "Invalid email." }, 400);
+
+  const row = await env.SUBSCRIBERS.prepare(
+    "SELECT email, first_name, status, consent_email FROM subscribers WHERE email = ?1"
+  ).bind(email).first();
+  if (!row) return json({ error: "That subscriber wasn't found." }, 404);
+  if (row.status !== "confirmed" || !row.consent_email) {
+    return json({ error: "That person hasn't confirmed marketing consent, so we can't email them." }, 400);
+  }
+
+  const cfg = await getBirthdayConfig(env);
+  const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+  const result = await deliverCampaign(env, origin, {
+    subject: cfg.subject || "Happy birthday from Lumi Derm",
+    html: cfg.html || defaultBirthdayHtml(),
+    recipients: [{ email: row.email, name: row.first_name || "" }],
+    audienceSource: "birthday-manual",
+  });
+  if (!result.sent) return json({ error: (result.errors && result.errors[0]) || "Could not send." }, 502);
+
+  const year = new Date().getUTCFullYear();
+  await env.SUBSCRIBERS.prepare("UPDATE subscribers SET birthday_sent_year=?1 WHERE email=?2").bind(year, row.email).run();
+  await logAudit(env, request, { action: "birthday.manual_send", detail: email, status: "ok" });
+  return json({ ok: true, sentTo: email });
+}
 
 async function getBirthdayConfig(env) {
   const def = {

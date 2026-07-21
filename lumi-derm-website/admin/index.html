@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260721-media1">
+    <link rel="stylesheet" href="admin.css?v=20260721-bday2">
   </head>
   <body>
     <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
@@ -76,6 +76,15 @@
               <article class="metric-card"><span>Email</span><strong>Ready</strong><p>Send campaigns to your subscribers from the Send email tab.</p></article>
               <article class="metric-card"><span>Booking system</span><strong>Treatwell</strong><p>Bookings, payments and client records stay in Treatwell Connect.</p></article>
             </div>
+
+            <section class="admin-card">
+              <div class="admin-card-head">
+                <div><p class="admin-eyebrow">Reminders</p><h2>Birthdays &#127874;</h2></div>
+                <button class="tiny-button" type="button" data-birthday-reload>Reload</button>
+              </div>
+              <p class="admin-help">Confirmed subscribers with a birthday today or in the next 7 days. Send their birthday email with one click &mdash; or let the automation do it if it&rsquo;s on.</p>
+              <div class="birthday-list" data-birthday-list><p class="admin-help">Checking birthdays&hellip;</p></div>
+            </section>
 
             <div class="admin-grid admin-grid-2">
               <section class="admin-card">
@@ -815,7 +824,7 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
-    <script src="admin.js?v=20260721-media2"></script>
+    <script src="admin.js?v=20260721-bday2"></script>
     <script src="sender.js?v=20260721-bday1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>

@@ -571,6 +571,30 @@ code {
 .ld-modal-body { margin: 0 0 1.2rem; color: var(--admin-ink); line-height: 1.6; }
 .ld-modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; flex-wrap: wrap; }
 
+/* ---- Birthday reminders ---- */
+.birthday-list { display: grid; gap: 0.55rem; margin-top: 0.6rem; }
+.birthday-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border-top: 1px solid rgba(68, 52, 49, 0.09);
+  padding-top: 0.6rem;
+}
+.birthday-item:first-child { border-top: 0; padding-top: 0; }
+.birthday-item strong { display: block; }
+.birthday-item span { color: var(--admin-muted); font-size: 0.84rem; }
+.birthday-item.is-today {
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  border-top: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(246, 231, 229, 0.6)), var(--admin-surface-strong);
+}
+.birthday-item.is-today strong { color: var(--admin-accent-dark); }
+.birthday-sent { color: #2f7d4f; font-weight: 800; font-size: 0.85rem; }
+.birthday-note { color: var(--admin-muted); font-weight: 700; font-size: 0.85rem; }
+.tiny-button.primary { background: var(--admin-accent); color: #fff; border-color: transparent; }
+
 /* ---- Media library + email banner ---- */
 .media-item { position: relative; }
 .media-item .tiny-button.danger { position: absolute; top: 8px; right: 8px; }
