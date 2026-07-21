@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260721-upgrades1">
+    <link rel="stylesheet" href="admin.css?v=20260721-collapse1">
   </head>
   <body>
     <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
@@ -565,12 +565,12 @@
                   <div class="campaign-drafts" data-campaign-drafts></div>
                 </section>
 
-                <section class="admin-card">
+                <section class="admin-card" data-collapsible data-collapse-key="history">
                   <div class="admin-card-head">
                     <div><p class="admin-eyebrow">History</p><h3>Recent sends</h3></div>
                     <button class="tiny-button" type="button" data-history-reload>Reload</button>
                   </div>
-                  <div class="campaign-history" data-campaign-history>
+                  <div class="campaign-history list-cap" data-campaign-history>
                     <p class="admin-help">No history loaded yet.</p>
                   </div>
                 </section>
@@ -706,7 +706,7 @@
               <label>Search<input type="search" data-review-search placeholder="Name or text…"></label>
             </div>
             <p class="admin-help" data-review-counts></p>
-            <div class="admin-review-list" data-review-list></div>
+            <div class="admin-review-list list-cap" data-review-list></div>
           </section>
 
           <!-- ===================== MEDIA ===================== -->
@@ -896,13 +896,13 @@
                   <li><span>Marketing consent workflow</span><strong>Confirm Treatwell account features before build</strong></li>
                 </ul>
               </section>
-              <section class="admin-card">
+              <section class="admin-card" data-collapsible data-collapse-key="versions" data-collapsed>
                 <div class="admin-card-head">
                   <div><p class="admin-eyebrow">Draft safety</p><h3>Version history</h3></div>
                   <button class="tiny-button" type="button" data-version-refresh>Refresh</button>
                 </div>
-                <p class="admin-help">Recent local snapshots for offers, prices and page text. Use this before overwriting a draft if something looks wrong.</p>
-                <div class="version-history" data-version-history><p class="admin-help">No versions saved yet.</p></div>
+                <p class="admin-help">Recent snapshots for offers, prices, page text and reviews. Use this before overwriting a draft if something looks wrong.</p>
+                <div class="version-history list-cap" data-version-history><p class="admin-help">No versions saved yet.</p></div>
               </section>
               <section class="admin-card">
                 <h3>How publishing works</h3>
@@ -910,7 +910,7 @@
               </section>
             </div>
 
-            <section class="admin-card">
+            <section class="admin-card" data-collapsible data-collapse-key="audit" data-collapsed>
               <div class="admin-card-head">
                 <div><p class="admin-eyebrow">Security</p><h3>Activity log</h3></div>
                 <button class="tiny-button" type="button" data-audit-reload>Reload</button>
@@ -931,7 +931,7 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260721-seo1"></script>
-    <script src="admin.js?v=20260721-upgrades1"></script>
+    <script src="admin.js?v=20260721-collapse1"></script>
     <script src="sender.js?v=20260721-analytics1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>

@@ -1950,3 +1950,28 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
 .role-caps li.cap-off { color: var(--admin-muted); }
 .cap-yes { color: #2f7a4d; font-weight: 800; white-space: nowrap; }
 .cap-no { color: #b0483c; font-weight: 800; white-space: nowrap; }
+
+/* ---- Collapsible cards + scroll caps (keep growing data compact) ---- */
+.is-collapse-head { cursor: pointer; }
+.collapse-chevron {
+  margin-left: 0.4rem;
+  border: 0;
+  background: transparent;
+  color: var(--admin-muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.35rem 0.45rem;
+  border-radius: 8px;
+}
+.collapse-chevron:hover { background: rgba(183, 123, 114, 0.1); color: var(--admin-ink); }
+.admin-card.is-collapsed > *:not(.admin-card-head) { display: none !important; }
+
+/* Cap tall lists so a full history/queue scrolls inside its card, not the page. */
+.list-cap { max-height: 460px; overflow-y: auto; }
+.admin-table-wrap { max-height: 480px; overflow: auto; }
+.admin-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--admin-surface-strong);
+}

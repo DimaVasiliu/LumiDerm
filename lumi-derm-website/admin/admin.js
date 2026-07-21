@@ -111,6 +111,7 @@ function runApp() {
   loadReviewSubmissions();
   loadAlerts();
   document.querySelector("[data-alerts-reload]")?.addEventListener("click", loadAlerts);
+  initCollapsibles();
   // First run (no local draft yet) -> start from the offers actually on the website.
   if (!localStorage.getItem(STORAGE_KEY)) loadOffersFromSite(false);
 }
@@ -2202,6 +2203,48 @@ function applyRoleControls() {
     roleToastShown = true;
     toast("Assistant role active: drafts can be edited, but sending, publishing, deleting and exports require owner access.");
   }
+}
+
+/* ---------------- Collapsible cards ---------------- */
+// Any card marked [data-collapsible] can be expanded/collapsed by clicking its
+// header. State is remembered per card. Keeps data-heavy cards from forcing a
+// long scroll as they fill up over time.
+function initCollapsibles() {
+  document.querySelectorAll("[data-collapsible]").forEach((card) => {
+    const head = card.querySelector(".admin-card-head");
+    if (!head || head.dataset.collapseBound) return;
+    head.dataset.collapseBound = "1";
+    head.classList.add("is-collapse-head");
+    const key = card.getAttribute("data-collapse-key") || "";
+    const storeKey = key ? "lumi-collapse-" + key : "";
+
+    const chev = document.createElement("button");
+    chev.type = "button";
+    chev.className = "collapse-chevron";
+    chev.setAttribute("aria-label", "Expand or collapse this section");
+    head.appendChild(chev);
+
+    let collapsed = card.hasAttribute("data-collapsed");
+    if (storeKey) {
+      const saved = localStorage.getItem(storeKey);
+      if (saved === "1") collapsed = true;
+      else if (saved === "0") collapsed = false;
+    }
+    setCardCollapsed(card, collapsed);
+
+    head.addEventListener("click", (e) => {
+      // Don't toggle when clicking a real control in the header (e.g. Reload).
+      if (e.target !== chev && e.target.closest("button, a, input, select, textarea, label")) return;
+      const now = !card.classList.contains("is-collapsed");
+      setCardCollapsed(card, now);
+      if (storeKey) { try { localStorage.setItem(storeKey, now ? "1" : "0"); } catch { /* ignore */ } }
+    });
+  });
+}
+function setCardCollapsed(card, on) {
+  card.classList.toggle("is-collapsed", on);
+  const chev = card.querySelector(".collapse-chevron");
+  if (chev) { chev.textContent = on ? "▸" : "▾"; chev.setAttribute("aria-expanded", on ? "false" : "true"); }
 }
 
 /* ---------------- Dashboard alerts ---------------- */
