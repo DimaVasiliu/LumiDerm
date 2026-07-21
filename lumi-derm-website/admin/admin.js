@@ -152,6 +152,7 @@ function draftVersions() {
 }
 
 function recordDraftVersion(kind, label, payload) {
+  // Local safety net (works offline, this browser only).
   try {
     const rows = draftVersions();
     rows.unshift({
@@ -162,22 +163,50 @@ function recordDraftVersion(kind, label, payload) {
       payload: structuredClone(payload),
     });
     localStorage.setItem(VERSION_KEY, JSON.stringify(rows.slice(0, 40)));
-    renderVersionHistory();
   } catch { /* local snapshots are a safety net, not critical */ }
+  // Durable server copy (survives a new laptop/browser). Fire-and-forget.
+  saveServerRevision(kind, label, payload);
 }
 
-function renderVersionHistory() {
+function saveServerRevision(kind, label, payload) {
+  fetch("/admin/api/revisions", {
+    method: "POST", credentials: "same-origin",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ kind, label, payload }),
+  }).then(() => renderVersionHistory()).catch(() => { /* offline: local copy still exists */ });
+}
+
+// Server-first (durable, any device). Falls back to the local browser copy
+// if the server can't be reached or has nothing yet.
+async function renderVersionHistory() {
   const box = document.querySelector("[data-version-history]");
   if (!box) return;
+  try {
+    const res = await fetch("/admin/api/revisions?limit=15", { cache: "no-store", credentials: "same-origin" });
+    const data = await ldReadJson(res);
+    const rows = data.revisions || [];
+    if (!rows.length) { renderLocalVersionHistory(box); return; }
+    box.innerHTML = rows.map((row) => `
+      <article class="version-item">
+        <div><strong>${escapeHtml(versionKind(row.kind))}</strong><span>${escapeHtml(row.label || "Snapshot")} · ${escapeHtml(auditWhen(row.created_at))}${row.actor ? " · " + escapeHtml(row.actor) : ""}</span></div>
+        <button class="tiny-button" type="button" data-version-restore="srv:${escapeAttr(row.id)}">Restore</button>
+      </article>`).join("");
+    box.querySelectorAll("[data-version-restore]").forEach((btn) => btn.addEventListener("click", () => restoreDraftVersion(btn.dataset.versionRestore)));
+  } catch {
+    renderLocalVersionHistory(box);
+  }
+}
+
+function renderLocalVersionHistory(box) {
   const rows = draftVersions();
   if (!rows.length) {
-    box.innerHTML = '<p class="admin-help">No versions saved yet. Publishing or reloading creates a snapshot automatically.</p>';
+    box.innerHTML = '<p class="admin-help">No versions saved yet. Publishing, reloading or editing reviews creates a snapshot automatically.</p>';
     return;
   }
   box.innerHTML = rows.slice(0, 12).map((row) => `
     <article class="version-item">
-      <div><strong>${escapeHtml(versionKind(row.kind))}</strong><span>${escapeHtml(row.label || "Snapshot")} · ${escapeHtml(auditWhen(row.created_at))}</span></div>
-      <button class="tiny-button" type="button" data-version-restore="${escapeAttr(row.id)}">Restore</button>
+      <div><strong>${escapeHtml(versionKind(row.kind))}</strong><span>${escapeHtml(row.label || "Snapshot")} · ${escapeHtml(auditWhen(row.created_at))} · this browser</span></div>
+      <button class="tiny-button" type="button" data-version-restore="loc:${escapeAttr(row.id)}">Restore</button>
     </article>`).join("");
   box.querySelectorAll("[data-version-restore]").forEach((btn) => btn.addEventListener("click", () => restoreDraftVersion(btn.dataset.versionRestore)));
 }
@@ -186,11 +215,14 @@ function versionKind(kind) {
   if (kind === "offers") return "Offers";
   if (kind === "prices") return "Prices";
   if (kind === "content") return "Page text";
+  if (kind === "reviews") return "Reviews";
   return "Draft";
 }
 
 async function restoreDraftVersion(id) {
-  const row = draftVersions().find((v) => v.id === id);
+  if (typeof id === "string" && id.indexOf("srv:") === 0) return restoreServerVersion(id.slice(4));
+  const localId = typeof id === "string" && id.indexOf("loc:") === 0 ? id.slice(4) : id;
+  const row = draftVersions().find((v) => v.id === localId);
   if (!row) return;
   const ok = await ldConfirm({
     title: "Restore " + versionKind(row.kind) + "?",
@@ -198,10 +230,48 @@ async function restoreDraftVersion(id) {
     confirmLabel: "Restore draft"
   });
   if (!ok) return;
-  if (row.kind === "offers") { state.offers = structuredClone(row.payload || []); selectedOfferIndex = 0; renderOffers(); }
-  if (row.kind === "prices") { state.prices = structuredClone(row.payload || { groups: [] }); selectedTx = { gi: 0, ti: 0 }; renderPrices(); }
-  if (row.kind === "content") { state.content = structuredClone(row.payload || {}); renderContent(); }
-  saveDraft(versionKind(row.kind) + " restored from version history.");
+  applyRevisionPayload(row.kind, row.payload);
+}
+
+async function restoreServerVersion(id) {
+  let rev;
+  try {
+    const res = await fetch("/admin/api/revisions/item?id=" + encodeURIComponent(id), { cache: "no-store", credentials: "same-origin" });
+    const data = await ldReadJson(res);
+    rev = data.revision;
+  } catch (err) { toast(ldFriendlyError(err)); return; }
+  if (!rev || rev.payload == null) { toast("That version could not be loaded."); return; }
+  const isReviews = rev.kind === "reviews";
+  if (isReviews && reviewsReadOnly()) return; // owner-only (restoring publishes)
+  const ok = await ldConfirm({
+    title: "Restore " + versionKind(rev.kind) + "?",
+    body: isReviews
+      ? "This replaces the current reviews with this snapshot and publishes it to the homepage right away."
+      : "This replaces the current local draft in this browser. It does not publish until you click Publish.",
+    confirmLabel: "Restore",
+    danger: isReviews,
+  });
+  if (!ok) return;
+  applyRevisionPayload(rev.kind, rev.payload);
+}
+
+function applyRevisionPayload(kind, payload) {
+  if (kind === "offers") {
+    state.offers = structuredClone(payload || []); selectedOfferIndex = 0; renderOffers();
+    saveDraft("Offers restored from version history.");
+  } else if (kind === "prices") {
+    state.prices = structuredClone(payload || { groups: [] }); selectedTx = { gi: 0, ti: 0 }; renderPrices();
+    saveDraft("Prices restored from version history.");
+  } else if (kind === "content") {
+    state.content = structuredClone(payload || {}); renderContent();
+    saveDraft("Page text restored from version history.");
+  } else if (kind === "reviews") {
+    if (reviewsReadOnly()) return;
+    state.reviews = Array.isArray(payload && payload.reviews) ? structuredClone(payload.reviews) : [];
+    if (payload && payload.summary) reviewsSummary = payload.summary;
+    renderReviews();
+    persistReviews("Reviews restored and published from version history.");
+  }
 }
 
 function undoLastLocalEdit() {

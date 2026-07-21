@@ -239,24 +239,24 @@
 
         <section class="section reviews-section reviews-section-compact" id="reviews">
           <div class="container">
-            <div class="review-trust reveal" data-reveal>
+            <div class="review-trust reveal" data-reveal data-review-trust>
               <div class="review-trust-main">
                 <p class="eyebrow">Client feedback</p>
-                <h2>Care people come back for.</h2>
-                <p class="review-trust-lead">Calm, consultation-led treatments with feedback collected from real clients and reviewed before it appears here.</p>
+                <h2>Kind words, quietly earned.</h2>
+                <p class="review-trust-lead">Feedback from clients who value calm care, clear advice and treatments that feel considered from start to finish.</p>
                 <div class="review-trust-actions">
                   <button class="btn btn-primary review-modal-open" type="button" data-review-modal-open>Read client reviews</button>
-                  <button class="btn btn-secondary" type="button" data-review-form-open>Leave a review</button>
+                  <button class="btn btn-ghost" type="button" data-review-form-open>Leave a review</button>
                 </div>
               </div>
 
               <div class="review-trust-proof" aria-label="Client review summary">
-                <div class="review-score-panel" data-reviews-summary aria-label="Rated 5.0 out of 5 from 47 Treatwell reviews">
+                <div class="review-score-panel" data-reviews-summary data-review-animate="score" aria-label="Rated 5.0 out of 5 from 47 Treatwell reviews">
                   <strong>5.0</strong>
                   <span aria-hidden="true">★★★★★</span>
                   <small>47 Treatwell reviews</small>
                 </div>
-                <figure class="review-feature-quote">
+                <figure class="review-feature-quote" data-review-animate="quote">
                   <blockquote>“Professional, friendly and calm care in a clean studio.”</blockquote>
                   <figcaption>
                     <span class="review-avatar" aria-hidden="true">L</span>
@@ -415,7 +415,9 @@
         </div>
       </footer>
     </div>
-    <script src="js/main.js?v=20260721-featured1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    <script src="js/main.js?v=20260721-reviewgsap1" defer></script>
     <script src="js/reviews-form.js?v=20260721-reviewform1"></script>
     <script src="js/signup.js?v=20260721-consent1"></script>
     <script src="js/chatbot.js?v=20260710-flow1"></script>

@@ -185,6 +185,30 @@ function assistantEnv() {
   };
 }
 
+function assetsWithReviews() {
+  return {
+    async fetch(request) {
+      const url = new URL(request.url);
+      if (url.pathname !== '/assets/data/reviews.json') {
+        return new Response('Not found', { status: 404 });
+      }
+      return Response.json({
+        summary: { rating: '5.0', count: 47, label: 'Treatwell reviews' },
+        reviews: [
+          {
+            name: 'Elena',
+            initial: 'E',
+            rating: 5,
+            treatment: 'Lymphatic Drainage',
+            source: 'Client feedback',
+            text: 'Professional, calm care in a clean studio.',
+          },
+        ],
+      });
+    },
+  };
+}
+
 async function sign(email, secret = 'test_secret') {
   const key = await crypto.subtle.importKey(
     'raw',
@@ -303,6 +327,32 @@ test('tracked campaign click records an event and redirects', async () => {
   assert.equal(res.status, 302);
   assert.equal(res.headers.get('location'), 'https://lumidermaesthetics.com/pages/booking.html');
   assert.equal(e.SUBSCRIBERS.campaignEvents[0].event_type, 'click');
+});
+
+test('public reviews fall back to static review feed when D1 is not bound', async () => {
+  const res = await worker.fetch(req('/api/reviews'), {
+    ASSETS: assetsWithReviews(),
+  });
+  assert.equal(res.status, 200);
+  const body = await json(res);
+  assert.equal(body.summary.label, 'Treatwell reviews');
+  assert.equal(body.reviews.length, 1);
+  assert.equal(body.reviews[0].name, 'Elena');
+});
+
+test('public reviews fall back to static review feed when D1 review tables are unavailable', async () => {
+  const res = await worker.fetch(req('/api/reviews'), {
+    ASSETS: assetsWithReviews(),
+    SUBSCRIBERS: {
+      prepare() {
+        throw new Error('no such table: reviews');
+      },
+    },
+  });
+  assert.equal(res.status, 200);
+  const body = await json(res);
+  assert.equal(body.summary.count, 47);
+  assert.equal(body.reviews.length, 1);
 });
 
 test('scheduled campaign insert/list/cancel routes work', async () => {

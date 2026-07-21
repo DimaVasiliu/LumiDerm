@@ -2175,35 +2175,30 @@ body:has(.price-modal-open:checked) {
 }
 
 .reviews-section-compact {
-  padding-block: clamp(2.25rem, 5vw, 4.2rem);
+  padding-block: clamp(2.75rem, 6vw, 5.25rem);
 }
 
 .review-trust {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
-  gap: clamp(1.25rem, 3vw, 2.4rem);
-  align-items: stretch;
-  padding: clamp(1.25rem, 3vw, 2rem);
-  border: 1px solid rgba(169, 111, 104, 0.16);
-  border-radius: var(--radius-lg);
-  background:
-    linear-gradient(90deg, rgba(255, 253, 249, 0.96), rgba(255, 253, 249, 0.78)),
-    radial-gradient(88% 120% at 100% 0%, rgba(219, 234, 240, 0.52), transparent 58%),
-    radial-gradient(78% 120% at 2% 100%, rgba(242, 216, 217, 0.44), transparent 62%),
-    linear-gradient(135deg, #fffdf9, #fbf6f1);
-  box-shadow: 0 22px 60px rgba(61, 45, 47, 0.08);
+  grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+  gap: clamp(1.8rem, 5vw, 5rem);
+  align-items: center;
+  padding-block: clamp(0.5rem, 2vw, 1rem);
 }
 
 .review-trust::before {
-  content: "";
+  content: "\201C";
   position: absolute;
-  inset: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.76);
-  border-radius: calc(var(--radius-lg) - 10px);
-  pointer-events: none;
+  top: -0.28em;
+  right: 6%;
   z-index: 0;
+  color: rgba(169, 111, 104, 0.07);
+  font-family: var(--font-heading);
+  font-size: clamp(8rem, 19vw, 18rem);
+  line-height: 1;
+  pointer-events: none;
 }
 
 .review-trust > * {
@@ -2214,8 +2209,7 @@ body:has(.price-modal-open:checked) {
 .review-trust-main {
   display: grid;
   align-content: center;
-  gap: 0.95rem;
-  padding: clamp(0.35rem, 1vw, 0.8rem);
+  gap: 1rem;
 }
 
 .review-trust .eyebrow {
@@ -2223,8 +2217,8 @@ body:has(.price-modal-open:checked) {
 }
 
 .review-trust h2 {
-  max-width: 11ch;
-  font-size: clamp(2.15rem, 5.8vw, 4.15rem);
+  max-width: 10.5ch;
+  font-size: clamp(2.35rem, 6vw, 4.7rem);
   letter-spacing: 0;
 }
 
@@ -2238,40 +2232,42 @@ body:has(.price-modal-open:checked) {
 .review-trust-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 0.15rem;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.35rem;
+}
+
+.review-trust-actions .btn-ghost {
+  color: var(--color-charcoal);
+  font-weight: 900;
+}
+
+.review-trust-actions .btn-ghost::after {
+  content: "\2192";
+  margin-left: 0.45rem;
+  color: var(--color-rose-deep);
 }
 
 .review-trust-proof {
   display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 0.9rem;
-}
-
-.review-score-panel,
-.review-feature-quote {
-  border: 1px solid rgba(169, 111, 104, 0.16);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 14px 32px rgba(61, 45, 47, 0.07);
-  backdrop-filter: blur(18px);
+  gap: clamp(1rem, 2.8vw, 1.8rem);
+  padding-left: clamp(1rem, 3vw, 2.5rem);
+  border-left: 1px solid rgba(169, 111, 104, 0.2);
 }
 
 .review-score-panel {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.12rem 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.8rem;
   align-items: center;
-  padding: clamp(1rem, 2.2vw, 1.35rem);
   color: var(--color-rose-deep);
   font-weight: 900;
 }
 
 .review-score-panel strong {
-  grid-row: span 2;
   color: var(--color-charcoal);
   font-family: var(--font-heading);
-  font-size: clamp(2.35rem, 5vw, 3.45rem);
+  font-size: clamp(2.4rem, 5vw, 3.9rem);
   line-height: 1;
 }
 
@@ -2281,32 +2277,29 @@ body:has(.price-modal-open:checked) {
 
 .review-score-panel small {
   color: var(--color-muted);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 800;
 }
 
 .review-feature-quote {
-  display: grid;
-  align-content: space-between;
   margin: 0;
-  min-height: 220px;
-  padding: clamp(1.15rem, 2.8vw, 1.55rem);
 }
 
 .review-feature-quote blockquote {
   margin: 0;
   color: var(--color-charcoal);
   font-family: var(--font-heading);
-  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-size: clamp(1.65rem, 4.1vw, 3.35rem);
   font-weight: 700;
-  line-height: 1.18;
+  line-height: 1.12;
+  max-width: 16ch;
 }
 
 .review-feature-quote figcaption {
   display: flex;
   gap: 0.75rem;
   align-items: center;
-  margin-top: 1.5rem;
+  margin-top: clamp(1.25rem, 2.8vw, 2rem);
 }
 
 .review-feature-quote figcaption > span:last-child {
@@ -2355,35 +2348,36 @@ body:has(.price-modal-open:checked) {
 @media (max-width: 860px) {
   .review-trust {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
   .review-trust h2 {
-    max-width: 12ch;
+    max-width: 11ch;
+  }
+
+  .review-trust-proof {
+    padding-left: 0;
+    border-left: 0;
   }
 }
 
 @media (max-width: 560px) {
   .review-trust {
-    padding: 1rem;
-    border-radius: 22px;
-  }
-
-  .review-trust::before {
-    inset: 0.65rem;
-    border-radius: 16px;
+    gap: 1.35rem;
   }
 
   .review-trust-actions .btn {
-    width: 100%;
+    width: auto;
   }
 
   .review-score-panel {
-    grid-template-columns: 1fr;
-    gap: 0.28rem;
+    display: grid;
+    gap: 0.18rem;
   }
 
-  .review-score-panel strong {
-    grid-row: auto;
+  .review-feature-quote blockquote {
+    max-width: 18ch;
+    font-size: clamp(1.45rem, 8vw, 2.05rem);
   }
 }
 
@@ -2553,6 +2547,14 @@ body:has(.price-modal-open:checked) {
 .review-modal .review-byline span {
   font-size: 0.58rem;
   letter-spacing: 0.09em;
+}
+
+.review-modal .reviews-empty {
+  margin: clamp(1.2rem, 3vw, 2rem) 0 0;
+  padding: 1.1rem 0;
+  border-top: 1px solid rgba(169, 111, 104, 0.16);
+  color: var(--color-muted);
+  font-size: 0.98rem;
 }
 
 body.reviews-modal-open {

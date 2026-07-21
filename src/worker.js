@@ -22,6 +22,9 @@
  *   POST /api/reviews             — public: submit a client review (pending moderation)
  *   GET  /admin/api/reviews       — admin: all reviews + summary (manager UI)
  *   POST /admin/api/reviews/save  — admin: replace reviews + summary (instant, live)
+ *   GET  /admin/api/revisions     — admin: recent version-history snapshots (metadata)
+ *   POST /admin/api/revisions     — admin: record a snapshot (offers/prices/content)
+ *   GET  /admin/api/revisions/item?id= — admin: one snapshot incl. payload (for restore)
  *   GET  /admin/api/reviews/submissions — admin: pending website review submissions
  *   POST /admin/api/reviews/submissions/resolve — admin: import/reject a submission
  *   GET  /api/subscribe/confirm   — double opt-in confirmation link
@@ -246,6 +249,16 @@ export default {
         const owner = requireOwner(request, env, "publish reviews");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleAdminReviewsSave(request, env);
+      }
+
+      // Durable version history (offers / prices / page text / reviews).
+      if (apiPath === "/api/revisions/item" && isAdminApi) {
+        return handleRevisionItem(request, env, url);
+      }
+      if (apiPath === "/api/revisions" && isAdminApi) {
+        if (request.method === "GET") return handleRevisionsList(request, env, url);
+        if (request.method === "POST") return handleRevisionCreate(request, env);
+        return json({ error: "Use GET or POST." }, 405);
       }
 
       if (apiPath === "/api/birthdays" && isAdminApi) {
@@ -906,7 +919,7 @@ async function readReviewSummary(env) {
 
 // Public: the homepage review feed. Only approved reviews, featured first.
 async function handlePublicReviews(env) {
-  if (!env.SUBSCRIBERS) return json({ summary: {}, reviews: [] });
+  if (!env.SUBSCRIBERS) return json(await fallbackReviewsFromAssets(env));
   try {
     const summary = await readReviewSummary(env);
     const { results } = await env.SUBSCRIBERS.prepare(
@@ -922,7 +935,24 @@ async function handlePublicReviews(env) {
     }));
     return json({ summary, reviews });
   } catch {
-    return json({ summary: {}, reviews: [] });
+    return json(await fallbackReviewsFromAssets(env));
+  }
+}
+
+async function fallbackReviewsFromAssets(env) {
+  const fallback = { summary: { rating: "5.0", count: 47, label: "Treatwell reviews" }, reviews: [] };
+  if (!env.ASSETS) return fallback;
+  try {
+    const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+    const response = await env.ASSETS.fetch(new Request(origin + "/assets/data/reviews.json"));
+    if (!response.ok) return fallback;
+    const data = await response.json();
+    return {
+      summary: data && data.summary ? data.summary : fallback.summary,
+      reviews: Array.isArray(data && data.reviews) ? data.reviews : [],
+    };
+  } catch {
+    return fallback;
   }
 }
 
@@ -950,6 +980,9 @@ async function handleAdminReviewsSave(request, env) {
   try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
   const list = Array.isArray(body.reviews) ? body.reviews : [];
   const summary = body.summary || {};
+
+  // Snapshot the reviews as they are now (a rollback point) before replacing.
+  await snapshotReviewsRevision(env, request);
 
   const stmts = [env.SUBSCRIBERS.prepare("DELETE FROM reviews")];
   const insert = env.SUBSCRIBERS.prepare(
@@ -985,6 +1018,98 @@ async function handleAdminReviewsSave(request, env) {
   const live = list.filter((r) => r.status === "approved").length;
   await logAudit(env, request, { action: "reviews.saved", detail: list.length + " reviews (" + live + " live)", status: "ok" });
   return json({ ok: true, saved: list.length, live });
+}
+
+/* ------------------------------------------------------------------ */
+/* Durable version history (revisions)                                 */
+/* ------------------------------------------------------------------ */
+
+const REVISION_KINDS = ["offers", "prices", "content", "reviews"];
+const REVISIONS_PER_KIND = 40;
+
+// Insert a revision and prune old ones so each kind keeps at most N snapshots.
+async function insertRevision(env, kind, label, payload, actor) {
+  if (!env.SUBSCRIBERS) return;
+  const payloadJson = typeof payload === "string" ? payload : JSON.stringify(payload ?? null);
+  if (payloadJson.length > 400000) return; // guardrail against runaway payloads
+  await env.SUBSCRIBERS.prepare(
+    `INSERT INTO revisions (kind, label, payload, actor, created_at) VALUES (?1,?2,?3,?4,?5)`
+  ).bind(kind, String(label || "Snapshot").slice(0, 120), payloadJson, String(actor || "").slice(0, 160), new Date().toISOString()).run();
+  // Keep the newest REVISIONS_PER_KIND for this kind.
+  await env.SUBSCRIBERS.prepare(
+    `DELETE FROM revisions WHERE kind=?1 AND id NOT IN (
+       SELECT id FROM revisions WHERE kind=?1 ORDER BY id DESC LIMIT ?2
+     )`
+  ).bind(kind, REVISIONS_PER_KIND).run();
+}
+
+// Before a review save, capture the current reviews as a rollback point — but at
+// most once every few minutes so a burst of edits doesn't flood the history.
+async function snapshotReviewsRevision(env, request) {
+  if (!env.SUBSCRIBERS) return;
+  try {
+    const last = await env.SUBSCRIBERS.prepare(
+      "SELECT created_at FROM revisions WHERE kind='reviews' ORDER BY id DESC LIMIT 1"
+    ).first();
+    if (last && last.created_at && (Date.now() - Date.parse(last.created_at)) < 3 * 60 * 1000) return;
+    const summary = await readReviewSummary(env);
+    const { results } = await env.SUBSCRIBERS.prepare(
+      `SELECT name, initial, rating, treatment, source, text, status, featured
+         FROM reviews ORDER BY sort_order ASC, id ASC`
+    ).all();
+    const reviews = (results || []).map((r) => ({
+      name: r.name || "", initial: r.initial || "", rating: Number(r.rating) || 5,
+      treatment: r.treatment || "", source: r.source || "Client feedback", text: r.text || "",
+      status: r.status || "pending", featured: r.featured === 1 || r.featured === true,
+    }));
+    if (!reviews.length) return; // nothing worth snapshotting yet
+    await insertRevision(env, "reviews", "Before a review change", { summary, reviews }, adminEmail(request));
+  } catch { /* history is a safety net, never block the save */ }
+}
+
+// Admin: record a snapshot (offers / prices / content) sent from the browser.
+async function handleRevisionCreate(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "History isn't set up yet." }, 500);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  const kind = String(body.kind || "");
+  if (REVISION_KINDS.indexOf(kind) === -1) return json({ error: "Unknown revision kind." }, 400);
+  if (body.payload == null) return json({ error: "Nothing to snapshot." }, 400);
+  await insertRevision(env, kind, body.label, body.payload, adminEmail(request));
+  return json({ ok: true });
+}
+
+// Admin: recent snapshots (metadata only — payloads are fetched on restore).
+async function handleRevisionsList(request, env, url) {
+  if (!env.SUBSCRIBERS) return json({ ok: true, revisions: [] });
+  const kind = String(url.searchParams.get("kind") || "");
+  const limit = clampInt(url.searchParams.get("limit"), 1, 50) || 20;
+  let stmt;
+  if (REVISION_KINDS.indexOf(kind) !== -1) {
+    stmt = env.SUBSCRIBERS.prepare(
+      "SELECT id, kind, label, actor, created_at FROM revisions WHERE kind=?1 ORDER BY id DESC LIMIT ?2"
+    ).bind(kind, limit);
+  } else {
+    stmt = env.SUBSCRIBERS.prepare(
+      "SELECT id, kind, label, actor, created_at FROM revisions ORDER BY id DESC LIMIT ?1"
+    ).bind(limit);
+  }
+  const { results } = await stmt.all();
+  return json({ ok: true, revisions: results || [] });
+}
+
+// Admin: one revision including its payload, for restoring into a draft.
+async function handleRevisionItem(request, env, url) {
+  if (!env.SUBSCRIBERS) return json({ error: "History isn't set up yet." }, 500);
+  const id = clampInt(url.searchParams.get("id"), 1, 2000000000);
+  if (!id) return json({ error: "Bad revision id." }, 400);
+  const row = await env.SUBSCRIBERS.prepare(
+    "SELECT id, kind, label, actor, created_at, payload FROM revisions WHERE id=?1"
+  ).bind(id).first();
+  if (!row) return json({ error: "That revision no longer exists." }, 404);
+  let payload = null;
+  try { payload = JSON.parse(row.payload); } catch { payload = null; }
+  return json({ ok: true, revision: { id: row.id, kind: row.kind, label: row.label, actor: row.actor, created_at: row.created_at, payload } });
 }
 
 // Confirmed + consented subscribers whose birthday is today or within the next 7 days.

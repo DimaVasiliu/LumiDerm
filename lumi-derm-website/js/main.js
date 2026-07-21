@@ -278,8 +278,47 @@ function initFallbackReveals() {
   revealItems.forEach((item) => revealObserver.observe(item));
 }
 
+function initReviewGsap() {
+  const section = document.querySelector('[data-review-trust]');
+  if (!section || prefersReducedMotion || !window.gsap) return;
+
+  const gsap = window.gsap;
+  if (window.ScrollTrigger) gsap.registerPlugin(window.ScrollTrigger);
+
+  const main = section.querySelector('.review-trust-main');
+  const score = section.querySelector('[data-review-animate="score"]');
+  const quote = section.querySelector('[data-review-animate="quote"]');
+  const stars = section.querySelector('.review-score-panel span[aria-hidden]');
+
+  gsap.set([main, score, quote].filter(Boolean), { y: 24 });
+  if (stars) gsap.set(stars, { letterSpacing: '0.22em' });
+
+  const timeline = gsap.timeline({
+    defaults: { ease: 'power3.out', duration: 0.9 },
+    scrollTrigger: window.ScrollTrigger
+      ? {
+          trigger: section,
+          start: 'top 76%',
+          once: true,
+        }
+      : null,
+  });
+
+  timeline
+    .to(main, { y: 0 })
+    .to(score, { y: 0 }, '-=0.52')
+    .to(quote, { y: 0 }, '-=0.58');
+
+  if (stars) {
+    timeline.to(stars, { letterSpacing: '0.12em', duration: 0.7 }, '-=0.65');
+  }
+
+  if (!window.ScrollTrigger) timeline.play(0);
+}
+
 function initMotion() {
   initFallbackReveals();
+  initReviewGsap();
 }
 
 function initCarousels() {
@@ -507,11 +546,19 @@ async function initReviewsFeed() {
   const grid = document.querySelector('[data-reviews-grid]');
   if (!grid || !grid.dataset.reviewsSource) return;
 
-  try {
-    const response = await fetch(grid.dataset.reviewsSource, { cache: 'no-cache' });
-    if (!response.ok) return;
+  async function fetchJson(url) {
+    const response = await fetch(url, { cache: 'no-cache' });
+    if (!response.ok) throw new Error(`Could not load reviews from ${url}`);
+    return response.json();
+  }
 
-    const data = await response.json();
+  try {
+    let data;
+    try {
+      data = await fetchJson(grid.dataset.reviewsSource);
+    } catch {
+      data = await fetchJson('assets/data/reviews.json');
+    }
     if (!Array.isArray(data.reviews) || !data.reviews.length) return;
 
     grid.innerHTML = data.reviews.map(renderReviewCard).join('');
@@ -537,7 +584,7 @@ async function initReviewsFeed() {
       `;
     }
   } catch {
-    // Static HTML reviews remain visible if JSON cannot load, such as from file://.
+    grid.innerHTML = '<p class="reviews-empty">Reviews are temporarily unavailable. Please try again shortly.</p>';
   }
 }
 
