@@ -2532,10 +2532,9 @@ body:has(.price-modal-open:checked) {
 
 .review-modal .review-card {
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.62rem;
-  min-height: auto;
+  display: block;
+  overflow: visible;
+  min-height: 0;
   padding: clamp(0.82rem, 1.7vw, 1.1rem) clamp(0.9rem, 2vw, 1.2rem) clamp(0.82rem, 1.7vw, 1.1rem) 0;
   border: 0;
   border-bottom: 1px solid rgba(169, 111, 104, 0.14);
@@ -2544,6 +2543,10 @@ body:has(.price-modal-open:checked) {
   box-shadow: none;
   transition: color 180ms ease;
 }
+
+.review-modal .review-card .stars { margin: 0 0 0.5rem; }
+.review-modal .review-card blockquote { margin: 0; }
+.review-modal .review-card cite { margin-top: 0.7rem; }
 
 .review-modal .review-card::before,
 .review-modal .review-card::after {
