@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="admin.css?v=20260720-audit1">
   </head>
   <body>
-    <!-- Soft lock screen (light gate only — enable Cloudflare Access for real protection) -->
+    <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
     <div class="admin-gate" data-admin-gate hidden>
       <form class="admin-gate-card" data-gate-form>
         <span class="admin-logo"><img src="../assets/icons/lumi-derm-logo.png" alt="" aria-hidden="true"></span>
@@ -22,7 +22,7 @@
         <p>Enter your passcode to open the workspace.</p>
         <label>Passcode<input type="password" autocomplete="off" data-gate-input></label>
         <button class="admin-button admin-button-primary" type="button" data-gate-unlock>Unlock</button>
-        <small>A light lock for shared screens. For real security, protect this URL with Cloudflare Access.</small>
+        <small>A light lock for shared screens. The real protection is Cloudflare Access, which already guards this page.</small>
       </form>
     </div>
 
@@ -47,7 +47,7 @@
         </nav>
         <div class="admin-sidebar-note">
           <span>Private route</span>
-          <p>Protect this page with Cloudflare Access before launch. Offers, prices &amp; reviews publish to the live site; other tabs save drafts in this browser.</p>
+          <p>This page is protected by Cloudflare Access. Offers, prices, reviews &amp; page text publish to the live site; other tabs save drafts in this browser.</p>
         </div>
       </aside>
 
@@ -712,7 +712,7 @@
                 <h3>Admin passcode</h3>
                 <label>Set / change passcode<input type="text" data-set-pass placeholder="New passcode"></label>
                 <button class="admin-button admin-button-secondary" type="button" data-save-pass>Save passcode</button>
-                <p class="admin-help">This is a light lock only. For real protection, enable <strong>Cloudflare Access</strong> on the /admin route.</p>
+                <p class="admin-help">This is a light lock only. The real protection is <strong>Cloudflare Access</strong>, already enabled on the /admin route.</p>
               </section>
               <section class="admin-card admin-editor">
                 <p class="admin-eyebrow">Publishing</p>
@@ -745,8 +745,10 @@
               <section class="admin-card">
                 <h3>Integration checklist</h3>
                 <ul class="admin-status-list">
-                  <li><span>Cloudflare Access</span><strong>Required before sharing this URL</strong></li>
-                  <li><span>Website connection (GitHub token)</span><strong>Publishes offers &amp; images live</strong></li>
+                  <li><span>Cloudflare Access</span><strong>Enabled &mdash; protects /admin and /admin/api &#10003;</strong></li>
+                  <li><span>Admin API allow-list</span><strong>Restricted to your two emails &#10003;</strong></li>
+                  <li><span>Publishing token</span><strong>Stored as a Cloudflare secret, not in the browser &#10003;</strong></li>
+                  <li><span>Audit log</span><strong>Admin actions recorded &mdash; see Activity log &#10003;</strong></li>
                   <li><span>Treatwell Connect</span><strong>Booking and client system of record</strong></li>
                   <li><span>Cloudflare Web Analytics</span><strong>Not verified or present in repository code</strong></li>
                   <li><span>Marketing consent workflow</span><strong>Confirm Treatwell account features before build</strong></li>
@@ -779,7 +781,7 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
-    <script src="admin.js?v=20260720-audit1"></script>
+    <script src="admin.js?v=20260720-audit2"></script>
     <script src="sender.js?v=20260720-schedule1"></script>
     <script src="subscribers.js?v=20260720-audit2"></script>
   </body>

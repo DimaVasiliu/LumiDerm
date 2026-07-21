@@ -723,7 +723,10 @@ function updateMetrics() {
   if (pending) items.push(["Reviews to approve", `${pending} pending in the queue`]);
   const drafts = state.offers.filter((o) => String(o.status || "").toLowerCase() === "draft").length;
   if (drafts) items.push(["Offer drafts", `${drafts} not yet published`]);
-  items.push(["Protect the admin", "Enable Cloudflare Access before sharing this URL"]);
+  // Access is enabled on /admin (verified), so no security to-do here — an
+  // evergreen good-practice reminder instead.
+  items.push(["Before you send", "Always email yourself a test campaign first"]);
+  if (!pending && !drafts) items.push(["Back up your data", "Export a copy from Settings now and then"]);
   attention.innerHTML = items.map(([t, d]) => `<li><span>${escapeHtml(t)}</span><strong>${escapeHtml(d)}</strong></li>`).join("");
 }
 
