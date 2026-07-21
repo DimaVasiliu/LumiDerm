@@ -45,6 +45,12 @@
 
   var MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var MONTH_LOOKUP = {
+    jan: "1", january: "1", feb: "2", february: "2", mar: "3", march: "3",
+    apr: "4", april: "4", may: "5", jun: "6", june: "6", jul: "7", july: "7",
+    aug: "8", august: "8", sep: "9", sept: "9", september: "9", oct: "10",
+    october: "10", nov: "11", november: "11", dec: "12", december: "12"
+  };
   function birthday(r) {
     if (!r.birth_day || !r.birth_month) return "";
     return r.birth_day + " " + (MONTHS[r.birth_month] || "");
@@ -58,6 +64,45 @@
     var dt = new Date(d);
     return isNaN(dt.getTime()) ? "" : dt.toLocaleDateString("en-GB",
       { day: "numeric", month: "short", year: "numeric" });
+  }
+  function looksConsented(value) {
+    var v = String(value == null ? "" : value).trim().toLowerCase();
+    return ["yes", "y", "true", "1", "opted in", "opted-in", "subscribed", "consented", "x", "✓"].indexOf(v) !== -1;
+  }
+  function parseCsv(text) {
+    var rows = [], row = [], field = "", inQuotes = false, i = 0;
+    text = String(text || "").replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    while (i < text.length) {
+      var ch = text[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+          inQuotes = false; i += 1; continue;
+        }
+        field += ch; i += 1; continue;
+      }
+      if (ch === '"') { inQuotes = true; i += 1; continue; }
+      if (ch === ",") { row.push(field); field = ""; i += 1; continue; }
+      if (ch === "\n") { row.push(field); rows.push(row); row = []; field = ""; i += 1; continue; }
+      field += ch; i += 1;
+    }
+    row.push(field); rows.push(row);
+    return rows.filter(function (r) { return r.some(function (cell) { return String(cell).trim() !== ""; }); });
+  }
+  function findCol(headers, names) {
+    for (var n = 0; n < names.length; n += 1) {
+      for (var h = 0; h < headers.length; h += 1) {
+        if (headers[h].indexOf(names[n]) !== -1) return h;
+      }
+    }
+    return -1;
+  }
+  function birthdayParts(value) {
+    var s = String(value || "").trim();
+    if (!s) return { day: "", month: "" };
+    var parts = s.split(/[\/\-\s.]+/).filter(Boolean);
+    if (parts.length >= 2) return { day: parts[0], month: MONTH_LOOKUP[String(parts[1]).toLowerCase()] || parts[1] };
+    return { day: "", month: "" };
   }
 
   var cache = [];
@@ -155,6 +200,17 @@
   function exportCsv() {
     var confirmed = cache.filter(function (r) { return r.status === "confirmed"; });
     if (!confirmed.length) { status("No confirmed subscribers to export yet.", "error"); return; }
+    confirmModal({
+      title: "Export subscriber personal data?",
+      body: "This downloads confirmed subscribers from D1 as a CSV containing personal data. Keep the file private and delete old copies when you no longer need them.",
+      confirmLabel: "Export CSV"
+    }).then(function (ok) {
+      if (!ok) return;
+      doExportCsv(confirmed);
+    });
+  }
+
+  function doExportCsv(confirmed) {
     var rows = [["first name", "last name", "email", "birthday", "interest", "consent", "confirmed date"]];
     confirmed.forEach(function (r) {
       rows.push([
@@ -186,12 +242,77 @@
     }).catch(function () { /* best-effort */ });
   }
 
+  function importCsvFile(file) {
+    if (!file) return;
+    confirmModal({
+      title: "Import subscriber personal data?",
+      body: "Only import people who clearly gave marketing consent. This writes contacts into the D1 subscriber database and records them as manually imported consent.",
+      confirmLabel: "Import subscribers"
+    }).then(function (ok) {
+      if (!ok) return;
+      var reader = new FileReader();
+      reader.onerror = function () { status("Could not read that CSV file.", "error"); };
+      reader.onload = function () {
+        var rows = parseCsv(reader.result);
+        if (rows.length < 2) { status("That CSV looks empty.", "error"); return; }
+        var headers = rows[0].map(function (h) { return String(h || "").trim().toLowerCase(); });
+        var emailCol = findCol(headers, ["email", "e-mail"]);
+        var firstCol = findCol(headers, ["first name", "firstname", "first"]);
+        var lastCol = findCol(headers, ["last name", "lastname", "surname", "last"]);
+        var birthdayCol = findCol(headers, ["birthday", "birth date", "dob", "date of birth"]);
+        var dayCol = findCol(headers, ["birth day", "birthday day", "day"]);
+        var monthCol = findCol(headers, ["birth month", "birthday month", "month"]);
+        var interestCol = findCol(headers, ["interest", "interested"]);
+        var consentCol = findCol(headers, ["consent", "marketing", "opt-in", "opt in", "subscribed"]);
+        if (emailCol < 0) { status("Import needs an email column.", "error"); return; }
+        if (consentCol < 0) { status("Import needs a consent / marketing opt-in column.", "error"); return; }
+        var list = rows.slice(1).map(function (r) {
+          var bp = birthdayParts(birthdayCol >= 0 ? r[birthdayCol] : "");
+          return {
+            first_name: firstCol >= 0 ? r[firstCol] : "",
+            last_name: lastCol >= 0 ? r[lastCol] : "",
+            email: r[emailCol],
+            birth_day: dayCol >= 0 ? r[dayCol] : bp.day,
+            birth_month: monthCol >= 0 ? r[monthCol] : bp.month,
+            interest: interestCol >= 0 ? r[interestCol] : "",
+            consent_email: looksConsented(r[consentCol])
+          };
+        });
+        status("Importing " + list.length + " row(s)…");
+        fetch(ADMIN_API + "/subscribers/import", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            source: "admin CSV import",
+            consent_wording: "Manually imported with recorded marketing consent.",
+            subscribers: list
+          })
+        })
+          .then(function (res) { return responseJson(res); })
+          .then(function (data) {
+            status("Imported " + data.imported + ", updated " + data.updated + ". Skipped " + (data.invalid + data.skippedNoConsent + data.skippedSuppressed + data.skippedUnsubscribed) + ".", "ok");
+            load();
+          })
+          .catch(function (err) { status(friendly(err), "error"); });
+      };
+      reader.readAsText(file);
+    });
+  }
+
   function init() {
     if (!document.getElementById("subscribers")) return;
     var reload = $("[data-subs-reload]");
     var exp = $("[data-subs-export]");
+    var imp = $("[data-subs-import]");
+    var impFile = $("[data-subs-import-file]");
     if (reload) reload.addEventListener("click", load);
     if (exp) exp.addEventListener("click", exportCsv);
+    if (imp && impFile) imp.addEventListener("click", function () { impFile.click(); });
+    if (impFile) impFile.addEventListener("change", function () {
+      importCsvFile(impFile.files && impFile.files[0]);
+      impFile.value = "";
+    });
     var search = $("[data-subs-search]");
     if (search) search.addEventListener("input", function () {
       searchTerm = search.value || "";

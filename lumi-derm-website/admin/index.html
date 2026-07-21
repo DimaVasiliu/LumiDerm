@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260721-bday2">
+    <link rel="stylesheet" href="admin.css?v=20260721-polish1">
   </head>
   <body>
     <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
@@ -60,6 +60,7 @@
           </div>
           <div class="admin-topbar-actions">
             <a class="admin-button admin-button-ghost" href="../index.html" target="_blank" rel="noopener">View site</a>
+            <button class="admin-button admin-button-secondary" type="button" data-undo-local>Undo local edit</button>
             <button class="admin-button admin-button-secondary" type="button" data-import-admin>Import</button>
             <button class="admin-button admin-button-secondary" type="button" data-export-admin>Export</button>
             <button class="admin-button admin-button-primary" type="button" data-publish-demo>Publish offers</button>
@@ -317,7 +318,10 @@
                 <strong>Publish to the website</strong>
                 <p data-publish-status>Your changes are saved in this browser only. Click publish to put them live.</p>
               </div>
-              <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-offers>Publish offers</button>
+              <div class="admin-publish-actions">
+                <a class="admin-button admin-button-secondary" href="../index.html#offers" target="_blank" rel="noopener" data-preview-offers>Preview live offers</a>
+                <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-offers>Publish offers</button>
+              </div>
             </div>
             <div class="admin-layout">
               <section class="admin-card">
@@ -390,7 +394,10 @@
                 <strong>Publish to the website</strong>
                 <p data-prices-status>Your changes are saved in this browser only. Click publish to put them live on the treatments page.</p>
               </div>
-              <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-prices>Publish prices</button>
+              <div class="admin-publish-actions">
+                <a class="admin-button admin-button-secondary" href="../pages/services.html" target="_blank" rel="noopener" data-preview-prices>Preview live prices</a>
+                <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-prices>Publish prices</button>
+              </div>
             </div>
             <div class="admin-layout admin-layout-prices">
               <nav class="admin-card price-nav" data-price-nav aria-label="Choose a treatment to edit"></nav>
@@ -601,8 +608,20 @@
               <div class="admin-actions-inline start">
                 <button class="admin-button admin-button-secondary" type="button" data-subs-reload>Reload</button>
                 <button class="admin-button admin-button-primary" type="button" data-subs-export>Export confirmed (CSV)</button>
+                <button class="admin-button admin-button-secondary" type="button" data-subs-import>Import personal data (CSV)</button>
+                <input type="file" accept=".csv,text/csv" data-subs-import-file hidden>
               </div>
             </div>
+
+            <section class="admin-card personal-data-card">
+              <p class="admin-eyebrow">Personal data</p>
+              <h3>Subscriber import/export</h3>
+              <p>Subscriber files contain personal data. Export only when you need a backup or a lawful business copy, keep the file private, and delete old copies when you are done. Import only people who gave clear marketing consent.</p>
+              <ul class="admin-status-list compact-list">
+                <li><span>Export</span><strong>Downloads confirmed website subscribers from D1 as a CSV.</strong></li>
+                <li><span>Import</span><strong>Adds or updates D1 subscribers from a CSV and records them as manually imported consent.</strong></li>
+              </ul>
+            </section>
 
             <div class="subs-stats" data-subs-stats>
               <div class="subs-stat"><strong data-subs-count-confirmed>0</strong><span>Confirmed</span></div>
@@ -677,7 +696,10 @@
                 <strong>Publish to the website</strong>
                 <p data-content-status>Your changes are saved in this browser only. Click publish to put them live.</p>
               </div>
-              <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-content>Publish page text</button>
+              <div class="admin-publish-actions">
+                <a class="admin-button admin-button-secondary" href="../index.html" target="_blank" rel="noopener" data-preview-content>Preview live page</a>
+                <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-content>Publish page text</button>
+              </div>
             </div>
             <div class="admin-grid admin-grid-2">
               <section class="admin-card admin-editor">

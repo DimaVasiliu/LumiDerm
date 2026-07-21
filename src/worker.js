@@ -17,6 +17,7 @@
  *   POST /api/subscribe           — newsletter signup (double opt-in)
  *   GET  /api/subscribe/confirm   — double opt-in confirmation link
  *   GET  /admin/api/subscribers   — admin: list subscribers
+ *   POST /admin/api/subscribers/import — admin: import consented subscribers from CSV
  *   POST /admin/api/subscribers/delete — admin: erase a subscriber
  *   POST /admin/api/campaign/schedule — admin: queue a campaign for later
  *   GET  /admin/api/campaign/scheduled — admin: list scheduled/sent queued campaigns
@@ -221,6 +222,11 @@ export default {
 
       if (apiPath === "/api/subscribers" && isAdminApi) {
         return handleListSubscribers(request, env);
+      }
+
+      if (apiPath === "/api/subscribers/import" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleImportSubscribers(request, env);
       }
 
       if (apiPath === "/api/subscribers/delete" && isAdminApi) {
@@ -1461,6 +1467,81 @@ async function handleListSubscribers(request, env) {
   list.forEach((r) => { if (counts[r.status] !== undefined) counts[r.status] += 1; });
 
   return json({ ok: true, counts, total: list.length, subscribers: list });
+}
+
+async function handleImportSubscribers(request, env) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+  if (!env.SUBSCRIBERS) return json({ error: "Signups aren't set up yet." }, 500);
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request." }, 400);
+  }
+
+  const rows = Array.isArray(body.subscribers) ? body.subscribers.slice(0, MAX_RECIPIENTS) : [];
+  if (!rows.length) return json({ error: "No subscribers to import." }, 400);
+
+  const now = new Date().toISOString();
+  const wording = String(body.consent_wording || "Manually imported with recorded marketing consent.").slice(0, 300);
+  const source = String(body.source || "admin CSV import").slice(0, 80);
+  let imported = 0;
+  let updated = 0;
+  let invalid = 0;
+  let skippedNoConsent = 0;
+  let skippedSuppressed = 0;
+  let skippedUnsubscribed = 0;
+  const seen = new Set();
+
+  for (const row of rows) {
+    const email = String((row && row.email) || "").trim().toLowerCase();
+    if (!isEmail(email) || seen.has(email)) { invalid += 1; continue; }
+    seen.add(email);
+    if (row.consent_email !== true) { skippedNoConsent += 1; continue; }
+    if (env.SUPPRESSION && await env.SUPPRESSION.get(suppressionKey(email))) {
+      skippedSuppressed += 1;
+      continue;
+    }
+
+    const existing = await env.SUBSCRIBERS.prepare(
+      "SELECT status FROM subscribers WHERE email = ?1"
+    ).bind(email).first();
+    if (existing && existing.status === "unsubscribed") {
+      skippedUnsubscribed += 1;
+      continue;
+    }
+
+    const firstName = String(row.first_name || "").trim().slice(0, 60);
+    const lastName = String(row.last_name || "").trim().slice(0, 60);
+    const birthDay = clampInt(row.birth_day, 1, 31);
+    const birthMonth = clampInt(row.birth_month, 1, 12);
+    const interest = String(row.interest || "").trim().slice(0, 40);
+
+    await env.SUBSCRIBERS.prepare(
+      `INSERT INTO subscribers
+         (email, first_name, last_name, birth_day, birth_month, interest, status,
+          consent_email, consent_wording, consent_source, signup_ip, confirm_token, created_at, confirmed_at)
+       VALUES (?1,?2,?3,?4,?5,?6,'confirmed',1,?7,?8,?9,NULL,?10,?10)
+       ON CONFLICT(email) DO UPDATE SET
+         first_name=?2, last_name=?3, birth_day=?4, birth_month=?5, interest=?6,
+         status='confirmed', consent_email=1, consent_wording=?7, consent_source=?8,
+         signup_ip=?9, confirm_token=NULL, confirmed_at=?10, unsubscribed_at=NULL`
+    ).bind(
+      email, firstName, lastName, birthDay, birthMonth, interest,
+      wording, source, request.headers.get("cf-connecting-ip") || "", now
+    ).run();
+    if (existing) updated += 1; else imported += 1;
+  }
+
+  await logAudit(env, request, {
+    action: "subscriber.import",
+    detail: "imported " + imported + ", updated " + updated + ", skipped " + (skippedNoConsent + skippedSuppressed + skippedUnsubscribed + invalid),
+    status: "ok",
+  });
+
+  return json({ ok: true, imported, updated, invalid, skippedNoConsent, skippedSuppressed, skippedUnsubscribed });
 }
 
 async function handleDeleteSubscriber(request, env) {

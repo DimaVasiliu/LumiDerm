@@ -1170,8 +1170,30 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
 }
 .admin-publish-bar strong { display: block; font-size: 0.98rem; }
 .admin-publish-bar p { margin: 0.2rem 0 0; font-size: 0.85rem; opacity: 0.75; }
+.admin-publish-actions {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+.admin-publish-actions .admin-button { flex: 1 1 auto; }
 .admin-publish-btn { min-width: 10rem; }
 .admin-publish-btn:disabled { opacity: 0.6; cursor: progress; }
+.personal-data-card {
+  margin: 0 0 1rem;
+  border-color: rgba(176, 72, 60, 0.18);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(246, 231, 229, 0.46)),
+    var(--admin-surface);
+}
+.compact-list {
+  gap: 0.45rem;
+  margin-top: 0.7rem;
+}
+.compact-list li {
+  padding-top: 0.55rem;
+}
 
 /* checkbox row in the offer editor */
 .admin-check {
@@ -1630,3 +1652,159 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.06);
 }
+
+/* ================================================================
+   POLISH PASS — consistent spacing, form controls, previews,
+   buttons and readability. Appended last so it takes precedence.
+   ================================================================ */
+
+/* --- Even vertical rhythm between stacked cards/sections in a panel --- */
+.admin-panel > .admin-card,
+.admin-panel > .admin-layout,
+.admin-panel > .admin-grid,
+.admin-panel > .admin-publish-bar { margin-top: 1.15rem; }
+.admin-panel > .admin-section-head { margin-top: 0; padding-top: 0.5rem; }
+.admin-panel > .admin-card:first-child,
+.admin-panel > .admin-grid:first-child,
+.admin-panel > .admin-layout:first-child { margin-top: 0; }
+.admin-panel > .admin-section-head + .admin-card,
+.admin-panel > .admin-section-head + .admin-layout,
+.admin-panel > .admin-section-head + .admin-grid { margin-top: 1rem; }
+.admin-card-head { margin-bottom: 0.5rem; align-items: center; }
+
+/* --- ONE consistent style for every input / select / textarea in the admin,
+       including ones nested deeper than the original rules reached --- */
+.admin-main input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.admin-main select,
+.admin-main textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(68, 52, 49, 0.16);
+  border-radius: 14px;
+  padding: 0.7rem 0.9rem;
+  min-height: 46px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--admin-ink);
+  background-color: #fff;
+  text-transform: none;
+  letter-spacing: 0;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.admin-main input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+.admin-main select:focus,
+.admin-main textarea:focus {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px rgba(183, 123, 114, 0.14);
+}
+.admin-main input::placeholder,
+.admin-main textarea::placeholder { color: #b6aca6; opacity: 1; }
+
+/* Custom dropdown arrow on EVERY select (native arrow removed) */
+.admin-main select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.5rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--admin-accent-dark) 50%),
+    linear-gradient(135deg, var(--admin-accent-dark) 50%, transparent 50%);
+  background-position: calc(100% - 1.15rem) 55%, calc(100% - 0.9rem) 55%;
+  background-size: 0.4rem 0.4rem;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+.admin-main textarea { min-height: 120px; resize: vertical; line-height: 1.55; }
+.admin-main input[type="file"] { font-size: 0.9rem; }
+
+/* Small inline inputs (test-email boxes) shouldn't stretch full width */
+.admin-actions-inline input[type="email"],
+.mail-banner-row input[type="email"] { width: auto; min-width: 200px; flex: 1 1 200px; }
+
+/* --- Labels: calmer small-caps --- */
+.admin-editor label,
+.admin-card > label,
+.admin-card .field-pair > label,
+.review-controls label { font-size: 0.72rem; letter-spacing: 0.08em; }
+.admin-editor label small,
+.admin-card label small { text-transform: none; letter-spacing: 0; font-weight: 500; opacity: 0.7; }
+
+/* --- Email / birthday preview: framed, white, comfortable --- */
+.mail-preview {
+  height: 620px;
+  border: 1px solid rgba(68, 52, 49, 0.14);
+  border-radius: 14px;
+  background: #f4f1ee;
+}
+/* Give the campaign preview column enough width so the 600px email fits nicely */
+@media (min-width: 1080px) {
+  .admin-layout { grid-template-columns: minmax(0, 1.35fr) minmax(430px, 0.9fr); }
+}
+
+/* Prices and campaign UI are the densest admin surfaces. Keep them usable on
+   tablets by avoiding fixed side columns until there is real horizontal room. */
+@media (max-width: 1279px) {
+  #sender > .admin-layout,
+  .admin-layout.admin-layout-prices {
+    grid-template-columns: 1fr;
+  }
+  .price-nav {
+    max-height: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  .admin-layout.admin-layout-prices {
+    grid-template-columns: minmax(320px, 0.95fr) minmax(520px, 1.05fr);
+  }
+}
+
+@media (max-width: 719px) {
+  .admin-topbar,
+  .admin-section-head,
+  .admin-card-head,
+  .admin-publish-bar {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .admin-topbar-actions,
+  .admin-actions-inline,
+  .admin-publish-actions,
+  .mail-banner-row {
+    justify-content: stretch;
+  }
+  .admin-topbar-actions > *,
+  .admin-actions-inline > *,
+  .admin-publish-actions > *,
+  .mail-banner-row > * {
+    width: 100%;
+  }
+  .admin-button,
+  .tiny-button {
+    white-space: normal;
+  }
+  .mail-preview {
+    height: min(560px, 78vh);
+  }
+  .scheduled-item,
+  .birthday-item {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .scheduled-item-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* --- Buttons: consistent tap targets --- */
+.tiny-button { min-height: 34px; padding: 0.42rem 0.8rem; font-size: 0.8rem; line-height: 1; }
+.admin-actions-inline { align-items: center; gap: 0.6rem; }
+.admin-publish-bar { align-items: center; gap: 1rem; flex-wrap: wrap; }
+
+/* --- Readability --- */
+.admin-help { line-height: 1.6; }
+.admin-subsection-title { margin-top: 1.4rem; margin-bottom: 0.25rem; }
+.admin-card > .admin-help:first-of-type { margin-top: 0.2rem; }
+
+/* --- Field pairs: comfortable gap --- */
+.field-pair { gap: 0.8rem; }

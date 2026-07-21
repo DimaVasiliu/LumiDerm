@@ -9,7 +9,6 @@ const publicPages = [
   '404.html',
   'pages/about.html',
   'pages/booking.html',
-  'pages/contact.html',
   'pages/cookies.html',
   'pages/gallery.html',
   'pages/policies.html',
@@ -69,8 +68,8 @@ test('sitemap and robots use canonical, indexable routes', async () => {
   assert.match(robots, /Sitemap: https:\/\/lumidermaesthetics\.com\/sitemap\.xml/);
   assert.doesNotMatch(robots, /www\.lumidermaesthetics\.com/);
   assert.doesNotMatch(sitemap, /pages\/treatment\.html/);
-  assert.equal([...sitemap.matchAll(/<url>/g)].length, 10);
-  assert.equal([...sitemap.matchAll(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g)].length, 10);
+  assert.equal([...sitemap.matchAll(/<url>/g)].length, 9);
+  assert.equal([...sitemap.matchAll(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g)].length, 9);
 });
 
 test('security policy allows only the retained script sources and matches JSON-LD', async () => {

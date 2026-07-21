@@ -32,6 +32,7 @@ const panelTitles = { dashboard: "Overview", guide: "Guide & help", offers: "Off
 let state = loadDraft();
 let selectedOfferIndex = 0;
 let selectedTx = { gi: 0, ti: 0 }; // selected treatment in the Prices editor (group index, treatment index)
+let undoStack = [];
 
 const toastRegion = document.querySelector("[data-admin-toast-region]");
 
@@ -124,11 +125,39 @@ function loadDraft() {
 }
 
 function saveDraft(message) {
+  const before = localStorage.getItem(STORAGE_KEY);
+  const next = JSON.stringify(state);
+  if (before && before !== next) {
+    undoStack.push(before);
+    if (undoStack.length > 12) undoStack.shift();
+  }
   state.savedAt = new Date().toISOString();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   updateLastSaved();
   updateMetrics();
   if (message) toast(message);
+}
+
+function undoLastLocalEdit() {
+  const previous = undoStack.pop();
+  if (!previous) { toast("Nothing to undo in this browser."); return; }
+  try {
+    state = JSON.parse(previous);
+    if (!Array.isArray(state.offers)) state.offers = [];
+    if (!Array.isArray(state.reviews)) state.reviews = [];
+    if (!Array.isArray(state.campaigns)) state.campaigns = [];
+    if (!state.prices || !Array.isArray(state.prices.groups)) state.prices = { groups: [] };
+    if (!state.content) state.content = {};
+    selectedOfferIndex = 0;
+    selectedTx = { gi: 0, ti: 0 };
+    localStorage.setItem(STORAGE_KEY, previous);
+    renderAll();
+    updateLastSaved();
+    updateMetrics();
+    toast("Undid the last local edit.");
+  } catch {
+    toast("Could not undo that local edit.");
+  }
 }
 
 function updateLastSaved() {
@@ -165,6 +194,7 @@ function bindTopActions() {
   document.querySelectorAll("[data-import-admin]").forEach((b) => b.addEventListener("click", () => document.querySelector("[data-import-file]").click()));
   document.querySelector("[data-import-file]")?.addEventListener("change", importAll);
   document.querySelector("[data-publish-demo]")?.addEventListener("click", () => { goPanel("offers"); publishOffers(); });
+  document.querySelector("[data-undo-local]")?.addEventListener("click", undoLastLocalEdit);
   document.querySelector("[data-birthday-reload]")?.addEventListener("click", loadBirthdays);
 }
 
@@ -176,8 +206,14 @@ function exportAll() {
 function importAll(e) {
   const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
+      const ok = await ldConfirm({
+        title: "Import admin backup?",
+        body: "This replaces the local drafts in this browser with the backup file. You can use Undo local edit straight after if it was the wrong file.",
+        confirmLabel: "Import backup"
+      });
+      if (!ok) { e.target.value = ""; return; }
       const data = JSON.parse(reader.result);
       state = { ...state, ...data };
       ["offers", "reviews", "campaigns"].forEach((k) => { if (!Array.isArray(state[k])) state[k] = []; });
@@ -331,8 +367,13 @@ function renderOfferPreview() {
 const PRICES_JSON_URL = "../assets/data/prices.json";
 
 function bindPrices() {
-  document.querySelector("[data-reload-prices]")?.addEventListener("click", () => {
-    if (!confirm("Replace the prices in the editor with the ones currently on the website?")) return;
+  document.querySelector("[data-reload-prices]")?.addEventListener("click", async () => {
+    const ok = await ldConfirm({
+      title: "Reload live prices?",
+      body: "This replaces the local prices in this browser with the prices currently on the website. You can use Undo local edit straight after if needed.",
+      confirmLabel: "Reload live prices"
+    });
+    if (!ok) return;
     loadPricesFromJson(true, true);
   });
 }
@@ -615,8 +656,13 @@ const DEFAULT_CONTENT = {
 function contentReady() { return state.content && state.content.hero && state.content.contact; }
 
 function bindContent() {
-  document.querySelector("[data-reload-content]")?.addEventListener("click", () => {
-    if (!confirm("Replace the text in the editor with what's currently on the website?")) return;
+  document.querySelector("[data-reload-content]")?.addEventListener("click", async () => {
+    const ok = await ldConfirm({
+      title: "Reload live page text?",
+      body: "This replaces the local page-text draft in this browser with what is currently on the website. You can use Undo local edit straight after if needed.",
+      confirmLabel: "Reload live text"
+    });
+    if (!ok) return;
     loadContentFromJson(true, true);
   });
   document.querySelectorAll("[data-content-hero]").forEach((f) => f.addEventListener("change", () => {
@@ -1421,8 +1467,13 @@ function bindPublishing() {
   document.querySelector("[data-publish-reviews]")?.addEventListener("click", publishReviews);
   document.querySelector("[data-publish-prices]")?.addEventListener("click", publishPrices);
   document.querySelector("[data-publish-content]")?.addEventListener("click", publishContent);
-  document.querySelector("[data-reload-offers]")?.addEventListener("click", () => {
-    if (!confirm("Replace what's in the editor with the offers currently on the website?")) return;
+  document.querySelector("[data-reload-offers]")?.addEventListener("click", async () => {
+    const ok = await ldConfirm({
+      title: "Reload live offers?",
+      body: "This replaces the local offers in this browser with the offers currently on the website. You can use Undo local edit straight after if needed.",
+      confirmLabel: "Reload live offers"
+    });
+    if (!ok) return;
     loadOffersFromSite(true);
   });
 
@@ -1447,6 +1498,7 @@ const AUDIT_LABELS = {
   "publish.prices": "Published prices", "publish.pages": "Published page text",
   "upload.image": "Uploaded image", "delete.image": "Deleted image",
   "subscriber.delete": "Deleted subscriber", "subscriber.export": "Exported subscribers (CSV)",
+  "subscriber.import": "Imported subscribers (CSV)",
   "subscriber.optin": "New subscriber confirmed", "birthday.config": "Changed birthday automation",
   "birthday.test": "Sent birthday preview", "auth.denied": "Sign-in denied"
 };
