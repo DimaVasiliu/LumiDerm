@@ -1611,7 +1611,9 @@ async function handleTrackedClick(request, env, url) {
   if (!(await validEmailToken(env, email, token))) {
     return htmlPage("Invalid link", "This link is not valid.", 400);
   }
-  const safeTarget = safeCampaignTarget(target, url.origin);
+  // Only redirect to an approved domain (anti-open-redirect). A tracked link
+  // should always carry an approved target; if not, fall back to the homepage.
+  const safeTarget = safeCampaignTarget(target, url.origin) || (url.origin + "/");
   if (campaignId) await recordCampaignEvent(env, { campaignId, email, eventType: "click", detail: safeTarget });
   return Response.redirect(safeTarget, 302);
 }
@@ -2070,20 +2072,42 @@ async function trackCampaignLinks(env, origin, html, campaignId, email) {
   });
 }
 
+// Domains a campaign link is allowed to point at. The clinic site + booking,
+// Treatwell, and the clinic's approved social channels. Anything else is left
+// untouched (not rewritten, not redirected) so external links keep working.
+const APPROVED_CAMPAIGN_DOMAINS = [
+  "lumidermaesthetics.com",
+  "treatwell.co.uk",
+  "instagram.com",
+  "facebook.com",
+  "fb.com",
+  "fb.me",
+  "wa.me",
+  "whatsapp.com",
+  "tiktok.com",
+  "youtube.com",
+  "youtu.be",
+];
+
+function isApprovedCampaignHost(host) {
+  const h = String(host || "").toLowerCase();
+  return APPROVED_CAMPAIGN_DOMAINS.some((d) => h === d || h.endsWith("." + d));
+}
+
+// Returns the safe absolute URL if it points to an approved domain, otherwise
+// null. Callers must treat null as "don't rewrite / don't track this link" —
+// never silently redirect an unsupported link to the homepage.
 function safeCampaignTarget(raw, origin) {
   try {
     const target = new URL(String(raw || ""), origin);
-    const host = target.hostname.toLowerCase();
     if (
-      host === "lumidermaesthetics.com" ||
-      host === "www.lumidermaesthetics.com" ||
-      host === "www.treatwell.co.uk" ||
-      host === "treatwell.co.uk"
+      (target.protocol === "https:" || target.protocol === "http:") &&
+      isApprovedCampaignHost(target.hostname)
     ) {
       return target.toString();
     }
   } catch { /* fall through */ }
-  return origin + "/";
+  return null;
 }
 
 async function recordCampaignEvent(env, detail) {
