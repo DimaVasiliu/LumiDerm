@@ -589,6 +589,7 @@ function bindReviews() {
   document.querySelector("[data-add-review]")?.addEventListener("click", () => openReviewEditor(null));
   document.querySelectorAll("[data-review-summary]").forEach((f) => {
     f.addEventListener("input", () => {
+      if (reviewsReadOnly()) return;
       const k = f.dataset.reviewSummary;
       reviewsSummary[k] = k === "count" ? (parseInt(f.value, 10) || 0) : f.value;
       persistReviews(null);
@@ -615,8 +616,15 @@ let reviewSubmissionsCache = [];
 async function loadReviewSubmissions() {
   const card = document.querySelector("[data-review-submissions-card]");
   const box = document.querySelector("[data-review-submissions]");
+  // Moderating submissions is owner-only; assistants simply don't see the card.
+  if (adminRole === "assistant") {
+    reviewSubmissionsCount = 0;
+    if (card) card.hidden = true;
+    return;
+  }
   try {
     const res = await fetch(REVIEW_SUB_API, { cache: "no-store", credentials: "same-origin" });
+    if (res.status === 403) { reviewSubmissionsCount = 0; if (card) card.hidden = true; updateMetrics(); return; }
     const data = await ldReadJson(res);
     reviewSubmissionsCache = data.submissions || [];
     reviewSubmissionsCount = reviewSubmissionsCache.length;
@@ -653,6 +661,7 @@ function renderReviewSubmissions(subs) {
 }
 
 function importSubmission(id) {
+  if (reviewsReadOnly()) return;
   const s = reviewSubmissionsCache.find((x) => x.id === id); if (!s) return;
   state.reviews.unshift({
     name: s.name || "Client", initial: (s.name || "C").charAt(0).toUpperCase(),
@@ -666,6 +675,7 @@ function importSubmission(id) {
 }
 
 async function rejectSubmission(id) {
+  if (reviewsReadOnly()) return;
   const ok = await ldConfirm({
     title: "Reject this submission?",
     body: "Remove this website submission. It won't be added to your reviews. This can't be undone.",
@@ -761,6 +771,15 @@ function persistReviews(message) {
   scheduleSaveReviews(); // live to the homepage
   if (message) toast(message);
 }
+// Reviews go live on save, so changing them is an owner-only action (the server
+// enforces this too). Blocks assistants before any local change is made.
+function reviewsReadOnly() {
+  if (adminRole === "assistant") {
+    toast("Owner access is required to change or publish reviews.");
+    return true;
+  }
+  return false;
+}
 function setReviewSaveState(state) {
   const btn = document.querySelector("[data-publish-reviews]");
   if (!btn) return;
@@ -841,6 +860,7 @@ function renderReviews() {
   }).join("") || '<article class="admin-review-item"><p class="admin-help">No reviews match these filters.</p></article>';
 
   list.querySelectorAll("[data-review-action]").forEach((b) => b.addEventListener("click", () => {
+    if (reviewsReadOnly()) return;
     const review = state.reviews[+b.dataset.reviewIndex]; if (!review) return;
     const action = b.dataset.reviewAction;
     if (action === "featured") {
@@ -859,6 +879,7 @@ function renderReviews() {
 }
 
 async function deleteReview(index) {
+  if (reviewsReadOnly()) return;
   const r = state.reviews[index]; if (!r) return;
   const ok = await ldConfirm({
     title: "Delete this review?",
@@ -913,6 +934,7 @@ function openReviewEditor(index) {
   q(".ld-modal-veil").addEventListener("click", close);
   q("[data-rev-cancel]").addEventListener("click", close);
   q("[data-rev-save]").addEventListener("click", () => {
+    if (reviewsReadOnly()) return;
     const name = q("[data-rev-name]").value.trim();
     if (!name) { toast("Add the client's name first."); return; }
     const updated = {
@@ -1991,6 +2013,7 @@ function applyRoleControls() {
     "[data-send-campaign]", "[data-send-test]", "[data-schedule-toggle]", "[data-bday-save]", "[data-bday-test]",
     "[data-media-upload-btn]", "[data-offer-image-upload]", "[data-mail-banner-upload]",
     "[data-subs-export]", "[data-subs-import]", "[data-export-admin]", "[data-import-admin]",
+    "[data-add-review]",
   ];
   const assistant = adminRole === "assistant";
   restricted.forEach((sel) => {

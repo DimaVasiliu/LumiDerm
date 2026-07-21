@@ -224,18 +224,27 @@ export default {
       }
 
       if (apiPath === "/api/reviews/submissions" && isAdminApi) {
+        // Submissions carry client names + emails (personal data) → owner only.
+        const owner = requireOwner(request, env, "view client review submissions");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleReviewSubmissions(request, env);
       }
       if (apiPath === "/api/reviews/submissions/resolve" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "moderate review submissions");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleReviewResolve(request, env);
       }
       if (apiPath === "/api/reviews" && isAdminApi) {
+        // Reading the review list (no personal data) is fine for assistants.
         if (request.method === "GET") return handleAdminReviewsList(env);
         return json({ error: "Use GET." }, 405);
       }
       if (apiPath === "/api/reviews/save" && isAdminApi) {
+        // Saving publishes reviews live on the homepage → owner only.
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "publish reviews");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleAdminReviewsSave(request, env);
       }
 
