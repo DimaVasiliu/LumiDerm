@@ -539,6 +539,12 @@ code {
   font-size: 0.88rem;
 }
 
+/* ---- Activity log (audit) ---- */
+.admin-audit-table th,
+.admin-audit-table td { font-size: 0.82rem; vertical-align: top; }
+.admin-audit-table td:nth-child(4) { color: var(--admin-muted); }
+.admin-audit-table tr.audit-warn td { background: rgba(190, 70, 60, 0.08); }
+
 /* ---- Offer drag-to-reorder ---- */
 tr[data-offer-row] { cursor: grab; }
 tr[data-offer-row].dragging { opacity: 0.45; cursor: grabbing; }

@@ -25,6 +25,10 @@
  *   POST /admin/api/settings/birthday/test — admin: send birthday preview
  *   POST /admin/api/github        — admin: GitHub publish proxy (token stays server-side)
  *   GET  /admin/api/github/health — admin: is server-side publishing configured?
+ *   GET  /admin/api/audit         — admin: recent audit-log entries
+ *   POST /admin/api/audit         — admin: record a client-only action (e.g. CSV export)
+ *
+ * D1 also stores an admin_audit_log (who/what/when) — see logAudit().
  *
  * Cron (wrangler triggers, hourly): scheduled() sends due queued campaigns and,
  * at the configured hour, the day's birthday emails.
@@ -65,6 +69,16 @@ export default {
     }
 
     try {
+      // Central admin gate: every /admin/api/* call needs a valid Access user in
+      // ADMIN_EMAILS. Log access failures (OWASP) and stop here on denial.
+      if (isAdminApi) {
+        const gate = authorised(request, env);
+        if (!gate.ok) {
+          await logAudit(env, request, { actor: adminEmail(request), action: "auth.denied", detail: apiPath, status: "denied" });
+          return json({ error: gate.reason || "Unauthorised." }, 401);
+        }
+      }
+
       if (apiPath === "/api/health") {
         if (isAdminApi) {
           const admin = authorised(request, env);
@@ -145,6 +159,12 @@ export default {
       if (apiPath === "/api/github" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
         return handleGithubProxy(request, env);
+      }
+
+      if (apiPath === "/api/audit" && isAdminApi) {
+        if (request.method === "GET") return handleAuditList(request, env);
+        if (request.method === "POST") return handleAuditLogClient(request, env);
+        return json({ error: "Use GET or POST." }, 405);
       }
 
       if (apiPath === "/api/subscribe" && isPublicApi) {
@@ -320,6 +340,12 @@ async function handleSend(request, env, url) {
     invalid,
     status: errors.length ? "partial" : "sent",
     errors,
+  });
+
+  await logAudit(env, request, {
+    action: isTest ? "campaign.test" : "campaign.send",
+    detail: '"' + subject + '" — sent ' + sent + "/" + incoming.length + (suppressed ? ", " + suppressed + " suppressed" : ""),
+    status: errors.length ? "error" : "ok",
   });
 
   return json(payload);
@@ -699,6 +725,11 @@ async function handleScheduleCampaign(request, env) {
     JSON.stringify(cleanRecipients), when.toISOString(), new Date().toISOString()
   ).run();
 
+  await logAudit(env, request, {
+    action: "campaign.schedule",
+    detail: '"' + subject + '" for ' + when.toISOString() + " — " + cleanRecipients.length + " recipients",
+    status: "ok",
+  });
   return json({ ok: true, scheduledFor: when.toISOString(), recipients: cleanRecipients.length });
 }
 
@@ -741,6 +772,7 @@ async function handleCancelScheduled(request, env) {
   ).bind(id).run();
   const changed = res.meta && res.meta.changes ? res.meta.changes : 0;
   if (!changed) return json({ error: "That campaign has already sent or been cancelled." }, 409);
+  await logAudit(env, request, { action: "campaign.cancel", detail: "scheduled campaign id " + id, status: "ok" });
   return json({ ok: true });
 }
 
@@ -772,6 +804,11 @@ async function handleSetBirthday(request, env) {
      ON CONFLICT(key) DO UPDATE SET value=?1, updated_at=?2`
   ).bind(JSON.stringify(cfg), now).run();
 
+  await logAudit(env, request, {
+    action: "birthday.config",
+    detail: "enabled=" + cfg.enabled + ", hour=" + cfg.hour,
+    status: "ok",
+  });
   return json({ ok: true, birthday: cfg });
 }
 
@@ -805,6 +842,7 @@ async function handleTestBirthday(request, env) {
     body: JSON.stringify(message),
   });
   if (!res.ok) { const t = await res.text(); return json({ error: "Test send failed: " + t.slice(0, 200) }, 502); }
+  await logAudit(env, request, { action: "birthday.test", detail: "to " + to, status: "ok" });
   return json({ ok: true, sentTo: to });
 }
 
@@ -900,6 +938,10 @@ async function handleGithubProxy(request, env) {
   }
 
   const ghRes = await fetch(url, init);
+  if (method !== "GET") {
+    const act = githubAction(path, method);
+    if (act) await logAudit(env, request, { action: act, detail: path, status: ghRes.ok ? "ok" : ("error " + ghRes.status) });
+  }
   // Forward GitHub's status + JSON body verbatim, so the admin's existing publish
   // logic (sha handling, 409 retry, base64 decode) keeps working unchanged.
   const text = await ghRes.text();
@@ -907,6 +949,60 @@ async function handleGithubProxy(request, env) {
     status: ghRes.status,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
   });
+}
+
+/* ------------------------------------------------------------------ */
+/* Admin: audit log                                                    */
+/* ------------------------------------------------------------------ */
+// Best-effort, server-side record of who did what. Never throws — a logging
+// failure must not break the real action.
+async function logAudit(env, request, entry) {
+  if (!env.SUBSCRIBERS) return;
+  try {
+    await env.SUBSCRIBERS.prepare(
+      `INSERT INTO admin_audit_log (created_at, actor, action, detail, ip, status)
+       VALUES (?1,?2,?3,?4,?5,?6)`
+    ).bind(
+      new Date().toISOString(),
+      String((entry && entry.actor) || (request ? adminEmail(request) : "") || "").slice(0, 160),
+      String((entry && entry.action) || "unknown").slice(0, 80),
+      String((entry && entry.detail) || "").slice(0, 500),
+      request ? (request.headers.get("cf-connecting-ip") || "") : "",
+      String((entry && entry.status) || "ok").slice(0, 24)
+    ).run();
+  } catch (err) { /* audit logging is best-effort */ }
+}
+
+// Friendly action name for a GitHub publish path. Only the data files + images
+// are logged (rendered .html files are part of a json publish already logged).
+function githubAction(path, method) {
+  if (method === "DELETE") return "delete.image";
+  if (/offers\.json$/.test(path)) return "publish.offers";
+  if (/reviews\.json$/.test(path)) return "publish.reviews";
+  if (/prices\.json$/.test(path)) return "publish.prices";
+  if (/content\.json$/.test(path)) return "publish.pages";
+  if (/assets\/images\//.test(path)) return "upload.image";
+  return null; // .html files: skip (already covered by the json publish)
+}
+
+async function handleAuditList(request, env) {
+  // auth already enforced by the central gate
+  if (!env.SUBSCRIBERS) return json({ error: "Audit log isn't set up yet." }, 500);
+  const { results } = await env.SUBSCRIBERS.prepare(
+    `SELECT id, created_at, actor, action, detail, ip, status
+       FROM admin_audit_log ORDER BY created_at DESC LIMIT 100`
+  ).all();
+  return json({ ok: true, entries: results || [] });
+}
+
+// Lets the admin record a client-only action (e.g. CSV export) in the log.
+async function handleAuditLogClient(request, env) {
+  let body;
+  try { body = await request.json(); } catch { body = {}; }
+  const action = String(body.action || "").slice(0, 80);
+  if (!action) return json({ error: "action is required." }, 400);
+  await logAudit(env, request, { action, detail: String(body.detail || "").slice(0, 500), status: "ok" });
+  return json({ ok: true });
 }
 
 /* ------------------------------------------------------------------ */
@@ -1070,6 +1166,8 @@ async function handleConfirmByToken(env, rawToken) {
     "UPDATE subscribers SET status='confirmed', confirmed_at=?1, confirm_token=NULL WHERE confirm_token=?2"
   ).bind(new Date().toISOString(), token).run();
 
+  await logAudit(env, null, { actor: row.email, action: "subscriber.optin", detail: "double opt-in confirmed", status: "ok" });
+
   return htmlPage(
     "You're subscribed",
     `Thank you — <strong>${escapeHtml(row.email)}</strong> is confirmed. You'll be first to hear about our offers.<br><br>You can unsubscribe from any email at any time.`,
@@ -1147,6 +1245,7 @@ async function handleDeleteSubscriber(request, env) {
   if (!isEmail(email)) return json({ error: "Invalid email." }, 400);
 
   await env.SUBSCRIBERS.prepare("DELETE FROM subscribers WHERE email = ?1").bind(email).run();
+  await logAudit(env, request, { action: "subscriber.delete", detail: email, status: "ok" });
   return json({ ok: true });
 }
 

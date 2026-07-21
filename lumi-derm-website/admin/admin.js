@@ -673,6 +673,11 @@ function bindSettings() {
     localStorage.setItem(PASS_KEY, v); document.querySelector("[data-set-pass]").value = "";
     toast("Passcode updated.");
   });
+  document.querySelector("[data-audit-reload]")?.addEventListener("click", loadAuditLog);
+  // Load the activity log the first time Settings is opened.
+  const settingsNav = document.querySelector('[data-admin-panel="settings"]');
+  let auditLoaded = false;
+  if (settingsNav) settingsNav.addEventListener("click", () => { if (!auditLoaded) { auditLoaded = true; loadAuditLog(); } });
   document.querySelector("[data-reset-admin]")?.addEventListener("click", () => {
     if (!confirm("Reset all admin drafts back to defaults? This clears your local changes.")) return;
     localStorage.removeItem(STORAGE_KEY);
@@ -1224,6 +1229,52 @@ function bindPublishing() {
 function setGhStatus(message) {
   const el = document.querySelector("[data-gh-status]");
   if (el) el.textContent = message;
+}
+
+/* ---------- Activity log (server-side audit trail) ---------- */
+const AUDIT_API = "/admin/api/audit";
+const AUDIT_LABELS = {
+  "campaign.send": "Sent campaign", "campaign.test": "Sent test email",
+  "campaign.schedule": "Scheduled campaign", "campaign.cancel": "Cancelled scheduled send",
+  "publish.offers": "Published offers", "publish.reviews": "Published reviews",
+  "publish.prices": "Published prices", "publish.pages": "Published page text",
+  "upload.image": "Uploaded image", "delete.image": "Deleted image",
+  "subscriber.delete": "Deleted subscriber", "subscriber.export": "Exported subscribers (CSV)",
+  "subscriber.optin": "New subscriber confirmed", "birthday.config": "Changed birthday automation",
+  "birthday.test": "Sent birthday preview", "auth.denied": "Sign-in denied"
+};
+
+function auditLabel(action) { return AUDIT_LABELS[action] || action || "—"; }
+
+function auditWhen(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso || "";
+  return d.toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+async function loadAuditLog() {
+  const body = document.querySelector("[data-audit-log]");
+  if (!body) return;
+  try {
+    const res = await fetch(AUDIT_API, { cache: "no-store", credentials: "same-origin" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || ("Could not load the log (" + res.status + ")."));
+    renderAuditLog(data.entries || []);
+  } catch (err) {
+    body.innerHTML = '<tr><td colspan="4">' + escapeHtml(err.message) + "</td></tr>";
+  }
+}
+
+function renderAuditLog(entries) {
+  const body = document.querySelector("[data-audit-log]");
+  if (!body) return;
+  if (!entries.length) { body.innerHTML = '<tr><td colspan="4">No activity recorded yet.</td></tr>'; return; }
+  body.innerHTML = entries.map((e) => {
+    const warn = (e.status === "denied" || e.status === "error") ? ' class="audit-warn"' : "";
+    return "<tr" + warn + "><td>" + escapeHtml(auditWhen(e.created_at)) + "</td><td>" +
+      escapeHtml(e.actor || "—") + "</td><td>" + escapeHtml(auditLabel(e.action)) + "</td><td>" +
+      escapeHtml(e.detail || "") + "</td></tr>";
+  }).join("");
 }
 
 /* ---------- Image upload: photo -> repo -> website ---------- */

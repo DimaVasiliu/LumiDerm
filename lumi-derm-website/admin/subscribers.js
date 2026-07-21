@@ -166,6 +166,13 @@
     a.click();
     document.body.removeChild(a);
     status("Exported " + confirmed.length + " confirmed subscriber(s).", "ok");
+    // Record the export in the server-side audit log (OWASP: log data exports).
+    fetch(ADMIN_API + "/audit", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "subscriber.export", detail: confirmed.length + " confirmed contacts" })
+    }).catch(function () { /* best-effort */ });
   }
 
   function init() {

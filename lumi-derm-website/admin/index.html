@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260720-nice1">
+    <link rel="stylesheet" href="admin.css?v=20260720-audit1">
   </head>
   <body>
     <!-- Soft lock screen (light gate only — enable Cloudflare Access for real protection) -->
@@ -757,6 +757,20 @@
                 <p>When you click Publish on Offers or Reviews, this admin commits the change to GitHub and Cloudflare rebuilds the live site &mdash; usually within a minute. Emails and subscribers run through a secure Worker + database. You never touch any of it.</p>
               </section>
             </div>
+
+            <section class="admin-card">
+              <div class="admin-card-head">
+                <div><p class="admin-eyebrow">Security</p><h3>Activity log</h3></div>
+                <button class="tiny-button" type="button" data-audit-reload>Reload</button>
+              </div>
+              <p class="admin-help">Who did what and when &mdash; publishing, emails, subscriber changes, CSV exports and sign-in failures. Recorded on the server; it can&rsquo;t be edited from here.</p>
+              <div class="admin-table-wrap">
+                <table class="admin-table admin-audit-table">
+                  <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead>
+                  <tbody data-audit-log><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
+                </table>
+              </div>
+            </section>
           </section>
         </main>
       </div>
@@ -765,8 +779,8 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
-    <script src="admin.js?v=20260720-secure2"></script>
+    <script src="admin.js?v=20260720-audit1"></script>
     <script src="sender.js?v=20260720-schedule1"></script>
-    <script src="subscribers.js?v=20260720-audit1"></script>
+    <script src="subscribers.js?v=20260720-audit2"></script>
   </body>
 </html>

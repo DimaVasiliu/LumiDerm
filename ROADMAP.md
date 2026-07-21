@@ -11,6 +11,7 @@ Working list of what's left, in priority order. Tick items off as they ship.
   - [x] **Confirmed:** Lumiderm Policy → Include → Emails (Action: Allow) contains `dima.vasiliu@yahoo.com` and `info@lumidermaesthetics.co.uk` (the clinic inbox = Iulia's login). Iulia signs in via a one-time code emailed to that inbox. Session duration 30 min; MFA off (email-OTP is the factor).
   - [x] **Confirmed in the dashboard:** Access app destination is `lumidermaesthetics.com/admin/*` (Lumiderm Policy, Self-hosted). The `/admin/*` wildcard covers the UI, `/admin/api/*`, and even bare `/admin` — all verified intercepted by Access in live tests.
 - [x] **Restrict the admin API to specific emails (`ADMIN_EMAILS`).** ✅ Set to `dima.vasiliu@yahoo.com,info@lumidermaesthetics.co.uk` in `wrangler.jsonc`. The Worker now serves the admin API only to those two emails (was: any Access user). Verified the allow-check logic (case-insensitive; strangers + no-header denied).
+- [x] **Audit logging for admin actions.** ✅ Done. A D1 `admin_audit_log` table records who/what/when, written server-side by the Worker (can't be tampered with from the browser). Covers: publish offers/reviews/prices/pages, image upload/delete, send/test/schedule/cancel campaigns, delete subscriber, **CSV export**, change/preview birthday automation, subscriber **opt-in** confirmations, and **auth/access failures** (central admin gate logs `auth.denied`). Viewable read-only in **Admin → Settings → Activity log**. Follows the OWASP logging cheat-sheet categories. **Needs migration 0005 applied** (see deploy note). Verified insert/list + capture of sends, publishes, exports and denied access against SQLite.
 - [x] **Move GitHub publishing server-side (token as a Cloudflare secret).** ✅ Done. The browser no longer stores a GitHub token/repo/branch — all publishing goes through a Worker proxy (`/admin/api/github`) that injects the `GITHUB_TOKEN` secret, owns the repo/branch, and only allows writes to an allowlist of site files (verified: denies the worker, wrangler.jsonc, workflows, path-traversal, admin/). Old browser tokens are auto-purged from `localStorage`; `api.github.com` removed from the site CSP. **Dima action: set the secret — see `GITHUB-PUBLISHING-SETUP.md`** (`npx wrangler secret put GITHUB_TOKEN`), then deploy.
 
 ---
@@ -76,7 +77,7 @@ Working list of what's left, in priority order. Tick items off as they ship.
    ```
    npx wrangler d1 migrations apply lumidermdb --remote
    ```
-   (Adds `scheduled_campaigns`, `app_settings`, and the `birthday_sent_year` column.)
+   (Adds `scheduled_campaigns`, `app_settings`, `birthday_sent_year`, and — from migration 0005 — the `admin_audit_log` table. Running the command again applies any not-yet-applied migrations.)
 2. **Push as usual** — the `git push` deploys the worker and, from `wrangler.jsonc`, registers the **hourly cron** (`"crons": ["0 * * * *"]`). No `wrangler deploy` needed; Cloudflare's Git build applies it.
 3. **Check** in the Cloudflare dashboard: Workers → `lumiderm` → Triggers shows the cron. Then in the admin, open **Send email → Automatic birthday emails**, write the message, click **Send me a preview**, and only flip it **On** once you're happy.
 
