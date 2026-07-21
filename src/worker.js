@@ -1080,25 +1080,54 @@ async function readReviewSummary(env) {
 }
 
 // Public: the homepage review feed. Only approved reviews, featured first.
+// The homepage feed = the established Treatwell reviews (baseline in
+// assets/data/reviews.json) PLUS any new approved reviews managed in the admin
+// (D1), merged and de-duplicated. The admin only manages the new/upcoming ones.
 async function handlePublicReviews(env) {
-  if (!env.SUBSCRIBERS) return json(await fallbackReviewsFromAssets(env));
-  try {
-    const summary = await readReviewSummary(env);
-    const { results } = await env.SUBSCRIBERS.prepare(
-      `SELECT name, initial, rating, treatment, source, text, featured
-         FROM reviews WHERE status='approved'
-        ORDER BY featured DESC, sort_order ASC, id ASC`
-    ).all();
-    const reviews = (results || []).map((r) => ({
-      name: r.name || "", initial: r.initial || (r.name || "?").charAt(0).toUpperCase(),
-      rating: Number(r.rating) || 5, treatment: r.treatment || "",
-      source: r.source || "Client feedback", text: r.text || "",
-      featured: r.featured === 1 || r.featured === true,
-    }));
-    return json({ summary, reviews });
-  } catch {
-    return json(await fallbackReviewsFromAssets(env));
+  const normalise = (r) => ({
+    name: r.name || "",
+    initial: r.initial || (r.name || "?").charAt(0).toUpperCase(),
+    rating: Number(r.rating) || 5,
+    treatment: r.treatment || "",
+    source: r.source || "Client feedback",
+    text: r.text || "",
+    featured: r.featured === 1 || r.featured === true,
+  });
+
+  const baselineData = await fallbackReviewsFromAssets(env);
+  const baseline = (baselineData.reviews || []).map(normalise);
+  let summary = baselineData.summary || { rating: "5.0", count: 47, label: "Treatwell reviews" };
+
+  const d1Featured = [];
+  const d1Rest = [];
+  if (env.SUBSCRIBERS) {
+    try {
+      const metaSummary = await readReviewSummary(env);
+      if (metaSummary) summary = metaSummary;
+      const { results } = await env.SUBSCRIBERS.prepare(
+        `SELECT name, initial, rating, treatment, source, text, featured
+           FROM reviews WHERE status='approved'
+          ORDER BY featured DESC, sort_order ASC, id ASC`
+      ).all();
+      (results || []).forEach((row) => {
+        const rv = normalise(row);
+        (rv.featured ? d1Featured : d1Rest).push(rv);
+      });
+    } catch { /* D1 unavailable → baseline only */ }
   }
+
+  // Featured new reviews first, then the Treatwell baseline, then other new ones.
+  const key = (r) => String(r.name || "").trim().toLowerCase() + "|" +
+    String(r.text || "").trim().toLowerCase().replace(/\s+/g, " ").slice(0, 80);
+  const seen = new Set();
+  const reviews = [];
+  for (const r of [...d1Featured, ...baseline, ...d1Rest]) {
+    const k = key(r);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    reviews.push(r);
+  }
+  return json({ summary, reviews });
 }
 
 async function fallbackReviewsFromAssets(env) {
