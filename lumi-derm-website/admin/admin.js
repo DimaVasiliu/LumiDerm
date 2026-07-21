@@ -2218,11 +2218,10 @@ function initCollapsibles() {
     const key = card.getAttribute("data-collapse-key") || "";
     const storeKey = key ? "lumi-collapse-" + key : "";
 
-    const chev = document.createElement("button");
-    chev.type = "button";
-    chev.className = "collapse-chevron";
-    chev.setAttribute("aria-label", "Expand or collapse this section");
-    head.appendChild(chev);
+    const toggleBtn = document.createElement("button");
+    toggleBtn.type = "button";
+    toggleBtn.className = "collapse-toggle";
+    head.appendChild(toggleBtn);
 
     let collapsed = card.hasAttribute("data-collapsed");
     if (storeKey) {
@@ -2232,19 +2231,30 @@ function initCollapsibles() {
     }
     setCardCollapsed(card, collapsed);
 
-    head.addEventListener("click", (e) => {
-      // Don't toggle when clicking a real control in the header (e.g. Reload).
-      if (e.target !== chev && e.target.closest("button, a, input, select, textarea, label")) return;
+    const doToggle = () => {
       const now = !card.classList.contains("is-collapsed");
       setCardCollapsed(card, now);
       if (storeKey) { try { localStorage.setItem(storeKey, now ? "1" : "0"); } catch { /* ignore */ } }
+    };
+    toggleBtn.addEventListener("click", (e) => { e.stopPropagation(); doToggle(); });
+    // The heading area is also clickable, but not its real controls (e.g. Reload).
+    head.addEventListener("click", (e) => {
+      if (e.target.closest("button, a, input, select, textarea, label") && !e.target.closest(".collapse-toggle")) return;
+      if (e.target.closest(".collapse-toggle")) return; // handled above
+      doToggle();
     });
   });
 }
 function setCardCollapsed(card, on) {
   card.classList.toggle("is-collapsed", on);
-  const chev = card.querySelector(".collapse-chevron");
-  if (chev) { chev.textContent = on ? "▸" : "▾"; chev.setAttribute("aria-expanded", on ? "false" : "true"); }
+  const btn = card.querySelector(".collapse-toggle");
+  if (btn) {
+    btn.innerHTML = on
+      ? '<span class="collapse-caret">▾</span> Show'
+      : '<span class="collapse-caret collapse-caret-open">▾</span> Hide';
+    btn.setAttribute("aria-expanded", on ? "false" : "true");
+    btn.setAttribute("aria-label", (on ? "Show" : "Hide") + " this section");
+  }
 }
 
 /* ---------------- Dashboard alerts ---------------- */
