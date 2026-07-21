@@ -644,11 +644,17 @@ async function deliverCampaign(env, origin, opts) {
 
   const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
   const replyTo = env.REPLY_TO || null;
+  const campaignId = "cmp_" + randomId();
   const messages = [];
   for (const person of kept) {
-    const unsubUrl = await buildUnsubscribeUrl(env, origin, person.email);
+    const unsubUrl = await buildUnsubscribeUrl(env, origin, person.email, campaignId);
+    const preferencesUrl = await buildPreferencesUrl(env, origin, person.email);
     const who = firstName(person.name) || "there";
-    const personalised = html.replaceAll("{{name}}", escapeHtml(who)).replaceAll("{{unsubscribe}}", unsubUrl);
+    let personalised = html
+      .replaceAll("{{name}}", escapeHtml(who))
+      .replaceAll("{{unsubscribe}}", unsubUrl)
+      .replaceAll("{{preferences}}", preferencesUrl);
+    personalised = trackCampaignLinks(env, origin, personalised, campaignId, person.email);
     const personalisedSubject = subject.replaceAll("{{name}}", who);
     const message = {
       from,
@@ -683,10 +689,10 @@ async function deliverCampaign(env, origin, opts) {
   await recordCampaignSend(env, {
     subject, audienceSource, isTest: false,
     requested: incoming.length, sent, suppressed, invalid,
-    status: errors.length ? "partial" : "sent", errors,
+    status: errors.length ? "partial" : "sent", errors, campaignId,
   });
 
-  return { ok: errors.length === 0, sent, suppressed, invalid, errors };
+  return { ok: errors.length === 0, sent, suppressed, invalid, errors, campaignId };
 }
 
 /* ------------------------------------------------------------------ */

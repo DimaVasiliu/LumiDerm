@@ -484,9 +484,11 @@ function renderReviewCard(review) {
   const rating = Math.max(1, Math.min(5, Number(review.rating) || 5));
   const stars = '★'.repeat(rating);
   const source = [review.treatment, review.source].filter(Boolean).join(' · ');
+  const featured = review.featured === true;
 
   return `
-    <figure class="review-card">
+    <figure class="review-card${featured ? ' review-card--featured' : ''}">
+      ${featured ? '<span class="review-featured-badge">★ Featured</span>' : ''}
       <p class="stars" aria-label="${rating} star client review">${stars}</p>
       <blockquote><p>${escapeHtml(review.text)}</p></blockquote>
       <cite>
