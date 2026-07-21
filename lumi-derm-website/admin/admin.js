@@ -663,6 +663,7 @@ function bindReviews() {
   });
   document.querySelector("[data-review-search]")?.addEventListener("input", renderReviews);
   document.querySelector("[data-add-review]")?.addEventListener("click", () => openReviewEditor(null));
+  document.querySelector("[data-import-google]")?.addEventListener("click", importGoogleReviews);
   document.querySelectorAll("[data-review-summary]").forEach((f) => {
     f.addEventListener("input", () => {
       if (reviewsReadOnly()) return;
@@ -855,6 +856,42 @@ function reviewsReadOnly() {
     return true;
   }
   return false;
+}
+
+// Pull recent reviews from the clinic's Google Business listing and add the new
+// ones to the queue as Pending (deduped). Needs the Google API key + Place ID set.
+async function importGoogleReviews() {
+  if (reviewsReadOnly()) return;
+  toast("Checking Google for reviews…");
+  let data;
+  try {
+    const res = await fetch("/admin/api/reviews/google", { cache: "no-store", credentials: "same-origin" });
+    data = await ldReadJson(res);
+  } catch (err) { toast(ldFriendlyError(err)); return; }
+  if (!data.configured) {
+    toast("Google reviews aren't connected yet — ask Dima to add the Google API key and Place ID.");
+    return;
+  }
+  if (data.error) { toast("Google: " + data.error); return; }
+  const fetched = data.reviews || [];
+  if (!fetched.length) { toast("No Google reviews found to import."); return; }
+  const key = (r) => String(r.name || "").trim().toLowerCase() + "|" + String(r.text || "").trim().toLowerCase().slice(0, 60);
+  const existing = new Set(state.reviews.map(key));
+  const fresh = fetched.filter((r) => !existing.has(key(r)));
+  if (!fresh.length) { toast("All Google reviews are already in your queue."); return; }
+  const ok = await ldConfirm({
+    title: "Import " + fresh.length + " Google review" + (fresh.length > 1 ? "s" : "") + "?",
+    body: "They'll be added to your queue as Pending (source: Google). Approve the ones you want to show on the homepage.",
+    confirmLabel: "Import"
+  });
+  if (!ok) return;
+  fresh.forEach((r) => state.reviews.unshift({
+    name: r.name || "Google client", initial: (r.name || "G").charAt(0).toUpperCase(),
+    rating: Number(r.rating) || 5, treatment: r.treatment || "", source: "Google",
+    text: r.text || "", status: "pending", featured: false,
+  }));
+  renderReviews();
+  persistReviews("Imported " + fresh.length + " Google review" + (fresh.length > 1 ? "s" : "") + " as Pending.");
 }
 function setReviewSaveState(state) {
   const btn = document.querySelector("[data-publish-reviews]");
@@ -2186,7 +2223,7 @@ function applyRoleControls() {
     "[data-send-campaign]", "[data-send-test]", "[data-schedule-toggle]", "[data-bday-save]", "[data-bday-test]",
     "[data-media-upload-btn]", "[data-offer-image-upload]", "[data-mail-banner-upload]",
     "[data-subs-export]", "[data-subs-import]", "[data-export-admin]", "[data-import-admin]",
-    "[data-add-review]",
+    "[data-add-review]", "[data-import-google]",
   ];
   const assistant = adminRole === "assistant";
   restricted.forEach((sel) => {

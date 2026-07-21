@@ -24,6 +24,7 @@
  *   POST /api/reviews             — public: submit a client review (pending moderation)
  *   GET  /admin/api/reviews       — admin: all reviews + summary (manager UI)
  *   POST /admin/api/reviews/save  — admin: replace reviews + summary (instant, live)
+ *   GET  /admin/api/reviews/google — admin: recent Google Business reviews to import
  *   GET  /admin/api/revisions     — admin: recent version-history snapshots (metadata)
  *   POST /admin/api/revisions     — admin: record a snapshot (offers/prices/content)
  *   GET  /admin/api/revisions/item?id= — admin: one snapshot incl. payload (for restore)
@@ -64,6 +65,9 @@
  *   GITHUB_TOKEN     — fine-grained PAT (Contents: read & write on this repo only).
  *                      Used by the /admin/api/github publish proxy so the token is
  *                      never stored in the browser.
+ *   GOOGLE_PLACES_API_KEY — optional: Google Places API key, to import Google
+ *                      Business reviews. Set with: npx wrangler secret put GOOGLE_PLACES_API_KEY
+ *   GOOGLE_PLACE_ID  — optional: the clinic's Google Place ID (a Var, not secret).
  *
  * Vars:
  *   ADMIN_EMAILS     — optional comma-separated Access emails allowed for admin API.
@@ -269,6 +273,9 @@ export default {
         const owner = requireOwner(request, env, "publish reviews");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleAdminReviewsSave(request, env);
+      }
+      if (apiPath === "/api/reviews/google" && isAdminApi) {
+        return handleGoogleReviews(request, env);
       }
 
       // Durable version history (offers / prices / page text / reviews).
@@ -1167,6 +1174,37 @@ async function fallbackReviewsFromAssets(env) {
     };
   } catch {
     return fallback;
+  }
+}
+
+// Admin: fetch recent reviews from the clinic's Google Business listing (via the
+// Places API). Needs GOOGLE_PLACES_API_KEY + GOOGLE_PLACE_ID set as secrets.
+// Returns up to ~5 recent reviews for the team to import into the queue.
+async function handleGoogleReviews(request, env) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+  const key = env.GOOGLE_PLACES_API_KEY;
+  const placeId = env.GOOGLE_PLACE_ID;
+  if (!key || !placeId) return json({ ok: true, configured: false, reviews: [] });
+  try {
+    const url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=" +
+      encodeURIComponent(placeId) + "&fields=reviews&reviews_no_translations=true&key=" + encodeURIComponent(key);
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.status !== "OK") {
+      return json({ ok: true, configured: true, reviews: [], error: data.error_message || data.status || "Google returned no data." });
+    }
+    const reviews = ((data.result && data.result.reviews) || []).map((r) => ({
+      name: String(r.author_name || "Google client").slice(0, 80),
+      rating: clampInt(r.rating, 1, 5) || 5,
+      text: String(r.text || "").slice(0, 1500),
+      source: "Google",
+      treatment: "",
+      when: r.relative_time_description || "",
+    })).filter((r) => r.text.length >= 2);
+    return json({ ok: true, configured: true, reviews });
+  } catch (err) {
+    return json({ ok: true, configured: true, reviews: [], error: (err && err.message) || "Network error." });
   }
 }
 
