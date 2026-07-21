@@ -2512,7 +2512,10 @@ body:has(.price-modal-open:checked) {
 .review-modal .reviews-grid-expanded {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
+  grid-auto-rows: max-content;
+  align-items: start;
+  column-gap: 1.6rem;
+  row-gap: 0;
   min-height: 0;
   margin-top: 0;
   padding-right: 0.8rem;
@@ -2532,10 +2535,13 @@ body:has(.price-modal-open:checked) {
 
 .review-modal .review-card {
   position: relative;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-content: flex-start;
+  gap: 0.5rem;
   overflow: visible;
   min-height: 0;
-  padding: clamp(0.82rem, 1.7vw, 1.1rem) clamp(0.9rem, 2vw, 1.2rem) clamp(0.82rem, 1.7vw, 1.1rem) 0;
+  padding: clamp(0.9rem, 1.7vw, 1.15rem) clamp(0.9rem, 2vw, 1.2rem) clamp(0.9rem, 1.7vw, 1.15rem) 0;
   border: 0;
   border-bottom: 1px solid rgba(169, 111, 104, 0.14);
   border-radius: 0;
@@ -2544,9 +2550,9 @@ body:has(.price-modal-open:checked) {
   transition: color 180ms ease;
 }
 
-.review-modal .review-card .stars { margin: 0 0 0.5rem; }
-.review-modal .review-card blockquote { margin: 0; }
-.review-modal .review-card cite { margin-top: 0.7rem; }
+.review-modal .review-card .stars { margin: 0; }
+.review-modal .review-card blockquote { margin: 0; flex: 0 0 auto; }
+.review-modal .review-card cite { margin-top: 0.25rem; }
 
 .review-modal .review-card::before,
 .review-modal .review-card::after {
