@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260720-audit1">
+    <link rel="stylesheet" href="admin.css?v=20260721-ux1">
   </head>
   <body>
     <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
@@ -705,7 +705,16 @@
                 <h2>Settings</h2>
                 <p>Access, data backups and integration status.</p>
               </div>
+              <button class="admin-button admin-button-secondary" type="button" data-status-refresh>Refresh status</button>
             </div>
+
+            <section class="admin-card">
+              <div class="admin-card-head"><div><p class="admin-eyebrow">Live</p><h3>System status</h3></div></div>
+              <ul class="system-status" data-system-status>
+                <li><span>Checking&hellip;</span></li>
+              </ul>
+            </section>
+
             <div class="admin-grid admin-grid-2">
               <section class="admin-card admin-editor">
                 <p class="admin-eyebrow">Access</p>
@@ -781,8 +790,8 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
-    <script src="admin.js?v=20260720-audit2"></script>
-    <script src="sender.js?v=20260721-consent1"></script>
-    <script src="subscribers.js?v=20260720-audit2"></script>
+    <script src="admin.js?v=20260721-ux1"></script>
+    <script src="sender.js?v=20260721-ux1"></script>
+    <script src="subscribers.js?v=20260721-ux1"></script>
   </body>
 </html>

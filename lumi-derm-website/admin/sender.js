@@ -110,16 +110,22 @@
     el.textContent = message;
     el.className = "admin-status" + (kind ? " is-" + kind : "");
   }
+  // Friendly message for a low-level failure (expired Access session, etc.).
+  function friendly(err) {
+    return window.ldFriendlyError ? window.ldFriendlyError(err) : ((err && err.message) || String(err));
+  }
+  // Styled confirm modal (falls back to native confirm if the helper isn't loaded).
+  function confirmModal(opts) {
+    if (window.ldConfirm) return window.ldConfirm(opts);
+    return Promise.resolve(window.confirm((opts && opts.body) || "Are you sure?"));
+  }
   function responseJson(res) {
     return res.text().then(function (text) {
       var data;
       try {
         data = text ? JSON.parse(text) : {};
       } catch (err) {
-        if (/^\s*</.test(text || "")) {
-          throw new Error("Admin API is returning a webpage instead of data. Redeploy the Worker and check /admin/api routing.");
-        }
-        throw new Error("Admin API returned invalid data.");
+        throw new Error(friendly(new Error("webpage instead of data")));
       }
       if (!res.ok) throw new Error(data.error || "Request failed (" + res.status + ").");
       return data;
@@ -382,10 +388,7 @@
     status(out, "Loading confirmed website subscribers…");
     fetch(ADMIN_API + "/subscribers", { cache: "no-store", credentials: "same-origin" })
       .then(function (res) {
-        return res.json().then(function (data) {
-          if (!res.ok) throw new Error(data.error || "Could not load subscribers.");
-          return data;
-        });
+        return responseJson(res);
       })
       .then(function (data) {
         // Keep the full confirmed+consented list; segments filter it live.
@@ -396,7 +399,7 @@
       })
       .catch(function (err) {
         state.allSubs = [];
-        status(out, err.message, "error");
+        status(out, friendly(err), "error");
         updateSendButton();
       });
   }
@@ -817,12 +820,7 @@
         audienceSource: isTest === true ? "test" : state.audienceSource,
         test: isTest === true
       })
-    }).then(function (res) {
-      return res.json().then(function (data) {
-        if (!res.ok) throw new Error(data.error || "Send failed (" + res.status + ").");
-        return data;
-      });
-    });
+    }).then(function (res) { return responseJson(res); });
   }
 
   function bindSending() {
@@ -847,7 +845,7 @@
             status(out, "Test sent to " + email + ". Check it on your phone.", "ok");
           })
           .catch(function (err) {
-            status(out, err.message, "error");
+            status(out, friendly(err), "error");
           })
           .then(function () {
             testBtn.disabled = false;
@@ -874,35 +872,29 @@
       sendBtn.addEventListener("click", function () {
         var count = state.recipients.length;
         if (scheduleToggle && scheduleToggle.checked) { scheduleCampaign(count); return; }
-        var ok = window.confirm(
-          "Send this email to " +
-            count +
-            " client" +
-            (count === 1 ? "" : "s") +
-            " now?\n\nThis cannot be undone."
-        );
-        if (!ok) return;
-
-        sendBtn.disabled = true;
-        status(out, "Sending to " + count + " clients…");
-
-        postCampaign(state.recipients, false)
-          .then(function (data) {
-            var msg = "Sent to " + data.sent + " client" + (data.sent === 1 ? "" : "s") + ".";
-            if (data.suppressed) msg += " " + data.suppressed + " skipped (unsubscribed).";
-            if (data.errors && data.errors.length) {
-              status(out, msg + " Some batches failed: " + data.errors.join(" | "), "error");
-            } else {
-              status(out, msg, "ok");
-            }
-            loadHistory();
-          })
-          .catch(function (err) {
-            status(out, err.message, "error");
-          })
-          .then(function () {
-            updateSendButton();
-          });
+        confirmModal({
+          title: "Send this campaign now?",
+          body: "This emails " + count + " subscriber" + (count === 1 ? "" : "s") + " straight away. This cannot be undone.",
+          confirmLabel: "Send now",
+          danger: true
+        }).then(function (ok) {
+          if (!ok) return;
+          sendBtn.disabled = true;
+          status(out, "Sending to " + count + " clients…");
+          postCampaign(state.recipients, false)
+            .then(function (data) {
+              var msg = "Sent to " + data.sent + " client" + (data.sent === 1 ? "" : "s") + ".";
+              if (data.suppressed) msg += " " + data.suppressed + " skipped (unsubscribed).";
+              if (data.errors && data.errors.length) {
+                status(out, msg + " Some batches failed: " + data.errors.join(" | "), "error");
+              } else {
+                status(out, msg, "ok");
+              }
+              loadHistory();
+            })
+            .catch(function (err) { status(out, friendly(err), "error"); })
+            .then(function () { updateSendButton(); });
+        });
       });
     }
   }
@@ -920,39 +912,44 @@
     if (isNaN(when.getTime())) { status(out, "That date and time isn't valid.", "error"); return; }
     if (when.getTime() < Date.now()) { status(out, "Pick a future date and time.", "error"); return; }
     var human = when.toLocaleString();
-    if (!window.confirm("Schedule this email to " + count + " client" + (count === 1 ? "" : "s") + " for " + human + "?")) return;
-
-    var btn = $("[data-send-campaign]");
-    if (btn) btn.disabled = true;
-    status(out, "Scheduling…");
-    fetch(ADMIN_API + "/campaign/schedule", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        subject: String(state.mail.subject || ""),
-        html: buildHtml(false),
-        recipients: state.recipients,
-        audienceSource: state.audienceSource,
-        sendAt: when.toISOString()
+    confirmModal({
+      title: "Schedule this campaign?",
+      body: "This will email " + count + " subscriber" + (count === 1 ? "" : "s") + " automatically on " + human + ".",
+      confirmLabel: "Schedule"
+    }).then(function (ok) {
+      if (!ok) return;
+      var btn = $("[data-send-campaign]");
+      if (btn) btn.disabled = true;
+      status(out, "Scheduling…");
+      fetch(ADMIN_API + "/campaign/schedule", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          subject: String(state.mail.subject || ""),
+          html: buildHtml(false),
+          recipients: state.recipients,
+          audienceSource: state.audienceSource,
+          sendAt: when.toISOString()
+        })
       })
-    })
-      .then(function (res) { return res.json().then(function (d) { if (!res.ok) throw new Error(d.error || "Could not schedule (" + res.status + ")."); return d; }); })
-      .then(function (d) {
-        status(out, "Scheduled for " + human + " — " + d.recipients + " recipient" + (d.recipients === 1 ? "" : "s") + ".", "ok");
-        loadScheduled();
-      })
-      .catch(function (err) { status(out, err.message, "error"); })
-      .then(function () { updateSendButton(); });
+        .then(function (res) { return responseJson(res); })
+        .then(function (d) {
+          status(out, "Scheduled for " + human + " — " + d.recipients + " recipient" + (d.recipients === 1 ? "" : "s") + ".", "ok");
+          loadScheduled();
+        })
+        .catch(function (err) { status(out, friendly(err), "error"); })
+        .then(function () { updateSendButton(); });
+    });
   }
 
   function loadScheduled() {
     var box = $("[data-scheduled-list]");
     if (!box) return;
     fetch(ADMIN_API + "/campaign/scheduled", { cache: "no-store", credentials: "same-origin" })
-      .then(function (res) { return res.json().then(function (d) { if (!res.ok) throw new Error(d.error || "Could not load."); return d; }); })
+      .then(function (res) { return responseJson(res); })
       .then(function (d) { renderScheduled(d.scheduled || []); })
-      .catch(function (err) { box.innerHTML = '<p class="admin-status is-error">' + esc(err.message) + "</p>"; });
+      .catch(function (err) { box.innerHTML = '<p class="admin-status is-error">' + esc(friendly(err)) + "</p>"; });
   }
 
   function renderScheduled(list) {
@@ -982,9 +979,9 @@
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ id: parseInt(id, 10) })
     })
-      .then(function (res) { return res.json().then(function (d) { if (!res.ok) throw new Error(d.error || "Could not cancel."); return d; }); })
+      .then(function (res) { return responseJson(res); })
       .then(function () { loadScheduled(); })
-      .catch(function (err) { status($("[data-send-status]"), err.message, "error"); });
+      .catch(function (err) { status($("[data-send-status]"), friendly(err), "error"); });
   }
 
   /* --------------------------------------------------------------- */
@@ -1004,7 +1001,7 @@
   function loadBirthday() {
     populateBirthdayHours();
     fetch(ADMIN_API + "/settings/birthday", { cache: "no-store", credentials: "same-origin" })
-      .then(function (res) { return res.json().then(function (d) { if (!res.ok) throw new Error(d.error || "Could not load."); return d; }); })
+      .then(function (res) { return responseJson(res); })
       .then(function (d) {
         var b = d.birthday || {};
         if ($("[data-bday-enabled]")) $("[data-bday-enabled]").checked = b.enabled === true;
@@ -1029,11 +1026,11 @@
       headers: { "content-type": "application/json" },
       body: JSON.stringify(payload)
     })
-      .then(function (res) { return res.json().then(function (d) { if (!res.ok) throw new Error(d.error || "Could not save."); return d; }); })
+      .then(function (res) { return responseJson(res); })
       .then(function (d) {
         status(out, d.birthday && d.birthday.enabled ? "Saved — birthday emails are ON." : "Saved — birthday emails are OFF.", "ok");
       })
-      .catch(function (err) { status(out, err.message, "error"); });
+      .catch(function (err) { status(out, friendly(err), "error"); });
   }
 
   function testBirthday() {
@@ -1049,9 +1046,9 @@
         html: String(($("[data-bday-body]") || {}).value || "")
       })
     })
-      .then(function (res) { return res.json().then(function (d) { if (!res.ok) throw new Error(d.error || "Could not send."); return d; }); })
+      .then(function (res) { return responseJson(res); })
       .then(function (d) { status(out, "Preview sent to " + d.sentTo + ". Check your inbox.", "ok"); })
-      .catch(function (err) { status(out, err.message, "error"); });
+      .catch(function (err) { status(out, friendly(err), "error"); });
   }
 
   function bindBirthday() {
@@ -1264,7 +1261,7 @@
         loadCampaigns();
       })
       .catch(function (err) {
-        status($("[data-send-status]"), err.message, "error");
+        status($("[data-send-status]"), friendly(err), "error");
       })
       .then(function () {
         if (btn) btn.disabled = false;
@@ -1306,7 +1303,7 @@
         loadCampaigns();
       })
       .catch(function (err) {
-        status($("[data-send-status]"), err.message, "error");
+        status($("[data-send-status]"), friendly(err), "error");
       });
   }
   function loadCampaigns() {
@@ -1320,7 +1317,7 @@
       })
       .catch(function (err) {
         campaignDrafts = [];
-        box.innerHTML = '<p class="admin-status is-error">' + esc(err.message) + "</p>";
+        box.innerHTML = '<p class="admin-status is-error">' + esc(friendly(err)) + "</p>";
       });
   }
   function renderCampaigns() {
@@ -1368,10 +1365,7 @@
       credentials: "same-origin"
     })
       .then(function (res) {
-        return res.json().then(function (data) {
-          if (!res.ok) throw new Error(data.error || "Could not load history.");
-          return data;
-        });
+        return responseJson(res);
       })
       .then(function (data) {
         var rows = data.history || [];
@@ -1392,7 +1386,7 @@
         }).join("");
       })
       .catch(function (err) {
-        box.innerHTML = '<p class="admin-status is-error">' + esc(err.message) + "</p>";
+        box.innerHTML = '<p class="admin-status is-error">' + esc(friendly(err)) + "</p>";
       });
   }
 

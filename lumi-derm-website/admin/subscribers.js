@@ -23,16 +23,20 @@
     el.textContent = msg;
     el.className = "admin-status" + (kind ? " is-" + kind : "");
   }
+  function friendly(err) {
+    return window.ldFriendlyError ? window.ldFriendlyError(err) : ((err && err.message) || String(err));
+  }
+  function confirmModal(opts) {
+    if (window.ldConfirm) return window.ldConfirm(opts);
+    return Promise.resolve(window.confirm((opts && opts.body) || "Are you sure?"));
+  }
   function responseJson(res) {
     return res.text().then(function (text) {
       var data;
       try {
         data = text ? JSON.parse(text) : {};
       } catch (err) {
-        if (/^\s*</.test(text || "")) {
-          throw new Error("Admin API is returning a webpage instead of subscriber data. Redeploy the Worker and check /admin/api routing.");
-        }
-        throw new Error("Admin API returned invalid subscriber data.");
+        throw new Error(friendly(new Error("webpage instead of data")));
       }
       if (!res.ok) throw new Error(data.error || "Could not load (" + res.status + ").");
       return data;
@@ -124,21 +128,28 @@
         render(data);
         status(data.total + " subscriber" + (data.total === 1 ? "" : "s") + " total.", "ok");
       })
-      .catch(function (err) { status(err.message, "error"); });
+      .catch(function (err) { status(friendly(err), "error"); });
   }
 
   function del(email) {
     if (!email) return;
-    if (!window.confirm("Delete " + email + " permanently? This cannot be undone.")) return;
-    fetch(ADMIN_API + "/subscribers/delete", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email: email })
-    })
-      .then(function (res) { return responseJson(res); })
-      .then(function () { status("Deleted " + email + ".", "ok"); load(); })
-      .catch(function (err) { status(err.message, "error"); });
+    confirmModal({
+      title: "Delete this subscriber?",
+      body: "Permanently delete " + email + " and their consent record. This is used for the right to erasure and cannot be undone.",
+      confirmLabel: "Delete permanently",
+      danger: true
+    }).then(function (ok) {
+      if (!ok) return;
+      fetch(ADMIN_API + "/subscribers/delete", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: email })
+      })
+        .then(function (res) { return responseJson(res); })
+        .then(function () { status("Deleted " + email + ".", "ok"); load(); })
+        .catch(function (err) { status(friendly(err), "error"); });
+    });
   }
 
   function exportCsv() {

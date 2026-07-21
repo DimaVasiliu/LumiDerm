@@ -539,6 +539,55 @@ code {
   font-size: 0.88rem;
 }
 
+/* ---- Confirmation modal (ldConfirm) + danger button ---- */
+.admin-button-danger { color: #fff; background: #b0483c; box-shadow: 0 18px 42px rgba(176, 72, 60, 0.22); }
+
+.ld-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.ld-modal.is-open { opacity: 1; }
+.ld-modal-veil { position: absolute; inset: 0; background: rgba(41, 36, 38, 0.55); backdrop-filter: blur(2px); }
+.ld-modal-card {
+  position: relative;
+  width: min(440px, 100%);
+  background: var(--admin-surface-strong);
+  border: 1px solid rgba(68, 52, 49, 0.12);
+  border-radius: 18px;
+  box-shadow: var(--admin-shadow);
+  padding: 1.6rem 1.6rem 1.4rem;
+  transform: translateY(8px) scale(0.98);
+  transition: transform 160ms ease;
+}
+.ld-modal.is-open .ld-modal-card { transform: none; }
+.ld-modal-title { margin: 0 0 0.5rem; font-family: var(--font-heading); font-size: 1.5rem; }
+.ld-modal-body { margin: 0 0 1.2rem; color: var(--admin-ink); line-height: 1.6; }
+.ld-modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; flex-wrap: wrap; }
+
+/* ---- System status ---- */
+.system-status { display: grid; gap: 0.7rem; margin: 0.6rem 0 0; padding: 0; list-style: none; }
+.system-status li {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  border-top: 1px solid rgba(68, 52, 49, 0.09);
+  padding-top: 0.7rem;
+}
+.system-status li:first-child { border-top: 0; padding-top: 0; }
+.system-status li > span:not(.status-dot) { color: var(--admin-muted); font-weight: 700; }
+.system-status li strong { text-align: right; font-weight: 800; word-break: break-word; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--admin-muted); display: inline-block; }
+.status-dot.is-ok { background: #2f7d4f; }
+.status-dot.is-bad { background: #b0483c; }
+
 /* ---- Activity log (audit) ---- */
 .admin-audit-table th,
 .admin-audit-table td { font-size: 0.82rem; vertical-align: top; }

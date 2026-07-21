@@ -90,7 +90,10 @@ export default {
             unsubSecret: Boolean(env.UNSUB_SECRET),
             suppression: Boolean(env.SUPPRESSION),
             subscribers: Boolean(env.SUBSCRIBERS),
+            github: Boolean(env.GITHUB_TOKEN && env.GITHUB_REPO),
             from: env.FROM_EMAIL || null,
+            deploy: deployInfo(env),
+            lastSend: await lastSuccessfulSend(env),
           });
         }
         return json({
@@ -1003,6 +1006,28 @@ async function handleAuditLogClient(request, env) {
   if (!action) return json({ error: "action is required." }, 400);
   await logAudit(env, request, { action, detail: String(body.detail || "").slice(0, 500), status: "ok" });
   return json({ ok: true });
+}
+
+/* ------------------------------------------------------------------ */
+/* System status helpers                                               */
+/* ------------------------------------------------------------------ */
+function deployInfo(env) {
+  const v = env.CF_VERSION_METADATA;
+  if (!v) return null;
+  return { id: v.id ? String(v.id).slice(0, 8) : null, tag: v.tag || null, timestamp: v.timestamp || null };
+}
+
+async function lastSuccessfulSend(env) {
+  if (!env.SUBSCRIBERS) return null;
+  try {
+    const row = await env.SUBSCRIBERS.prepare(
+      `SELECT subject, sent_count, created_at FROM campaign_sends
+        WHERE status IN ('sent','partial') AND sent_count > 0
+        ORDER BY created_at DESC LIMIT 1`
+    ).first();
+    if (!row) return null;
+    return { subject: row.subject, sent: row.sent_count, at: row.created_at };
+  } catch (err) { return null; }
 }
 
 /* ------------------------------------------------------------------ */

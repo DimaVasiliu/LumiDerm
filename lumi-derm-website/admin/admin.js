@@ -547,7 +547,7 @@ async function publishReviews() {
     toast("Published — your reviews will be live on the website in about a minute.");
     return true;
   } catch (err) {
-    toast("Publish failed: " + err.message);
+    toast("Publish failed: " + ldFriendlyError(err));
     return false;
   } finally {
     if (button) { button.disabled = false; button.textContent = "Publish reviews"; }
@@ -674,12 +674,19 @@ function bindSettings() {
     toast("Passcode updated.");
   });
   document.querySelector("[data-audit-reload]")?.addEventListener("click", loadAuditLog);
-  // Load the activity log the first time Settings is opened.
+  document.querySelector("[data-status-refresh]")?.addEventListener("click", loadSystemStatus);
+  // Load the system status + activity log the first time Settings is opened.
   const settingsNav = document.querySelector('[data-admin-panel="settings"]');
-  let auditLoaded = false;
-  if (settingsNav) settingsNav.addEventListener("click", () => { if (!auditLoaded) { auditLoaded = true; loadAuditLog(); } });
-  document.querySelector("[data-reset-admin]")?.addEventListener("click", () => {
-    if (!confirm("Reset all admin drafts back to defaults? This clears your local changes.")) return;
+  let settingsLoaded = false;
+  if (settingsNav) settingsNav.addEventListener("click", () => { if (!settingsLoaded) { settingsLoaded = true; loadSystemStatus(); loadAuditLog(); } });
+  document.querySelector("[data-reset-admin]")?.addEventListener("click", async () => {
+    const ok = await ldConfirm({
+      title: "Reset admin drafts?",
+      body: "This clears all your unsaved local changes in this browser and reloads the live offers, prices and page text. Anything already published stays live. This can't be undone.",
+      confirmLabel: "Reset drafts",
+      danger: true
+    });
+    if (!ok) return;
     localStorage.removeItem(STORAGE_KEY);
     state = loadDraft(); selectedOfferIndex = 0; selectedTx = { gi: 0, ti: 0 };
     renderAll(); loadPricesFromJson(false, true); loadContentFromJson(false, true); toast("Admin reset to defaults.");
@@ -747,6 +754,77 @@ function toast(message) {
 }
 function escapeHtml(v) { return String(v ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
 function escapeAttr(v) { return escapeHtml(v); }
+
+/* ---------- Shared UI helpers (also used by sender.js + subscribers.js via window) ---------- */
+
+// Turn a low-level failure into a friendly, actionable message. The usual cause
+// of "Unexpected token <" / "Failed to fetch" here is an expired Cloudflare
+// Access session (the request hit a login/redirect page instead of the API).
+function ldFriendlyError(err) {
+  const m = (err && err.message) || String(err || "");
+  if (/Unexpected token|not valid JSON|JSON\.parse|webpage instead|<!doctype|<html|Failed to fetch|NetworkError|Load failed/i.test(m)) {
+    return "Couldn't reach the admin service. Your sign-in may have expired — refresh this page to sign in again. If it keeps happening, tell Dima.";
+  }
+  return m;
+}
+window.ldFriendlyError = ldFriendlyError;
+
+// Parse a fetch Response as JSON; on HTML/invalid responses throw a friendly error.
+async function ldReadJson(res) {
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : {}; } catch (e) { data = null; }
+  if (data === null) {
+    throw new Error(ldFriendlyError(new Error("webpage instead of data")));
+  }
+  if (!res.ok) throw new Error(data.error || ("Something went wrong (" + res.status + ")."));
+  return data;
+}
+window.ldReadJson = ldReadJson;
+
+// A styled confirmation modal that returns a Promise<boolean>. Replaces window.confirm
+// for high-risk actions. opts: { title, body, confirmLabel, cancelLabel, danger }.
+function ldConfirm(opts) {
+  opts = opts || {};
+  return new Promise((resolve) => {
+    const back = document.createElement("div");
+    back.className = "ld-modal";
+    back.innerHTML =
+      '<div class="ld-modal-veil"></div>' +
+      '<div class="ld-modal-card" role="dialog" aria-modal="true" aria-labelledby="ld-modal-title">' +
+        '<h3 class="ld-modal-title" id="ld-modal-title"></h3>' +
+        '<p class="ld-modal-body"></p>' +
+        '<div class="ld-modal-actions">' +
+          '<button type="button" class="admin-button admin-button-secondary" data-ld-cancel></button>' +
+          '<button type="button" class="admin-button" data-ld-confirm></button>' +
+        '</div>' +
+      '</div>';
+    back.querySelector(".ld-modal-title").textContent = opts.title || "Are you sure?";
+    back.querySelector(".ld-modal-body").textContent = opts.body || "";
+    const cancelBtn = back.querySelector("[data-ld-cancel]");
+    const confirmBtn = back.querySelector("[data-ld-confirm]");
+    cancelBtn.textContent = opts.cancelLabel || "Cancel";
+    confirmBtn.textContent = opts.confirmLabel || "Confirm";
+    confirmBtn.classList.add(opts.danger ? "admin-button-danger" : "admin-button-primary");
+    const prevOverflow = document.body.style.overflow;
+    function close(val) {
+      document.removeEventListener("keydown", onKey);
+      back.classList.remove("is-open");
+      document.body.style.overflow = prevOverflow;
+      setTimeout(() => back.remove(), 160);
+      resolve(val);
+    }
+    function onKey(e) { if (e.key === "Escape") close(false); }
+    back.querySelector(".ld-modal-veil").addEventListener("click", () => close(false));
+    cancelBtn.addEventListener("click", () => close(false));
+    confirmBtn.addEventListener("click", () => close(true));
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(back);
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => { back.classList.add("is-open"); confirmBtn.focus(); });
+  });
+}
+window.ldConfirm = ldConfirm;
 
 /* =====================================================================
    PUBLISHING — offers created here go live on the homepage.
@@ -822,7 +900,7 @@ async function checkGithubHealth(probe) {
     }
   } catch (err) {
     ghReady = false;
-    setGhStatus("Could not reach the server: " + err.message);
+    setGhStatus(ldFriendlyError(err));
   }
 }
 
@@ -982,8 +1060,8 @@ async function publishOffers(options) {
     if (!silent) toast("Published — your offers will be live on the website in about a minute.");
     return true;
   } catch (err) {
-    setPublishStatus("Publish failed: " + err.message);
-    toast("Publish failed: " + err.message);
+    setPublishStatus("Publish failed: " + ldFriendlyError(err));
+    toast("Publish failed: " + ldFriendlyError(err));
     return false;
   } finally {
     if (button) { button.disabled = false; button.textContent = "Publish offers"; }
@@ -1037,6 +1115,12 @@ async function publishPrices() {
   if (typeof window.renderTreatmentLibrary !== "function") { toast("Price template didn’t load — hard-refresh the admin and try again."); return false; }
   if (!state.prices || !(state.prices.groups || []).length) { toast("No prices loaded yet — click “Reload from website” first."); return false; }
 
+  if (!(await ldConfirm({
+    title: "Publish prices?",
+    body: "This updates the live Treatments & prices page for everyone visiting the website. Continue?",
+    confirmLabel: "Publish prices"
+  }))) return false;
+
   const button = document.querySelector("[data-publish-prices]");
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
   setPricesStatus("Publishing to the treatments page…");
@@ -1055,8 +1139,8 @@ async function publishPrices() {
     toast("Published — your new prices will be live on the treatments page in about a minute.");
     return true;
   } catch (err) {
-    setPricesStatus("Publish failed: " + err.message);
-    toast("Publish failed: " + err.message);
+    setPricesStatus("Publish failed: " + ldFriendlyError(err));
+    toast("Publish failed: " + ldFriendlyError(err));
     return false;
   } finally {
     if (button) { button.disabled = false; button.textContent = "Publish prices"; }
@@ -1156,8 +1240,8 @@ async function publishContent() {
     toast("Published — your page text will be live in about a minute.");
     return true;
   } catch (err) {
-    setContentStatus("Publish failed: " + err.message);
-    toast("Publish failed: " + err.message);
+    setContentStatus("Publish failed: " + ldFriendlyError(err));
+    toast("Publish failed: " + ldFriendlyError(err));
     return false;
   } finally {
     if (button) { button.disabled = false; button.textContent = "Publish page text"; }
@@ -1255,6 +1339,32 @@ function auditWhen(iso) {
   return d.toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
+async function loadSystemStatus() {
+  const box = document.querySelector("[data-system-status]");
+  if (!box) return;
+  box.innerHTML = '<li><span>Checking…</span></li>';
+  const dot = (ok) => (ok === null ? "" : '<em class="status-dot ' + (ok ? "is-ok" : "is-bad") + '" aria-hidden="true"></em>');
+  try {
+    const res = await fetch("/admin/api/health", { cache: "no-store", credentials: "same-origin" });
+    const d = await ldReadJson(res);
+    const dep = d.deploy;
+    const ls = d.lastSend;
+    const rows = [
+      ["Signed in as", escapeHtml(d.adminEmail || "—"), true],
+      ["Database (D1)", d.subscribers ? "Connected" : "Not connected", !!d.subscribers],
+      ["Email (Resend)", d.resend ? "Connected" : "Not connected", !!d.resend],
+      ["Unsubscribe suppression", d.suppression ? "Connected" : "Not connected", !!d.suppression],
+      ["Publishing (GitHub)", d.github ? "Connected" : "Not set up", !!d.github],
+      ["Sending from", escapeHtml(d.from || "—"), !!d.from],
+      ["Last deploy", dep && (dep.tag || dep.id) ? escapeHtml((dep.tag || dep.id) + (dep.timestamp ? " · " + auditWhen(dep.timestamp) : "")) : "unknown", dep ? true : null],
+      ["Last successful send", ls ? escapeHtml('“' + ls.subject + '” — ' + ls.sent + " sent · " + auditWhen(ls.at)) : "none yet", ls ? true : null],
+    ];
+    box.innerHTML = rows.map((r) => "<li>" + dot(r[2]) + "<span>" + r[0] + "</span><strong>" + r[1] + "</strong></li>").join("");
+  } catch (err) {
+    box.innerHTML = '<li><span>Could not load status</span><strong>' + escapeHtml(ldFriendlyError(err)) + "</strong></li>";
+  }
+}
+
 async function loadAuditLog() {
   const body = document.querySelector("[data-audit-log]");
   if (!body) return;
@@ -1264,7 +1374,7 @@ async function loadAuditLog() {
     if (!res.ok) throw new Error(data.error || ("Could not load the log (" + res.status + ")."));
     renderAuditLog(data.entries || []);
   } catch (err) {
-    body.innerHTML = '<tr><td colspan="4">' + escapeHtml(err.message) + "</td></tr>";
+    body.innerHTML = '<tr><td colspan="4">' + escapeHtml(ldFriendlyError(err)) + "</td></tr>";
   }
 }
 
@@ -1360,8 +1470,8 @@ function bindImageUpload() {
       if (status) status.textContent = "Uploaded and selected. The photo appears on the website about a minute after you publish.";
       toast("Photo uploaded to the website.");
     } catch (err) {
-      if (status) status.textContent = "Upload failed: " + err.message;
-      toast("Upload failed: " + err.message);
+      if (status) status.textContent = "Upload failed: " + ldFriendlyError(err);
+      toast("Upload failed: " + ldFriendlyError(err));
     }
     event.target.value = "";
   });
