@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260721-submissions1">
+    <link rel="stylesheet" href="admin.css?v=20260721-deploy1">
   </head>
   <body>
     <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
@@ -803,6 +803,16 @@
               </ul>
             </section>
 
+            <section class="admin-card">
+              <div class="admin-card-head">
+                <div><p class="admin-eyebrow">Publishing</p><h3>Latest publish &amp; deploy</h3></div>
+                <button class="admin-button admin-button-secondary" type="button" data-deploy-refresh>Refresh</button>
+              </div>
+              <div class="deploy-status" data-deploy-status>
+                <p class="admin-help">Checking&hellip;</p>
+              </div>
+            </section>
+
             <div class="admin-grid admin-grid-2">
               <section class="admin-card admin-editor">
                 <p class="admin-eyebrow">Access</p>
@@ -886,7 +896,7 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
-    <script src="admin.js?v=20260721-revisions1"></script>
+    <script src="admin.js?v=20260721-deploy1"></script>
     <script src="sender.js?v=20260721-bday1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>

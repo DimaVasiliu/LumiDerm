@@ -1132,10 +1132,11 @@ function bindSettings() {
   document.querySelector("[data-audit-reload]")?.addEventListener("click", loadAuditLog);
   document.querySelector("[data-status-refresh]")?.addEventListener("click", loadSystemStatus);
   document.querySelector("[data-version-refresh]")?.addEventListener("click", renderVersionHistory);
+  document.querySelector("[data-deploy-refresh]")?.addEventListener("click", loadDeployStatus);
   // Load the system status + activity log the first time Settings is opened.
   const settingsNav = document.querySelector('[data-admin-panel="settings"]');
   let settingsLoaded = false;
-  if (settingsNav) settingsNav.addEventListener("click", () => { if (!settingsLoaded) { settingsLoaded = true; loadSystemStatus(); loadAuditLog(); renderVersionHistory(); } });
+  if (settingsNav) settingsNav.addEventListener("click", () => { if (!settingsLoaded) { settingsLoaded = true; loadSystemStatus(); loadAuditLog(); renderVersionHistory(); loadDeployStatus(); } });
   document.querySelector("[data-reset-admin]")?.addEventListener("click", async () => {
     const ok = await ldConfirm({
       title: "Reset admin drafts?",
@@ -1668,8 +1669,9 @@ async function publishOffers(options) {
 
     state.publishedAt = new Date().toISOString();
     saveDraft(null);
-    setPublishStatus("Published. The website updates in about a minute.");
-    if (!silent) toast("Published — your offers will be live on the website in about a minute.");
+    setPublishStatus("Published. Tracking the deploy in Settings → Latest publish & deploy.");
+    startDeployWatch();
+    if (!silent) toast("Published — deploying now. You'll get a note when it's live (about a minute).");
     return true;
   } catch (err) {
     setPublishStatus("Publish failed: " + ldFriendlyError(err));
@@ -1748,8 +1750,9 @@ async function publishPrices() {
 
     state.publishedAt = new Date().toISOString();
     saveDraft(null);
-    setPricesStatus("Published. The treatments page updates in about a minute.");
-    toast("Published — your new prices will be live on the treatments page in about a minute.");
+    setPricesStatus("Published. Tracking the deploy in Settings → Latest publish & deploy.");
+    startDeployWatch();
+    toast("Published — deploying now. You'll get a note when the treatments page is live.");
     return true;
   } catch (err) {
     setPricesStatus("Publish failed: " + ldFriendlyError(err));
@@ -1850,8 +1853,9 @@ async function publishContent() {
 
     state.publishedAt = new Date().toISOString();
     saveDraft(null);
-    setContentStatus("Published. The website updates in about a minute (" + changed + " page" + (changed === 1 ? "" : "s") + " updated).");
-    toast("Published — your page text will be live in about a minute.");
+    setContentStatus("Published " + changed + " page" + (changed === 1 ? "" : "s") + ". Tracking the deploy in Settings → Latest publish & deploy.");
+    startDeployWatch();
+    toast("Published — deploying now. You'll get a note when it's live.");
     return true;
   } catch (err) {
     setContentStatus("Publish failed: " + ldFriendlyError(err));
@@ -1906,8 +1910,9 @@ async function deleteOffer(index) {
     try { await deleteRepoImage(image); } catch (err) { /* non-fatal */ }
   }
 
-  setPublishStatus("Deleted. The website updates in about a minute.");
-  toast("\u201c" + label + "\u201d deleted and removed from the website.");
+  setPublishStatus("Deleted. Tracking the deploy in Settings \u2192 Latest publish & deploy.");
+  startDeployWatch();
+  toast("\u201c" + label + "\u201d deleted \u2014 deploying the removal now.");
 }
 
 function bindPublishing() {
@@ -2124,6 +2129,83 @@ function applyRoleControls() {
     roleToastShown = true;
     toast("Assistant role active: drafts can be edited, but sending, publishing, deleting and exports require owner access.");
   }
+}
+
+/* ---------------- Publish / deploy status ---------------- */
+// Compares the repo's latest commit (HEAD) with the version Cloudflare is running
+// so the panel can show: last publish time, latest commit, deploy pending/done.
+let deployWatch = { timer: null, since: 0 };
+
+async function loadDeployStatus() {
+  const box = document.querySelector("[data-deploy-status]");
+  if (!box) return null;
+  try {
+    const res = await fetch("/admin/api/deploy-status", { cache: "no-store", credentials: "same-origin" });
+    const d = await ldReadJson(res);
+    renderDeployStatus(d, box);
+    return d;
+  } catch (err) {
+    box.innerHTML = '<p class="admin-status is-error">' + escapeHtml(ldFriendlyError(err)) + "</p>";
+    return null;
+  }
+}
+
+function deployPhase(d) {
+  if (!d || !d.configured) return "unconfigured";
+  if (!d.commit) return "unknown";
+  if (!d.deploy || !d.deploy.timestamp) return "nodeploy";
+  const dep = Date.parse(d.deploy.timestamp);
+  const com = Date.parse(d.commit.date || 0);
+  if (isNaN(dep) || isNaN(com)) return "nodeploy";
+  if (dep + 20000 >= com) return "deployed"; // live version is at/after the commit (20s skew)
+  const elapsed = deployWatch.since ? (Date.now() - deployWatch.since) : (Date.now() - com);
+  return elapsed > 5 * 60 * 1000 ? "delayed" : "pending";
+}
+
+function renderDeployStatus(d, box) {
+  box = box || document.querySelector("[data-deploy-status]");
+  if (!box) return;
+  if (!d || !d.configured) {
+    box.innerHTML = '<p class="admin-help">Publishing isn’t set up on the server yet.</p>';
+    return;
+  }
+  const phase = deployPhase(d);
+  const meta = {
+    deployed: ["is-ok", "Deployed ✓ — live"],
+    pending: ["is-pending", "Deploying…"],
+    delayed: ["is-bad", "Taking longer than usual — check Cloudflare"],
+    nodeploy: ["is-pending", "Live version unavailable"],
+    unknown: ["is-pending", "No commits found"],
+  }[phase] || ["is-pending", "Unknown"];
+  const c = d.commit, dep = d.deploy;
+  const rows = [];
+  rows.push('<div class="deploy-row"><span>Deploy</span><strong><em class="status-dot ' + meta[0] + '" aria-hidden="true"></em>' + escapeHtml(meta[1]) + "</strong></div>");
+  if (c) {
+    const sha = c.url
+      ? '<a href="' + escapeAttr(c.url) + '" target="_blank" rel="noopener">' + escapeHtml(c.sha || "") + "</a>"
+      : escapeHtml(c.sha || "");
+    rows.push('<div class="deploy-row"><span>Latest change</span><strong>' + sha + (c.message ? " · " + escapeHtml(c.message) : "") + "</strong></div>");
+    if (c.date) rows.push('<div class="deploy-row"><span>Published</span><strong>' + escapeHtml(auditWhen(c.date)) + (c.author ? " · " + escapeHtml(c.author) : "") + "</strong></div>");
+  }
+  if (dep && dep.timestamp) rows.push('<div class="deploy-row"><span>Live version</span><strong>' + escapeHtml((dep.tag || dep.id || "—") + " · " + auditWhen(dep.timestamp)) + "</strong></div>");
+  box.innerHTML = rows.join("");
+}
+
+// Called after a successful publish: poll until the live version catches up.
+function startDeployWatch() {
+  deployWatch.since = Date.now();
+  if (deployWatch.timer) clearInterval(deployWatch.timer);
+  loadDeployStatus();
+  let tries = 0;
+  deployWatch.timer = setInterval(async () => {
+    tries += 1;
+    const d = await loadDeployStatus();
+    const phase = deployPhase(d);
+    if (phase === "deployed" || tries >= 40) { // ~5 min max
+      clearInterval(deployWatch.timer); deployWatch.timer = null;
+      if (phase === "deployed") { deployWatch.since = 0; toast("Deploy complete — your changes are live."); }
+    }
+  }, 8000);
 }
 
 async function loadAuditLog() {

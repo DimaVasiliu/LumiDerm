@@ -25,6 +25,7 @@
  *   GET  /admin/api/revisions     — admin: recent version-history snapshots (metadata)
  *   POST /admin/api/revisions     — admin: record a snapshot (offers/prices/content)
  *   GET  /admin/api/revisions/item?id= — admin: one snapshot incl. payload (for restore)
+ *   GET  /admin/api/deploy-status — admin: latest commit (repo HEAD) + live deploy version
  *   GET  /admin/api/reviews/submissions — admin: pending website review submissions
  *   POST /admin/api/reviews/submissions/resolve — admin: import/reject a submission
  *   GET  /api/subscribe/confirm   — double opt-in confirmation link
@@ -209,6 +210,10 @@ export default {
 
       if (apiPath === "/api/github/health" && isAdminApi) {
         return handleGithubHealth(request, env);
+      }
+
+      if (apiPath === "/api/deploy-status" && isAdminApi) {
+        return handleDeployStatus(request, env);
       }
 
       if (apiPath === "/api/github" && isAdminApi) {
@@ -1441,6 +1446,48 @@ async function handleGithubHealth(request, env) {
     return json({ ...base, probed: true, reachable: false, status: res.status, error: message });
   } catch (err) {
     return json({ ...base, probed: true, reachable: false, error: (err && err.message) || "Network error." });
+  }
+}
+
+// Professional publish/deploy status: the latest commit on the branch (repo HEAD)
+// plus the version Cloudflare is actually running. The admin compares the two to
+// show pending / deployed / delayed. Works from any device (no local state).
+async function handleDeployStatus(request, env) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
+
+  const deploy = deployInfo(env);
+  const configured = Boolean(env.GITHUB_TOKEN && env.GITHUB_REPO);
+  if (!configured) return json({ ok: true, configured: false, commit: null, deploy });
+
+  const branch = env.GITHUB_BRANCH || "main";
+  try {
+    const res = await fetch(
+      "https://api.github.com/repos/" + env.GITHUB_REPO + "/commits/" + encodeURIComponent(branch),
+      {
+        headers: {
+          Authorization: "Bearer " + env.GITHUB_TOKEN,
+          Accept: "application/vnd.github+json",
+          "User-Agent": "LumiDerm-Admin-Worker",
+        },
+      }
+    );
+    if (!res.ok) {
+      let message = "";
+      try { message = (await res.json()).message || ""; } catch { /* ignore */ }
+      return json({ ok: true, configured: true, commit: null, deploy, error: message || ("GitHub returned " + res.status) });
+    }
+    const c = await res.json();
+    const commit = {
+      sha: c.sha ? String(c.sha).slice(0, 7) : null,
+      message: c.commit && c.commit.message ? String(c.commit.message).split("\n")[0].slice(0, 140) : "",
+      author: c.commit && c.commit.author ? c.commit.author.name : (c.author && c.author.login) || "",
+      date: c.commit && c.commit.author ? c.commit.author.date : null,
+      url: c.html_url || null,
+    };
+    return json({ ok: true, configured: true, commit, deploy });
+  } catch (err) {
+    return json({ ok: true, configured: true, commit: null, deploy, error: (err && err.message) || "Network error." });
   }
 }
 

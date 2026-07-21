@@ -1883,3 +1883,21 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
 .review-sub-body p { margin: 0.4rem 0 0.25rem; color: var(--admin-ink); line-height: 1.55; }
 .review-sub-body small { color: var(--admin-muted); }
 .review-sub-item .review-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; align-content: flex-start; }
+
+/* ---- Latest publish & deploy status ---- */
+.status-dot.is-pending { background: #c98a1e; }
+.deploy-status { display: grid; gap: 0.55rem; margin-top: 0.3rem; }
+.deploy-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  border-top: 1px solid rgba(68, 52, 49, 0.09);
+  padding-top: 0.55rem;
+}
+.deploy-row:first-child { border-top: 0; padding-top: 0; }
+.deploy-row > span { color: var(--admin-muted); font-weight: 700; font-size: 0.82rem; }
+.deploy-row > strong { text-align: right; font-weight: 800; }
+.deploy-row .status-dot { margin-right: 0.4rem; vertical-align: middle; }
+.deploy-row a { color: var(--admin-accent-dark); text-decoration: underline; }
