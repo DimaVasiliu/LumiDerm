@@ -899,6 +899,37 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
   gap: 0.5rem;
 }
 
+/* Reviews: filters row */
+.review-filters {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: 1fr;
+  margin: 1rem 0 0.5rem;
+}
+@media (min-width: 720px) {
+  .review-filters { grid-template-columns: 1.1fr 1fr 1.2fr 1.4fr; }
+}
+.review-filters label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--admin-accent-dark);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Reviews: status pill colours */
+.status-pill.status-approved { background: rgba(60, 140, 90, 0.16); color: #2f7d4f; }
+.status-pill.status-pending { background: rgba(201, 162, 39, 0.18); color: #9a7b1e; }
+.status-pill.status-hidden { background: rgba(68, 52, 49, 0.1); color: var(--admin-muted); }
+.status-pill.status-featured { background: var(--admin-accent); color: #fff; }
+.review-body p { margin: 0; }
+
+/* Review editor modal (wider form modal) */
+.ld-modal-form { width: min(540px, 100%); text-align: left; max-height: 90vh; overflow-y: auto; }
+.ld-modal-form .admin-editor { margin: 0.4rem 0 1.1rem; }
+
 .media-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));

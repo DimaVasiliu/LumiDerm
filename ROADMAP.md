@@ -62,6 +62,7 @@ Working list of what's left, in priority order. Tick items off as they ship.
 - Offers gallery redesign (cards, spotlight, modal, search, show-all, mobile limit).
 - Offers publish to GitHub from admin (with image upload, true delete, 409 retry).
 - **Reviews** publish to GitHub from admin (approved-only, featured first).
+- **Reviews manager** — full editor modal (name, rating, treatment, source, text, featured), delete with confirm, status toggles (approve/pending/hide/unhide), filters (status, rating≥, source, search) with live counts, editable homepage rating badge (rating/count/label), and the `featured` flag round-trips through `reviews.json`. Approved reviews publish to the homepage as before.
 - **Prices** publish to GitHub from admin — the treatments page is data-driven from `prices.json` and regenerated between markers on publish (SEO-safe, prices/notes/headline editable).
 - **Pages** publish to GitHub from admin — homepage hero copy (markers) + contact details (site-wide exact-string replace) editable from `content.json`, SEO-safe.
 - Website signup pop-up + double opt-in + D1 subscribers + admin Subscribers tab (with search).

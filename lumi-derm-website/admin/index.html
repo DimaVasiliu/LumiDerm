@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260721-polish1">
+    <link rel="stylesheet" href="admin.css?v=20260721-reviews1">
   </head>
   <body>
     <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
@@ -657,10 +657,23 @@
                 <button class="admin-button admin-button-primary" type="button" data-publish-reviews>Publish reviews</button>
               </div>
             </div>
-            <div class="review-controls">
-              <label>Filter<select data-review-filter><option value="all">All</option><option value="approved">Approved</option><option value="featured">Featured</option><option value="pending">Pending</option><option value="hidden">Hidden</option></select></label>
-              <p>New reviews you add start as <strong>pending</strong> and stay off the site until you approve and publish them.</p>
+            <section class="admin-card admin-editor">
+              <p class="admin-eyebrow">Homepage rating badge</p>
+              <p class="admin-help">The star rating shown on the homepage. Publishes with your reviews.</p>
+              <div class="field-pair">
+                <label>Star rating<input type="text" data-review-summary="rating" placeholder="5.0"></label>
+                <label>Number of reviews<input type="number" min="0" data-review-summary="count" placeholder="47"></label>
+              </div>
+              <label>Label<input type="text" data-review-summary="label" placeholder="Treatwell reviews"></label>
+            </section>
+
+            <div class="review-filters">
+              <label>Status<select data-review-filter><option value="all">All</option><option value="approved">Approved</option><option value="featured">Featured</option><option value="pending">Pending</option><option value="hidden">Hidden</option></select></label>
+              <label>Rating<select data-review-rating-filter><option value="all">Any</option><option value="5">★★★★★</option><option value="4">★★★★+</option><option value="3">★★★+</option><option value="2">★★+</option><option value="1">★+</option></select></label>
+              <label>Source<select data-review-source-filter><option value="all">All sources</option></select></label>
+              <label>Search<input type="search" data-review-search placeholder="Name or text…"></label>
             </div>
+            <p class="admin-help" data-review-counts></p>
             <div class="admin-review-list" data-review-list></div>
           </section>
 
@@ -846,7 +859,7 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
-    <script src="admin.js?v=20260721-bday2"></script>
+    <script src="admin.js?v=20260721-reviews1"></script>
     <script src="sender.js?v=20260721-bday1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>

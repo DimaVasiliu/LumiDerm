@@ -14,6 +14,9 @@
  *   POST /admin/api/campaign/drafts/delete — admin: delete campaign draft
  *   GET  /api/unsubscribe         — one-click unsubscribe landing page
  *   POST /api/unsubscribe         — RFC 8058 one-click unsubscribe
+ *   GET  /api/preferences         — subscriber preference centre
+ *   POST /api/preferences         — save subscriber preferences
+ *   GET  /api/click               — tracked campaign-link redirect
  *   POST /api/subscribe           — newsletter signup (double opt-in)
  *   GET  /api/subscribe/confirm   — double opt-in confirmation link
  *   GET  /admin/api/subscribers   — admin: list subscribers
@@ -53,6 +56,9 @@
  * Vars:
  *   ADMIN_EMAILS     — optional comma-separated Access emails allowed for admin API.
  *                      If omitted, any Cloudflare Access-authenticated user is accepted.
+ *   ADMIN_OWNER_EMAILS — optional comma-separated owner emails. If set, only owners
+ *                      can send, publish, export/import/delete personal data.
+ *   ADMIN_EDITOR_EMAILS — optional comma-separated assistant/editor emails.
  *
  * Vars (in wrangler.jsonc):
  *   FROM_EMAIL       — e.g. "Lumi Derm Aesthetics <hello@lumidermaesthetics.com>"
@@ -101,6 +107,7 @@ export default {
           return json({
             ok: true,
             adminEmail: admin.email,
+            role: admin.role || "owner",
             resend: Boolean(env.RESEND_API_KEY),
             unsubSecret: Boolean(env.UNSUB_SECRET),
             suppression: Boolean(env.SUPPRESSION),
@@ -125,9 +132,19 @@ export default {
       if (apiPath === "/api/unsubscribe" && isPublicApi) {
         return handleUnsubscribe(request, env, url);
       }
+      if (apiPath === "/api/preferences" && isPublicApi) {
+        if (request.method === "GET") return handlePreferencesGet(request, env, url);
+        if (request.method === "POST") return handlePreferencesPost(request, env, url);
+        return json({ error: "Use GET or POST." }, 405);
+      }
+      if (apiPath === "/api/click" && isPublicApi) {
+        return handleTrackedClick(request, env, url);
+      }
 
       if (apiPath === "/api/campaign/send" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "send campaigns");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleSend(request, env, url);
       }
 
@@ -143,11 +160,15 @@ export default {
 
       if (apiPath === "/api/campaign/drafts/delete" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "delete saved campaigns");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleDeleteCampaignDraft(request, env);
       }
 
       if (apiPath === "/api/campaign/schedule" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "schedule campaigns");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleScheduleCampaign(request, env);
       }
 
@@ -157,17 +178,23 @@ export default {
 
       if (apiPath === "/api/campaign/scheduled/cancel" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "cancel scheduled campaigns");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleCancelScheduled(request, env);
       }
 
       if (apiPath === "/api/settings/birthday" && isAdminApi) {
         if (request.method === "GET") return handleGetBirthday(request, env);
+        const owner = requireOwner(request, env, "change birthday automation");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         if (request.method === "POST") return handleSetBirthday(request, env);
         return json({ error: "Use GET or POST." }, 405);
       }
 
       if (apiPath === "/api/settings/birthday/test" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "send birthday previews");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleTestBirthday(request, env);
       }
 
@@ -177,11 +204,15 @@ export default {
 
       if (apiPath === "/api/github" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "publish website changes");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleGithubProxy(request, env);
       }
 
       if (apiPath === "/api/audit" && isAdminApi) {
         if (request.method === "GET") return handleAuditList(request, env);
+        const owner = requireOwner(request, env, "record export actions");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         if (request.method === "POST") return handleAuditLogClient(request, env);
         return json({ error: "Use GET or POST." }, 405);
       }
@@ -191,6 +222,8 @@ export default {
       }
       if (apiPath === "/api/birthdays/send" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "send birthday emails");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleBirthdaysSend(request, env);
       }
 
@@ -199,10 +232,14 @@ export default {
       }
       if (apiPath === "/api/media/upload" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "upload media");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleMediaUpload(request, env);
       }
       if (apiPath === "/api/media/delete" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "delete media");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleMediaDelete(request, env);
       }
 
@@ -226,11 +263,15 @@ export default {
 
       if (apiPath === "/api/subscribers/import" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "import subscribers");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleImportSubscribers(request, env);
       }
 
       if (apiPath === "/api/subscribers/delete" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "delete subscribers");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleDeleteSubscriber(request, env);
       }
 
@@ -321,14 +362,18 @@ async function handleSend(request, env, url) {
 
   const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <hello@lumidermaesthetics.com>";
   const replyTo = env.REPLY_TO || null;
+  const campaignId = isTest ? "test_" + randomId() : "cmp_" + randomId();
 
   const messages = [];
   for (const person of kept) {
-    const unsubUrl = await buildUnsubscribeUrl(env, url.origin, person.email);
+    const unsubUrl = await buildUnsubscribeUrl(env, url.origin, person.email, campaignId);
+    const preferencesUrl = await buildPreferencesUrl(env, url.origin, person.email);
     const who = firstName(person.name) || "there";
-    const personalised = html
+    let personalised = html
       .replaceAll("{{name}}", escapeHtml(who))
-      .replaceAll("{{unsubscribe}}", unsubUrl);
+      .replaceAll("{{unsubscribe}}", unsubUrl)
+      .replaceAll("{{preferences}}", preferencesUrl);
+    personalised = trackCampaignLinks(env, url.origin, personalised, campaignId, person.email);
     // Subject is a plain-text header — personalise but do not HTML-escape.
     const personalisedSubject = subject.replaceAll("{{name}}", who);
 
@@ -384,6 +429,7 @@ async function handleSend(request, env, url) {
     invalid,
     status: errors.length ? "partial" : "sent",
     errors,
+    campaignId,
   });
 
   await logAudit(env, request, {
@@ -392,7 +438,7 @@ async function handleSend(request, env, url) {
     status: errors.length ? "error" : "ok",
   });
 
-  return json(payload);
+  return json({ ...payload, campaignId });
 }
 
 async function recordCampaignSend(env, detail) {
@@ -401,8 +447,8 @@ async function recordCampaignSend(env, detail) {
     await env.SUBSCRIBERS.prepare(
       `INSERT INTO campaign_sends
         (subject, audience_source, is_test, requested_count, sent_count, suppressed_count,
-         invalid_count, status, error_summary, created_at)
-       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+         invalid_count, status, error_summary, created_at, campaign_id)
+       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)`
     ).bind(
       String(detail.subject || "").slice(0, 240),
       String(detail.audienceSource || "manual").slice(0, 80),
@@ -413,10 +459,29 @@ async function recordCampaignSend(env, detail) {
       detail.invalid || 0,
       String(detail.status || "sent").slice(0, 24),
       (detail.errors || []).join(" | ").slice(0, 1000),
-      new Date().toISOString()
+      new Date().toISOString(),
+      String(detail.campaignId || "").slice(0, 80)
     ).run();
   } catch (err) {
-    // History is useful, but a logging failure must not block a real email send.
+    try {
+      await env.SUBSCRIBERS.prepare(
+        `INSERT INTO campaign_sends
+          (subject, audience_source, is_test, requested_count, sent_count, suppressed_count,
+           invalid_count, status, error_summary, created_at)
+         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+      ).bind(
+        String(detail.subject || "").slice(0, 240),
+        String(detail.audienceSource || "manual").slice(0, 80),
+        detail.isTest ? 1 : 0,
+        detail.requested || 0,
+        detail.sent || 0,
+        detail.suppressed || 0,
+        detail.invalid || 0,
+        String(detail.status || "sent").slice(0, 24),
+        (detail.errors || []).join(" | ").slice(0, 1000),
+        new Date().toISOString()
+      ).run();
+    } catch (inner) { /* history must not block a real email send */ }
   }
 }
 
@@ -425,13 +490,29 @@ async function handleCampaignHistory(request, env) {
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Campaign history isn't set up yet." }, 500);
 
-  const { results } = await env.SUBSCRIBERS.prepare(
-    `SELECT id, subject, audience_source, is_test, requested_count, sent_count,
-            suppressed_count, invalid_count, status, error_summary, created_at
-     FROM campaign_sends
-     ORDER BY created_at DESC
-     LIMIT 50`
-  ).all();
+  let results;
+  try {
+    ({ results } = await env.SUBSCRIBERS.prepare(
+      `SELECT s.id, s.campaign_id, s.subject, s.audience_source, s.is_test, s.requested_count, s.sent_count,
+              s.suppressed_count, s.invalid_count, s.status, s.error_summary, s.created_at,
+              COALESCE(SUM(CASE WHEN e.event_type='click' THEN 1 ELSE 0 END), 0) AS click_count,
+              COALESCE(SUM(CASE WHEN e.event_type='unsubscribe' THEN 1 ELSE 0 END), 0) AS unsubscribe_count,
+              COALESCE(SUM(CASE WHEN e.event_type='failed' THEN 1 ELSE 0 END), 0) AS failed_count
+       FROM campaign_sends s
+       LEFT JOIN campaign_events e ON e.campaign_id = s.campaign_id
+       GROUP BY s.id
+       ORDER BY s.created_at DESC
+       LIMIT 50`
+    ).all());
+  } catch {
+    ({ results } = await env.SUBSCRIBERS.prepare(
+      `SELECT id, subject, audience_source, is_test, requested_count, sent_count,
+              suppressed_count, invalid_count, status, error_summary, created_at
+       FROM campaign_sends
+       ORDER BY created_at DESC
+       LIMIT 50`
+    ).all());
+  }
 
   return json({ ok: true, history: results || [] });
 }
@@ -1569,16 +1650,43 @@ function authorised(request, env) {
     return { ok: false, reason: "Cloudflare Access sign-in is required." };
   }
 
-  const allowed = String(env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean);
+  const allowed = csvEmails(env.ADMIN_EMAILS);
+  const owners = csvEmails(env.ADMIN_OWNER_EMAILS);
+  const editors = csvEmails(env.ADMIN_EDITOR_EMAILS);
+  const lower = email.toLowerCase();
 
-  if (allowed.length && !allowed.includes(email.toLowerCase())) {
+  if (allowed.length && !allowed.includes(lower)) {
     return { ok: false, reason: "This Access user is not allowed to manage admin data." };
   }
 
-  return { ok: true, email };
+  let role = "owner";
+  if (owners.length || editors.length) {
+    if (owners.includes(lower)) role = "owner";
+    else if (editors.includes(lower)) role = "assistant";
+    else if (allowed.includes(lower) && !owners.length) role = "owner";
+    else return { ok: false, reason: "This Access user has no admin role." };
+  }
+
+  return { ok: true, email, role };
+}
+
+function requireOwner(request, env, action) {
+  const admin = authorised(request, env);
+  if (!admin.ok) return admin;
+  if (admin.role !== "owner") {
+    return {
+      ok: false,
+      reason: "Owner access is required to " + action + ". Assistants can edit drafts, but cannot send, delete, export or publish.",
+    };
+  }
+  return admin;
+}
+
+function csvEmails(value) {
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
 }
 
 function adminEmail(request) {

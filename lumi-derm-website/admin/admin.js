@@ -518,14 +518,25 @@ function updateNavHeadline() {
 
 /* ---------------- Reviews ---------------- */
 function bindReviews() {
-  document.querySelector("[data-review-filter]")?.addEventListener("change", renderReviews);
-  document.querySelector("[data-sync-google]")?.addEventListener("click", () => {
-    state.reviews.unshift({ name: "Google review", initial: "G", rating: 5, treatment: "Imported from Google", source: "Google Business Profile", text: "Pending imported Google review. Approve before it appears publicly.", status: "pending", featured: false });
-    renderReviews(); saveDraft("Google review imported as pending.");
+  ["[data-review-filter]", "[data-review-rating-filter]", "[data-review-source-filter]"].forEach((sel) => {
+    document.querySelector(sel)?.addEventListener("change", renderReviews);
   });
-  document.querySelector("[data-add-review]")?.addEventListener("click", () => {
-    state.reviews.unshift({ name: "New review", initial: "N", rating: 5, treatment: "Client feedback", source: "Manual entry", text: "Add the approved client quote here.", status: "pending", featured: false });
-    renderReviews(); saveDraft("Review added as pending.");
+  document.querySelector("[data-review-search]")?.addEventListener("input", renderReviews);
+  document.querySelector("[data-add-review]")?.addEventListener("click", () => openReviewEditor(null));
+  document.querySelectorAll("[data-review-summary]").forEach((f) => {
+    f.addEventListener("input", () => {
+      const k = f.dataset.reviewSummary;
+      reviewsSummary[k] = k === "count" ? (parseInt(f.value, 10) || 0) : f.value;
+      saveDraft(null);
+    });
+  });
+  renderReviewSummaryFields();
+}
+
+function renderReviewSummaryFields() {
+  document.querySelectorAll("[data-review-summary]").forEach((f) => {
+    const v = reviewsSummary[f.dataset.reviewSummary];
+    f.value = v == null ? "" : v;
   });
 }
 
@@ -536,7 +547,14 @@ async function loadReviewsFromJson() {
     if (!r.ok) throw new Error("unavailable");
     const data = await r.json();
     reviewsSummary = data.summary || reviewsSummary;
-    state.reviews = (data.reviews || []).map((rev, i) => ({ ...rev, status: i < 10 ? "approved" : "pending", featured: i < 3 }));
+    // Reviews in reviews.json are the ones already live on the site → approved.
+    state.reviews = (data.reviews || []).map((rev) => ({
+      name: rev.name || "", initial: rev.initial || (rev.name || "?").charAt(0).toUpperCase(),
+      rating: Number(rev.rating) || 5, treatment: rev.treatment || "",
+      source: rev.source || "Client feedback", text: rev.text || "",
+      status: "approved", featured: rev.featured === true,
+    }));
+    renderReviewSummaryFields();
     renderReviews(); updateMetrics();
   } catch { state.reviews = []; renderReviews(); }
 }
@@ -554,7 +572,8 @@ function toReviewsJson() {
     rating: Number(r.rating) || 5,
     treatment: r.treatment || "",
     source: r.source || "Client feedback",
-    text: r.text || ""
+    text: r.text || "",
+    featured: r.featured === true
   }));
   return { summary: reviewsSummary, reviews };
 }
@@ -599,33 +618,155 @@ async function publishReviews() {
   }
 }
 
+function reviewFilterValue(sel) { const el = document.querySelector(sel); return el ? el.value : ""; }
+
+function populateReviewSourceFilter() {
+  const sel = document.querySelector("[data-review-source-filter]"); if (!sel) return;
+  const cur = sel.value;
+  const sources = Array.from(new Set(state.reviews.map((r) => (r.source || "").trim()).filter(Boolean))).sort();
+  sel.innerHTML = '<option value="all">All sources</option>' + sources.map((s) => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join("");
+  sel.value = cur && sources.indexOf(cur) !== -1 ? cur : "all";
+}
+
+function updateReviewCounts() {
+  const el = document.querySelector("[data-review-counts]"); if (!el) return;
+  const approved = state.reviews.filter((r) => r.status === "approved").length;
+  const pending = state.reviews.filter((r) => (r.status || "pending") === "pending").length;
+  const hidden = state.reviews.filter((r) => r.status === "hidden").length;
+  const featured = state.reviews.filter((r) => r.featured).length;
+  el.textContent = state.reviews.length + " total · " + approved + " approved · " + featured + " featured · " + pending + " pending · " + hidden + " hidden";
+}
+
 function renderReviews() {
-  const list = document.querySelector("[data-review-list]");
-  const filter = document.querySelector("[data-review-filter]")?.value || "all";
-  if (!list) return;
-  const reviews = state.reviews.filter((r) => filter === "all" ? true : filter === "featured" ? r.featured : r.status === filter);
-  list.innerHTML = reviews.map((review) => {
+  const list = document.querySelector("[data-review-list]"); if (!list) return;
+  populateReviewSourceFilter();
+  updateReviewCounts();
+  const status = reviewFilterValue("[data-review-filter]") || "all";
+  const ratingF = reviewFilterValue("[data-review-rating-filter]") || "all";
+  const sourceF = reviewFilterValue("[data-review-source-filter]") || "all";
+  const q = (reviewFilterValue("[data-review-search]") || "").trim().toLowerCase();
+
+  const filtered = state.reviews.filter((r) => {
+    if (status === "featured") { if (!r.featured) return false; }
+    else if (status !== "all") { if ((r.status || "pending") !== status) return false; }
+    if (ratingF !== "all" && (Number(r.rating) || 0) < Number(ratingF)) return false;
+    if (sourceF !== "all" && (r.source || "") !== sourceF) return false;
+    if (q && ((r.name || "") + " " + (r.text || "") + " " + (r.treatment || "")).toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+
+  list.innerHTML = filtered.map((review) => {
     const i = state.reviews.indexOf(review);
+    const st = review.status || "pending";
+    const stars = "★".repeat(Math.max(1, Math.min(5, +review.rating || 5)));
     return `
       <article class="admin-review-item">
-        <div>
-          <div class="review-meta"><strong>${escapeHtml(review.name || "Client")}</strong><span class="review-stars">${"★".repeat(+review.rating || 5)}</span><span class="status-pill">${escapeHtml(review.status || "approved")}</span>${review.featured ? '<span class="status-pill">featured</span>' : ""}</div>
+        <div class="review-body">
+          <div class="review-meta">
+            <strong>${escapeHtml(review.name || "Client")}</strong>
+            <span class="review-stars">${stars}</span>
+            <span class="status-pill status-${escapeHtml(st)}">${escapeHtml(st)}</span>
+            ${review.featured ? '<span class="status-pill status-featured">featured</span>' : ""}
+          </div>
           <p>${escapeHtml(review.text || "")}</p>
           <small>${escapeHtml(review.treatment || "Treatment")} · ${escapeHtml(review.source || "Client review")}</small>
         </div>
         <div class="review-actions">
-          <button class="tiny-button" type="button" data-review-action="approved" data-review-index="${i}">Approve</button>
+          <button class="tiny-button" type="button" data-review-edit="${i}">Edit</button>
+          <button class="tiny-button ${st === "approved" ? "" : "primary"}" type="button" data-review-action="${st === "approved" ? "pending" : "approved"}" data-review-index="${i}">${st === "approved" ? "Unapprove" : "Approve"}</button>
           <button class="tiny-button" type="button" data-review-action="featured" data-review-index="${i}">${review.featured ? "Unfeature" : "Feature"}</button>
-          <button class="tiny-button" type="button" data-review-action="hidden" data-review-index="${i}">Hide</button>
-          <button class="tiny-button" type="button" data-review-action="pending" data-review-index="${i}">Pending</button>
+          <button class="tiny-button" type="button" data-review-action="${st === "hidden" ? "pending" : "hidden"}" data-review-index="${i}">${st === "hidden" ? "Unhide" : "Hide"}</button>
+          <button class="tiny-button danger" type="button" data-review-del="${i}">Delete</button>
         </div>
       </article>`;
-  }).join("") || '<article class="admin-review-item"><p>No reviews match this filter.</p></article>';
+  }).join("") || '<article class="admin-review-item"><p class="admin-help">No reviews match these filters.</p></article>';
+
   list.querySelectorAll("[data-review-action]").forEach((b) => b.addEventListener("click", () => {
     const review = state.reviews[+b.dataset.reviewIndex]; if (!review) return;
-    if (b.dataset.reviewAction === "featured") review.featured = !review.featured; else review.status = b.dataset.reviewAction;
+    if (b.dataset.reviewAction === "featured") review.featured = !review.featured;
+    else review.status = b.dataset.reviewAction;
     renderReviews(); saveDraft("Review updated.");
   }));
+  list.querySelectorAll("[data-review-edit]").forEach((b) => b.addEventListener("click", () => openReviewEditor(+b.dataset.reviewEdit)));
+  list.querySelectorAll("[data-review-del]").forEach((b) => b.addEventListener("click", () => deleteReview(+b.dataset.reviewDel)));
+}
+
+async function deleteReview(index) {
+  const r = state.reviews[index]; if (!r) return;
+  const ok = await ldConfirm({
+    title: "Delete this review?",
+    body: 'Permanently remove the review from "' + (r.name || "this client") + '". If it was live, it disappears from the site on your next Publish. This can\'t be undone.',
+    confirmLabel: "Delete review",
+    danger: true
+  });
+  if (!ok) return;
+  state.reviews.splice(index, 1);
+  renderReviews();
+  saveDraft("Review deleted.");
+}
+
+// Modal form to add or edit a review's content.
+function openReviewEditor(index) {
+  const isNew = index == null || index < 0;
+  const r = isNew
+    ? { name: "", rating: 5, treatment: "", source: "Website", text: "", status: "pending", featured: false }
+    : state.reviews[index];
+  if (!r) return;
+  const ratingOpts = [5, 4, 3, 2, 1].map((n) => '<option value="' + n + '">' + "★".repeat(n) + " (" + n + ")</option>").join("");
+  const back = document.createElement("div");
+  back.className = "ld-modal";
+  back.innerHTML =
+    '<div class="ld-modal-veil"></div>' +
+    '<div class="ld-modal-card ld-modal-form" role="dialog" aria-modal="true">' +
+      "<h3 class=\"ld-modal-title\">" + (isNew ? "Add review" : "Edit review") + "</h3>" +
+      '<div class="admin-editor">' +
+        "<label>Client name<input type=\"text\" data-rev-name></label>" +
+        '<div class="field-pair">' +
+          "<label>Rating<select data-rev-rating>" + ratingOpts + "</select></label>" +
+          "<label>Treatment<input type=\"text\" data-rev-treatment placeholder=\"e.g. Laser hair removal\"></label>" +
+        "</div>" +
+        "<label>Source<input type=\"text\" data-rev-source placeholder=\"e.g. Treatwell, Google, In person\"></label>" +
+        "<label>Review text<textarea rows=\"4\" data-rev-text></textarea></label>" +
+        '<label class="admin-check"><input type="checkbox" data-rev-featured> Feature this review (shows first on the homepage)</label>' +
+      "</div>" +
+      '<div class="ld-modal-actions">' +
+        '<button class="admin-button admin-button-secondary" type="button" data-rev-cancel>Cancel</button>' +
+        '<button class="admin-button admin-button-primary" type="button" data-rev-save>' + (isNew ? "Add review" : "Save changes") + "</button>" +
+      "</div>" +
+    "</div>";
+  const q = (s) => back.querySelector(s);
+  q("[data-rev-name]").value = r.name || "";
+  q("[data-rev-rating]").value = String(r.rating || 5);
+  q("[data-rev-treatment]").value = r.treatment || "";
+  q("[data-rev-source]").value = r.source || "";
+  q("[data-rev-text]").value = r.text || "";
+  q("[data-rev-featured]").checked = r.featured === true;
+  function close() { back.classList.remove("is-open"); document.body.style.overflow = ""; document.removeEventListener("keydown", onKey); setTimeout(() => back.remove(), 160); }
+  function onKey(e) { if (e.key === "Escape") close(); }
+  q(".ld-modal-veil").addEventListener("click", close);
+  q("[data-rev-cancel]").addEventListener("click", close);
+  q("[data-rev-save]").addEventListener("click", () => {
+    const name = q("[data-rev-name]").value.trim();
+    if (!name) { toast("Add the client's name first."); return; }
+    const updated = {
+      name,
+      initial: name.charAt(0).toUpperCase(),
+      rating: parseInt(q("[data-rev-rating]").value, 10) || 5,
+      treatment: q("[data-rev-treatment]").value.trim(),
+      source: q("[data-rev-source]").value.trim() || "Client feedback",
+      text: q("[data-rev-text]").value.trim(),
+      featured: q("[data-rev-featured]").checked,
+      status: isNew ? "pending" : (r.status || "pending"),
+    };
+    if (isNew) state.reviews.unshift(updated);
+    else state.reviews[index] = { ...r, ...updated };
+    renderReviews();
+    saveDraft(isNew ? "Review added (pending — approve then publish)." : "Review updated.");
+    close();
+  });
+  (document.querySelector(".admin-main") || document.body).appendChild(back);
+  document.body.style.overflow = "hidden";
+  requestAnimationFrame(() => { back.classList.add("is-open"); const n = q("[data-rev-name]"); if (n) n.focus(); });
 }
 
 /* ---------------- Pages (hero copy + contact details) ----------------
