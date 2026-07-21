@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260721-reviews1">
+    <link rel="stylesheet" href="admin.css?v=20260721-submissions1">
   </head>
   <body>
     <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
@@ -442,6 +442,9 @@
                     <option value="Lashes &amp; brows">Lashes &amp; brows</option>
                     <option value="Not sure yet">Not sure yet</option>
                   </select></label>
+                  <label>Confirmed since<input type="date" data-segment="confirmed_since"></label>
+                </div>
+                <div class="field-pair">
                   <label>Birthday month<select data-segment="month">
                     <option value="">Any month</option>
                     <option value="1">January</option><option value="2">February</option>
@@ -468,6 +471,10 @@
                   <option value="yes">Yes — opted-in only (required)</option>
                   <option value="no">No — I have consent another way</option>
                 </select></label>
+              </div>
+              <div class="field-pair" data-column-map-3 hidden>
+                <label>Last visit column<select data-map-field="lastvisit"></select></label>
+                <label>Inactive for at least<input type="number" min="0" step="1" data-map-field="inactiveDays" placeholder="e.g. 90 days"></label>
               </div>
               <div class="csv-preview" data-csv-preview hidden></div>
               <p class="admin-status" data-recipients-status>No list loaded.</p>
@@ -657,6 +664,18 @@
                 <button class="admin-button admin-button-primary" type="button" data-publish-reviews>Publish reviews</button>
               </div>
             </div>
+            <section class="admin-card review-submissions-card" data-review-submissions-card hidden>
+              <div class="admin-card-head">
+                <div>
+                  <p class="admin-eyebrow">New from the website</p>
+                  <h3>Client submissions <span class="review-sub-count" data-review-sub-count></span></h3>
+                </div>
+                <button class="admin-button admin-button-secondary" type="button" data-review-sub-reload>Reload</button>
+              </div>
+              <p class="admin-help">Reviews people wrote on the website. Click <strong>Add to reviews</strong> for the ones you like &mdash; they arrive as Pending, then you approve and publish. <strong>Reject</strong> removes the rest.</p>
+              <div class="review-submissions" data-review-submissions></div>
+            </section>
+
             <section class="admin-card admin-editor">
               <p class="admin-eyebrow">Homepage rating badge</p>
               <p class="admin-help">The star rating shown on the homepage. Publishes with your reviews.</p>
@@ -822,7 +841,7 @@
               </section>
               <section class="admin-card">
                 <h3>Integration checklist</h3>
-                <ul class="admin-status-list">
+                <ul class="admin-status-list" data-onboarding-checklist>
                   <li><span>Cloudflare Access</span><strong>Enabled &mdash; protects /admin and /admin/api &#10003;</strong></li>
                   <li><span>Admin API allow-list</span><strong>Restricted to your two emails &#10003;</strong></li>
                   <li><span>Publishing token</span><strong>Stored as a Cloudflare secret, not in the browser &#10003;</strong></li>
@@ -831,6 +850,14 @@
                   <li><span>Cloudflare Web Analytics</span><strong>Not verified or present in repository code</strong></li>
                   <li><span>Marketing consent workflow</span><strong>Confirm Treatwell account features before build</strong></li>
                 </ul>
+              </section>
+              <section class="admin-card">
+                <div class="admin-card-head">
+                  <div><p class="admin-eyebrow">Draft safety</p><h3>Version history</h3></div>
+                  <button class="tiny-button" type="button" data-version-refresh>Refresh</button>
+                </div>
+                <p class="admin-help">Recent local snapshots for offers, prices and page text. Use this before overwriting a draft if something looks wrong.</p>
+                <div class="version-history" data-version-history><p class="admin-help">No versions saved yet.</p></div>
               </section>
               <section class="admin-card">
                 <h3>How publishing works</h3>
@@ -859,7 +886,7 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260720-pages1"></script>
-    <script src="admin.js?v=20260721-reviews1"></script>
+    <script src="admin.js?v=20260721-submissions1"></script>
     <script src="sender.js?v=20260721-bday1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>

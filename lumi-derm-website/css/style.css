@@ -6944,3 +6944,89 @@ body.tx-modal-active { overflow: hidden; }
   .signup-banner { transform: translateX(-50%); }
   .signup-banner.is-open { transform: translateX(-50%); }
 }
+
+/* ============================================================
+   Leave-a-review form (public submission modal)
+   ============================================================ */
+.review-strip-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.review-form-panel { max-width: 520px; }
+
+.review-hp {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.review-form {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 0.4rem;
+  text-align: left;
+}
+.review-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-charcoal, #2b2422);
+}
+.review-optional { font-weight: 400; color: var(--color-muted, #8a807b); }
+.review-form input,
+.review-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(120, 96, 90, 0.25);
+  border-radius: 12px;
+  font-size: 0.98rem;
+  background: #fff;
+  color: var(--color-charcoal, #2b2422);
+}
+.review-form textarea { resize: vertical; min-height: 110px; line-height: 1.5; }
+.review-form input:focus,
+.review-form textarea:focus {
+  outline: none;
+  border-color: var(--color-rose-deep, #936258);
+  box-shadow: 0 0 0 3px rgba(147, 98, 88, 0.14);
+}
+
+.review-rating-field { display: grid; gap: 0.4rem; }
+.review-rating-label { font-size: 0.82rem; font-weight: 700; color: var(--color-charcoal, #2b2422); }
+.review-stars-input { display: flex; gap: 0.25rem; }
+.review-star {
+  border: 0;
+  background: none;
+  padding: 0 0.1rem;
+  font-size: 2rem;
+  line-height: 1;
+  color: rgba(120, 96, 90, 0.28);
+  transition: color 120ms ease, transform 120ms ease;
+}
+.review-star:hover { transform: scale(1.08); }
+.review-star.is-on { color: var(--color-rose-deep, #936258); }
+
+.review-form-submit { margin-top: 0.3rem; justify-self: start; }
+.review-form-status { margin: 0; font-size: 0.9rem; color: var(--color-muted, #8a807b); }
+.review-form-status.is-error { color: #b0483c; }
+
+.review-form-done { text-align: center; padding: 1rem 0; }
+.review-form-done .review-form-tick {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 0.8rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(60, 140, 90, 0.14);
+  color: #2f7d4f;
+  font-size: 1.5rem;
+}
+.review-form-done h3 { font-family: var(--font-heading, Georgia, serif); font-size: 1.5rem; margin: 0 0 0.5rem; }
+.review-form-done p { margin: 0 0 1.2rem; }

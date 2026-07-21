@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260721-featured1">
+    <link rel="stylesheet" href="css/style.css?v=20260721-reviewform1">
     <link rel="stylesheet" href="css/responsive.css?v=20260718-gallery5">
     <script type="application/ld+json">
       {
@@ -250,7 +250,10 @@
                 <small>47 Treatwell reviews</small>
               </div>
               <p class="review-strip-quote">“Professional, friendly and calm care in a clean studio.”</p>
-              <button class="btn btn-secondary review-modal-open" type="button" data-review-modal-open>Read reviews</button>
+              <div class="review-strip-actions">
+                <button class="btn btn-secondary review-modal-open" type="button" data-review-modal-open>Read reviews</button>
+                <button class="btn btn-primary" type="button" data-review-form-open>Leave a review</button>
+              </div>
             </div>
           </div>
         </section>
@@ -335,6 +338,37 @@
           </div>
         </div>
 
+        <div class="review-modal" role="dialog" aria-modal="true" aria-labelledby="review-form-title" aria-hidden="true" data-review-form-modal>
+          <div class="review-modal-backdrop" data-review-form-close></div>
+          <div class="review-modal-panel review-form-panel" role="document">
+            <button class="review-modal-close" type="button" aria-label="Close the review form" data-review-form-close></button>
+            <div class="review-modal-header">
+              <p class="eyebrow">Share your experience</p>
+              <h2 id="review-form-title">Leave a review</h2>
+              <p>We read every review. Yours is checked by the team before it appears on the site.</p>
+            </div>
+            <form class="review-form" data-review-form novalidate>
+              <input class="review-hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+              <label>Your name<input type="text" name="name" required autocomplete="name" placeholder="First name or full name"></label>
+              <div class="review-rating-field">
+                <span class="review-rating-label">Your rating</span>
+                <div class="review-stars-input" data-review-stars role="radiogroup" aria-label="Your rating">
+                  <button type="button" class="review-star" data-star="1" aria-label="1 star">★</button>
+                  <button type="button" class="review-star" data-star="2" aria-label="2 stars">★</button>
+                  <button type="button" class="review-star" data-star="3" aria-label="3 stars">★</button>
+                  <button type="button" class="review-star" data-star="4" aria-label="4 stars">★</button>
+                  <button type="button" class="review-star" data-star="5" aria-label="5 stars">★</button>
+                </div>
+              </div>
+              <label>Treatment <span class="review-optional">(optional)</span><input type="text" name="treatment" placeholder="e.g. Laser hair removal"></label>
+              <label>Your review<textarea name="text" rows="4" required placeholder="Tell us about your experience…"></textarea></label>
+              <label>Email <span class="review-optional">(optional, never shown publicly)</span><input type="email" name="email" autocomplete="email"></label>
+              <button class="btn btn-primary review-form-submit" type="submit">Submit review</button>
+              <p class="review-form-status" data-review-form-status role="status"></p>
+            </form>
+          </div>
+        </div>
+
         <div class="faq-modal" role="dialog" aria-modal="true" aria-labelledby="faq-modal-title" aria-hidden="true" data-faq-modal>
           <div class="faq-modal-backdrop" data-faq-modal-close></div>
           <div class="faq-modal-panel" role="document">
@@ -372,6 +406,7 @@
       </footer>
     </div>
     <script src="js/main.js?v=20260721-featured1"></script>
+    <script src="js/reviews-form.js?v=20260721-reviewform1"></script>
     <script src="js/signup.js?v=20260721-consent1"></script>
     <script src="js/chatbot.js?v=20260710-flow1"></script>
   </body>

@@ -27,6 +27,7 @@ class MockD1 {
   constructor() {
     this.subscribers = [];
     this.campaignSends = [];
+    this.campaignEvents = [];
     this.scheduledCampaigns = [];
     this.settings = new Map();
     this.audit = [];
@@ -47,6 +48,10 @@ class MockD1 {
       const row = this.subscribers.find((s) => s.email === args[0]);
       return row ? { status: row.status } : null;
     }
+    if (/SELECT email, first_name, last_name, birth_day, birth_month, interest, status, consent_email/.test(sql)) {
+      const row = this.subscribers.find((s) => s.email === args[0]);
+      return row || null;
+    }
     if (/SELECT value FROM app_settings WHERE key='birthday'/.test(sql)) {
       const value = this.settings.get('birthday');
       return value ? { value } : null;
@@ -65,6 +70,29 @@ class MockD1 {
     return [];
   }
   _run(sql, args) {
+    if (/Updated in email preference centre/.test(sql)) {
+      const [email, firstName, lastName, birthDay, birthMonth, interest, now] = args;
+      const existing = this.subscribers.find((s) => s.email === email);
+      const row = {
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        birth_day: birthDay,
+        birth_month: birthMonth,
+        interest,
+        status: 'confirmed',
+        consent_email: 1,
+        consent_wording: 'Updated in email preference centre',
+        consent_source: 'preference centre',
+        confirm_token: null,
+        created_at: existing?.created_at || now,
+        confirmed_at: existing?.confirmed_at || now,
+        unsubscribed_at: null,
+      };
+      if (existing) Object.assign(existing, row);
+      else this.subscribers.push(row);
+      return { meta: { changes: 1 } };
+    }
     if (/INSERT INTO subscribers/.test(sql)) {
       const [email, firstName, lastName, birthDay, birthMonth, interest, wording, source, ip, now] = args;
       const existing = this.subscribers.find((s) => s.email === email);
@@ -100,7 +128,11 @@ class MockD1 {
       return { meta: { changes: before - this.subscribers.length } };
     }
     if (/INSERT INTO campaign_sends/.test(sql)) {
-      this.campaignSends.push({ id: this.campaignSends.length + 1, subject: args[0], created_at: args[9] });
+      this.campaignSends.push({ id: this.campaignSends.length + 1, subject: args[0], created_at: args[9], campaign_id: args[10] || null });
+      return { meta: { changes: 1 } };
+    }
+    if (/INSERT INTO campaign_events/.test(sql)) {
+      this.campaignEvents.push({ campaign_id: args[0], email: args[1], event_type: args[2], detail: args[3], created_at: args[4] });
       return { meta: { changes: 1 } };
     }
     if (/INSERT INTO scheduled_campaigns/.test(sql)) {
@@ -141,6 +173,15 @@ function env() {
     RESEND_API_KEY: 'test_resend_key',
     UNSUB_SECRET: 'test_secret',
     FROM_EMAIL: 'Lumi Derm <info@lumidermaesthetics.com>',
+  };
+}
+
+function assistantEnv() {
+  return {
+    ...env(),
+    ADMIN_EMAILS: 'owner@example.com,assistant@example.com',
+    ADMIN_OWNER_EMAILS: 'owner@example.com',
+    ADMIN_EDITOR_EMAILS: 'assistant@example.com',
   };
 }
 
@@ -205,6 +246,28 @@ test('campaign send validates required input before delivery', async () => {
   assert.match((await json(res)).error, /No recipients/);
 });
 
+test('assistant role cannot send campaigns', async () => {
+  const res = await worker.fetch(req('/admin/api/campaign/send', {
+    method: 'POST',
+    headers: { 'cf-access-authenticated-user-email': 'assistant@example.com', 'content-type': 'application/json' },
+    body: JSON.stringify({
+      subject: 'Hello',
+      html: '<p>Hello {{unsubscribe}} {{preferences}}</p>',
+      recipients: [{ email: 'client@example.com' }],
+    }),
+  }), assistantEnv());
+  assert.equal(res.status, 403);
+  assert.match((await json(res)).error, /Owner access/i);
+});
+
+test('assistant role cannot read subscriber personal data', async () => {
+  const res = await worker.fetch(req('/admin/api/subscribers', {
+    headers: { 'cf-access-authenticated-user-email': 'assistant@example.com' },
+  }), assistantEnv());
+  assert.equal(res.status, 403);
+  assert.match((await json(res)).error, /Owner access/i);
+});
+
 test('unsubscribe link updates suppression list and D1 status', async () => {
   const e = env();
   e.SUBSCRIBERS.subscribers.push({ email: 'client@example.com', status: 'confirmed', created_at: '2026-07-21T00:00:00.000Z' });
@@ -213,6 +276,33 @@ test('unsubscribe link updates suppression list and D1 status', async () => {
   assert.equal(res.status, 200);
   assert.equal(await e.SUPPRESSION.get('unsub:client@example.com') !== null, true);
   assert.equal(e.SUBSCRIBERS.subscribers[0].status, 'unsubscribed');
+});
+
+test('preference centre updates subscriber consent details', async () => {
+  const e = env();
+  const token = await sign('client@example.com');
+  const form = new FormData();
+  form.set('email', 'client@example.com');
+  form.set('token', token);
+  form.set('first_name', 'Client');
+  form.set('last_name', 'Person');
+  form.set('interest', 'Facials & peels');
+  form.set('birth_day', '12');
+  form.set('birth_month', '5');
+  form.set('subscribed', '1');
+  const res = await worker.fetch(req('/api/preferences', { method: 'POST', body: form }), e);
+  assert.equal(res.status, 200);
+  assert.equal(e.SUBSCRIBERS.subscribers[0].interest, 'Facials & peels');
+  assert.equal(e.SUBSCRIBERS.subscribers[0].consent_email, 1);
+});
+
+test('tracked campaign click records an event and redirects', async () => {
+  const e = env();
+  const token = await sign('client@example.com');
+  const res = await worker.fetch(req('/api/click?c=cmp_test&e=client%40example.com&t=' + token + '&u=' + encodeURIComponent('https://lumidermaesthetics.com/pages/booking.html')), e);
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get('location'), 'https://lumidermaesthetics.com/pages/booking.html');
+  assert.equal(e.SUBSCRIBERS.campaignEvents[0].event_type, 'click');
 });
 
 test('scheduled campaign insert/list/cancel routes work', async () => {

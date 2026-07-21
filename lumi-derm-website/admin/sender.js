@@ -271,13 +271,16 @@
       var emailCol = guessColumn(state.csvHeaders, ["email", "e-mail"]);
       var nameCol = guessColumn(state.csvHeaders, ["first name", "firstname", "name"]);
       var optCol = guessColumn(state.csvHeaders, ["opt-in", "opt in", "optin", "marketing", "consent"]);
+      var lastVisitCol = guessColumn(state.csvHeaders, ["last visit", "last appointment", "last booking", "last seen", "last treatment"]);
 
       fillSelect($('[data-map-field="email"]'), state.csvHeaders, emailCol);
       fillSelect($('[data-map-field="name"]'), state.csvHeaders, nameCol);
       fillSelect($('[data-map-field="optin"]'), state.csvHeaders, optCol);
+      fillSelect($('[data-map-field="lastvisit"]'), state.csvHeaders, lastVisitCol);
 
       $("[data-column-map]").hidden = false;
       $("[data-column-map-2]").hidden = false;
+      setHidden("[data-column-map-3]", false);
 
       buildRecipients();
       renderCsvPreview();
@@ -292,6 +295,11 @@
     var nameCol = parseInt(($('[data-map-field="name"]') || {}).value, 10);
     var optCol = parseInt(($('[data-map-field="optin"]') || {}).value, 10);
     var strict = ($('[data-map-field="strict"]') || {}).value !== "no";
+    var lastVisitCol = parseInt(($('[data-map-field="lastvisit"]') || {}).value, 10);
+    var inactiveDays = parseInt(($('[data-map-field="inactiveDays"]') || {}).value, 10);
+    var inactiveCutoff = !isNaN(inactiveDays) && inactiveDays > 0
+      ? Date.now() - inactiveDays * 24 * 60 * 60 * 1000
+      : null;
 
     if (isNaN(emailCol) || emailCol < 0) {
       status(out, "Pick which column holds the email address.", "error");
@@ -304,6 +312,7 @@
     var kept = [];
     var noConsent = 0;
     var noEmail = 0;
+    var notInactive = 0;
 
     state.csvRows.forEach(function (row) {
       var email = String(row[emailCol] || "").trim().toLowerCase();
@@ -315,6 +324,13 @@
         // No opt-in column selected, or the cell is not a yes → drop the row.
         if (isNaN(optCol) || optCol < 0 || !looksConsented(row[optCol])) {
           noConsent += 1;
+          return;
+        }
+      }
+      if (inactiveCutoff && lastVisitCol >= 0) {
+        var last = parseDate(row[lastVisitCol]);
+        if (!last || last.getTime() > inactiveCutoff) {
+          notInactive += 1;
           return;
         }
       }
@@ -332,6 +348,7 @@
     parts.push(kept.length + " recipient" + (kept.length === 1 ? "" : "s") + " ready");
     if (noConsent) parts.push(noConsent + " dropped (no marketing consent)");
     if (noEmail) parts.push(noEmail + " dropped (no valid email)");
+    if (notInactive) parts.push(notInactive + " dropped (not inactive long enough)");
 
     var kind = kept.length ? "ok" : "error";
     if (!kept.length && noConsent) {
@@ -346,6 +363,21 @@
     }
 
     updateSendButton();
+  }
+
+  function parseDate(value) {
+    var raw = String(value || "").trim();
+    if (!raw) return null;
+    var direct = new Date(raw);
+    if (!isNaN(direct.getTime())) return direct;
+    var m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/.exec(raw);
+    if (m) {
+      var y = parseInt(m[3], 10);
+      if (y < 100) y += 2000;
+      var d = new Date(y, parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+      if (!isNaN(d.getTime())) return d;
+    }
+    return null;
   }
 
   function renderCsvPreview() {
@@ -411,12 +443,18 @@
     if (state.audienceSource !== "website") return;
     var interestSel = $('[data-segment="interest"]');
     var monthSel = $('[data-segment="month"]');
+    var sinceSel = $('[data-segment="confirmed_since"]');
     var interest = interestSel ? interestSel.value : "";
     var month = monthSel ? parseInt(monthSel.value, 10) : NaN;
+    var since = sinceSel && sinceSel.value ? new Date(sinceSel.value + "T00:00:00") : null;
 
     var filtered = (state.allSubs || []).filter(function (row) {
       if (interest && String(row.interest || "") !== interest) return false;
       if (!isNaN(month) && Number(row.birth_month) !== month) return false;
+      if (since) {
+        var confirmed = new Date(row.confirmed_at || row.created_at || "");
+        if (isNaN(confirmed.getTime()) || confirmed < since) return false;
+      }
       return true;
     });
 
@@ -430,7 +468,7 @@
     var total = (state.allSubs || []).length;
     var count = $("[data-segment-count]");
     if (count) {
-      var segmenting = interest || !isNaN(month);
+      var segmenting = interest || !isNaN(month) || Boolean(since);
       count.hidden = false;
       count.innerHTML =
         "<strong>" + state.recipients.length + "</strong> " +
@@ -453,6 +491,7 @@
     setHidden("[data-segment-controls]", !isWebsite);
     setHidden("[data-column-map]", true);
     setHidden("[data-column-map-2]", true);
+    setHidden("[data-column-map-3]", true);
     setHidden("[data-csv-preview]", true);
     setHidden("[data-segment-count]", true);
     state.recipients = [];
@@ -666,6 +705,7 @@
   function renderEmail(m, forPreview, offers) {
     offers = offers || [];
     var unsub = forPreview ? "#" : "{{unsubscribe}}";
+    var pref = forPreview ? "#" : "{{preferences}}";
     var greeting = forPreview ? "Sarah" : "{{name}}";
 
     var bodyHtml = paragraphs(String(m.body || "").replace(/\{\{name\}\}/g, greeting));
@@ -749,6 +789,10 @@
       '<p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:#b8ada1;">' +
       "You're receiving this because you opted in to hear from Lumi Derm Aesthetics.<br>" +
       '<a href="' +
+      pref +
+      '" style="color:#b8ada1;text-decoration:underline;">Preferences</a>' +
+      '<span style="color:#d8cfc5;">&nbsp;&nbsp;&middot;&nbsp;&nbsp;</span>' +
+      '<a href="' +
       unsub +
       '" style="color:#b8ada1;text-decoration:underline;">Unsubscribe</a></p>' +
       "</td></tr></table></td></tr>" +
@@ -801,6 +845,10 @@
     checks.push({
       ok: /\{\{unsubscribe\}\}/.test(html),
       text: "Unsubscribe token is included."
+    });
+    checks.push({
+      ok: /\{\{preferences\}\}/.test(html),
+      text: "Preference-centre token is included."
     });
     checks.push({
       ok: !ctaUrl || /^https:\/\/(lumidermaesthetics\.com|www\.treatwell\.co\.uk)\//i.test(ctaUrl),
@@ -936,11 +984,15 @@
       var file = fileInput.files && fileInput.files[0];
       if (!file) return;
       if (!/^image\//.test(file.type || "")) { status(statusEl, "That file is not an image.", "error"); fileInput.value = ""; return; }
-      if (file.size > 6 * 1024 * 1024) { status(statusEl, "That image is larger than 6MB.", "error"); fileInput.value = ""; return; }
-      status(statusEl, "Uploading…");
-      var form = new FormData();
-      form.append("file", file, file.name);
-      fetch(ADMIN_API + "/media/upload", { method: "POST", credentials: "same-origin", body: form })
+      if (file.size > 12 * 1024 * 1024) { status(statusEl, "That image is larger than 12MB.", "error"); fileInput.value = ""; return; }
+      status(statusEl, "Preparing…");
+      Promise.resolve(window.ldPrepareImageUpload ? window.ldPrepareImageUpload(file, { width: 1200, height: 620, quality: 0.86, prefix: "email-banner" }) : file)
+        .then(function (prepared) {
+          status(statusEl, "Uploading…");
+          var form = new FormData();
+          form.append("file", prepared, prepared.name || file.name);
+          return fetch(ADMIN_API + "/media/upload", { method: "POST", credentials: "same-origin", body: form });
+        })
         .then(function (res) { return responseJson(res); })
         .then(function (d) {
           state.mail.heroImage = d.url || "";
@@ -1318,13 +1370,16 @@
   function currentSegment() {
     var i = $('[data-segment="interest"]');
     var m = $('[data-segment="month"]');
-    return { interest: i ? i.value : "", month: m ? m.value : "" };
+    var s = $('[data-segment="confirmed_since"]');
+    return { interest: i ? i.value : "", month: m ? m.value : "", confirmed_since: s ? s.value : "" };
   }
   function setSegment(segment) {
     var i = $('[data-segment="interest"]');
     var m = $('[data-segment="month"]');
+    var s = $('[data-segment="confirmed_since"]');
     if (i) i.value = (segment && segment.interest) || "";
     if (m) m.value = (segment && segment.month) || "";
+    if (s) s.value = (segment && segment.confirmed_since) || "";
   }
   function campaignPayload(id) {
     var nameEl = $("[data-campaign-name]");
@@ -1429,6 +1484,7 @@
       var seg = [];
       if (c.segment && c.segment.interest) seg.push(esc(c.segment.interest));
       if (c.segment && c.segment.month) seg.push("month " + esc(c.segment.month));
+      if (c.segment && c.segment.confirmed_since) seg.push("since " + esc(c.segment.confirmed_since));
       var sub = esc((c.mail && c.mail.subject) || "(no subject)");
       return '<div class="campaign-draft">' +
         '<div class="campaign-draft-main"><strong>' + esc(c.name) + "</strong>" +
@@ -1474,10 +1530,16 @@
         box.innerHTML = rows.slice(0, 8).map(function (row) {
           var count = Number(row.sent_count || 0);
           var label = row.is_test ? "Test" : row.audience_source === "website" ? "Website subscribers" : "Treatwell CSV";
+          var metrics = [
+            count + " sent",
+            Number(row.failed_count || 0) + " failed",
+            Number(row.unsubscribe_count || 0) + " unsubscribed",
+            Number(row.click_count || 0) + " clicks"
+          ].join(" · ");
           return (
             '<article class="history-item">' +
             '<div><strong>' + esc(row.subject || "Untitled") + '</strong>' +
-            '<span>' + esc(label) + " · " + count + " sent · " + esc(formatDate(row.created_at)) + '</span></div>' +
+            '<span>' + esc(label) + " · " + esc(metrics) + " · " + esc(formatDate(row.created_at)) + '</span></div>' +
             '<em class="' + (row.status === "sent" ? "is-ok" : "is-warn") + '">' + esc(row.status || "sent") + '</em>' +
             '</article>'
           );

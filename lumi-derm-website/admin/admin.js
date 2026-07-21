@@ -3,6 +3,7 @@
    external system of record for bookings, payments and client information. */
 
 const STORAGE_KEY = "lumi-derm-admin-draft-v2";
+const VERSION_KEY = "lumi-derm-admin-versions-v1";
 const PASS_KEY = "lumi-derm-admin-pass";
 const UNLOCK_KEY = "lumi-derm-admin-unlocked";
 const DEFAULT_PASS = "lumiderm";
@@ -33,6 +34,7 @@ let state = loadDraft();
 let selectedOfferIndex = 0;
 let selectedTx = { gi: 0, ti: 0 }; // selected treatment in the Prices editor (group index, treatment index)
 let undoStack = [];
+let adminRole = "owner";
 
 const toastRegion = document.querySelector("[data-admin-toast-region]");
 
@@ -103,6 +105,7 @@ function runApp() {
   loadContentFromJson();
   loadMedia();
   loadBirthdays();
+  loadReviewSubmissions();
   // First run (no local draft yet) -> start from the offers actually on the website.
   if (!localStorage.getItem(STORAGE_KEY)) loadOffersFromSite(false);
 }
@@ -136,6 +139,66 @@ function saveDraft(message) {
   updateLastSaved();
   updateMetrics();
   if (message) toast(message);
+}
+
+function draftVersions() {
+  try {
+    const rows = JSON.parse(localStorage.getItem(VERSION_KEY) || "[]");
+    return Array.isArray(rows) ? rows : [];
+  } catch { return []; }
+}
+
+function recordDraftVersion(kind, label, payload) {
+  try {
+    const rows = draftVersions();
+    rows.unshift({
+      id: "ver_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8),
+      kind,
+      label,
+      created_at: new Date().toISOString(),
+      payload: structuredClone(payload),
+    });
+    localStorage.setItem(VERSION_KEY, JSON.stringify(rows.slice(0, 40)));
+    renderVersionHistory();
+  } catch { /* local snapshots are a safety net, not critical */ }
+}
+
+function renderVersionHistory() {
+  const box = document.querySelector("[data-version-history]");
+  if (!box) return;
+  const rows = draftVersions();
+  if (!rows.length) {
+    box.innerHTML = '<p class="admin-help">No versions saved yet. Publishing or reloading creates a snapshot automatically.</p>';
+    return;
+  }
+  box.innerHTML = rows.slice(0, 12).map((row) => `
+    <article class="version-item">
+      <div><strong>${escapeHtml(versionKind(row.kind))}</strong><span>${escapeHtml(row.label || "Snapshot")} · ${escapeHtml(auditWhen(row.created_at))}</span></div>
+      <button class="tiny-button" type="button" data-version-restore="${escapeAttr(row.id)}">Restore</button>
+    </article>`).join("");
+  box.querySelectorAll("[data-version-restore]").forEach((btn) => btn.addEventListener("click", () => restoreDraftVersion(btn.dataset.versionRestore)));
+}
+
+function versionKind(kind) {
+  if (kind === "offers") return "Offers";
+  if (kind === "prices") return "Prices";
+  if (kind === "content") return "Page text";
+  return "Draft";
+}
+
+async function restoreDraftVersion(id) {
+  const row = draftVersions().find((v) => v.id === id);
+  if (!row) return;
+  const ok = await ldConfirm({
+    title: "Restore " + versionKind(row.kind) + "?",
+    body: "This replaces the current local draft in this browser. It does not publish until you click Publish.",
+    confirmLabel: "Restore draft"
+  });
+  if (!ok) return;
+  if (row.kind === "offers") { state.offers = structuredClone(row.payload || []); selectedOfferIndex = 0; renderOffers(); }
+  if (row.kind === "prices") { state.prices = structuredClone(row.payload || { groups: [] }); selectedTx = { gi: 0, ti: 0 }; renderPrices(); }
+  if (row.kind === "content") { state.content = structuredClone(row.payload || {}); renderContent(); }
+  saveDraft(versionKind(row.kind) + " restored from version history.");
 }
 
 function undoLastLocalEdit() {
@@ -374,6 +437,7 @@ function bindPrices() {
       confirmLabel: "Reload live prices"
     });
     if (!ok) return;
+    recordDraftVersion("prices", "Before reloading live prices", state.prices);
     loadPricesFromJson(true, true);
   });
 }
@@ -530,6 +594,9 @@ function bindReviews() {
       saveDraft(null);
     });
   });
+  document.querySelector("[data-review-sub-reload]")?.addEventListener("click", loadReviewSubmissions);
+  const revNav = document.querySelector('[data-admin-panel="reviews"]');
+  if (revNav) revNav.addEventListener("click", () => setTimeout(loadReviewSubmissions, 0), { once: true });
   renderReviewSummaryFields();
 }
 
@@ -538,6 +605,86 @@ function renderReviewSummaryFields() {
     const v = reviewsSummary[f.dataset.reviewSummary];
     f.value = v == null ? "" : v;
   });
+}
+
+/* ---- Client review submissions (from the website form) ---- */
+const REVIEW_SUB_API = "/admin/api/reviews/submissions";
+let reviewSubmissionsCount = 0;
+let reviewSubmissionsCache = [];
+
+async function loadReviewSubmissions() {
+  const card = document.querySelector("[data-review-submissions-card]");
+  const box = document.querySelector("[data-review-submissions]");
+  try {
+    const res = await fetch(REVIEW_SUB_API, { cache: "no-store", credentials: "same-origin" });
+    const data = await ldReadJson(res);
+    reviewSubmissionsCache = data.submissions || [];
+    reviewSubmissionsCount = reviewSubmissionsCache.length;
+    renderReviewSubmissions(reviewSubmissionsCache);
+    if (card) card.hidden = reviewSubmissionsCount === 0;
+    const badge = document.querySelector("[data-review-sub-count]");
+    if (badge) badge.textContent = reviewSubmissionsCount ? "(" + reviewSubmissionsCount + ")" : "";
+    updateMetrics();
+  } catch (err) {
+    if (box) box.innerHTML = '<p class="admin-status is-error">' + escapeHtml(ldFriendlyError(err)) + "</p>";
+  }
+}
+
+function renderReviewSubmissions(subs) {
+  const box = document.querySelector("[data-review-submissions]"); if (!box) return;
+  if (!subs.length) { box.innerHTML = '<p class="admin-help">No new submissions right now.</p>'; return; }
+  box.innerHTML = subs.map((s) => {
+    const stars = "★".repeat(Math.max(1, Math.min(5, +s.rating || 5)));
+    const meta = [s.treatment, s.email].filter(Boolean).join(" · ");
+    return '<article class="review-sub-item">' +
+      '<div class="review-sub-body">' +
+        '<div class="review-meta"><strong>' + escapeHtml(s.name || "Anonymous") + '</strong><span class="review-stars">' + stars + '</span><span class="review-sub-when">' + escapeHtml(auditWhen(s.created_at)) + "</span></div>" +
+        "<p>" + escapeHtml(s.text || "") + "</p>" +
+        (meta ? "<small>" + escapeHtml(meta) + "</small>" : "") +
+      "</div>" +
+      '<div class="review-actions">' +
+        '<button class="tiny-button primary" type="button" data-sub-import="' + s.id + '">Add to reviews</button>' +
+        '<button class="tiny-button danger" type="button" data-sub-reject="' + s.id + '">Reject</button>' +
+      "</div>" +
+    "</article>";
+  }).join("");
+  box.querySelectorAll("[data-sub-import]").forEach((b) => b.addEventListener("click", () => importSubmission(+b.dataset.subImport)));
+  box.querySelectorAll("[data-sub-reject]").forEach((b) => b.addEventListener("click", () => rejectSubmission(+b.dataset.subReject)));
+}
+
+function importSubmission(id) {
+  const s = reviewSubmissionsCache.find((x) => x.id === id); if (!s) return;
+  state.reviews.unshift({
+    name: s.name || "Client", initial: (s.name || "C").charAt(0).toUpperCase(),
+    rating: Number(s.rating) || 5, treatment: s.treatment || "", source: "Website",
+    text: s.text || "", status: "pending", featured: false,
+  });
+  saveDraft("Added to reviews (pending — approve then publish).");
+  renderReviews();
+  resolveSubmission(id, "imported");
+  toast("Added to your reviews. Approve it, then Publish.");
+}
+
+async function rejectSubmission(id) {
+  const ok = await ldConfirm({
+    title: "Reject this submission?",
+    body: "Remove this website submission. It won't be added to your reviews. This can't be undone.",
+    confirmLabel: "Reject", danger: true
+  });
+  if (!ok) return;
+  resolveSubmission(id, "rejected");
+}
+
+async function resolveSubmission(id, action) {
+  try {
+    const res = await fetch(REVIEW_SUB_API + "/resolve", {
+      method: "POST", credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id, action })
+    });
+    await ldReadJson(res);
+    loadReviewSubmissions();
+  } catch (err) { toast(ldFriendlyError(err)); }
 }
 
 async function loadReviewsFromJson() {
@@ -804,6 +951,7 @@ function bindContent() {
       confirmLabel: "Reload live text"
     });
     if (!ok) return;
+    recordDraftVersion("content", "Before reloading live page text", state.content);
     loadContentFromJson(true, true);
   });
   document.querySelectorAll("[data-content-hero]").forEach((f) => f.addEventListener("change", () => {
@@ -866,10 +1014,11 @@ function bindSettings() {
   });
   document.querySelector("[data-audit-reload]")?.addEventListener("click", loadAuditLog);
   document.querySelector("[data-status-refresh]")?.addEventListener("click", loadSystemStatus);
+  document.querySelector("[data-version-refresh]")?.addEventListener("click", renderVersionHistory);
   // Load the system status + activity log the first time Settings is opened.
   const settingsNav = document.querySelector('[data-admin-panel="settings"]');
   let settingsLoaded = false;
-  if (settingsNav) settingsNav.addEventListener("click", () => { if (!settingsLoaded) { settingsLoaded = true; loadSystemStatus(); loadAuditLog(); } });
+  if (settingsNav) settingsNav.addEventListener("click", () => { if (!settingsLoaded) { settingsLoaded = true; loadSystemStatus(); loadAuditLog(); renderVersionHistory(); } });
   document.querySelector("[data-reset-admin]")?.addEventListener("click", async () => {
     const ok = await ldConfirm({
       title: "Reset admin drafts?",
@@ -878,6 +1027,9 @@ function bindSettings() {
       danger: true
     });
     if (!ok) return;
+    recordDraftVersion("offers", "Before resetting admin drafts", state.offers);
+    recordDraftVersion("prices", "Before resetting admin drafts", state.prices);
+    recordDraftVersion("content", "Before resetting admin drafts", state.content);
     localStorage.removeItem(STORAGE_KEY);
     state = loadDraft(); selectedOfferIndex = 0; selectedTx = { gi: 0, ti: 0 };
     renderAll(); loadPricesFromJson(false, true); loadContentFromJson(false, true); toast("Admin reset to defaults.");
@@ -973,10 +1125,12 @@ async function loadMedia() {
 async function uploadMedia(file) {
   if (!file) return null;
   if (!/^image\//.test(file.type || "")) { setMediaStatus("That file is not an image.", "error"); return null; }
-  if (file.size > 6 * 1024 * 1024) { setMediaStatus("That image is larger than 6MB — please use a smaller one.", "error"); return null; }
-  setMediaStatus("Uploading " + file.name + "…");
+  if (file.size > 12 * 1024 * 1024) { setMediaStatus("That image is larger than 12MB — please use a smaller one.", "error"); return null; }
+  setMediaStatus("Preparing " + file.name + "…");
+  const prepared = await ldPrepareImageUpload(file, { width: 1400, height: 1000, quality: 0.86, prefix: "lumi" });
+  setMediaStatus("Uploading " + prepared.name + "…");
   const form = new FormData();
-  form.append("file", file, file.name);
+  form.append("file", prepared, prepared.name);
   try {
     const res = await fetch(MEDIA_API + "/upload", { method: "POST", credentials: "same-origin", body: form });
     const data = await ldReadJson(res);
@@ -988,6 +1142,38 @@ async function uploadMedia(file) {
     return null;
   }
 }
+
+async function ldPrepareImageUpload(file, opts = {}) {
+  if (!file || !/^image\//.test(file.type || "")) return file;
+  const width = Math.max(320, Number(opts.width || 1400));
+  const height = Math.max(240, Number(opts.height || Math.round(width * 0.72)));
+  const quality = Math.min(0.95, Math.max(0.6, Number(opts.quality || 0.86)));
+  const prefix = String(opts.prefix || "image").replace(/[^a-z0-9-]+/gi, "-").toLowerCase();
+  const bitmap = await createImageBitmap(file);
+  const sourceRatio = bitmap.width / bitmap.height;
+  const targetRatio = width / height;
+  let sx = 0, sy = 0, sw = bitmap.width, sh = bitmap.height;
+  if (sourceRatio > targetRatio) {
+    sw = Math.round(bitmap.height * targetRatio);
+    sx = Math.round((bitmap.width - sw) / 2);
+  } else {
+    sh = Math.round(bitmap.width / targetRatio);
+    sy = Math.round((bitmap.height - sh) / 2);
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d", { alpha: false });
+  ctx.fillStyle = "#f4f1ee";
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(bitmap, sx, sy, sw, sh, 0, 0, width, height);
+  if (bitmap.close) bitmap.close();
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
+  if (!blob) return file;
+  const base = file.name.replace(/\.[^.]+$/, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 42) || "upload";
+  return new File([blob], prefix + "-" + base + "-" + Date.now().toString(36) + ".webp", { type: "image/webp" });
+}
+window.ldPrepareImageUpload = ldPrepareImageUpload;
 
 async function deleteMedia(key) {
   const ok = await ldConfirm({
@@ -1033,6 +1219,7 @@ function updateMetrics() {
   const attention = document.querySelector("[data-attention]"); if (!attention) return;
   const items = [];
   if (birthdaysToday) items.push(["Birthday today 🎂", birthdaysToday + " subscriber" + (birthdaysToday === 1 ? "" : "s") + " — send from the Birthdays card"]);
+  if (reviewSubmissionsCount) items.push(["New website reviews", reviewSubmissionsCount + " waiting — check the Reviews tab"]);
   const pending = state.reviews.filter((r) => r.status === "pending").length;
   if (pending) items.push(["Reviews to approve", `${pending} pending in the queue`]);
   const drafts = state.offers.filter((o) => String(o.status || "").toLowerCase() === "draft").length;
@@ -1326,6 +1513,7 @@ async function publishOffers(options) {
   const button = document.querySelector("[data-publish-offers]");
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
   setPublishStatus("Publishing to the website…");
+  recordDraftVersion("offers", "Before publishing offers", state.offers);
 
   try {
     const branch = "main";
@@ -1431,6 +1619,7 @@ async function publishPrices() {
   const button = document.querySelector("[data-publish-prices]");
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
   setPricesStatus("Publishing to the treatments page…");
+  recordDraftVersion("prices", "Before publishing prices", state.prices);
   try {
     const branch = "main";
     // 1) the data file (source of truth the admin reloads from)
@@ -1502,6 +1691,7 @@ async function publishContent() {
   const button = document.querySelector("[data-publish-content]");
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
   setContentStatus("Publishing page text…");
+  recordDraftVersion("content", "Before publishing page text", state.content);
   try {
     const branch = "main";
 
@@ -1615,6 +1805,7 @@ function bindPublishing() {
       confirmLabel: "Reload live offers"
     });
     if (!ok) return;
+    recordDraftVersion("offers", "Before reloading live offers", state.offers);
     loadOffersFromSite(true);
   });
 
@@ -1729,6 +1920,8 @@ async function loadSystemStatus() {
   try {
     const res = await fetch("/admin/api/health", { cache: "no-store", credentials: "same-origin" });
     const d = await ldReadJson(res);
+    adminRole = d.role || "owner";
+    applyRoleControls();
     const dep = d.deploy;
     const ls = d.lastSend;
     const rows = [
@@ -1743,9 +1936,52 @@ async function loadSystemStatus() {
       ["Last successful send", ls ? escapeHtml('“' + ls.subject + '” — ' + ls.sent + " sent · " + auditWhen(ls.at)) : "none yet", ls ? true : null],
     ];
     box.innerHTML = rows.map((r) => "<li>" + dot(r[2]) + "<span>" + r[0] + "</span><strong>" + r[1] + "</strong></li>").join("");
+    renderOnboardingChecklist(d);
   } catch (err) {
     box.innerHTML = '<li><span>Could not load status</span><strong>' + escapeHtml(ldFriendlyError(err)) + "</strong></li>";
+    renderOnboardingChecklist(null);
   }
+}
+
+function renderOnboardingChecklist(d) {
+  const box = document.querySelector("[data-onboarding-checklist]");
+  if (!box) return;
+  const role = d && d.role ? d.role : "unknown";
+  const checks = [
+    ["Cloudflare Access", Boolean(d && d.adminEmail), d && d.adminEmail ? "Signed in as " + d.adminEmail : "Sign in through Cloudflare Access"],
+    ["Role separation", Boolean(d && d.role), role === "owner" ? "Owner access active" : role === "assistant" ? "Assistant access active" : "Role not reported"],
+    ["Database (D1)", Boolean(d && d.subscribers), d && d.subscribers ? "Subscribers database connected" : "Connect SUBSCRIBERS D1"],
+    ["Email sending", Boolean(d && d.resend), d && d.resend ? "Resend configured" : "Add RESEND_API_KEY"],
+    ["Unsubscribe/preference links", Boolean(d && d.unsubSecret && d.suppression), d && d.unsubSecret && d.suppression ? "Signed links and suppression connected" : "Add UNSUB_SECRET and SUPPRESSION KV"],
+    ["Publishing", Boolean(d && d.github), d && d.github ? "GitHub secret configured" : "Add GitHub publishing secret"],
+    ["Image storage", Boolean(d && d.media), d && d.media ? "R2 media storage connected" : "Connect MEDIA R2 bucket"],
+    ["Audit log", Boolean(d && d.subscribers), d && d.subscribers ? "Recorded in D1" : "Available after D1 is connected"],
+  ];
+  box.innerHTML = checks.map(([label, ok, detail]) =>
+    '<li class="' + (ok ? "is-complete" : "is-pending") + '"><span>' + escapeHtml(label) + '</span><strong>' +
+    escapeHtml(detail) + (ok ? " ✓" : "") + "</strong></li>"
+  ).join("");
+}
+
+function applyRoleControls() {
+  const restricted = [
+    "[data-publish-offers]", "[data-publish-reviews]", "[data-publish-prices]", "[data-publish-content]",
+    "[data-send-campaign]", "[data-send-test]", "[data-schedule-toggle]", "[data-bday-save]", "[data-bday-test]",
+    "[data-media-upload-btn]", "[data-offer-image-upload]", "[data-mail-banner-upload]",
+    "[data-subs-export]", "[data-subs-import]", "[data-export-admin]", "[data-import-admin]",
+  ];
+  const assistant = adminRole === "assistant";
+  restricted.forEach((sel) => {
+    document.querySelectorAll(sel).forEach((el) => {
+      if (assistant) {
+        el.disabled = true;
+        el.setAttribute("title", "Owner access is required for this action.");
+      } else if (el.getAttribute("title") === "Owner access is required for this action.") {
+        el.removeAttribute("title");
+      }
+    });
+  });
+  if (assistant) toast("Assistant role active: drafts can be edited, but sending, publishing, deleting and exports require owner access.");
 }
 
 async function loadAuditLog() {

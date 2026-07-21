@@ -18,6 +18,9 @@
  *   POST /api/preferences         — save subscriber preferences
  *   GET  /api/click               — tracked campaign-link redirect
  *   POST /api/subscribe           — newsletter signup (double opt-in)
+ *   POST /api/reviews             — public: submit a client review (pending moderation)
+ *   GET  /admin/api/reviews/submissions — admin: pending website review submissions
+ *   POST /admin/api/reviews/submissions/resolve — admin: import/reject a submission
  *   GET  /api/subscribe/confirm   — double opt-in confirmation link
  *   GET  /admin/api/subscribers   — admin: list subscribers
  *   POST /admin/api/subscribers/import — admin: import consented subscribers from CSV
@@ -217,7 +220,17 @@ export default {
         return json({ error: "Use GET or POST." }, 405);
       }
 
+      if (apiPath === "/api/reviews/submissions" && isAdminApi) {
+        return handleReviewSubmissions(request, env);
+      }
+      if (apiPath === "/api/reviews/submissions/resolve" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleReviewResolve(request, env);
+      }
+
       if (apiPath === "/api/birthdays" && isAdminApi) {
+        const owner = requireOwner(request, env, "view birthday subscriber data");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleBirthdaysList(request, env);
       }
       if (apiPath === "/api/birthdays/send" && isAdminApi) {
@@ -248,6 +261,11 @@ export default {
         return handleSubscribe(request, env, url);
       }
 
+      if (apiPath === "/api/reviews" && isPublicApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleReviewSubmit(request, env);
+      }
+
       // Clean, mail-safe confirmation link: /api/confirm/<token> (no query string).
       if (url.pathname.startsWith("/api/confirm/") && isPublicApi) {
         return handleConfirmByToken(env, url.pathname.slice("/api/confirm/".length));
@@ -258,6 +276,8 @@ export default {
       }
 
       if (apiPath === "/api/subscribers" && isAdminApi) {
+        const owner = requireOwner(request, env, "view subscriber personal data");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleListSubscribers(request, env);
       }
 
@@ -373,7 +393,7 @@ async function handleSend(request, env, url) {
       .replaceAll("{{name}}", escapeHtml(who))
       .replaceAll("{{unsubscribe}}", unsubUrl)
       .replaceAll("{{preferences}}", preferencesUrl);
-    personalised = trackCampaignLinks(env, url.origin, personalised, campaignId, person.email);
+    personalised = await trackCampaignLinks(env, url.origin, personalised, campaignId, person.email);
     // Subject is a plain-text header — personalise but do not HTML-escape.
     const personalisedSubject = subject.replaceAll("{{name}}", who);
 
@@ -418,6 +438,9 @@ async function handleSend(request, env, url) {
     invalid,
     errors,
   };
+  if (errors.length) {
+    await recordCampaignEvent(env, { campaignId, eventType: "failed", detail: errors.join(" | ").slice(0, 500) });
+  }
 
   await recordCampaignSend(env, {
     subject,
@@ -654,7 +677,7 @@ async function deliverCampaign(env, origin, opts) {
       .replaceAll("{{name}}", escapeHtml(who))
       .replaceAll("{{unsubscribe}}", unsubUrl)
       .replaceAll("{{preferences}}", preferencesUrl);
-    personalised = trackCampaignLinks(env, origin, personalised, campaignId, person.email);
+    personalised = await trackCampaignLinks(env, origin, personalised, campaignId, person.email);
     const personalisedSubject = subject.replaceAll("{{name}}", who);
     const message = {
       from,
@@ -691,6 +714,9 @@ async function deliverCampaign(env, origin, opts) {
     requested: incoming.length, sent, suppressed, invalid,
     status: errors.length ? "partial" : "sent", errors, campaignId,
   });
+  if (errors.length) {
+    await recordCampaignEvent(env, { campaignId, eventType: "failed", detail: errors.join(" | ").slice(0, 500) });
+  }
 
   return { ok: errors.length === 0, sent, suppressed, invalid, errors, campaignId };
 }
@@ -782,6 +808,64 @@ const DEFAULT_BIRTHDAY_FIELDS = {
   ctaLabel: "Book your birthday treat",
   ctaUrl: "https://lumidermaesthetics.com/pages/booking.html",
 };
+
+/* ------------------------------------------------------------------ */
+/* Client review submissions (public form -> admin moderation)         */
+/* ------------------------------------------------------------------ */
+
+// Public: a visitor submits a review from the homepage. Stored 'pending'.
+async function handleReviewSubmit(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Reviews aren't set up yet." }, 500);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request." }, 400); }
+
+  // Honeypot: real people leave this empty. Pretend success for bots.
+  if (String(body.company || "").trim() !== "") return json({ ok: true, message: "Thank you!" });
+
+  const name = String(body.name || "").trim().slice(0, 80);
+  const rating = clampInt(body.rating, 1, 5);
+  const treatment = String(body.treatment || "").trim().slice(0, 80);
+  const text = String(body.text || "").trim().slice(0, 1500);
+  const email = String(body.email || "").trim().slice(0, 160);
+  if (!name) return json({ error: "Please add your name." }, 400);
+  if (rating === null) return json({ error: "Please choose a star rating." }, 400);
+  if (text.length < 4) return json({ error: "Please write a short review." }, 400);
+
+  const ip = request.headers.get("cf-connecting-ip") || "";
+  await env.SUBSCRIBERS.prepare(
+    `INSERT INTO review_submissions (name, rating, treatment, text, email, status, ip, created_at)
+     VALUES (?1,?2,?3,?4,?5,'pending',?6,?7)`
+  ).bind(name, rating, treatment, text, email, ip, new Date().toISOString()).run();
+  await logAudit(env, null, { actor: email || name, action: "review.submitted", detail: name + " (" + rating + "★)", status: "ok" });
+
+  return json({ ok: true, message: "Thank you! Your review has been sent to us for approval." });
+}
+
+// Admin: list pending website submissions.
+async function handleReviewSubmissions(request, env) {
+  if (!env.SUBSCRIBERS) return json({ ok: true, submissions: [] });
+  const { results } = await env.SUBSCRIBERS.prepare(
+    `SELECT id, name, rating, treatment, text, email, created_at
+       FROM review_submissions WHERE status='pending' ORDER BY created_at DESC LIMIT 200`
+  ).all();
+  return json({ ok: true, submissions: results || [] });
+}
+
+// Admin: mark a submission imported (added to the review list) or rejected.
+async function handleReviewResolve(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Not set up yet." }, 500);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  const id = parseInt(body.id, 10);
+  const action = String(body.action || "");
+  if (!id || ["imported", "rejected"].indexOf(action) === -1) return json({ error: "Bad request." }, 400);
+  const res = await env.SUBSCRIBERS.prepare(
+    "UPDATE review_submissions SET status=?1 WHERE id=?2 AND status='pending'"
+  ).bind(action, id).run();
+  const changed = res.meta && res.meta.changes ? res.meta.changes : 0;
+  await logAudit(env, request, { action: action === "imported" ? "review.imported" : "review.rejected", detail: "submission " + id, status: "ok" });
+  return json({ ok: true, changed });
+}
 
 // Confirmed + consented subscribers whose birthday is today or within the next 7 days.
 async function handleBirthdaysList(request, env) {
@@ -1328,16 +1412,96 @@ async function handleMediaDelete(request, env) {
 /* Unsubscribe                                                         */
 /* ------------------------------------------------------------------ */
 
+async function handlePreferencesGet(request, env, url) {
+  const email = String(url.searchParams.get("e") || "").trim().toLowerCase();
+  const token = String(url.searchParams.get("t") || "");
+  if (!(await validEmailToken(env, email, token))) {
+    return htmlPage("Invalid link", "This preference link is not valid.", 400);
+  }
+
+  let row = null;
+  if (env.SUBSCRIBERS) {
+    try {
+      row = await env.SUBSCRIBERS.prepare(
+        `SELECT email, first_name, last_name, birth_day, birth_month, interest, status, consent_email
+           FROM subscribers WHERE email=?1`
+      ).bind(email).first();
+    } catch { row = null; }
+  }
+
+  return preferencesPage({
+    email,
+    token,
+    firstName: row && row.first_name,
+    lastName: row && row.last_name,
+    day: row && row.birth_day,
+    month: row && row.birth_month,
+    interest: row && row.interest,
+    subscribed: !row || (row.status === "confirmed" && Number(row.consent_email) === 1),
+  });
+}
+
+async function handlePreferencesPost(request, env) {
+  if (!env.SUBSCRIBERS) return htmlPage("Not available", "Preferences are not set up yet.", 500);
+  const form = await request.formData();
+  const email = String(form.get("email") || "").trim().toLowerCase();
+  const token = String(form.get("token") || "");
+  if (!(await validEmailToken(env, email, token))) {
+    return htmlPage("Invalid link", "This preference link is not valid.", 400);
+  }
+
+  const now = new Date().toISOString();
+  const firstNameVal = String(form.get("first_name") || "").trim().slice(0, 60);
+  const lastNameVal = String(form.get("last_name") || "").trim().slice(0, 60);
+  const interest = String(form.get("interest") || "").trim().slice(0, 40);
+  const birthDay = clampInt(form.get("birth_day"), 1, 31);
+  const birthMonth = clampInt(form.get("birth_month"), 1, 12);
+  const subscribed = form.get("subscribed") === "1";
+
+  if (subscribed) {
+    await env.SUBSCRIBERS.prepare(
+      `INSERT INTO subscribers
+         (email, first_name, last_name, birth_day, birth_month, interest, status,
+          consent_email, consent_wording, consent_source, confirm_token, created_at, confirmed_at, unsubscribed_at)
+       VALUES (?1,?2,?3,?4,?5,?6,'confirmed',1,'Updated in email preference centre','preference centre',NULL,?7,?7,NULL)
+       ON CONFLICT(email) DO UPDATE SET
+         first_name=?2, last_name=?3, birth_day=?4, birth_month=?5, interest=?6,
+         status='confirmed', consent_email=1, consent_source='preference centre',
+         consent_wording='Updated in email preference centre', confirmed_at=COALESCE(confirmed_at, ?7),
+         unsubscribed_at=NULL`
+    ).bind(email, firstNameVal, lastNameVal, birthDay, birthMonth, interest, now).run();
+    if (env.SUPPRESSION) await env.SUPPRESSION.delete(suppressionKey(email));
+    return htmlPage("Preferences saved", "Your email preferences have been updated. You can change them again from any Lumi Derm email.", 200);
+  }
+
+  if (env.SUPPRESSION) {
+    await env.SUPPRESSION.put(suppressionKey(email), JSON.stringify({ at: now, source: "preference centre" }));
+  }
+  await env.SUBSCRIBERS.prepare(
+    "UPDATE subscribers SET status='unsubscribed', consent_email=0, unsubscribed_at=?1 WHERE email=?2"
+  ).bind(now, email).run();
+  return htmlPage("You're unsubscribed", "We've removed you from Lumi Derm marketing emails. Appointment messages are separate and may still be sent where needed.", 200);
+}
+
+async function handleTrackedClick(request, env, url) {
+  const email = String(url.searchParams.get("e") || "").trim().toLowerCase();
+  const token = String(url.searchParams.get("t") || "");
+  const campaignId = String(url.searchParams.get("c") || "").slice(0, 80);
+  const target = String(url.searchParams.get("u") || "");
+  if (!(await validEmailToken(env, email, token))) {
+    return htmlPage("Invalid link", "This link is not valid.", 400);
+  }
+  const safeTarget = safeCampaignTarget(target, url.origin);
+  if (campaignId) await recordCampaignEvent(env, { campaignId, email, eventType: "click", detail: safeTarget });
+  return Response.redirect(safeTarget, 302);
+}
+
 async function handleUnsubscribe(request, env, url) {
   const email = String(url.searchParams.get("e") || "").trim().toLowerCase();
   const token = String(url.searchParams.get("t") || "");
+  const campaignId = String(url.searchParams.get("c") || "").slice(0, 80);
 
-  if (!isEmail(email) || !token) {
-    return htmlPage("Invalid link", "This unsubscribe link is not valid.", 400);
-  }
-
-  const expected = await signEmail(env, email);
-  if (!timingSafeEqual(token, expected)) {
+  if (!(await validEmailToken(env, email, token))) {
     return htmlPage("Invalid link", "This unsubscribe link is not valid.", 400);
   }
 
@@ -1356,12 +1520,19 @@ async function handleUnsubscribe(request, env, url) {
       ).bind(new Date().toISOString(), email).run();
     } catch (err) { /* non-fatal */ }
   }
+  if (campaignId) await recordCampaignEvent(env, { campaignId, email, eventType: "unsubscribe", detail: "one-click unsubscribe" });
 
   return htmlPage(
     "You're unsubscribed",
     `We've removed <strong>${escapeHtml(email)}</strong> from our marketing emails. You won't hear from us again unless you ask.<br><br>Appointment confirmations and reminders are separate and will still reach you.`,
     200
   );
+}
+
+async function validEmailToken(env, email, token) {
+  if (!isEmail(email) || !token) return false;
+  const expected = await signEmail(env, email);
+  return timingSafeEqual(token, expected);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1754,9 +1925,61 @@ function confirmEmailHtml(firstName, confirmUrl) {
 </table></td></tr></table></body></html>`;
 }
 
-async function buildUnsubscribeUrl(env, origin, email) {
+async function buildUnsubscribeUrl(env, origin, email, campaignId) {
   const token = await signEmail(env, email);
-  return `${origin}/api/unsubscribe?e=${encodeURIComponent(email)}&t=${token}`;
+  const campaign = campaignId ? `&c=${encodeURIComponent(campaignId)}` : "";
+  return `${origin}/api/unsubscribe?e=${encodeURIComponent(email)}&t=${token}${campaign}`;
+}
+
+async function buildPreferencesUrl(env, origin, email) {
+  const token = await signEmail(env, email);
+  return `${origin}/api/preferences?e=${encodeURIComponent(email)}&t=${token}`;
+}
+
+async function trackCampaignLinks(env, origin, html, campaignId, email) {
+  if (!campaignId || !email) return html;
+  const token = await signEmail(env, email);
+  return String(html || "").replace(/href="([^"]+)"/gi, (match, href) => {
+    if (!/^https?:\/\//i.test(href)) return match;
+    if (/\/api\/(unsubscribe|preferences|click)\b/i.test(href)) return match;
+    const target = safeCampaignTarget(href, origin);
+    if (!target) return match;
+    const encoded = encodeURIComponent(target);
+    const clickUrl = `${origin}/api/click?c=${encodeURIComponent(campaignId)}&e=${encodeURIComponent(email)}&t=${token}&u=${encoded}`;
+    return 'href="' + clickUrl.replace(/"/g, "%22") + '"';
+  });
+}
+
+function safeCampaignTarget(raw, origin) {
+  try {
+    const target = new URL(String(raw || ""), origin);
+    const host = target.hostname.toLowerCase();
+    if (
+      host === "lumidermaesthetics.com" ||
+      host === "www.lumidermaesthetics.com" ||
+      host === "www.treatwell.co.uk" ||
+      host === "treatwell.co.uk"
+    ) {
+      return target.toString();
+    }
+  } catch { /* fall through */ }
+  return origin + "/";
+}
+
+async function recordCampaignEvent(env, detail) {
+  if (!env.SUBSCRIBERS || !detail || !detail.campaignId) return;
+  try {
+    await env.SUBSCRIBERS.prepare(
+      `INSERT INTO campaign_events (campaign_id, email, event_type, detail, created_at)
+       VALUES (?1,?2,?3,?4,?5)`
+    ).bind(
+      String(detail.campaignId || "").slice(0, 80),
+      String(detail.email || "").slice(0, 160),
+      String(detail.eventType || "").slice(0, 40),
+      String(detail.detail || "").slice(0, 500),
+      new Date().toISOString()
+    ).run();
+  } catch { /* event tracking must never block public routes */ }
 }
 
 async function signEmail(env, email) {
@@ -1787,6 +2010,69 @@ function json(data, status = 200) {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
     },
+  });
+}
+
+function preferencesPage(data) {
+  const interests = [
+    "",
+    "Laser hair removal",
+    "Skin & boosters",
+    "Facials & peels",
+    "Body & contouring",
+    "Lashes & brows",
+    "Not sure yet",
+  ];
+  const dayOptions = ['<option value="">Day</option>'];
+  for (let i = 1; i <= 31; i += 1) {
+    dayOptions.push('<option value="' + i + '"' + (Number(data.day) === i ? " selected" : "") + ">" + i + "</option>");
+  }
+  const months = ["Month", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const monthOptions = months.map((m, i) => {
+    if (i === 0) return '<option value="">' + m + "</option>";
+    return '<option value="' + i + '"' + (Number(data.month) === i ? " selected" : "") + ">" + m + "</option>";
+  }).join("");
+  const interestOptions = interests.map((i) =>
+    '<option value="' + escapeHtml(i) + '"' + (String(data.interest || "") === i ? " selected" : "") + ">" + escapeHtml(i || "Everything") + "</option>"
+  ).join("");
+  const body = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Email preferences — Lumi Derm Aesthetics</title>
+<style>
+  body{margin:0;min-height:100vh;background:#f4f1ee;color:#1c1a18;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding:24px;}
+  .card{background:#fff;max-width:560px;margin:40px auto;padding:38px 34px;border-radius:6px;box-shadow:0 18px 42px rgba(42,35,30,.08);}
+  .brand{font-family:Georgia,serif;font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:#a2968a;margin:0 0 18px;}
+  h1{font-family:Georgia,serif;font-weight:400;font-size:30px;margin:0 0 14px;}
+  p{font-size:15px;line-height:1.7;color:#4a443e;margin:0 0 22px;}
+  label{display:block;font-size:13px;font-weight:700;color:#756b63;margin:16px 0 6px;}
+  input,select{box-sizing:border-box;width:100%;border:1px solid #e5ddd6;border-radius:6px;padding:13px 14px;font:inherit;color:#1c1a18;background:#fff;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .check{display:flex;gap:10px;align-items:flex-start;margin:20px 0;color:#4a443e;font-size:15px;line-height:1.5;}
+  .check input{width:auto;margin-top:4px;}
+  button{border:0;background:#1c1a18;color:#fff;padding:15px 28px;border-radius:3px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;cursor:pointer;}
+  small{display:block;color:#8c8178;margin-top:16px;line-height:1.6;}
+  @media (max-width:620px){body{padding:12px}.card{margin:12px auto;padding:28px 22px}.row{grid-template-columns:1fr}}
+</style></head>
+<body><form class="card" method="post" action="/api/preferences">
+  <p class="brand">Lumi&nbsp;Derm</p>
+  <h1>Email preferences</h1>
+  <p>Update what you would like to hear about, or turn off marketing emails. Appointment messages are separate.</p>
+  <input type="hidden" name="email" value="${escapeHtml(data.email)}">
+  <input type="hidden" name="token" value="${escapeHtml(data.token)}">
+  <div class="row">
+    <div><label>First name</label><input name="first_name" value="${escapeHtml(data.firstName || "")}" autocomplete="given-name"></div>
+    <div><label>Last name</label><input name="last_name" value="${escapeHtml(data.lastName || "")}" autocomplete="family-name"></div>
+  </div>
+  <label>Treatment interest</label><select name="interest">${interestOptions}</select>
+  <label>Birthday</label><div class="row"><select name="birth_day">${dayOptions.join("")}</select><select name="birth_month">${monthOptions}</select></div>
+  <label class="check"><input type="checkbox" name="subscribed" value="1"${data.subscribed ? " checked" : ""}> <span>Send me Lumi Derm offers, news and useful treatment updates by email.</span></label>
+  <button type="submit">Save preferences</button>
+  <small>This page is personalised from the link in your email. You can unsubscribe from any campaign at any time.</small>
+</form></body></html>`;
+  return new Response(body, {
+    status: 200,
+    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
   });
 }
 
