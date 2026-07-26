@@ -808,11 +808,15 @@ async function initTreatmentIndex() {
   // when there is no live offer card for it — a match links to that treatment
   // on the booking page.
   const SERVICES_CATALOG = [
+    { slug: 'prp-consultation', name: 'PRP(Platelet rich plasma) Consultation', cat: 'Consultation', kw: 'prp platelet rich plasma consultation cosmetic injectables suitability first appointment' },
+    { slug: 'hair-loss-consultation', name: 'Hair Loss Consultation', cat: 'Consultation', kw: 'hair loss consultation cosmetic injectables scalp thinning prp mesotherapy suitability first appointment' },
     { slug: 'laser-hair-removal', name: 'Laser hair removal', cat: 'Laser', kw: 'hair removal cynosure elite face body' },
-    { slug: 'laser-rejuvenation', name: 'Laser skin rejuvenation', cat: 'Laser', kw: 'rejuvenation resurfacing tone texture glow' },
-    { slug: 'vascular-treatment', name: 'Laser vascular treatment', cat: 'Laser', kw: 'vascular veins thread vein redness capillaries' },
+    { slug: 'laser-rejuvenation', name: 'Laser Skin Rejuvenation', cat: 'Facials', kw: 'foto rf skin rejuvenation laser face neck decollete décolleté crow feet fine lines sagging skin' },
+    { slug: 'laser-rejuvenation-patch-test', name: 'Laser Skin Rejuvenation Compulsory Patch Test', cat: 'Patch test', kw: 'patch test laser skin rejuvenation compulsory sensitivity assessment hair' },
+    { slug: 'vascular-treatment', name: 'Laser Veins Treatment/Single session(Package available)', cat: 'Laser', kw: 'laser treatment thread veins spider veins nose cheeks legs buttocks package available' },
+    { slug: 'laser-veins-patch-test', name: 'Laser Veins Compulsory Patch Test', cat: 'Patch test', kw: 'patch test laser veins compulsory sensitivity assessment allergic reaction' },
     { slug: 'electrolysis', name: 'Electrolysis permanent hair removal', cat: 'Apilus', kw: 'electrolysis permanent hair apilus small area' },
-    { slug: 'prp', name: 'PRP', cat: 'Regenerative', kw: 'prp platelet vampire hair skin regeneration' },
+    { slug: 'prp', name: 'PRP(Platelet Rich Plasma)', cat: 'Cosmetic Injectables', kw: 'prp platelet rich plasma face body hair loss 1 session 3 sessions 5 sessions skin rejuvenation collagen acne scars micro needled blood collection scalp follicles thicker hair growth' },
     { slug: 'profhilo', name: 'Profhilo', cat: 'Skin boosters', kw: 'profhilo booster bio remodelling hydration' },
     { slug: 'polynucleotides', name: 'Polynucleotides', cat: 'Bio-remodelling', kw: 'polynucleotides pn under eye skin quality' },
     { slug: 'lip-boosters', name: 'Lip boosters', cat: 'Lip care', kw: 'lip lips filler booster hydration' },

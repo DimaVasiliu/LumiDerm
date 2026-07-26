@@ -73,12 +73,12 @@ const LUMI_KB = [
   {
     id: 'laser',
     keywords: ['laser', 'hair removal', 'ipl', 'cynosure', 'unwanted hair'],
-    answer: "Our laser treatments (Cynosure Elite) cover hair removal, skin rejuvenation and vascular concerns, from £40. A patch test is done before your first session — book a <a href=\"pages/booking.html\">consultation</a> to start.",
+    answer: "Our laser treatments cover Cynosure Elite hair removal and thread veins, plus Foto RF™ skin rejuvenation, from £40. A patch test is done before your first session — book a <a href=\"pages/booking.html\">consultation</a> to start.",
   },
   {
     id: 'consultation',
     keywords: ['consultation', 'consult', 'assessment', 'first visit', 'advice', 'patch test', 'patchtest'],
-    answer: "For laser and advanced skin treatments we recommend a consultation so Iulia can assess your skin and build a personalised plan (and arrange a patch test where needed). Book one just like any treatment on the <a href=\"pages/booking.html\">Book Now</a> page.",
+    answer: "Some treatments need a consultation or patch test before the main appointment. Start with the separate consultation and patch-test cards on the <a href=\"pages/services.html\">treatment library</a>, then book the treatment once suitability is confirmed.",
   },
   {
     id: 'prep',

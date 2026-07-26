@@ -1,6 +1,103 @@
 {
   "groups": [
     {
+      "title": "Consultations &amp; patch tests",
+      "treatments": [
+        {
+          "id": "prp-consultation",
+          "title": "PRP(Platelet rich plasma) Consultation",
+          "sub": "Cosmetic Injectables",
+          "headline": "£10 · 20 min",
+          "service": "prp-consultation",
+          "bookLabel": "Book PRP consultation",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Book this consultation before PRP so Iulia can confirm suitability, answer questions and recommend the right face, body, scalp or hair-loss treatment plan."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "PRP(Platelet rich plasma) Consultation",
+                  "cost": "£10",
+                  "costSmall": "20 min"
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Cleanup time: 10 minutes."
+            }
+          ]
+        },
+        {
+          "id": "laser-rejuvenation-patch-test",
+          "title": "Laser Skin Rejuvenation Compulsory Patch Test",
+          "sub": "Patch test for Hair",
+          "headline": "£10 · 20 min",
+          "service": "laser-rejuvenation-patch-test",
+          "bookLabel": "Book patch test",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Your comfort and safety are paramount. The trained professionals will give you a small assessment, testing a small patch of skin to detect any potential sensitivities."
+            },
+            {
+              "type": "p",
+              "html": "A Patch Test service isn't just a precaution — it's a promise that your well-being comes first, so you can indulge in the treatments you love with complete peace of mind."
+            },
+            {
+              "type": "p",
+              "html": "Book now for service with a style."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Laser Skin Rejuvenation Compulsory Patch Test",
+                  "cost": "£10",
+                  "costSmall": "20 min"
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Cleanup time: 15 minutes."
+            }
+          ]
+        },
+        {
+          "id": "hair-loss-consultation",
+          "title": "Hair Loss Consultation",
+          "sub": "Cosmetic Injectables",
+          "headline": "£10 · 20 min",
+          "service": "hair-loss-consultation",
+          "bookLabel": "Book hair loss consultation",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Book this consultation before hair loss treatment so Iulia can assess your scalp and hair concerns, confirm suitability and recommend the right mesotherapy, PRP or combined plan."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Hair Loss Consultation",
+                  "cost": "£10",
+                  "costSmall": "20 min"
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Cleanup time: 10 minutes."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "title": "Laser &amp; hair removal · Cynosure Elite",
       "treatments": [
         {
@@ -165,8 +262,49 @@
               ]
             },
             {
-              "type": "pill",
-              "text": "Package discounts: 2 areas 15% · 3 areas 20% · 4 areas 25% · 5 areas 30%"
+              "type": "subhead",
+              "text": "Packages · single session"
+            },
+            {
+              "type": "table",
+              "columns": [
+                "Package",
+                "1 session"
+              ],
+              "rows": [
+                [
+                  "Upper lip + Chin",
+                  "£80"
+                ],
+                [
+                  "Underarms + Any bikini",
+                  "£100"
+                ],
+                [
+                  "Any bikini + Half legs",
+                  "£150"
+                ],
+                [
+                  "Underarms + Half legs",
+                  "£150"
+                ],
+                [
+                  "Any bikini + Full legs",
+                  "£175"
+                ],
+                [
+                  "Underarms + Full legs",
+                  "£175"
+                ],
+                [
+                  "Underarms + Any bikini + Half legs",
+                  "£190"
+                ],
+                [
+                  "Underarms + Any bikini + Full legs",
+                  "£210"
+                ]
+              ]
             },
             {
               "type": "note",
@@ -176,15 +314,15 @@
         },
         {
           "id": "laser-rejuvenation",
-          "title": "Laser skin rejuvenation",
-          "sub": "Cynosure Elite",
+          "title": "Laser Skin Rejuvenation",
+          "sub": "Facials - Foto RF™ Skin Rejuvenation",
           "headline": "from £100",
           "service": "laser-rejuvenation",
-          "bookLabel": "Book skin rejuvenation",
+          "bookLabel": "Book laser skin rejuvenation",
           "detail": [
             {
               "type": "p",
-              "html": "Laser skin rejuvenation with Cynosure Elite gently heats the deeper layers of the skin to stimulate your own natural collagen and even out tone. It helps soften the look of dullness, sun damage, redness, enlarged pores and uneven texture, revealing a brighter, fresher, more even complexion."
+              "html": "Laser skin rejuvenation with Foto RF™ gently heats the deeper layers of the skin to stimulate your own natural collagen and elastin and even out tone. It helps soften crow’s feet, fine lines, dullness, sun damage, enlarged pores and uneven texture, revealing a brighter, firmer, more even complexion."
             },
             {
               "type": "p",
@@ -192,7 +330,7 @@
             },
             {
               "type": "p",
-              "html": "<strong>What to expect:</strong> mild warmth during treatment and temporary pinkness that settles within a few hours. A patch test is carried out 24 hours before your first session."
+              "html": "<strong>What to expect:</strong> a Face + Neck session takes 45 minutes (around 1 hour with décolleté), with mild warmth during treatment and temporary pinkness that settles within a few hours. A patch test is carried out 24 hours before your first session."
             },
             {
               "type": "pricelist",
@@ -200,22 +338,22 @@
                 {
                   "name": "Face + Neck · 1 session",
                   "cost": "£100",
-                  "costSmall": ""
+                  "costSmall": "45 min"
                 },
                 {
                   "name": "Face + Neck · 3 sessions",
                   "cost": "£270",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "45 min each · pay in 2 instalments"
                 },
                 {
                   "name": "Face + Neck + Décolleté · 1 session",
                   "cost": "£130",
-                  "costSmall": ""
+                  "costSmall": "1 h"
                 },
                 {
                   "name": "Face + Neck + Décolleté · 3 sessions",
                   "cost": "£330",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "1 h each · pay in 2 instalments"
                 }
               ]
             },
@@ -227,62 +365,80 @@
         },
         {
           "id": "vascular-treatment",
-          "title": "Laser vascular &amp; veins",
-          "sub": "Cynosure Elite · thread veins",
+          "title": "Laser Veins Treatment/Single session(Package available)",
+          "sub": "Laser Treatment - Thread Veins",
           "headline": "from £45",
           "service": "vascular-treatment",
-          "bookLabel": "Book vascular treatment",
+          "bookLabel": "Book laser veins treatment",
           "detail": [
             {
               "type": "p",
-              "html": "Laser vascular treatment uses focused light energy to target visible facial thread veins, spider veins and small vascular blemishes. The light is absorbed by the blood within the vessel, which is then gently broken down and naturally reabsorbed by the body, helping to visibly reduce its appearance."
+              "html": "Thread veins, or spider veins, are thread-like veins that develop in various areas of the body, including the nose, cheeks, legs, buttocks, etc. The most common and most efficient way of dealing with them is laser treatment."
             },
             {
-              "type": "p",
-              "html": "It is ideal for the nose, cheeks and legs and can treat anything from a small isolated spot to larger areas such as both legs. Depending on the concern, a course of 2–3 sessions delivers the clearest, most even result."
-            },
-            {
-              "type": "p",
-              "html": "<strong>What to expect:</strong> a quick warming sensation during treatment and possible short-lived redness afterwards. A patch test is required 24 hours before your first session."
-            },
-            {
-              "type": "table",
-              "columns": [
-                "Area",
-                "1 session",
-                "2 sessions",
-                "3 sessions"
-              ],
+              "type": "pricelist",
               "rows": [
-                [
-                  "Small area (e.g. nose)",
-                  "£45",
-                  "£85",
-                  "£120"
-                ],
-                [
-                  "Medium area (e.g. face)",
-                  "£80",
-                  "£150",
-                  "£210"
-                ],
-                [
-                  "Large area (e.g. leg)",
-                  "£125",
-                  "£235",
-                  "£330"
-                ],
-                [
-                  "X-Large area (e.g. both legs)",
-                  "£180",
-                  "£340",
-                  "£480"
-                ]
+                {
+                  "name": "Small area( e.g. Nose)",
+                  "cost": "£45",
+                  "costSmall": "15 min"
+                },
+                {
+                  "name": "Medium area (e.g. Face)",
+                  "cost": "£80",
+                  "costSmall": "30 min"
+                },
+                {
+                  "name": "Large area ( e.g. Leg)",
+                  "cost": "£125",
+                  "costSmall": "45 min"
+                },
+                {
+                  "name": "XL area( e.g. Both legs)",
+                  "cost": "£180",
+                  "costSmall": "1 h 20 min"
+                }
               ]
             },
             {
               "type": "note",
-              "text": "Patch test required 24 hours before your first session (£10)."
+              "text": "Cleanup time: 15 minutes."
+            }
+          ]
+        },
+        {
+          "id": "laser-veins-patch-test",
+          "title": "Laser Veins Compulsory Patch Test",
+          "sub": "Patch test for Hair",
+          "headline": "£10 · 20 min",
+          "service": "laser-veins-patch-test",
+          "bookLabel": "Book patch test",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Your comfort and safety are paramount. The trained professionals will give you a small assessment, testing a small patch of skin to detect any potential sensitivities or allergic reactions to the products."
+            },
+            {
+              "type": "p",
+              "html": "A Patch Test service isn't just a precaution — it's a promise that your well-being comes first, so you can indulge in the treatments you love with complete peace of mind."
+            },
+            {
+              "type": "p",
+              "html": "Book now for service with a style."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Laser Veins Compulsory Patch Test",
+                  "cost": "£10",
+                  "costSmall": "20 min"
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Cleanup time: 10 minutes."
             }
           ]
         },
@@ -332,6 +488,10 @@
               ]
             },
             {
+              "type": "pill",
+              "text": "10% early-bird discount on morning appointments"
+            },
+            {
               "type": "note",
               "text": "Patch test required 24 hours before your first session (£10)."
             }
@@ -344,23 +504,19 @@
       "treatments": [
         {
           "id": "prp",
-          "title": "PRP — Platelet Rich Plasma",
-          "sub": "Regenerative · skin &amp; hair",
+          "title": "PRP(Platelet Rich Plasma)",
+          "sub": "Cosmetic Injectables",
           "headline": "from £240",
           "service": "prp",
           "bookLabel": "Book PRP",
           "detail": [
             {
               "type": "p",
-              "html": "PRP (Platelet-Rich Plasma) is a natural, regenerative treatment that harnesses your own biology. A small blood sample is taken and spun in a centrifuge to concentrate the platelets and growth factors, which are then reintroduced into the skin or scalp to stimulate repair, collagen production and circulation."
+              "html": "PRP skin rejuvenation therapy is a cutting-edge treatment that leverages the body’s natural healing capabilities to improve skin appearance and health. With its ability to boost collagen production, enhance skin texture, and provide long-lasting results, PRP has become a sought-after option for those looking to rejuvenate their skin without invasive procedures. Whether addressing fine lines, acne scars, or overall skin quality, PRP offers a safe and effective solution for various skin concerns."
             },
             {
               "type": "p",
-              "html": "For the face and body, PRP improves skin quality, glow, firmness and fine lines. For the scalp, it supports thicker, healthier hair and can help slow shedding. Because it uses your own plasma it is extremely well tolerated, and a course of 3–5 sessions delivers the most visible, lasting results."
-            },
-            {
-              "type": "p",
-              "html": "<strong>What to expect:</strong> mild redness or small pinpoint marks that settle within a day or two. A £10 consultation confirms suitability and is redeemable against your treatment."
+              "html": "The treatment involves <strong>Blood Collection:</strong> A sample of your blood is drawn, similar to a routine blood test, to separate the platelet-rich plasma which is injected or micro needled in the area of concern."
             },
             {
               "type": "subhead",
@@ -372,19 +528,23 @@
                 {
                   "name": "1 session",
                   "cost": "£240",
-                  "costSmall": ""
+                  "costSmall": "50 min"
                 },
                 {
                   "name": "3 sessions",
                   "cost": "£650",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "50 min"
                 },
                 {
                   "name": "5 sessions",
                   "cost": "£950",
-                  "costSmall": "pay in 3 instalments"
+                  "costSmall": "50 min"
                 }
               ]
+            },
+            {
+              "type": "p",
+              "html": "Platelet-Rich Plasma (PRP) therapy has revolutionised the field of hair restoration, offering a natural and scientifically-backed approach to combating hair loss and enhancing hair transplant results. PRP (Platelet-Rich Plasma) uses your own blood, processed to concentrate growth factors that <strong>stimulate hair follicles, improve scalp health, and encourage stronger, thicker hair growth.</strong>"
             },
             {
               "type": "subhead",
@@ -396,23 +556,27 @@
                 {
                   "name": "1 session",
                   "cost": "£240",
-                  "costSmall": ""
+                  "costSmall": "50 min"
                 },
                 {
                   "name": "3 sessions",
                   "cost": "£650",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "50 min"
                 },
                 {
                   "name": "5 sessions",
                   "cost": "£950",
-                  "costSmall": "pay in 3 instalments"
+                  "costSmall": "50 min"
                 }
               ]
             },
             {
+              "type": "pill",
+              "text": "Up to 20% off last-minute & off-peak bookings"
+            },
+            {
               "type": "note",
-              "text": "Consultation £10, redeemable against your treatment."
+              "text": "Cleanup time: 15 minutes. Consultation £10, redeemable against your treatment."
             }
           ]
         },
@@ -442,14 +606,18 @@
                 {
                   "name": "1 session",
                   "cost": "£265",
-                  "costSmall": ""
+                  "costSmall": "30 min"
                 },
                 {
                   "name": "2 sessions",
                   "cost": "£490",
-                  "costSmall": ""
+                  "costSmall": "30 min each"
                 }
               ]
+            },
+            {
+              "type": "pill",
+              "text": "Up to 10% off last-minute &amp; off-peak bookings"
             },
             {
               "type": "note",
@@ -483,24 +651,28 @@
                 {
                   "name": "Eyes · 1 session",
                   "cost": "£220",
-                  "costSmall": ""
+                  "costSmall": "30 min"
                 },
                 {
                   "name": "Eyes · 3 sessions",
                   "cost": "£600",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "30 min each · pay in 2 instalments"
                 },
                 {
                   "name": "Face &amp; Neck · 1 session",
                   "cost": "£230",
-                  "costSmall": ""
+                  "costSmall": "30 min"
                 },
                 {
                   "name": "Face &amp; Neck · 3 sessions",
                   "cost": "£620",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "30 min each · pay in 2 instalments"
                 }
               ]
+            },
+            {
+              "type": "pill",
+              "text": "Up to 10% off last-minute &amp; off-peak bookings"
             },
             {
               "type": "note",
@@ -534,34 +706,38 @@
                 {
                   "name": "Eye mesotherapy · 1 session",
                   "cost": "£80",
-                  "costSmall": ""
+                  "costSmall": "30 min"
                 },
                 {
                   "name": "Eye mesotherapy · 3 sessions",
                   "cost": "£225",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "30 min each · pay in 2 instalments"
                 },
                 {
                   "name": "Face / Neck / Décolleté · 1 session",
                   "cost": "£150",
-                  "costSmall": ""
+                  "costSmall": "40 min"
                 },
                 {
                   "name": "Face / Neck / Décolleté · 3 sessions",
                   "cost": "£390",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "40 min each · pay in 2 instalments"
                 },
                 {
                   "name": "Hair mesotherapy · 1 session",
                   "cost": "£140",
-                  "costSmall": ""
+                  "costSmall": "40 min"
                 },
                 {
                   "name": "Hair mesotherapy · 3 sessions",
                   "cost": "£390",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "40 min each · pay in 2 instalments"
                 }
               ]
+            },
+            {
+              "type": "pill",
+              "text": "Up to 10% off last-minute &amp; off-peak bookings"
             },
             {
               "type": "note",
@@ -591,29 +767,33 @@
                 {
                   "name": "Hair mesotherapy · 1 session",
                   "cost": "£140",
-                  "costSmall": ""
+                  "costSmall": "40 min"
                 },
                 {
                   "name": "Hair mesotherapy · 3 sessions",
                   "cost": "£390",
-                  "costSmall": "pay in 2 instalments at the venue"
+                  "costSmall": "40 min each · pay in 2 instalments at the venue"
                 },
                 {
                   "name": "PRP for hair loss · 1 session",
                   "cost": "£240",
-                  "costSmall": ""
+                  "costSmall": "50 min"
                 },
                 {
                   "name": "PRP for hair loss · 3 sessions",
                   "cost": "£650",
-                  "costSmall": "pay in 2 instalments at the venue"
+                  "costSmall": "50 min each · pay in 2 instalments at the venue"
                 },
                 {
                   "name": "PRP for hair loss · 5 sessions",
                   "cost": "£950",
-                  "costSmall": "pay in 3 instalments at the venue"
+                  "costSmall": "50 min each · pay in 3 instalments at the venue"
                 }
               ]
+            },
+            {
+              "type": "pill",
+              "text": "PRP: up to 20% off last-minute &amp; off-peak bookings"
             },
             {
               "type": "note",
@@ -647,14 +827,18 @@
                 {
                   "name": "1 session",
                   "cost": "£220",
-                  "costSmall": ""
+                  "costSmall": "40 min"
                 },
                 {
                   "name": "3 sessions",
                   "cost": "£580",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "40 min each · pay in 2 instalments"
                 }
               ]
+            },
+            {
+              "type": "pill",
+              "text": "Up to 15% off last-minute &amp; off-peak bookings"
             },
             {
               "type": "note",
@@ -688,14 +872,18 @@
                 {
                   "name": "Face",
                   "cost": "£150",
-                  "costSmall": ""
+                  "costSmall": "1 h"
                 },
                 {
                   "name": "Face + Neck + Décolleté",
                   "cost": "£200",
-                  "costSmall": ""
+                  "costSmall": "1 h 30 min"
                 }
               ]
+            },
+            {
+              "type": "pill",
+              "text": "Up to 15% off last-minute &amp; off-peak bookings"
             }
           ]
         }
@@ -730,34 +918,38 @@
                 {
                   "name": "Fire &amp; Ice by iS Clinical + LED therapy",
                   "cost": "£90",
-                  "costSmall": ""
+                  "costSmall": "50 min"
                 },
                 {
                   "name": "Bespoke deep cleansing facial",
                   "cost": "£100",
-                  "costSmall": ""
+                  "costSmall": "1 h 20 min"
                 },
                 {
                   "name": "Dermaplaning",
                   "cost": "£90",
-                  "costSmall": ""
+                  "costSmall": "50 min"
                 },
                 {
                   "name": "Dermaplaning + LED therapy",
                   "cost": "£100",
-                  "costSmall": ""
+                  "costSmall": "1 h"
                 },
                 {
                   "name": "Microdermabrasion",
                   "cost": "£70",
-                  "costSmall": ""
+                  "costSmall": "40 min"
                 },
                 {
                   "name": "Microdermabrasion + LED therapy",
                   "cost": "£80",
-                  "costSmall": ""
+                  "costSmall": "50 min"
                 }
               ]
+            },
+            {
+              "type": "pill",
+              "text": "Up to 15% off last-minute &amp; off-peak bookings"
             },
             {
               "type": "note",
@@ -791,44 +983,48 @@
                 {
                   "name": "Glycolic peel · 1 session",
                   "cost": "£70",
-                  "costSmall": ""
+                  "costSmall": "45 min"
                 },
                 {
                   "name": "Glycolic peel · 3 sessions",
                   "cost": "£195",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "45 min each · pay in 2 instalments"
                 },
                 {
                   "name": "Salicylic peel · 1 session",
                   "cost": "£70",
-                  "costSmall": ""
+                  "costSmall": "45 min"
                 },
                 {
                   "name": "Salicylic peel · 3 sessions",
                   "cost": "£195",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "45 min each · pay in 2 instalments"
                 },
                 {
                   "name": "Azelaic peel · 1 session",
                   "cost": "£70",
-                  "costSmall": ""
+                  "costSmall": "45 min"
                 },
                 {
                   "name": "Azelaic peel · 3 sessions",
                   "cost": "£195",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "45 min each · pay in 2 instalments"
                 },
                 {
                   "name": "PRX T33 peel · 1 session",
                   "cost": "£110",
-                  "costSmall": ""
+                  "costSmall": "45 min"
                 },
                 {
                   "name": "PRX T33 peel · 3 sessions",
                   "cost": "£310",
-                  "costSmall": "pay in 2 instalments"
+                  "costSmall": "45 min each · pay in 2 instalments"
                 }
               ]
+            },
+            {
+              "type": "pill",
+              "text": "Up to 10% off last-minute &amp; off-peak bookings"
             },
             {
               "type": "note",
@@ -862,24 +1058,28 @@
                 {
                   "name": "Face",
                   "cost": "£130",
-                  "costSmall": ""
+                  "costSmall": "1 h"
                 },
                 {
                   "name": "Face + Neck + Décolleté",
                   "cost": "£200",
-                  "costSmall": ""
+                  "costSmall": "1 h 30 min"
                 },
                 {
                   "name": "Face + PRX T33 peel",
                   "cost": "£150",
-                  "costSmall": ""
+                  "costSmall": "1 h"
                 },
                 {
                   "name": "Face + Neck + Décolleté + PRX T33 peel",
                   "cost": "£220",
-                  "costSmall": ""
+                  "costSmall": "1 h 30 min"
                 }
               ]
+            },
+            {
+              "type": "pill",
+              "text": "Up to 15% off last-minute &amp; off-peak bookings"
             }
           ]
         }
@@ -918,25 +1118,25 @@
               ],
               "rows": [
                 [
-                  "Face",
+                  "Face (25 min)",
                   "£55",
                   "£300",
                   "£540"
                 ],
                 [
-                  "Half body",
+                  "Half body (40 min)",
                   "£80",
                   "£450",
                   "£800"
                 ],
                 [
-                  "Full body",
+                  "Full body (1 h)",
                   "£105",
                   "£600",
                   "£1080"
                 ],
                 [
-                  "Full body + Face",
+                  "Full body + Face (1 h 20 min)",
                   "£120",
                   "£690",
                   "£1260"
@@ -945,7 +1145,11 @@
             },
             {
               "type": "pill",
-              "text": "Trial session available · £50"
+              "text": "Trial session available · £50 · 35 min"
+            },
+            {
+              "type": "pill",
+              "text": "Up to 15% off last-minute on single sessions"
             },
             {
               "type": "note",
@@ -971,7 +1175,7 @@
             },
             {
               "type": "p",
-              "html": "<strong>What to expect:</strong> natural-looking results lasting several weeks. A complimentary patch test is required 48 hours before any lift or tint."
+              "html": "<strong>What to expect:</strong> natural-looking results lasting several weeks. A patch test (£1) is required 48 hours before any lift or tint."
             },
             {
               "type": "pricelist",
@@ -979,12 +1183,12 @@
                 {
                   "name": "Brow lamination <small>shape not included</small>",
                   "cost": "£45",
-                  "costSmall": ""
+                  "costSmall": "45 min"
                 },
                 {
                   "name": "Brow lamination &amp; tint <small>shape not included</small>",
                   "cost": "£50",
-                  "costSmall": ""
+                  "costSmall": "1 h"
                 },
                 {
                   "name": "Add-on: brow waxing",
@@ -994,18 +1198,22 @@
                 {
                   "name": "Lash lift",
                   "cost": "£50",
-                  "costSmall": ""
+                  "costSmall": "55 min"
                 },
                 {
                   "name": "Lash lift &amp; tint",
                   "cost": "£55",
-                  "costSmall": ""
+                  "costSmall": "1 h"
                 }
               ]
             },
             {
+              "type": "pill",
+              "text": "Up to 10% off last-minute &amp; off-peak bookings"
+            },
+            {
               "type": "note",
-              "text": "Patch test required 48 hours before (free) for any lift &amp; tint."
+              "text": "Patch test required 48 hours before (£1) for any lift &amp; tint."
             }
           ]
         }
