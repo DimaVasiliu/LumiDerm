@@ -92,6 +92,18 @@ const BATCH_SIZE = 100; // Resend's batch endpoint limit
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // Canonical host: send www.* to the bare domain (301), preserving path +
+    // query. Only fires if a www request actually reaches the Worker (i.e. www
+    // is routed here); harmless otherwise.
+    if (url.hostname.startsWith("www.")) {
+      const apex = url.hostname.slice(4);
+      return Response.redirect(
+        "https://" + apex + url.pathname + url.search,
+        301
+      );
+    }
+
     const isPublicApi = url.pathname.startsWith("/api/");
     const isAdminApi = url.pathname.startsWith("/admin/api/");
     const apiPath = isAdminApi ? url.pathname.replace("/admin/api", "/api") : url.pathname;
