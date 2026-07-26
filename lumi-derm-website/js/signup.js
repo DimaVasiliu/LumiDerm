@@ -24,7 +24,7 @@
     "July","August","September","October","November","December"];
 
   function stored(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-  function remember(k) { try { localStorage.setItem(k, "1"); } catch (e) {} }
+  function remember(k) { try { localStorage.setItem(k, "1"); } catch { /* ignore */ } }
   var reduceMotion = window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -108,7 +108,7 @@
     modalEl.style.display = "flex";
     requestAnimationFrame(function () { modalEl.classList.add("is-open"); });
     var first = modalEl.querySelector('input[name="first_name"]');
-    if (first) setTimeout(function () { try { first.focus(); } catch (e) {} }, 60);
+    if (first) setTimeout(function () { try { first.focus(); } catch { /* ignore */ } }, 60);
   }
   function closeModal() {
     if (!modalEl) return;
@@ -120,7 +120,7 @@
       modalEl.removeEventListener("transitionend", done);
     };
     if (reduceMotion) done(); else modalEl.addEventListener("transitionend", done);
-    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch { /* ignore */ } }
   }
 
   function bindModal(root) {

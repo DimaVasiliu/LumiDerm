@@ -19,6 +19,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          # Full history so the sitemap's <lastmod> dates come from real commits.
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -29,8 +32,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check JavaScript
-        run: npm run check:js
+      # Gate the deploy on the full check suite (syntax + site checks + tests),
+      # not just a syntax check, so a failing test cannot ship to production.
+      - name: Verify (syntax, site checks, tests)
+        run: npm run check
+
+      - name: Lint (JavaScript)
+        run: npm run lint:js
+
+      # Regenerate the sitemap so deployed <lastmod> dates are always current.
+      - name: Refresh sitemap
+        run: npm run sitemap
 
       - name: Deploy Worker
         uses: cloudflare/wrangler-action@v3

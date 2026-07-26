@@ -48,11 +48,47 @@ function trapFocus(event, container) {
 
 function setHeaderState() {
   if (!header) return;
-  header.classList.toggle('is-scrolled', window.scrollY > 18);
+  header.classList.toggle('is-scrolled', Math.max(0, window.scrollY || 0) > 18);
 }
 
 setHeaderState();
 window.addEventListener('scroll', setHeaderState, { passive: true });
+
+// Stop top-edge elastic scrolling from pulling the hero media down past its first position.
+(function initTopOverscrollGuard() {
+  const scrollRoot = document.scrollingElement || document.documentElement;
+  let touchStartY = 0;
+
+  function isAtPageTop() {
+    return scrollRoot.scrollTop <= 0;
+  }
+
+  window.addEventListener(
+    'wheel',
+    (event) => {
+      if (event.ctrlKey || event.metaKey) return;
+      if (event.deltaY < 0 && isAtPageTop()) event.preventDefault();
+    },
+    { passive: false },
+  );
+
+  window.addEventListener(
+    'touchstart',
+    (event) => {
+      touchStartY = event.touches[0]?.clientY || 0;
+    },
+    { passive: true },
+  );
+
+  window.addEventListener(
+    'touchmove',
+    (event) => {
+      const currentY = event.touches[0]?.clientY || 0;
+      if (currentY > touchStartY && isAtPageTop()) event.preventDefault();
+    },
+    { passive: false },
+  );
+})();
 
 if (navToggle && navMenu) {
   function syncNavigationState() {

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+/* global document */
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
 

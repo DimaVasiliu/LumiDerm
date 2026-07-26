@@ -58,7 +58,7 @@ class MockD1 {
     }
     return null;
   }
-  _all(sql, args) {
+  _all(sql) {
     if (/FROM subscribers ORDER BY created_at DESC/.test(sql)) {
       return [...this.subscribers].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
     }

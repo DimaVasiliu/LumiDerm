@@ -2191,13 +2191,25 @@ async function handleSubscribe(request, env, url) {
   if (!firstNameVal) return json({ error: "Please enter your first name." }, 400);
   if (!consent) return json({ error: "Please tick the consent box to subscribe." }, 400);
 
-  // If they already unsubscribed before, honour the suppression list —
-  // they must opt in again deliberately, which this flow does.
   const now = new Date().toISOString();
   const token = randomToken();
   const wording = String(body.consent_wording || "").slice(0, 300);
   const source = String(body.source || "website").slice(0, 60);
   const ip = request.headers.get("cf-connecting-ip") || "";
+
+  // Rate limit: at most 10 signups per IP per hour (honeypot handles naive bots;
+  // this blunts scripted signup floods). Double opt-in already protects the list.
+  if (ip) {
+    try {
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const recent = await env.SUBSCRIBERS.prepare(
+        "SELECT COUNT(*) AS c FROM subscribers WHERE signup_ip=?1 AND created_at >= ?2"
+      ).bind(ip, since).first();
+      if (recent && recent.c >= 10) {
+        return json({ error: "Too many signups from here just now — please try again later." }, 429);
+      }
+    } catch { /* never block a genuine signup if the check fails */ }
+  }
 
   // Is this email already confirmed?
   const existing = await env.SUBSCRIBERS.prepare(
@@ -2809,3 +2821,7 @@ function timingSafeEqual(a, b) {
   }
   return diff === 0;
 }
+
+// Named exports of pure, side-effect-free helpers so they can be unit-tested
+// without a full request/D1 harness. (The Worker entrypoint stays the default export.)
+export { safeCampaignTarget, isApprovedCampaignHost, topicColumn, clampInt, isEmail };

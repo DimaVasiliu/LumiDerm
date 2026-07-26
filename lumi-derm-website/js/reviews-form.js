@@ -37,13 +37,13 @@
     modal.classList.add("is-open");
     document.body.classList.add("reviews-modal-open");
     var first = form.querySelector('input[name="name"]');
-    if (first) setTimeout(function () { try { first.focus(); } catch (e) {} }, 60);
+    if (first) setTimeout(function () { try { first.focus(); } catch { /* ignore */ } }, 60);
   }
   function close() {
     modal.setAttribute("aria-hidden", "true");
     modal.classList.remove("is-open");
     document.body.classList.remove("reviews-modal-open");
-    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch { /* ignore */ } }
   }
 
   Array.prototype.forEach.call(openBtns, function (b) { b.addEventListener("click", open); });
