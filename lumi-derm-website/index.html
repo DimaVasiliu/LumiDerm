@@ -21,51 +21,159 @@
     <link rel="stylesheet" href="css/style.css?v=20260721-reviewsfix4">
     <link rel="stylesheet" href="css/responsive.css?v=20260718-gallery5">
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "BeautySalon",
-        "name": "Lumi Derm Aesthetics",
-        "url": "https://lumidermaesthetics.com/",
-        "image": "https://lumidermaesthetics.com/assets/icons/lumi-derm-logo.png",
-        "description": "Premium aesthetic clinic offering advanced skin and body treatments.",
-        "telephone": "07832839298",
-        "email": "info@lumidermaesthetics.co.uk",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "Unit 41 Skylines Village, Limeharbour",
-          "addressLocality": "London",
-          "postalCode": "E14 9TS",
-          "addressCountry": "GB"
-        },
-        "openingHours": ["Mo-Fr 10:00-20:00", "Sa 10:00-18:00"],
-        "sameAs": ["https://www.instagram.com/lumi.derm.aesthetic/", "https://www.facebook.com/LumiDerm"],
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "5.0",
-          "bestRating": "5",
-          "reviewCount": "47"
-        },
-        "review": [
-          {
-            "@type": "Review",
-            "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
-            "author": { "@type": "Person", "name": "Fatemeh" },
-            "reviewBody": "Iulia is highly professional, skilled, and very friendly."
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BeautySalon",
+      "name": "Lumi Derm Aesthetics",
+      "url": "https://lumidermaesthetics.com/",
+      "image": "https://lumidermaesthetics.com/assets/icons/lumi-derm-logo.png",
+      "description": "Premium aesthetic clinic offering advanced skin and body treatments.",
+      "telephone": "07832839298",
+      "email": "info@lumidermaesthetics.co.uk",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Unit 41 Skylines Village, Limeharbour",
+        "addressLocality": "London",
+        "postalCode": "E14 9TS",
+        "addressCountry": "GB"
+      },
+      "openingHours": [
+        "Mo-Fr 10:00-20:00",
+        "Sa 10:00-18:00"
+      ],
+      "sameAs": [
+        "https://www.instagram.com/lumi.derm.aesthetic/",
+        "https://www.facebook.com/LumiDerm"
+      ],
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5.0",
+        "bestRating": "5",
+        "reviewCount": "47"
+      },
+      "review": [
+        {
+          "@type": "Review",
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "5",
+            "bestRating": "5"
           },
-          {
-            "@type": "Review",
-            "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
-            "author": { "@type": "Person", "name": "Anatolii" },
-            "reviewBody": "Professional, friendly therapist. Nice atmosphere."
+          "author": {
+            "@type": "Person",
+            "name": "Fatemeh"
           },
-          {
-            "@type": "Review",
-            "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
-            "author": { "@type": "Person", "name": "Alice" },
-            "reviewBody": "Lovely and clean, and the treatment went really well."
+          "reviewBody": "Iulia is highly professional, skilled, and very friendly."
+        },
+        {
+          "@type": "Review",
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "5",
+            "bestRating": "5"
+          },
+          "author": {
+            "@type": "Person",
+            "name": "Anatolii"
+          },
+          "reviewBody": "Professional, friendly therapist. Nice atmosphere."
+        },
+        {
+          "@type": "Review",
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "5",
+            "bestRating": "5"
+          },
+          "author": {
+            "@type": "Person",
+            "name": "Alice"
+          },
+          "reviewBody": "Lovely and clean, and the treatment went really well."
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Where is Lumi Derm located?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "We're at Unit 41 Skylines Village, Limeharbour, London E14 9TS, in the Docklands. You can open directions in Google Maps."
           }
-        ]
-      }
+        },
+        {
+          "@type": "Question",
+          "name": "What are your opening hours?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Monday to Friday 10:00–20:00, Saturday 10:00–18:00, and closed on Sunday."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I book an appointment?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Use the Book Now page to choose your treatment and time and confirm securely online, or call us on 07832839298."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I pay when I book?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Treatwell shows the payment options and any deposit or prepayment requirement that applies to the treatment you select. Review those details before confirming your booking."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need a consultation first?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For laser and advanced skin treatments we recommend a consultation so Iulia can assess your skin and build a personalised plan. You can book a consultation the same way as any treatment."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is a patch test needed?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Some treatments — such as laser, electrolysis and lash lifts — do require a patch test beforehand to make sure the treatment is suitable for you. If you're not sure whether your treatment needs one, please contact the studio and we'll let you know."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is your cancellation policy?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Please give us at least 24 hours' notice if you need to reschedule or cancel. Cancellations with less than 24 hours' notice, or no-shows, may be charged. Deposit terms are shown during booking — see our policies for details."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can under-18s have treatments?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Adults aged 18 and over can book any of our treatments. Younger clients are welcome for selected treatments too — suitability is always assessed individually with Iulia at a consultation first. Anyone under 18 needs written consent from a parent or guardian, who must stay with them throughout the appointment.Please note that injectable treatments — including anti-wrinkle injections, dermal fillers, Profhilo, mesotherapy and PRP — are for clients aged 18 and over only. By UK law these cannot be carried out on under-18s, even with a parent's consent."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How can I contact you?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Call or text 07832839298, email info@lumidermaesthetics.co.uk, or message us on Instagram @lumi.derm.aesthetic."
+          }
+        }
+      ]
+    }
+  ]
+}
     </script>
   </head>
   <body class="home-hero"><a class="skip-link" href="#main-content">Skip to main content</a>

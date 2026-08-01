@@ -68,6 +68,9 @@
  *   GOOGLE_PLACES_API_KEY — optional: Google Places API key, to import Google
  *                      Business reviews. Set with: npx wrangler secret put GOOGLE_PLACES_API_KEY
  *   GOOGLE_PLACE_ID  — optional: the clinic's Google Place ID (a Var, not secret).
+ *   RESEND_WEBHOOK_SECRET — optional: Svix signing secret (whsec_...) from the
+ *                      Resend webhook. When set, POST /api/resend-webhook
+ *                      auto-suppresses hard bounces + spam complaints.
  *
  * Vars:
  *   ADMIN_EMAILS     — optional comma-separated Access emails allowed for admin API.
@@ -167,6 +170,12 @@ export default {
       }
       if (apiPath === "/api/click" && isPublicApi) {
         return handleTrackedClick(request, env, url);
+      }
+      // Resend delivery webhooks: hard bounces + complaints auto-suppress the
+      // address, protecting sender reputation. Signature-verified (Svix).
+      if (apiPath === "/api/resend-webhook" && isPublicApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleResendWebhook(request, env);
       }
 
       if (apiPath === "/api/campaign/send" && isAdminApi) {
@@ -2649,6 +2658,69 @@ async function recordCampaignEvent(env, detail) {
       new Date().toISOString()
     ).run();
   } catch { /* event tracking must never block public routes */ }
+}
+
+/* ------------------------------------------------------------------ */
+/* Resend delivery webhook: auto-suppress bounces + complaints          */
+/* ------------------------------------------------------------------ */
+
+// Verify a Resend/Svix webhook signature. Header `svix-signature` is a
+// space-separated list of "v1,<base64sig>"; the signed content is
+// "<id>.<timestamp>.<rawBody>", HMAC-SHA256 with the whsec_ secret.
+async function verifyResendSignature(secret, id, timestamp, rawBody, signatureHeader) {
+  try {
+    const b64 = secret.startsWith("whsec_") ? secret.slice(6) : secret;
+    const keyBytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const key = await crypto.subtle.importKey("raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const signed = `${id}.${timestamp}.${rawBody}`;
+    const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signed));
+    const expected = btoa(String.fromCharCode(...new Uint8Array(mac)));
+    const provided = String(signatureHeader || "").split(" ").map((p) => p.split(",")[1]).filter(Boolean);
+    return provided.some((sig) => timingSafeEqual(sig, expected));
+  } catch {
+    return false;
+  }
+}
+
+async function handleResendWebhook(request, env) {
+  // Dormant until the webhook secret is set (Resend dashboard → Webhooks).
+  if (!env.RESEND_WEBHOOK_SECRET) return json({ ok: true, skipped: "webhook not configured" });
+  const id = request.headers.get("svix-id");
+  const ts = request.headers.get("svix-timestamp");
+  const sig = request.headers.get("svix-signature");
+  const raw = await request.text();
+  if (!id || !ts || !sig || !(await verifyResendSignature(env.RESEND_WEBHOOK_SECRET, id, ts, raw, sig))) {
+    return json({ error: "Invalid signature." }, 401);
+  }
+  let event;
+  try { event = JSON.parse(raw); } catch { return json({ error: "Invalid body." }, 400); }
+
+  const type = String(event.type || "");
+  const data = event.data || {};
+  const to = Array.isArray(data.to) ? data.to[0] : (data.to || data.email || "");
+  const email = String(to || "").trim().toLowerCase();
+
+  // Hard bounces and spam complaints → suppress + unsubscribe.
+  if ((type === "email.bounced" || type === "email.complained") && isEmail(email)) {
+    const now = new Date().toISOString();
+    if (env.SUPPRESSION) {
+      await env.SUPPRESSION.put(suppressionKey(email), JSON.stringify({ at: now, reason: type }));
+    }
+    if (env.SUBSCRIBERS) {
+      try {
+        await env.SUBSCRIBERS.prepare(
+          "UPDATE subscribers SET status='unsubscribed', consent_email=0, unsubscribed_at=?1 WHERE email=?2"
+        ).bind(now, email).run();
+      } catch { /* non-fatal */ }
+    }
+    await logAudit(env, null, {
+      actor: email,
+      action: type === "email.complained" ? "email.complained" : "email.bounced",
+      detail: "auto-suppressed from Resend webhook",
+      status: "ok",
+    });
+  }
+  return json({ ok: true });
 }
 
 async function signEmail(env, email) {
