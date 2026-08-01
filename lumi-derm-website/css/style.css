@@ -4904,14 +4904,6 @@ body.tx-modal-active { overflow: hidden; }
   display: block;
   transform: translate3d(0, 0, 0);
 }
-.hero-cinematic .hero-poster {
-  display: none;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 62% 30%;
-  transform: translate3d(0, 0, 0);
-}
 /* Sophisticated, warm editorial overlay: dark & readable at the left, clearer to the right */
 .hero-cinematic .hero-overlay {
   position: absolute;
@@ -5244,7 +5236,6 @@ body.tx-modal-active { overflow: hidden; }
 
 @media (max-width: 900px) {
   .hero-cinematic .hero-video { object-position: 68% 24%; }
-  .hero-cinematic .hero-poster { object-position: 68% 24%; }
   .hero-cinematic .hero-inner { padding-left: clamp(1.5rem, 6vw, 4rem); padding-bottom: 8.5rem; }
   .hero-cinematic .hero-footer { left: clamp(1.5rem, 6vw, 4rem); }
   .hero-cinematic .hero-overlay {
@@ -5254,16 +5245,10 @@ body.tx-modal-active { overflow: hidden; }
   }
 }
 
-@media (max-width: 768px) {
-  .hero-cinematic .hero-video { display: none; }
-  .hero-cinematic .hero-poster { display: block; }
-}
-
 @media (max-width: 640px) {
   .hero-cinematic { min-height: 92vh; min-height: 92svh; }
   .hero-cinematic .hero-inner { min-height: 92vh; min-height: 92svh; padding: 7rem 1.4rem 9rem 1.4rem; }
   .hero-cinematic .hero-video { object-position: 72% 16%; }
-  .hero-cinematic .hero-poster { display: block; object-position: 72% 16%; }
   .hero-cinematic .hero-content { max-width: 100%; }
   .hero-cinematic .hero-eyebrow { max-width: 100%; flex-wrap: wrap; font-size: 0.62rem; letter-spacing: 0.14em; }
   .hero-cinematic .hero-title { font-size: clamp(2.3rem, 10.5vw, 3.2rem); line-height: 1.1; overflow-wrap: break-word; }

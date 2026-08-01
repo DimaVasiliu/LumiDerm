@@ -157,10 +157,6 @@ document.querySelectorAll("a[href^='#']").forEach((link) => {
     video.pause();
     return;
   }
-  if (window.matchMedia('(max-width: 768px)').matches) {
-    video.pause();
-    return;
-  }
 
   function attachSource() {
     if (video.dataset.sourceAttached === 'true') return;
