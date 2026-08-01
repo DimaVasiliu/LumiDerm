@@ -154,16 +154,42 @@ document.querySelectorAll("a[href^='#']").forEach((link) => {
   const video = document.querySelector('[data-hero-video]');
   if (!video) return;
   if (prefersReducedMotion) {
-    video.removeAttribute('autoplay');
     video.pause();
     return;
   }
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    video.pause();
+    return;
+  }
+
+  function attachSource() {
+    if (video.dataset.sourceAttached === 'true') return;
+    const src = video.dataset.heroVideoSrc;
+    if (!src) return;
+    const source = document.createElement('source');
+    source.src = src;
+    source.type = 'video/mp4';
+    video.appendChild(source);
+    video.dataset.sourceAttached = 'true';
+    video.load();
+  }
+
   const play = () => {
+    attachSource();
     const p = video.play();
     if (p && typeof p.catch === 'function') p.catch(() => {});
   };
-  if (video.readyState >= 2) play();
-  else video.addEventListener('loadeddata', play, { once: true });
+
+  const schedulePlayback = () => {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(play, { timeout: 1600 });
+      return;
+    }
+    window.setTimeout(play, 900);
+  };
+
+  if (document.readyState === 'complete') schedulePlayback();
+  else window.addEventListener('load', schedulePlayback, { once: true });
 })();
 
 // FAQ — minimal question list; each answer opens in a modal
@@ -1131,10 +1157,15 @@ function initContactStatus() {
 function initHeroShowcase() {
   const root = document.querySelector('[data-hero-showcase]');
   if (!root) return;
+  if (!window.matchMedia('(min-width: 1024px)').matches) return;
   const slides = Array.from(root.querySelectorAll('.hero-showcase-slide'));
   const label = root.querySelector('[data-hero-label]');
   const dotsWrap = root.querySelector('[data-hero-dots]');
   if (slides.length < 2 || !dotsWrap) return;
+
+  slides.forEach((slide) => {
+    if (!slide.getAttribute('src') && slide.dataset.src) slide.setAttribute('src', slide.dataset.src);
+  });
 
   const dots = slides.map((_, i) => {
     const dot = document.createElement('span');

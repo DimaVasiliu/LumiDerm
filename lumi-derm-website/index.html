@@ -17,8 +17,9 @@
     <meta property="og:image" content="https://lumidermaesthetics.com/assets/icons/lumi-derm-logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="image" href="assets/images/iulia-clinic-treatment-consultation.webp" fetchpriority="high">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260721-reviewsfix4">
+    <link rel="stylesheet" href="css/style.css?v=20260801-perf1">
     <link rel="stylesheet" href="css/responsive.css?v=20260718-gallery5">
     <script type="application/ld+json">
 {
@@ -181,7 +182,7 @@
       <header class="site-header" data-header>
         <div class="container nav-wrap">
           <a class="logo" href="index.html" aria-label="Lumi Derm Aesthetics home">
-            <span class="logo-mark"><img src="assets/icons/lumi-derm-logo.png" alt="" aria-hidden="true"></span>
+            <span class="logo-mark"><img src="assets/icons/favicon.png" alt="" aria-hidden="true" width="32" height="32"></span>
             <span>Lumi Derm Aesthetics</span>
           </a>
           <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="site-navigation" data-nav-toggle>
@@ -201,9 +202,8 @@
       <main tabindex="-1" id="main-content">
         <section class="hero simple-hero hero-cinematic" id="home" aria-label="Lumi Derm Aesthetics introduction">
           <div class="hero-media" aria-hidden="true">
-            <video class="hero-video" data-hero-video autoplay muted loop playsinline preload="auto" poster="assets/images/iulia-clinic-treatment-consultation.webp">
-              <source src="assets/videos/lumi-derm-hero.mp4" type="video/mp4">
-            </video>
+            <img class="hero-poster" src="assets/images/iulia-clinic-treatment-consultation.webp" alt="" fetchpriority="high" decoding="async" width="1600" height="1067">
+            <video class="hero-video" data-hero-video data-hero-video-src="assets/videos/lumi-derm-hero.mp4" muted loop playsinline preload="none" poster="assets/images/iulia-clinic-treatment-consultation.webp"></video>
             <div class="hero-overlay"></div>
           </div>
           <div class="container hero-inner">
@@ -227,10 +227,10 @@
           <aside class="hero-showcase" aria-hidden="true" data-hero-showcase>
             <figure class="hero-showcase-card">
               <div class="hero-showcase-stage">
-                <img class="hero-showcase-slide is-active" src="assets/images/offer-laser-treatments-cynosure.webp" alt="" data-label="Laser hair removal" fetchpriority="low">
-                <img class="hero-showcase-slide" src="assets/images/offer-skin-boosters.webp" alt="" data-label="Skin boosters" loading="lazy">
-                <img class="hero-showcase-slide" src="assets/images/offer-facials.webp" alt="" data-label="Signature facials" loading="lazy">
-                <img class="hero-showcase-slide" src="assets/images/offer-microneedling.webp" alt="" data-label="Microneedling" loading="lazy">
+                <img class="hero-showcase-slide is-active" data-src="assets/images/offer-laser-treatments-cynosure.webp" alt="" data-label="Laser hair removal" loading="lazy" decoding="async" fetchpriority="low">
+                <img class="hero-showcase-slide" data-src="assets/images/offer-skin-boosters.webp" alt="" data-label="Skin boosters" loading="lazy" decoding="async">
+                <img class="hero-showcase-slide" data-src="assets/images/offer-facials.webp" alt="" data-label="Signature facials" loading="lazy" decoding="async">
+                <img class="hero-showcase-slide" data-src="assets/images/offer-microneedling.webp" alt="" data-label="Microneedling" loading="lazy" decoding="async">
                 <span class="hero-showcase-veil"></span>
                 <span class="hero-showcase-badge"><span class="hero-showcase-badge-star">&#9733;</span> 5.0 rated care</span>
               </div>
@@ -242,8 +242,8 @@
             </figure>
           </aside>
           <!-- Hero background video: local cinematic clip. The <source> is inline in the
-               <video> above so it works under the site CSP (no inline script). Reduced-motion
-               visitors have it paused to the poster frame by main.js. -->
+               video source is attached by main.js after first paint so the poster can carry LCP.
+               Reduced-motion visitors stay on the poster frame. -->
         </section>
 
         <section class="section offers-gallery-section" id="offers">
@@ -530,7 +530,7 @@
         <div class="container">
           <div class="footer-grid">
             <div class="footer-brand">
-              <a class="logo" href="index.html"><span class="logo-mark"><img src="assets/icons/lumi-derm-logo.png" alt="" aria-hidden="true"></span><span>Lumi Derm Aesthetics</span></a>
+              <a class="logo" href="index.html"><span class="logo-mark"><img src="assets/icons/favicon.png" alt="" aria-hidden="true" width="32" height="32"></span><span>Lumi Derm Aesthetics</span></a>
               <p>Advanced beauty and skin treatments in a calm premium clinic environment.</p>
               <div class="social-links" aria-label="Social media links">
                 <a href="https://www.instagram.com/lumi.derm.aesthetic/" target="_blank" rel="noopener" aria-label="Lumi Derm Instagram">
@@ -553,9 +553,9 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
-    <script src="js/main.js?v=20260721-reviewsfix1" defer></script>
-    <script src="js/reviews-form.js?v=20260721-reviewform1"></script>
-    <script src="js/signup.js?v=20260721-consent1"></script>
-    <script src="js/chatbot.js?v=20260710-flow1"></script>
+    <script src="js/main.js?v=20260801-perf1" defer></script>
+    <script src="js/reviews-form.js?v=20260721-reviewform1" defer></script>
+    <script src="js/signup.js?v=20260721-consent1" defer></script>
+    <script src="js/chatbot.js?v=20260801-perf1" defer></script>
   </body>
 </html>

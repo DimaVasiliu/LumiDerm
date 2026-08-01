@@ -58,8 +58,15 @@ export async function auditSite({ siteRoot, canonicalOrigin = DEFAULT_ORIGIN }) 
   for (const file of htmlFiles) {
     const source = await readFile(file, 'utf8');
     const displayFile = relative(root, file) || 'index.html';
+    const isVerificationFile = /^google-site-verification:\s+/i.test(source.trim());
     const ids = new Set();
     const duplicates = new Set();
+
+    if (isVerificationFile) {
+      idsByFile.set(file, ids);
+      metadataByFile.set(file, { canonicalHref: undefined, noindex: false, refresh: false });
+      continue;
+    }
 
     for (const tagMatch of source.matchAll(/<[a-z][^>]*>/gi)) {
       const tag = tagMatch[0];
