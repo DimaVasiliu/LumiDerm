@@ -69,20 +69,6 @@
       "featured": false,
       "expires": "",
       "note": "Limited time"
-    },
-    {
-      "title": "Try mesotherapy — first session £70",
-      "category": "Skin infusion",
-      "description": "A first-session trial of our micro-infusion mesotherapy — a hydration and glow boost for tired, dull skin. Perfect if you'd like to test the treatment before committing to a course.",
-      "price": "From £70",
-      "badge": "Trial",
-      "image": "assets/images/offer-prp-treatment.webp",
-      "alt": "",
-      "service": "mesotherapy",
-      "status": "live",
-      "featured": false,
-      "expires": "2026-07-24",
-      "note": "First session only"
     }
   ]
 }
