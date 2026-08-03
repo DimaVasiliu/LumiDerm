@@ -1,20 +1,6 @@
 {
   "offers": [
     {
-      "title": "Summer glow: Fire & Ice + LED",
-      "category": "Glow facial",
-      "description": "The iconic iS Clinical facial finished with LED light therapy for instant radiance.",
-      "price": "£90",
-      "badge": "Seasonal",
-      "image": "assets/images/offer-facials.webp",
-      "alt": "",
-      "service": "facials",
-      "status": "live",
-      "featured": false,
-      "expires": "2026-09-30",
-      "note": ""
-    },
-    {
       "title": "Profhilo duo — save £40",
       "category": "Skin boosters",
       "description": "The full two-session Profhilo protocol for firmer, hydrated, glowing skin.",
