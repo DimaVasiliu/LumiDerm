@@ -15,20 +15,6 @@
       "note": "Ongoing offer"
     },
     {
-      "title": "Try Endospheres for £50",
-      "category": "Body therapy",
-      "description": "A full session of lymphatic drainage, smoothing and contouring — for £50.",
-      "price": "£50",
-      "badge": "Trial",
-      "image": "assets/images/offer-endospheres-therapy.webp",
-      "alt": "",
-      "service": "endospheres",
-      "status": "live",
-      "featured": false,
-      "expires": "",
-      "note": "First session only"
-    },
-    {
       "title": "Any peel — course of 3",
       "category": "Skin peels",
       "description": "Glycolic, salicylic or azelaic — a course of three, saving versus single sessions.",
