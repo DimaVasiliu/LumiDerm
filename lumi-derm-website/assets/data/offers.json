@@ -41,6 +41,20 @@
       "featured": false,
       "expires": "",
       "note": "Limited time"
+    },
+    {
+      "title": "August offer 20% off on Laser Hair Removal ",
+      "category": "Laser Hair Removal",
+      "description": "August offer- Save 20% on any Laser Hair Removal package or single session",
+      "price": "£32",
+      "badge": "20% off",
+      "image": "assets/images/offer-laser-treatments-cynosure.webp",
+      "alt": "",
+      "service": "laser-hair-removal",
+      "status": "live",
+      "featured": false,
+      "expires": "2026-08-31",
+      "note": "Ongoing offer"
     }
   ]
 }
