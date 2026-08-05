@@ -37,8 +37,8 @@ jobs:
       - name: Verify (syntax, site checks, tests)
         run: npm run check
 
-      - name: Lint (JavaScript)
-        run: npm run lint:js
+      - name: Lint (JavaScript + CSS)
+        run: npm run lint
 
       # Regenerate the sitemap so deployed <lastmod> dates are always current.
       - name: Refresh sitemap

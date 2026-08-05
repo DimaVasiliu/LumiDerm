@@ -6,11 +6,12 @@ const origin = 'https://lumidermaesthetics.com';
 const output = resolve('lumi-derm-website/sitemap.xml');
 const routes = [
   { url: '/', file: 'lumi-derm-website/index.html', image: true },
+  { url: '/llms.txt', file: 'lumi-derm-website/llms.txt' },
+  { url: '/llms-full.txt', file: 'lumi-derm-website/llms-full.txt' },
   { url: '/pages/services.html', file: 'lumi-derm-website/pages/services.html' },
   { url: '/pages/booking.html', file: 'lumi-derm-website/pages/booking.html' },
   { url: '/pages/gallery.html', file: 'lumi-derm-website/pages/gallery.html' },
   { url: '/pages/about.html', file: 'lumi-derm-website/pages/about.html' },
-  { url: '/pages/contact.html', file: 'lumi-derm-website/pages/contact.html' },
   { url: '/pages/policies.html', file: 'lumi-derm-website/pages/policies.html' },
   { url: '/pages/privacy.html', file: 'lumi-derm-website/pages/privacy.html' },
   { url: '/pages/terms.html', file: 'lumi-derm-website/pages/terms.html' },

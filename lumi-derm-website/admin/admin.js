@@ -1099,10 +1099,125 @@ const DEFAULT_CONTENT = {
     instagramHandle: "@lumi.derm.aesthetic",
     facebookUrl: "https://www.facebook.com/LumiDerm",
     facebookHandle: "LumiDerm"
+  },
+  pages: {
+    about: {
+      hero: {
+        eyebrow: "Meet your practitioner",
+        title: "Hi, I'm Iulia.",
+        lead: "An aesthetic practitioner with over 10 years' experience in laser, advanced skin and body treatments, offering practical advice, careful treatment planning and results that still look like you."
+      },
+      bio: {
+        eyebrow: "About me",
+        title: "Clinically minded care, delivered calmly",
+        paragraphs: [
+          "I founded Lumi Derm Aesthetics to offer advanced skincare the way I believe it should be: unhurried, personalised and honest. Over the past decade I've trained across laser, injectable, regenerative and body treatments, and I work with technology and products I trust.",
+          "Every appointment begins with a real conversation. I take time to understand your skin, your goals and your lifestyle, then recommend what is likely to help and what is worth leaving alone. If a treatment is not right for you, I will say so.",
+          "The aim is not to change your face or chase trends. It is to support healthier-looking skin, soften what bothers you and help you feel more comfortable in your own skin."
+        ],
+        signature: "Iulia",
+        role: "Founder & Lead Practitioner, Lumi Derm Aesthetics"
+      },
+      clinic: {
+        eyebrow: "The clinic",
+        title: "A quiet Docklands studio for skin, laser and body care",
+        lead: "Lumi Derm Aesthetics is a modern, private treatment space in London Docklands. The menu is broad, but the approach is simple: choose the treatment that fits the concern, explain it clearly, and keep each appointment focused on the person in front of me.",
+        cards: [
+          { title: "What I offer", copy: "Facials, chemical peels, skin boosters, mesotherapy, PRP, laser hair removal, vascular laser treatments, electrolysis for hair and blemish removal, lymphatic drainage and Endospheres therapy." },
+          { title: "How to get here", copy: "South Quay and Crossharbour stations are both about a 4-minute walk away. If you are driving, there is free and paid parking nearby, including ASDA parking around 10 minutes away on foot." },
+          { title: "What matters", copy: "Appointments are one-to-one, treatment plans are tailored, and product choices are considered, with cruelty-free options used where they fit the treatment." }
+        ]
+      },
+      concerns: {
+        eyebrow: "How I can help",
+        title: "The concerns I help you solve",
+        copy: "Most clients come in with something specific they want to improve: hair growth, texture, dullness, redness, thinning hair, puffiness or skin that no longer feels like theirs. These are the concerns I help with most often."
+      },
+      treatments: {
+        eyebrow: "What I do",
+        title: "Advanced treatments, planned with restraint",
+        copy: "The clinic offers laser, regenerative, skin and body treatments, but the plan stays focused: what is useful, what is safe, and what makes sense for your skin."
+      },
+      benefits: {
+        eyebrow: "How you benefit",
+        title: "What the appointment is built around",
+        copy: ""
+      },
+      journey: {
+        eyebrow: "What to expect",
+        title: "Your journey, step by step",
+        copy: ""
+      },
+      cta: {
+        title: "Ready when you are",
+        copy: "Book a consultation and we'll build a plan around your skin, your goals and your budget."
+      }
+    },
+    services: {
+      hero: {
+        eyebrow: "Treatment menu & prices",
+        title: "Treatments & prices",
+        lead: "Start with a consultation or patch test when one is required, then book the treatment after suitability is confirmed. The first cards below show those required first-step appointments separately from the treatment menu."
+      }
+    },
+    booking: {
+      hero: {
+        eyebrow: "Online booking",
+        title: "Book your appointment"
+      },
+      picker: {
+        eyebrow: "Treatment booking",
+        title: "Choose a treatment",
+        copy: "Select a category, then tap a treatment card."
+      },
+      widget: {
+        eyebrow: "Live booking",
+        title: "Choose your time on the Treatwell calendar",
+        copy: "Select the same treatment in the widget menu, then choose your appointment time and confirm securely without leaving this page."
+      },
+      support: {
+        title: "Not sure what to choose?",
+        copy: "Book a consultation or message Lumi Derm before selecting a treatment."
+      }
+    }
   }
 };
 
 function contentReady() { return state.content && state.content.hero && state.content.contact; }
+function mergeContent(data) {
+  return {
+    seo: { ...DEFAULT_CONTENT.seo, ...(data && data.seo ? data.seo : {}) },
+    hero: { ...DEFAULT_CONTENT.hero, ...(data && data.hero ? data.hero : {}) },
+    contact: { ...DEFAULT_CONTENT.contact, ...(data && data.contact ? data.contact : {}) },
+    pages: {
+      about: {
+        ...DEFAULT_CONTENT.pages.about,
+        ...(data && data.pages && data.pages.about ? data.pages.about : {}),
+        hero: { ...DEFAULT_CONTENT.pages.about.hero, ...(data && data.pages && data.pages.about && data.pages.about.hero ? data.pages.about.hero : {}) },
+        bio: { ...DEFAULT_CONTENT.pages.about.bio, ...(data && data.pages && data.pages.about && data.pages.about.bio ? data.pages.about.bio : {}) },
+        clinic: { ...DEFAULT_CONTENT.pages.about.clinic, ...(data && data.pages && data.pages.about && data.pages.about.clinic ? data.pages.about.clinic : {}) },
+        concerns: { ...DEFAULT_CONTENT.pages.about.concerns, ...(data && data.pages && data.pages.about && data.pages.about.concerns ? data.pages.about.concerns : {}) },
+        treatments: { ...DEFAULT_CONTENT.pages.about.treatments, ...(data && data.pages && data.pages.about && data.pages.about.treatments ? data.pages.about.treatments : {}) },
+        benefits: { ...DEFAULT_CONTENT.pages.about.benefits, ...(data && data.pages && data.pages.about && data.pages.about.benefits ? data.pages.about.benefits : {}) },
+        journey: { ...DEFAULT_CONTENT.pages.about.journey, ...(data && data.pages && data.pages.about && data.pages.about.journey ? data.pages.about.journey : {}) },
+        cta: { ...DEFAULT_CONTENT.pages.about.cta, ...(data && data.pages && data.pages.about && data.pages.about.cta ? data.pages.about.cta : {}) }
+      },
+      services: {
+        ...DEFAULT_CONTENT.pages.services,
+        ...(data && data.pages && data.pages.services ? data.pages.services : {}),
+        hero: { ...DEFAULT_CONTENT.pages.services.hero, ...(data && data.pages && data.pages.services && data.pages.services.hero ? data.pages.services.hero : {}) }
+      },
+      booking: {
+        ...DEFAULT_CONTENT.pages.booking,
+        ...(data && data.pages && data.pages.booking ? data.pages.booking : {}),
+        hero: { ...DEFAULT_CONTENT.pages.booking.hero, ...(data && data.pages && data.pages.booking && data.pages.booking.hero ? data.pages.booking.hero : {}) },
+        picker: { ...DEFAULT_CONTENT.pages.booking.picker, ...(data && data.pages && data.pages.booking && data.pages.booking.picker ? data.pages.booking.picker : {}) },
+        widget: { ...DEFAULT_CONTENT.pages.booking.widget, ...(data && data.pages && data.pages.booking && data.pages.booking.widget ? data.pages.booking.widget : {}) },
+        support: { ...DEFAULT_CONTENT.pages.booking.support, ...(data && data.pages && data.pages.booking && data.pages.booking.support ? data.pages.booking.support : {}) }
+      }
+    }
+  };
+}
 
 function bindContent() {
   document.querySelector("[data-reload-content]")?.addEventListener("click", async () => {
@@ -1133,6 +1248,14 @@ function bindContent() {
     state.content.seo[f.dataset.contentSeo] = escapeHtml(f.value.trim());
     saveDraft("SEO detail updated.");
   }));
+  document.querySelectorAll("[data-content-page]").forEach((f) => f.addEventListener("change", () => {
+    setContentPath(f.dataset.contentPage, escapeHtml(f.value.trim()));
+    saveDraft("Page text updated.");
+  }));
+  document.querySelectorAll("[data-content-list]").forEach((f) => f.addEventListener("change", () => {
+    setContentPath(f.dataset.contentList, paragraphList(f.value));
+    saveDraft("Page text updated.");
+  }));
 }
 
 async function loadContentFromJson(announce, force) {
@@ -1140,23 +1263,24 @@ async function loadContentFromJson(announce, force) {
     const r = await fetch(CONTENT_JSON_URL + "?t=" + Date.now(), { cache: "no-store" });
     if (r.ok) {
       const data = await r.json();
-      const live = { seo: data.seo || {}, hero: data.hero || {}, contact: data.contact || {} };
+      const live = mergeContent(data);
       if (force || !contentReady()) {
         state.content = structuredClone(live);
         saveDraft(announce ? "Loaded the text currently on the website." : null);
       }
     } else if (force || !contentReady()) {
-      state.content = structuredClone(DEFAULT_CONTENT);
+      state.content = mergeContent(DEFAULT_CONTENT);
       saveDraft(null);
     }
   } catch {
-    if (!contentReady()) state.content = structuredClone(DEFAULT_CONTENT);
+    if (!contentReady()) state.content = mergeContent(DEFAULT_CONTENT);
     if (announce) toast("Could not read the website's text file.");
   }
   renderContent();
 }
 
 function renderContent() {
+  state.content = mergeContent(state.content || {});
   const c = state.content || {};
   const hero = c.hero || {}, contact = c.contact || {}, seo = c.seo || {};
   const setVal = (sel, val) => { const el = document.querySelector(sel); if (el) el.value = val; };
@@ -1166,10 +1290,37 @@ function renderContent() {
   setVal('[data-content-hero="title"]', decodeHtml(String(hero.title || "").replace(/<br\s*\/?>/gi, "\n")));
   setVal('[data-content-hero="lead"]', decodeHtml(hero.lead || ""));
   CONTACT_KEYS.forEach((k) => setVal(`[data-content-contact="${k}"]`, decodeHtml(contact[k] || "")));
+  document.querySelectorAll("[data-content-page]").forEach((f) => {
+    setVal(`[data-content-page="${f.dataset.contentPage}"]`, decodeHtml(getContentPath(f.dataset.contentPage) || ""));
+  });
+  document.querySelectorAll("[data-content-list]").forEach((f) => {
+    const list = getContentPath(f.dataset.contentList);
+    setVal(`[data-content-list="${f.dataset.contentList}"]`, (Array.isArray(list) ? list : []).map(decodeHtml).join("\n\n"));
+  });
 }
 
 function setContentStatus(message) {
   const el = document.querySelector("[data-content-status]"); if (el) el.textContent = message;
+}
+
+function getContentPath(path) {
+  return String(path || "").split(".").reduce((obj, key) => (obj && obj[key] != null ? obj[key] : undefined), state.content);
+}
+
+function setContentPath(path, value) {
+  const keys = String(path || "").split(".").filter(Boolean);
+  if (!keys.length) return;
+  if (!state.content) state.content = {};
+  let target = state.content;
+  keys.slice(0, -1).forEach((key) => {
+    if (!target[key] || typeof target[key] !== "object") target[key] = {};
+    target = target[key];
+  });
+  target[keys[keys.length - 1]] = value;
+}
+
+function paragraphList(value) {
+  return String(value || "").split(/\n\s*\n/).map((p) => escapeHtml(p.trim())).filter(Boolean);
 }
 
 /* ---------------- Settings ---------------- */
@@ -1526,6 +1677,19 @@ const PRICES_MARKERS = /(<!-- PRICES:START[\s\S]*?-->)[\s\S]*?(<!-- PRICES:END -
 const CONTENT_REPO_PATH = "lumi-derm-website/assets/data/content.json";  // hero copy + contact details
 const HERO_MARKERS = /(<!-- HERO:START[\s\S]*?-->)[\s\S]*?(<!-- HERO:END -->)/; // homepage hero block
 const SEO_MARKERS = /(<!-- SEO:START[\s\S]*?-->)[\s\S]*?(<!-- SEO:END -->)/;    // homepage <head> title + meta description
+const ABOUT_HERO_MARKERS = /(<!-- ABOUT_HERO:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_HERO:END -->)/;
+const ABOUT_BIO_MARKERS = /(<!-- ABOUT_BIO:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_BIO:END -->)/;
+const ABOUT_CLINIC_MARKERS = /(<!-- ABOUT_CLINIC:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_CLINIC:END -->)/;
+const ABOUT_CONCERNS_MARKERS = /(<!-- ABOUT_CONCERNS:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_CONCERNS:END -->)/;
+const ABOUT_TREATMENTS_MARKERS = /(<!-- ABOUT_TREATMENTS:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_TREATMENTS:END -->)/;
+const ABOUT_BENEFITS_MARKERS = /(<!-- ABOUT_BENEFITS:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_BENEFITS:END -->)/;
+const ABOUT_JOURNEY_MARKERS = /(<!-- ABOUT_JOURNEY:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_JOURNEY:END -->)/;
+const ABOUT_CTA_MARKERS = /(<!-- ABOUT_CTA:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_CTA:END -->)/;
+const SERVICES_HERO_MARKERS = /(<!-- SERVICES_HERO:START[\s\S]*?-->)[\s\S]*?(<!-- SERVICES_HERO:END -->)/;
+const BOOKING_HERO_MARKERS = /(<!-- BOOKING_HERO:START[\s\S]*?-->)[\s\S]*?(<!-- BOOKING_HERO:END -->)/;
+const BOOKING_PICKER_MARKERS = /(<!-- BOOKING_PICKER:START[\s\S]*?-->)[\s\S]*?(<!-- BOOKING_PICKER:END -->)/;
+const BOOKING_WIDGET_MARKERS = /(<!-- BOOKING_WIDGET:START[\s\S]*?-->)[\s\S]*?(<!-- BOOKING_WIDGET:END -->)/;
+const BOOKING_SUPPORT_MARKERS = /(<!-- BOOKING_SUPPORT:START[\s\S]*?-->)[\s\S]*?(<!-- BOOKING_SUPPORT:END -->)/;
 // Every page that may show contact details; index.html also carries the hero.
 const SITE_PAGE_PATHS = [
   "lumi-derm-website/index.html",
@@ -1895,13 +2059,15 @@ async function publishContent() {
     const cur = await ghRequest(CONTENT_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
     if (cur.ok) {
       const m = await cur.json(); sha = m.sha;
-      try { const parsed = JSON.parse(decodeB64(m.content)); oldContent = { seo: parsed.seo || {}, hero: parsed.hero || {}, contact: parsed.contact || {} }; } catch { /* keep default */ }
+      try { oldContent = mergeContent(JSON.parse(decodeB64(m.content))); } catch { /* keep default */ }
     } else if (cur.status !== 404) { const e = await cur.json().catch(() => ({})); throw new Error(ghError(cur.status, e.message)); }
+    state.content = mergeContent(state.content);
 
     const heroChanged = JSON.stringify(oldContent.hero || {}) !== JSON.stringify(state.content.hero || {});
     const seoChanged = JSON.stringify(oldContent.seo || {}) !== JSON.stringify(state.content.seo || {});
+    const pagesChanged = JSON.stringify(oldContent.pages || {}) !== JSON.stringify(state.content.pages || {});
     const ops = contactOps(oldContent.contact || {}, state.content.contact || {});
-    if (!heroChanged && !seoChanged && !ops.length) {
+    if (!heroChanged && !seoChanged && !pagesChanged && !ops.length) {
       setContentStatus("Nothing to publish — no changes since last time.");
       toast("No page-text changes to publish.");
       return true;
@@ -1916,6 +2082,28 @@ async function publishContent() {
     // 3) rewrite each page: index.html gets SEO (head) + hero + contact; the rest get contact only
     const heroHtml = window.renderHero(state.content.hero || {});
     const seoHtml = typeof window.renderSeo === "function" ? window.renderSeo(state.content.seo || {}) : null;
+    const pages = state.content.pages || {};
+    const pageRenderers = {
+      "lumi-derm-website/pages/about.html": [
+        [ABOUT_HERO_MARKERS, () => window.renderSimpleHero(pages.about && pages.about.hero)],
+        [ABOUT_BIO_MARKERS, () => window.renderAboutBio(pages.about && pages.about.bio)],
+        [ABOUT_CLINIC_MARKERS, () => window.renderAboutClinic(pages.about && pages.about.clinic)],
+        [ABOUT_CONCERNS_MARKERS, () => window.renderSectionHeader(pages.about && pages.about.concerns)],
+        [ABOUT_TREATMENTS_MARKERS, () => window.renderSectionHeader(pages.about && pages.about.treatments)],
+        [ABOUT_BENEFITS_MARKERS, () => window.renderSectionHeader(pages.about && pages.about.benefits)],
+        [ABOUT_JOURNEY_MARKERS, () => window.renderSectionHeader(pages.about && pages.about.journey)],
+        [ABOUT_CTA_MARKERS, () => window.renderAboutCta(pages.about && pages.about.cta)]
+      ],
+      "lumi-derm-website/pages/services.html": [
+        [SERVICES_HERO_MARKERS, () => window.renderSimpleHero({ ...(pages.services && pages.services.hero), leadClass: "treatment-intro" })]
+      ],
+      "lumi-derm-website/pages/booking.html": [
+        [BOOKING_HERO_MARKERS, () => window.renderBookingHero(pages.booking && pages.booking.hero)],
+        [BOOKING_PICKER_MARKERS, () => window.renderBookingPicker(pages.booking && pages.booking.picker)],
+        [BOOKING_WIDGET_MARKERS, () => window.renderBookingWidget(pages.booking && pages.booking.widget)],
+        [BOOKING_SUPPORT_MARKERS, () => window.renderBookingSupport(pages.booking && pages.booking.support)]
+      ]
+    };
     let changed = 0;
     for (const repoPath of SITE_PAGE_PATHS) {
       const isHome = repoPath.endsWith("/index.html");
@@ -1923,6 +2111,11 @@ async function publishContent() {
         let out = html;
         if (isHome && seoChanged && seoHtml && SEO_MARKERS.test(out)) out = out.replace(SEO_MARKERS, "$1\n    " + seoHtml + "\n    $2");
         if (isHome && heroChanged && HERO_MARKERS.test(out)) out = out.replace(HERO_MARKERS, "$1\n              " + heroHtml + "\n              $2");
+        if (pagesChanged && pageRenderers[repoPath]) {
+          pageRenderers[repoPath].forEach(([markers, render]) => {
+            if (markers.test(out)) out = out.replace(markers, "$1\n            " + render() + "\n            $2");
+          });
+        }
         if (ops.length) out = applyOps(out, ops);
         return out;
       };

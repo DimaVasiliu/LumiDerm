@@ -48,7 +48,7 @@ const LUMI_KB = [
   {
     id: 'greeting',
     keywords: ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'],
-    answer: "Hi, welcome to Lumi Derm! 😊 I can help with treatments, prices, booking, opening hours and how to find us. What would you like to know?",
+    answer: "Hi, welcome to Lumi Derm. I can help with treatments, prices, booking, opening hours and how to find us. What would you like to know?",
   },
   {
     id: 'booking',
@@ -113,7 +113,7 @@ const LUMI_KB = [
   {
     id: 'age',
     keywords: ['age', 'how old', '18', 'minor', 'under 18', 'child', 'teenager', 'daughter', 'son', 'parent', 'consent', 'kid'],
-    answer: "Adults 18+ can book any treatment. Younger clients are welcome for selected treatments too — suitability is assessed with Iulia at a consultation, and under-18s need written parental consent with a parent present throughout. Injectables (anti-wrinkle, fillers, Profhilo, mesotherapy, PRP) are 18+ only, as required by UK law.",
+    answer: "Adults 18+ can book any treatment. Younger clients may be suitable for selected treatments after consultation, with written parental consent and a parent or guardian present throughout. Injectables and advanced regenerative treatments are for clients aged 18+ only.",
   },
   {
     id: 'contact',
@@ -123,7 +123,7 @@ const LUMI_KB = [
   {
     id: 'thanks',
     keywords: ['thanks', 'thank you', 'cheers', 'ta', 'appreciate'],
-    answer: "You're very welcome! Anything else I can help with? ✨",
+    answer: "You're very welcome. Anything else I can help with?",
   },
 ];
 
@@ -175,11 +175,49 @@ async function lumiGetReply(text, history) {
       if (!res.ok) throw new Error('bad status');
       const data = await res.json();
       if (data && data.reply) return data.reply;
-    } catch (err) {
+    } catch {
       /* network/API issue -> fall back to local answers */
     }
   }
   return lumiLocalAnswer(text);
+}
+
+function lumiEscapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function lumiSanitizeAssistantHtml(html) {
+  const template = document.createElement('template');
+  template.innerHTML = String(html);
+  const allowedLinks = [];
+
+  template.content.querySelectorAll('a').forEach((link, index) => {
+    const href = link.getAttribute('href') || '';
+    const hasUnsafeCharacter = href.includes('<') || href.includes('>') || Array.from(href).some((char) => char.charCodeAt(0) < 32);
+    const isSafe = /^(https?:|mailto:|tel:|pages\/|\.\/|\/)/i.test(href) && !hasUnsafeCharacter;
+    const text = link.textContent || href;
+    if (!isSafe) {
+      link.replaceWith(document.createTextNode(text));
+      return;
+    }
+    const token = `%%LUMI_LINK_${index}%%`;
+    allowedLinks.push({
+      token,
+      html: `<a href="${lumiEscapeHtml(href)}"${href.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>${lumiEscapeHtml(text)}</a>`,
+    });
+    link.replaceWith(document.createTextNode(token));
+  });
+
+  let safe = lumiEscapeHtml(template.content.textContent || '');
+  allowedLinks.forEach((link) => {
+    safe = safe.replace(link.token, link.html);
+  });
+  return safe;
 }
 
 /* ---- Widget UI ------------------------------------------------------------ */
@@ -221,7 +259,7 @@ function initLumiChat() {
   bubble.setAttribute('aria-label', 'Open chat: questions about treatments or booking?');
   bubble.innerHTML =
     '<button class="lumi-chat-bubble-close" type="button" aria-label="Dismiss">&times;</button>' +
-    '<strong>Hi there! 👋</strong>Questions about treatments, prices or booking? Ask me here.';
+    '<strong>Hi there.</strong>Questions about treatments, prices or booking? Ask me here.';
 
   document.body.appendChild(launcher);
   document.body.appendChild(panel);
@@ -240,11 +278,11 @@ function initLumiChat() {
   function dismissBubble() {
     bubble.classList.remove('is-visible');
     window.clearTimeout(bubbleTimer);
-    try { sessionStorage.setItem('lumiChatBubbleSeen', '1'); } catch (e) { /* ignore */ }
+    try { sessionStorage.setItem('lumiChatBubbleSeen', '1'); } catch { /* ignore */ }
   }
   function maybeShowBubble() {
     let seen = false;
-    try { seen = sessionStorage.getItem('lumiChatBubbleSeen') === '1'; } catch (e) { /* ignore */ }
+    try { seen = sessionStorage.getItem('lumiChatBubbleSeen') === '1'; } catch { /* ignore */ }
     if (seen) return;
     bubbleTimer = window.setTimeout(() => {
       if (!panel.classList.contains('is-open')) bubble.classList.add('is-visible');
@@ -256,7 +294,7 @@ function initLumiChat() {
   function addMessage(html, who) {
     const el = document.createElement('div');
     el.className = 'lumi-chat-msg ' + who;
-    el.innerHTML = html;
+    el.innerHTML = who === 'bot' ? lumiSanitizeAssistantHtml(html) : lumiEscapeHtml(html);
     body.appendChild(el);
     scrollDown();
     return el;
@@ -286,7 +324,7 @@ function initLumiChat() {
   async function handleUser(text) {
     const clean = text.trim();
     if (!clean) return;
-    addMessage(clean.replace(/</g, '&lt;'), 'user');
+    addMessage(clean, 'user');
     history.push({ role: 'user', content: clean });
     input.value = '';
     const typing = showTyping();
@@ -308,7 +346,7 @@ function initLumiChat() {
       const t = showTyping();
       setTimeout(() => {
         t.remove();
-        addMessage("Hi, welcome to Lumi Derm! 😊 Ask me about treatments, prices, booking, hours or how to find us — or tap a button below.", 'bot');
+        addMessage("Hi, welcome to Lumi Derm. Ask me about treatments, prices, booking, hours or how to find us — or tap a button below.", 'bot');
       }, 500);
     }
     setTimeout(() => input.focus(), 300);

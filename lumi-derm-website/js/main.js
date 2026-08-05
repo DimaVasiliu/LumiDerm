@@ -1327,6 +1327,7 @@ document.querySelectorAll('[data-nav-link]').forEach((link) => {
   function closeBanner() {
     if (!banner) return;
     banner.classList.remove('is-visible');
+    document.body.classList.remove('cookie-banner-open');
     const closingBanner = banner;
     closingBanner.setAttribute('aria-hidden', 'true');
     closingBanner.inert = true;
@@ -1355,6 +1356,7 @@ document.querySelectorAll('[data-nav-link]').forEach((link) => {
         </div>
       </div>`;
     document.body.appendChild(banner);
+    document.body.classList.add('cookie-banner-open');
     requestAnimationFrame(() => banner?.classList.add('is-visible'));
     if (focus) requestAnimationFrame(() => banner?.querySelector('button')?.focus());
   }

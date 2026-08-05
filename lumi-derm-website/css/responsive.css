@@ -1,4 +1,4 @@
-@media (max-width: 639px) {
+@media (width <= 639px) {
   .container {
     width: min(100% - 1.1rem, var(--container));
   }
@@ -27,7 +27,7 @@
   }
 
   .hero-banner::before {
-    background: linear-gradient(180deg, rgba(41, 36, 38, 0.18) 0%, rgba(41, 36, 38, 0.24) 36%, rgba(41, 36, 38, 0.64) 100%);
+    background: linear-gradient(180deg, rgb(41 36 38 / 18%) 0%, rgb(41 36 38 / 24%) 36%, rgb(41 36 38 / 64%) 100%);
   }
 
   .hero-banner-media img {
@@ -281,7 +281,7 @@
   }
 }
 
-@media (min-width: 640px) {
+@media (width >= 640px) {
   .card-grid,
   .reviews-grid,
   .contact-preview,
@@ -357,7 +357,7 @@
   }
 }
 
-@media (min-width: 820px) {
+@media (width >= 820px) {
   .hero-banner {
     align-items: stretch;
   }
@@ -402,10 +402,7 @@
   }
 
   .timeline::before {
-    top: 1.1rem;
-    right: 0.5rem;
-    bottom: auto;
-    left: 0.5rem;
+    inset: 1.1rem 0.5rem auto;
     width: auto;
     height: 1px;
   }
@@ -470,7 +467,7 @@
   }
 }
 
-@media (min-width: 980px) {
+@media (width >= 980px) {
   .nav-toggle {
     display: none;
   }
@@ -533,7 +530,7 @@
     bottom: -0.42rem;
     left: 0;
     height: 1px;
-    background: currentColor;
+    background: currentcolor;
     transform: scaleX(0);
     transform-origin: center;
     transition: transform 180ms ease;
@@ -575,7 +572,7 @@
 
 }
 
-@media (min-width: 1040px) {
+@media (width >= 1040px) {
   h1 {
     font-size: clamp(4rem, 5.4vw, 5.4rem);
   }
@@ -672,7 +669,7 @@
   }
 }
 
-@media (min-width: 1200px) {
+@media (width >= 1200px) {
   .price-modal-panel {
     width: min(100%, 820px);
   }

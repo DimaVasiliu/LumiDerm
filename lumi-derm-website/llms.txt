@@ -1,0 +1,36 @@
+# Lumi Derm Aesthetics
+
+> Advanced aesthetics and skin clinic in London Docklands, led by Iulia, offering consultation-led skin, laser, regenerative, body and beauty treatments.
+
+Website: https://lumidermaesthetics.com/
+Location: Unit 41 Skylines Village, Limeharbour, London E14 9TS
+Phone: 07832839298
+Email: info@lumidermaesthetics.co.uk
+
+## Core Pages
+
+- [Home](https://lumidermaesthetics.com/): overview of Lumi Derm Aesthetics, current offers, client reviews, FAQs, location and contact details.
+- [Treatments and Prices](https://lumidermaesthetics.com/pages/services.html): full treatment menu, prices, consultation guidance and patch-test guidance.
+- [Book Online](https://lumidermaesthetics.com/pages/booking.html): choose a treatment and open the secure Treatwell booking calendar.
+- [About Iulia](https://lumidermaesthetics.com/pages/about.html): clinic approach, practitioner background and treatment philosophy.
+- [Policies](https://lumidermaesthetics.com/pages/policies.html): cancellation, deposits, patch tests, age restrictions and treatment safety terms.
+
+## Treatment Areas
+
+- Consultations and patch tests
+- Laser hair removal and laser skin rejuvenation
+- Laser treatment for thread veins and spider veins
+- Electrolysis permanent hair removal and blemish removal
+- PRP for face, body and hair loss
+- Profhilo, polynucleotides, mesotherapy and skin boosters
+- Facials, chemical peels, microneedling and exosomes
+- Endospheres therapy, lymphatic drainage and body treatments
+- Lash and brow treatments
+
+## Booking Guidance
+
+Advanced treatments may require a consultation or patch test before the treatment appointment. Use the booking page or contact the clinic if unsure which first-step appointment is required.
+
+## Structured Data
+
+The site includes JSON-LD for the clinic, FAQs, reviews, treatment categories, breadcrumbs and booking actions where relevant. The sitemap is available at https://lumidermaesthetics.com/sitemap.xml.

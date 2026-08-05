@@ -1,0 +1,59 @@
+# Lumi Derm Aesthetics - AI-readable site summary
+
+Lumi Derm Aesthetics is an advanced aesthetics, skin and beauty clinic in London Docklands. The clinic is led by Iulia and provides consultation-led treatments for skin quality, hair removal, body care, lashes, brows and regenerative aesthetics.
+
+Primary website: https://lumidermaesthetics.com/
+Treatment menu: https://lumidermaesthetics.com/pages/services.html
+Booking page: https://lumidermaesthetics.com/pages/booking.html
+Policies: https://lumidermaesthetics.com/pages/policies.html
+Sitemap: https://lumidermaesthetics.com/sitemap.xml
+
+## Clinic Details
+
+Name: Lumi Derm Aesthetics
+Address: Unit 41 Skylines Village, Limeharbour, London E14 9TS
+Telephone: 07832839298
+Email: info@lumidermaesthetics.co.uk
+Instagram: https://www.instagram.com/lumi.derm.aesthetic/
+Booking platform: Treatwell
+
+## What The Website Covers
+
+The public website explains the clinic, the treatment menu, prices, online booking, contact details, FAQs and client policies. It is intended to help clients choose an appropriate first step and understand when a consultation or patch test is required.
+
+## Consultation-first Treatments
+
+Some treatments require a first-step appointment before the main treatment. The services page separates consultations and patch tests from the treatment menu so clients can book the correct appointment first.
+
+First-step appointments shown on the site include:
+- PRP(Platelet rich plasma) Consultation
+- Hair Loss Consultation
+- Laser Skin Rejuvenation Compulsory Patch Test
+- Other patch tests where required for treatment suitability
+
+Clients should book a consultation or patch test before the treatment where the website states that one is required, or contact the clinic if unsure.
+
+## Treatment Categories
+
+Lumi Derm Aesthetics lists these treatment areas:
+- Laser hair removal using Cynosure Elite for face and body areas
+- Laser skin rejuvenation and Foto RF skin treatments
+- Laser treatment for thread veins and spider veins
+- Electrolysis permanent hair removal and advanced electrolysis
+- PRP for face, body and hair loss
+- Profhilo, polynucleotides, mesotherapy, skin boosters and lip boosters
+- Facials, chemical peels, microneedling and exosomes
+- Endospheres therapy, lymphatic drainage and body treatments
+- Lash lift, brow treatments, waxing and beauty maintenance
+
+## Booking Process
+
+Clients can choose a treatment on the booking page, review the treatment notes, then open the Treatwell calendar. The booking page explains that Treatwell powers the calendar and may use its own cookies. Lumi Derm does not collect card details on the website.
+
+## Safety And Suitability
+
+Treatment suitability is confirmed through consultation, patch testing where needed, and practitioner assessment. Not every treatment is suitable for every client. Contraindications, medication, pregnancy, skin condition, recent procedures, age restrictions and safety concerns may mean a treatment is refused, postponed or adapted.
+
+## Search And AI Crawling Notes
+
+The site uses conventional crawlable HTML, canonical URLs, a standard robots.txt file and a sitemap. Public pages include structured data for the clinic, FAQs, reviews, treatment categories, breadcrumbs and booking actions where relevant. This file is provided as an additional AI-readable summary; it does not replace the visible website content.

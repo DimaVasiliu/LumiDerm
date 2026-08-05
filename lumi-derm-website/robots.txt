@@ -2,4 +2,8 @@ User-agent: *
 Disallow: /admin/
 Disallow: /cms/
 
+# AI-readable summaries:
+# https://lumidermaesthetics.com/llms.txt
+# https://lumidermaesthetics.com/llms-full.txt
+
 Sitemap: https://lumidermaesthetics.com/sitemap.xml
