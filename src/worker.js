@@ -91,6 +91,7 @@
 
 const MAX_RECIPIENTS = 500;
 const BATCH_SIZE = 100; // Resend's batch endpoint limit
+const GOOGLE_REVIEW_URL = "https://www.google.com/search?client=mobilesearchapp&sca_esv=89317be53c67f56a&channel=iss&cs=0&hl=en_GB&rlz=1MDAPLA_en-GBGB1173GB1173&v=432.8.954074404&output=search&kgmid=%2Fg%2F11zkv1js2p&q=Lumi%20Derm%20Aesthetics&shem=epsd1%2Cltae%2Crimspwouoe&shndl=30&source=sh%2Fx%2Floc%2Fact%2Fm1%2F5&kgs=0f7f27e36b2d2ca9";
 
 export default {
   async fetch(request, env) {
@@ -1488,6 +1489,7 @@ function defaultBirthdayHtml() {
 <table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#1c1a18" style="border-radius:2px;">
 <a href="https://lumidermaesthetics.com/pages/booking.html" style="display:inline-block;padding:16px 40px;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#fff;text-decoration:none;">Book your birthday treat</a>
 </td></tr></table>
+<p style="margin:24px 0 0;font-family:Arial,sans-serif;font-size:14px;line-height:1.7;color:#7d746b;">If you enjoyed your Lumi Derm visit, it would mean so much if you could leave a quick Google review: <a href="${GOOGLE_REVIEW_URL}" style="color:#7d746b;text-decoration:underline;">write a review</a>.</p>
 </td></tr>
 <tr><td style="padding:28px 40px 36px;">
 <p style="margin:0;border-top:1px solid #e8e2db;padding-top:22px;font-family:Arial,sans-serif;font-size:11px;line-height:1.6;color:#a2968a;">Lumi Derm Aesthetics &middot; London Docklands &middot; <a href="{{unsubscribe}}" style="color:#a2968a;">unsubscribe</a></p>
@@ -2612,6 +2614,7 @@ async function trackCampaignLinks(env, origin, html, campaignId, email) {
 const APPROVED_CAMPAIGN_DOMAINS = [
   "lumidermaesthetics.com",
   "treatwell.co.uk",
+  "google.com",
   "instagram.com",
   "facebook.com",
   "fb.com",

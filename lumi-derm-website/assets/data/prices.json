@@ -129,8 +129,8 @@
               "columns": [
                 "Area",
                 "1 session",
-                "6 sessions",
-                "10 sessions"
+                "6 sessions<br><small>(price per session)</small>",
+                "10 sessions<br><small>(price per session)</small>"
               ],
               "rows": [
                 [
@@ -174,8 +174,8 @@
               "columns": [
                 "Area",
                 "1 session",
-                "6 sessions",
-                "10 sessions"
+                "6 sessions<br><small>(price per session)</small>",
+                "10 sessions<br><small>(price per session)</small>"
               ],
               "rows": [
                 [
@@ -207,8 +207,8 @@
               "columns": [
                 "Area",
                 "1 session",
-                "6 sessions",
-                "10 sessions"
+                "6 sessions<br><small>(price per session)</small>",
+                "10 sessions<br><small>(price per session)</small>"
               ],
               "rows": [
                 [
@@ -308,7 +308,11 @@
             },
             {
               "type": "note",
-              "text": "Patch test required 24 hours before your first session (£10)."
+              "text": "Patch test required 24 hours before your first session."
+            },
+            {
+              "type": "note",
+              "text": "Instalment payments for packages available at the venue."
             }
           ]
         },
@@ -359,7 +363,11 @@
             },
             {
               "type": "note",
-              "text": "Patch test required 24 hours before your first session (£10)."
+              "text": "Patch test required 24 hours before your first session."
+            },
+            {
+              "type": "note",
+              "text": "Instalment payments for packages available at the venue."
             }
           ]
         },
@@ -493,7 +501,7 @@
             },
             {
               "type": "note",
-              "text": "Patch test required 24 hours before your first session (£10)."
+              "text": "Patch test required 24 hours before your first session."
             }
           ]
         }
@@ -576,7 +584,7 @@
             },
             {
               "type": "note",
-              "text": "Cleanup time: 15 minutes. Consultation £10, redeemable against your treatment."
+              "text": "Cleanup time: 15 minutes. Consultation confirms suitability before treatment."
             }
           ]
         },
@@ -598,7 +606,7 @@
             },
             {
               "type": "p",
-              "html": "<strong>What to expect:</strong> a small number of injection points that settle quickly. A £10 consultation confirms suitability and is redeemable against your treatment."
+              "html": "<strong>What to expect:</strong> a small number of injection points that settle quickly. A consultation confirms suitability before treatment."
             },
             {
               "type": "pricelist",
@@ -621,7 +629,7 @@
             },
             {
               "type": "note",
-              "text": "Consultation £10, redeemable against your treatment."
+              "text": "Consultation confirms suitability before treatment."
             }
           ]
         },
@@ -643,7 +651,7 @@
             },
             {
               "type": "p",
-              "html": "<strong>What to expect:</strong> small injection points and possible short-lived puffiness. A £10 consultation confirms suitability and is redeemable against your treatment."
+              "html": "<strong>What to expect:</strong> small injection points and possible short-lived puffiness. A consultation confirms suitability before treatment."
             },
             {
               "type": "pricelist",
@@ -676,7 +684,7 @@
             },
             {
               "type": "note",
-              "text": "Consultation £10, redeemable against your treatment."
+              "text": "Consultation confirms suitability before treatment."
             }
           ]
         },
@@ -698,7 +706,7 @@
             },
             {
               "type": "p",
-              "html": "<strong>What to expect:</strong> a light tingling during treatment and a fresh, dewy look afterwards, occasionally with mild redness. A £10 consultation confirms suitability and is redeemable against your treatment."
+              "html": "<strong>What to expect:</strong> a light tingling during treatment and a fresh, dewy look afterwards, occasionally with mild redness. A consultation confirms suitability before treatment."
             },
             {
               "type": "pricelist",
@@ -741,7 +749,7 @@
             },
             {
               "type": "note",
-              "text": "Consultation £10, redeemable against your treatment."
+              "text": "Consultation confirms suitability before treatment."
             }
           ]
         },
@@ -797,7 +805,7 @@
             },
             {
               "type": "note",
-              "text": "Consultation £10, redeemable against your treatment."
+              "text": "Consultation confirms suitability before treatment."
             }
           ]
         },
@@ -819,7 +827,7 @@
             },
             {
               "type": "p",
-              "html": "<strong>What to expect:</strong> subtle results that build over the course, with minimal downtime. A £10 consultation confirms suitability and is redeemable against your treatment."
+              "html": "<strong>What to expect:</strong> subtle results that build over the course, with minimal downtime. A consultation confirms suitability before treatment."
             },
             {
               "type": "pricelist",
@@ -842,7 +850,7 @@
             },
             {
               "type": "note",
-              "text": "Consultation £10, redeemable against your treatment."
+              "text": "Consultation confirms suitability before treatment."
             }
           ]
         },
@@ -910,7 +918,7 @@
             },
             {
               "type": "p",
-              "html": "<strong>What to expect:</strong> immediately fresher, brighter, smoother skin with little to no downtime — ideal before an event. A £10 consultation is redeemable against your treatment."
+              "html": "<strong>What to expect:</strong> immediately fresher, brighter, smoother skin with little to no downtime — ideal before an event. A consultation confirms suitability before treatment."
             },
             {
               "type": "pricelist",
@@ -953,7 +961,7 @@
             },
             {
               "type": "note",
-              "text": "Consultation £10, redeemable against your treatment."
+              "text": "Consultation confirms suitability before treatment."
             }
           ]
         },
@@ -975,7 +983,7 @@
             },
             {
               "type": "p",
-              "html": "<strong>What to expect:</strong> possible mild tingling and light flaking over the following days depending on the peel. A £10 consultation is redeemable against your treatment."
+              "html": "<strong>What to expect:</strong> possible mild tingling and light flaking over the following days depending on the peel. A consultation confirms suitability before treatment."
             },
             {
               "type": "pricelist",
@@ -1028,7 +1036,7 @@
             },
             {
               "type": "note",
-              "text": "Consultation £10, redeemable against your treatment."
+              "text": "Consultation confirms suitability before treatment."
             }
           ]
         },
@@ -1153,7 +1161,7 @@
             },
             {
               "type": "note",
-              "text": "Consultation £10. Courses of 6 pay in 2 instalments; courses of 12 pay in 3 instalments."
+              "text": "Consultation confirms suitability before treatment. Courses of 6 pay in 2 instalments; courses of 12 pay in 3 instalments."
             }
           ]
         },

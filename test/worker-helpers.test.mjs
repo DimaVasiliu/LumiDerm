@@ -21,6 +21,7 @@ test('safeCampaignTarget: approves the clinic site + booking', () => {
 test('safeCampaignTarget: approves Treatwell and social channels', () => {
   for (const url of [
     'https://www.treatwell.co.uk/place/lumi/',
+    'https://www.google.com/search?q=Lumi%20Derm%20Aesthetics',
     'https://www.instagram.com/lumi.derm.aesthetic/',
     'https://facebook.com/LumiDerm',
     'https://wa.me/447832839298',

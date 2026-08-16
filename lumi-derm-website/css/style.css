@@ -4863,6 +4863,7 @@ body.cookie-banner-open .lumi-chat-panel {
   font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em;
   color: var(--color-muted); font-weight: 800; border-bottom: 1.5px solid rgb(169 111 104 / 35%);
 }
+.tx-pricetable thead th small { display: block; margin-top: 0.12rem; font-size: 0.58rem; line-height: 1.25; letter-spacing: 0; text-transform: none; }
 .tx-pricetable td:first-child { color: var(--color-charcoal); font-weight: 600; }
 .tx-pricetable td:not(:first-child) { font-weight: 800; color: var(--color-rose-deep); white-space: nowrap; }
 .tx-pricetable tbody tr:last-child td { border-bottom: 0; }
@@ -7537,3 +7538,4 @@ body.tx-modal-active { overflow: hidden; }
 }
 .review-form-done h3 { font-family: var(--font-heading, Georgia, serif); font-size: 1.5rem; margin: 0 0 0.5rem; }
 .review-form-done p { margin: 0 0 1.2rem; }
+.review-form-done .btn { margin: 0.25rem; }

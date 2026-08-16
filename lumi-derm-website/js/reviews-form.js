@@ -19,6 +19,7 @@
   var statusEl = modal.querySelector("[data-review-form-status]");
   var rating = 0;
   var lastFocus = null;
+  var GOOGLE_REVIEW_URL = "https://www.google.com/search?client=mobilesearchapp&sca_esv=89317be53c67f56a&channel=iss&cs=0&hl=en_GB&rlz=1MDAPLA_en-GBGB1173GB1173&v=432.8.954074404&output=search&kgmid=%2Fg%2F11zkv1js2p&q=Lumi%20Derm%20Aesthetics&shem=epsd1%2Cltae%2Crimspwouoe&shndl=30&source=sh%2Fx%2Floc%2Fact%2Fm1%2F5&kgs=0f7f27e36b2d2ca9";
 
   function paint(n) {
     stars.forEach(function (s, i) { s.classList.toggle("is-on", i < n); });
@@ -87,6 +88,8 @@
           '<div class="review-form-tick" aria-hidden="true">&#10003;</div>' +
           '<h3>Thank you!</h3>' +
           '<p>Your review has been sent to the team. Once it&rsquo;s approved it will appear on the site.</p>' +
+          '<p>If you have another minute, a Google review helps new clients find Lumi Derm too.</p>' +
+          '<a class="btn btn-ghost" href="' + GOOGLE_REVIEW_URL + '" target="_blank" rel="noopener noreferrer">Review on Google</a>' +
           '<button class="btn btn-primary" type="button" data-review-form-close>Done</button>' +
         '</div>';
       form.querySelector("[data-review-form-close]").addEventListener("click", close);
