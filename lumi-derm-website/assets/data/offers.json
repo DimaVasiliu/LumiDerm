@@ -41,20 +41,6 @@
       "featured": false,
       "expires": "2026-08-31",
       "note": "Ongoing offer"
-    },
-    {
-      "title": "Facial - 10% August deal",
-      "category": "Skin boosters",
-      "description": "The full two-session protocol for firmer, hydrated, glowing skin.",
-      "price": "£113",
-      "badge": "Save £40",
-      "image": "/media/uploads/msvqjim5-958071d2.webp",
-      "alt": "",
-      "service": "facials",
-      "status": "live",
-      "featured": false,
-      "expires": "2026-08-31",
-      "note": "Ongoing offer"
     }
   ]
 }
