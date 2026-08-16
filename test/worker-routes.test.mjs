@@ -397,3 +397,47 @@ test('birthday settings can be saved and read back', async () => {
   assert.equal(read.birthday.subject, 'Happy birthday');
   assert.equal(read.birthday.hour, 9);
 });
+
+function askBody(overrides = {}) {
+  return JSON.stringify({
+    name: 'Jane Doe',
+    email: 'jane@example.com',
+    phone: '',
+    treatment: '',
+    question: 'Do you offer packages for laser?',
+    company: '',
+    ...overrides,
+  });
+}
+const jsonHeaders = { 'content-type': 'application/json' };
+
+test('ask form: honeypot silently succeeds without emailing', async () => {
+  const res = await worker.fetch(req('/api/ask', { method: 'POST', headers: jsonHeaders, body: askBody({ company: 'bot-filled' }) }), env());
+  assert.equal(res.status, 200);
+  const p = await json(res);
+  assert.equal(p.ok, true);
+});
+
+test('ask form: validates name, email and question', async () => {
+  const e = env();
+  const noName = await worker.fetch(req('/api/ask', { method: 'POST', headers: jsonHeaders, body: askBody({ name: '' }) }), e);
+  assert.equal(noName.status, 400);
+  const badEmail = await worker.fetch(req('/api/ask', { method: 'POST', headers: jsonHeaders, body: askBody({ email: 'nope' }) }), e);
+  assert.equal(badEmail.status, 400);
+  const shortQ = await worker.fetch(req('/api/ask', { method: 'POST', headers: jsonHeaders, body: askBody({ question: 'hi' }) }), e);
+  assert.equal(shortQ.status, 400);
+});
+
+test('ask form: accepts a valid question (no mailer configured)', async () => {
+  // No RESEND_API_KEY -> takes the graceful no-mailer path, so no network call.
+  const res = await worker.fetch(req('/api/ask', { method: 'POST', headers: jsonHeaders, body: askBody() }), { SUBSCRIBERS: new MockD1() });
+  assert.equal(res.status, 200);
+  const p = await json(res);
+  assert.equal(p.ok, true);
+  assert.match(p.message, /received|reply|touch/i);
+});
+
+test('ask form: rejects non-POST', async () => {
+  const res = await worker.fetch(req('/api/ask', { headers: jsonHeaders }), env());
+  assert.equal(res.status, 405);
+});

@@ -28,7 +28,7 @@ const defaultOffers = [
 // Prices are now data-driven from assets/data/prices.json (loaded at runtime by
 // loadPricesFromJson). The treatments page is regenerated from that file on publish.
 
-const panelTitles = { dashboard: "Overview", guide: "Guide & help", offers: "Offers", prices: "Prices", sender: "Send email", subscribers: "Subscribers", reviews: "Reviews", media: "Media", content: "Pages", clients: "Treatwell", settings: "Settings" };
+const panelTitles = { dashboard: "Overview", guide: "Guide & help", offers: "Offers", prices: "Prices", sender: "Send email", subscribers: "Subscribers", reviews: "Reviews", media: "Media", content: "Pages", faq: "FAQ", clients: "Treatwell", settings: "Settings" };
 
 let state = loadDraft();
 let selectedOfferIndex = 0;
@@ -97,6 +97,7 @@ function runApp() {
   bindPrices();
   bindReviews();
   bindContent();
+  bindFaq();
   bindSettings();
   bindGenericToasts();
   bindPublishing();
@@ -1091,6 +1092,7 @@ const DEFAULT_CONTENT = {
     title: "Skin confidence,<br>made personal.",
     lead: "Advanced skin, laser and body treatments designed around your goals, your skin and your lifestyle &mdash; delivered with calm, expert-led care."
   },
+  faq: [],
   contact: {
     phone: "07832839298",
     email: "info@lumidermaesthetics.co.uk",
@@ -1189,6 +1191,7 @@ function mergeContent(data) {
     seo: { ...DEFAULT_CONTENT.seo, ...(data && data.seo ? data.seo : {}) },
     hero: { ...DEFAULT_CONTENT.hero, ...(data && data.hero ? data.hero : {}) },
     contact: { ...DEFAULT_CONTENT.contact, ...(data && data.contact ? data.contact : {}) },
+    faq: Array.isArray(data && data.faq) ? data.faq.map((it) => ({ q: String((it && it.q) || ""), a: String((it && it.a) || "") })) : (DEFAULT_CONTENT.faq || []).slice(),
     pages: {
       about: {
         ...DEFAULT_CONTENT.pages.about,
@@ -1297,10 +1300,308 @@ function renderContent() {
     const list = getContentPath(f.dataset.contentList);
     setVal(`[data-content-list="${f.dataset.contentList}"]`, (Array.isArray(list) ? list : []).map(decodeHtml).join("\n\n"));
   });
+  renderFaq();
 }
 
 function setContentStatus(message) {
   const el = document.querySelector("[data-content-status]"); if (el) el.textContent = message;
+}
+
+/* ---------------- FAQ (homepage) ---------------- */
+// Editable homepage FAQ. Stored in content.json under `faq: [{q, a}]`, where the
+// answer is trusted HTML (may contain links). Publishing regenerates both the
+// visible accordion and the FAQPage structured data, and keeps the CSP JSON-LD
+// hash in _headers in sync.
+let faqDragFrom = null;
+const FAQ_INDEX_REPO_PATH = "lumi-derm-website/index.html";
+const FAQ_HEADERS_REPO_PATH = "lumi-derm-website/_headers";
+const FAQ_LIST_MARKERS = /(<!-- FAQ:START[\s\S]*?-->)[\s\S]*?(<!-- FAQ:END -->)/;
+const FAQ_JSONLD_RE = /\{\s*"@type":\s*"FAQPage"[\s\S]*?\}(?=\s*\]\s*\}\s*<\/script>)/;
+const FAQ_JSONLD_BLOCK_RE = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/;
+
+function faqList() {
+  if (!state.content) state.content = mergeContent({});
+  if (!Array.isArray(state.content.faq)) state.content.faq = [];
+  return state.content.faq;
+}
+
+// Answer HTML <-> friendly editor text (paragraphs separated by blank lines).
+function faqHtmlToText(a) {
+  return decodeHtml(
+    String(a || "")
+      .replace(/<\/p>\s*<p>/gi, "\n\n")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/?p>/gi, "")
+      .trim()
+  );
+}
+function faqTextToHtml(t) {
+  const blocks = String(t || "").split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
+  return blocks.map((b) => "<p>" + b.replace(/\n/g, "<br>") + "</p>").join("");
+}
+
+function setFaqStatus(message) {
+  const el = document.querySelector("[data-faq-status]"); if (el) el.textContent = message;
+}
+
+function bindFaq() {
+  document.querySelector("[data-faq-add]")?.addEventListener("click", () => {
+    faqList().push({ q: "", a: "" });
+    saveDraft(null);
+    renderFaq();
+    const cards = document.querySelectorAll("[data-faq-editor] [data-faq-index]");
+    cards[cards.length - 1]?.querySelector("[data-faq-q]")?.focus();
+  });
+  document.querySelector("[data-faq-reload]")?.addEventListener("click", () => loadContentFromJson(true, true));
+  document.querySelector("[data-faq-publish]")?.addEventListener("click", publishFaq);
+}
+
+function renderFaq() {
+  renderFaqEditor();
+  renderFaqPreview();
+}
+
+function updateFaqCount() {
+  const el = document.querySelector("[data-faq-count]");
+  if (!el) return;
+  const n = faqList().length;
+  el.textContent = n + " question" + (n === 1 ? "" : "s");
+}
+
+function renderFaqEditor() {
+  const host = document.querySelector("[data-faq-editor]");
+  if (!host) return;
+  const items = faqList();
+  updateFaqCount();
+  if (!items.length) {
+    host.innerHTML = '<div class="faq-empty">No questions yet. Click <strong>Add question</strong> to create your first one.</div>';
+    return;
+  }
+  host.innerHTML = items.map((it, i) => {
+    const q = escapeHtml(decodeHtml(it.q || ""));
+    const a = escapeHtml(faqHtmlToText(it.a || ""));
+    return '<article class="faq-edit-card" data-faq-index="' + i + '">' +
+      '<div class="faq-edit-head">' +
+        '<span class="faq-drag" data-faq-handle title="Drag to reorder">⋮⋮</span>' +
+        '<span class="faq-edit-num">' + (i + 1) + "</span>" +
+        '<span class="faq-edit-actions">' +
+          '<button class="faq-icon-btn" type="button" data-faq-up ' + (i === 0 ? "disabled" : "") + ' title="Move up" aria-label="Move up">↑</button>' +
+          '<button class="faq-icon-btn" type="button" data-faq-down ' + (i === items.length - 1 ? "disabled" : "") + ' title="Move down" aria-label="Move down">↓</button>' +
+          '<button class="faq-icon-btn faq-del" type="button" data-faq-del title="Delete" aria-label="Delete question">✕</button>' +
+        "</span>" +
+      "</div>" +
+      "<label>Question<input type=\"text\" data-faq-q value=\"" + q + "\" placeholder=\"e.g. Do you offer packages?\"></label>" +
+      "<label>Answer <small>you can add a link</small><textarea rows=\"3\" data-faq-a placeholder=\"Write a short, friendly answer.\">" + a + "</textarea></label>" +
+      '<div class="faq-answer-tools"><button class="faq-mini-btn" type="button" data-faq-link>Insert link</button></div>' +
+    "</article>";
+  }).join("");
+  bindFaqCards();
+}
+
+function bindFaqCards() {
+  const host = document.querySelector("[data-faq-editor]");
+  if (!host) return;
+  host.querySelectorAll("[data-faq-index]").forEach((card) => {
+    const i = Number(card.dataset.faqIndex);
+    card.querySelector("[data-faq-q]")?.addEventListener("input", (e) => { faqList()[i].q = e.target.value; saveDraft(null); renderFaqPreview(); });
+    card.querySelector("[data-faq-a]")?.addEventListener("input", (e) => { faqList()[i].a = faqTextToHtml(e.target.value); saveDraft(null); renderFaqPreview(); });
+    card.querySelector("[data-faq-up]")?.addEventListener("click", () => moveFaq(i, -1));
+    card.querySelector("[data-faq-down]")?.addEventListener("click", () => moveFaq(i, 1));
+    card.querySelector("[data-faq-del]")?.addEventListener("click", () => deleteFaq(i));
+    card.querySelector("[data-faq-link]")?.addEventListener("click", () => insertFaqLink(card, i));
+    bindFaqDrag(card, i);
+  });
+}
+
+function moveFaq(i, dir) {
+  const items = faqList();
+  const j = i + dir;
+  if (j < 0 || j >= items.length) return;
+  const [it] = items.splice(i, 1);
+  items.splice(j, 0, it);
+  saveDraft(null); renderFaq();
+}
+
+async function deleteFaq(i) {
+  const items = faqList();
+  const label = decodeHtml(items[i] && items[i].q ? items[i].q : "this question");
+  const ok = await ldConfirm({
+    title: "Delete this question?",
+    body: "“" + label + "” will be removed from the editor. It only leaves your website when you next publish.",
+    confirmLabel: "Delete question"
+  });
+  if (!ok) return;
+  items.splice(i, 1);
+  saveDraft(null); renderFaq();
+}
+
+function insertFaqLink(card, i) {
+  const ta = card.querySelector("[data-faq-a]");
+  if (!ta) return;
+  const url = window.prompt("Link address (https://…, tel: or mailto:)", "https://");
+  if (!url) return;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const sel = ta.value.slice(start, end) || "link text";
+  const link = '<a href="' + url.trim() + '">' + sel + "</a>";
+  ta.value = ta.value.slice(0, start) + link + ta.value.slice(end);
+  faqList()[i].a = faqTextToHtml(ta.value);
+  saveDraft(null); renderFaqPreview();
+  ta.focus();
+}
+
+function bindFaqDrag(card, i) {
+  const handle = card.querySelector("[data-faq-handle]");
+  if (handle) {
+    handle.addEventListener("mousedown", () => card.setAttribute("draggable", "true"));
+    handle.addEventListener("touchstart", () => card.setAttribute("draggable", "true"), { passive: true });
+  }
+  const clearDraggable = () => card.removeAttribute("draggable");
+  card.addEventListener("dragstart", (e) => {
+    faqDragFrom = i;
+    card.classList.add("is-dragging");
+    try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", String(i)); } catch { /* ignore */ }
+  });
+  card.addEventListener("dragend", () => {
+    card.classList.remove("is-dragging");
+    document.querySelectorAll(".faq-edit-card.is-drop-target").forEach((c) => c.classList.remove("is-drop-target"));
+    faqDragFrom = null;
+    clearDraggable();
+  });
+  card.addEventListener("dragover", (e) => { e.preventDefault(); card.classList.add("is-drop-target"); try { e.dataTransfer.dropEffect = "move"; } catch { /* ignore */ } });
+  card.addEventListener("dragleave", () => card.classList.remove("is-drop-target"));
+  card.addEventListener("drop", (e) => {
+    e.preventDefault();
+    card.classList.remove("is-drop-target");
+    const from = faqDragFrom, to = i;
+    if (from == null || from === to) { clearDraggable(); return; }
+    const items = faqList();
+    const [it] = items.splice(from, 1);
+    items.splice(to, 0, it);
+    saveDraft(null); renderFaq();
+  });
+}
+
+function renderFaqPreview() {
+  const host = document.querySelector("[data-faq-preview]");
+  if (!host) return;
+  const items = faqList().filter((it) => String(it.q || "").trim());
+  if (!items.length) {
+    host.innerHTML = '<p class="admin-hint">Your questions will appear here as you add them.</p>';
+    return;
+  }
+  host.innerHTML = items.map((it, i) =>
+    '<div class="faq-preview-row' + (i === 0 ? " is-open" : "") + '" data-faq-prow>' +
+      '<button class="faq-preview-q" type="button" data-faq-ptoggle>' + escapeHtml(decodeHtml(it.q)) + "</button>" +
+      '<div class="faq-preview-a"><div>' + (it.a || "") + "</div></div>" +
+    "</div>"
+  ).join("");
+  host.querySelectorAll("[data-faq-ptoggle]").forEach((btn) => {
+    btn.addEventListener("click", () => btn.closest("[data-faq-prow]")?.classList.toggle("is-open"));
+  });
+}
+
+async function sha256Base64(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  let bin = "";
+  new Uint8Array(buf).forEach((b) => { bin += String.fromCharCode(b); });
+  return btoa(bin);
+}
+function faqSleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+async function publishFaq() {
+  if (!ghReady) { toast("Publishing isn't set up on the server yet — ask Dima."); return false; }
+  if (typeof window.renderFaqRows !== "function" || typeof window.renderFaqJsonLd !== "function") {
+    toast("Page template didn’t load — hard-refresh the admin and try again."); return false;
+  }
+  const raw = faqList();
+  const clean = raw
+    .map((it) => ({ q: String(it.q || "").trim(), a: String(it.a || "").trim() }))
+    .filter((it) => it.q && it.a);
+  if (!clean.length) {
+    setFaqStatus("Nothing to publish yet — add a question and an answer.");
+    toast("Add at least one question with an answer before publishing.");
+    return false;
+  }
+
+  const btn = document.querySelector("[data-faq-publish]");
+  if (btn) { btn.disabled = true; btn.textContent = "Publishing…"; }
+  setFaqStatus("Publishing FAQ…");
+  recordDraftVersion("content", "Before publishing FAQ", state.content);
+  const branch = "main";
+  try {
+    // 1) content.json — replace only the faq key, preserving other page text.
+    const cur = await ghRequest(CONTENT_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
+    let json = {}, sha;
+    if (cur.ok) { const m = await cur.json(); sha = m.sha; try { json = JSON.parse(decodeB64(m.content)); } catch { json = {}; } }
+    else if (cur.status !== 404) { const e = await cur.json().catch(() => ({})); throw new Error(ghError(cur.status, e.message)); }
+    json.faq = clean;
+    const jb = { message: "Update FAQ (via admin)", content: b64(JSON.stringify(json, null, 2) + "\n"), branch };
+    if (sha) jb.sha = sha;
+    const pj = await ghRequest(CONTENT_REPO_PATH, { method: "PUT", body: JSON.stringify(jb) });
+    if (!pj.ok) { const e = await pj.json().catch(() => ({})); throw new Error(ghError(pj.status, e.message)); }
+
+    // 2) index.html — visible accordion rows + FAQPage structured data.
+    const rows = window.renderFaqRows(clean);
+    const faqLd = window.renderFaqJsonLd(clean);
+    let oldLd = null, newLd = null, indexChanged = false;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const curH = await ghRequest(FAQ_INDEX_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
+      if (!curH.ok) { const e = await curH.json().catch(() => ({})); throw new Error(ghError(curH.status, e.message)); }
+      const meta = await curH.json();
+      const before = decodeB64(meta.content);
+      if (!FAQ_LIST_MARKERS.test(before)) throw new Error("The FAQ markers weren’t found on the homepage — ask Dima to check index.html.");
+      let out = before.replace(FAQ_LIST_MARKERS, (m, p1, p2) => p1 + "\n" + rows + "\n              " + p2);
+      oldLd = (before.match(FAQ_JSONLD_BLOCK_RE) || [])[1] || null;
+      if (FAQ_JSONLD_RE.test(out)) out = out.replace(FAQ_JSONLD_RE, () => faqLd);
+      newLd = (out.match(FAQ_JSONLD_BLOCK_RE) || [])[1] || null;
+      if (out === before) { indexChanged = false; break; }
+      const put = await ghRequest(FAQ_INDEX_REPO_PATH, { method: "PUT", body: JSON.stringify({ message: "Update FAQ (via admin)", content: b64(out), sha: meta.sha, branch }) });
+      if (put.ok) { indexChanged = true; break; }
+      if (put.status === 409 && attempt < 2) { await faqSleep(500); continue; }
+      const e = await put.json().catch(() => ({})); throw new Error(ghError(put.status, e.message));
+    }
+
+    // 3) _headers — keep the CSP JSON-LD hash in sync when the structured data changed.
+    if (indexChanged && oldLd != null && newLd != null && oldLd !== newLd) {
+      const oldHash = await sha256Base64(oldLd);
+      const newHash = await sha256Base64(newLd);
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const curHd = await ghRequest(FAQ_HEADERS_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
+        if (!curHd.ok) { const e = await curHd.json().catch(() => ({})); throw new Error(ghError(curHd.status, e.message)); }
+        const meta = await curHd.json();
+        const before = decodeB64(meta.content);
+        if (!before.includes("'sha256-" + oldHash + "'")) {
+          throw new Error("The security-policy hash didn’t match the homepage — ask Dima to refresh _headers. Your text changes are safe.");
+        }
+        const after = before.replace("'sha256-" + oldHash + "'", "'sha256-" + newHash + "'");
+        if (after === before) break;
+        const put = await ghRequest(FAQ_HEADERS_REPO_PATH, { method: "PUT", body: JSON.stringify({ message: "Update FAQ structured-data hash (via admin)", content: b64(after), sha: meta.sha, branch }) });
+        if (put.ok) break;
+        if (put.status === 409 && attempt < 2) { await faqSleep(500); continue; }
+        const e = await put.json().catch(() => ({})); throw new Error(ghError(put.status, e.message));
+      }
+    }
+
+    state.content.faq = clean;
+    state.publishedAt = new Date().toISOString();
+    saveDraft(null);
+    renderFaq();
+    if (indexChanged) {
+      setFaqStatus("Published. Tracking the deploy in Settings → Latest publish & deploy.");
+      startDeployWatch();
+      toast("FAQ published — deploying now. You'll get a note when it's live.");
+    } else {
+      setFaqStatus("Already up to date — nothing changed since the last publish.");
+      toast("FAQ already matches the website.");
+    }
+    return true;
+  } catch (err) {
+    setFaqStatus("Publish failed: " + ldFriendlyError(err));
+    toast("Publish failed: " + ldFriendlyError(err));
+    return false;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "Publish FAQ"; }
+  }
 }
 
 function getContentPath(path) {

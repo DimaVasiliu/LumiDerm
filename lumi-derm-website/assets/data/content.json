@@ -17,6 +17,44 @@
     "facebookUrl": "https://www.facebook.com/LumiDerm",
     "facebookHandle": "LumiDerm"
   },
+  "faq": [
+    {
+      "q": "Where is Lumi Derm located?",
+      "a": "<p>We're at Unit 41 Skylines Village, Limeharbour, London E14 9TS, in the Docklands. You can <a href=\"https://maps.google.com/?q=Unit%2041%20Skylines%20Village%20Limeharbour%20London%20E14%209TS\" target=\"_blank\" rel=\"noopener\">open directions in Google Maps</a>.</p>"
+    },
+    {
+      "q": "What are your opening hours?",
+      "a": "<p>Monday to Friday 10:00–20:00, Saturday 10:00–18:00, and closed on Sunday.</p>"
+    },
+    {
+      "q": "How do I book an appointment?",
+      "a": "<p>Use the <a href=\"pages/booking.html\">Book Now</a> page to choose your treatment and time and confirm securely online, or call us on <a href=\"tel:07832839298\">07832839298</a>.</p>"
+    },
+    {
+      "q": "Do I pay when I book?",
+      "a": "<p>Treatwell shows the payment options and any deposit or prepayment requirement that applies to the treatment you select. Review those details before confirming your booking.</p>"
+    },
+    {
+      "q": "Do I need a consultation first?",
+      "a": "<p>For laser and advanced skin treatments we recommend a consultation so Iulia can assess your skin and build a personalised plan. You can book a consultation the same way as any treatment.</p>"
+    },
+    {
+      "q": "Is a patch test needed?",
+      "a": "<p>Some treatments — such as laser, electrolysis and lash lifts — do require a patch test beforehand to make sure the treatment is suitable for you. If you're not sure whether your treatment needs one, please <a href=\"tel:07832839298\">contact the studio</a> and we'll let you know.</p>"
+    },
+    {
+      "q": "What is your cancellation policy?",
+      "a": "<p>Please give us at least 24 hours' notice if you need to reschedule or cancel. Cancellations with less than 24 hours' notice, or no-shows, may be charged. Deposit terms are shown during booking — see our <a href=\"pages/policies.html\">policies</a> for details.</p>"
+    },
+    {
+      "q": "Can under-18s have treatments?",
+      "a": "<p>Adults aged 18 and over can book any of our treatments. Younger clients may be suitable for selected treatments too — suitability is always assessed individually with Iulia at a consultation first. Anyone under 18 needs written consent from a parent or guardian, who must stay with them throughout the appointment.</p><p>Injectable and advanced regenerative treatments are for clients aged 18 and over only.</p>"
+    },
+    {
+      "q": "How can I contact you?",
+      "a": "<p>Call or text <a href=\"tel:07832839298\">07832839298</a>, email <a href=\"mailto:info@lumidermaesthetics.co.uk\">info@lumidermaesthetics.co.uk</a>, or message us on Instagram <a href=\"https://www.instagram.com/lumi.derm.aesthetic/\" target=\"_blank\" rel=\"noopener\">@lumi.derm.aesthetic</a>.</p>"
+    }
+  ],
   "pages": {
     "about": {
       "hero": {

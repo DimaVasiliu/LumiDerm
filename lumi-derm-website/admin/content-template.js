@@ -127,6 +127,64 @@
       '    <meta property="og:description" content="' + esc(desc) + '">';
   }
 
+  // ---- FAQ (homepage) ----------------------------------------------------
+  // The visible accordion rows between <!-- FAQ:START --> / <!-- FAQ:END -->.
+  // Questions are plain text (HTML-escaped here); answers are trusted HTML
+  // authored in the admin (may contain <a> links), emitted verbatim.
+  function renderFaqRows(faq) {
+    var items = Array.isArray(faq) ? faq : [];
+    return items.map(function (item) {
+      item = item || {};
+      return '              <li class="faq-row">\n' +
+        '                <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">\n' +
+        '                  <span class="faq-q-text">' + esc(s(item.q)) + "</span>\n" +
+        "                </button>\n" +
+        '                <div class="faq-a-source" hidden>' + s(item.a) + "</div>\n" +
+        "              </li>";
+    }).join("\n");
+  }
+
+  function decodeEntities(t) {
+    return s(t)
+      .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"').replace(/&#0?39;|&apos;|&rsquo;|&lsquo;/g, "'")
+      .replace(/&mdash;/g, "—").replace(/&ndash;/g, "–").replace(/&nbsp;/g, " ")
+      .replace(/&#(\d+);/g, function (_, n) { return String.fromCharCode(+n); });
+  }
+
+  // Plain-text answer for the FAQPage structured data: strip tags, keep spacing.
+  function faqPlain(a) {
+    return decodeEntities(
+      s(a)
+        .replace(/<\/(p|div|li|h[1-6])>/gi, " ")
+        .replace(/<br\s*\/?>(?!$)/gi, " ")
+        .replace(/<[^>]+>/g, "")
+    ).replace(/\s+/g, " ").trim();
+  }
+
+  // The FAQPage object inside the JSON-LD @graph (regenerated on publish so the
+  // structured data mirrors the visible accordion). Returns valid, indented JSON.
+  function renderFaqJsonLd(faq) {
+    var items = Array.isArray(faq) ? faq : [];
+    var questions = items.map(function (item) {
+      item = item || {};
+      return "        {\n" +
+        '          "@type": "Question",\n' +
+        '          "name": ' + JSON.stringify(decodeEntities(s(item.q))) + ",\n" +
+        '          "acceptedAnswer": {\n' +
+        '            "@type": "Answer",\n' +
+        '            "text": ' + JSON.stringify(faqPlain(item.a)) + "\n" +
+        "          }\n" +
+        "        }";
+    }).join(",\n");
+    return "{\n" +
+      '      "@type": "FAQPage",\n' +
+      '      "mainEntity": [\n' +
+      questions + "\n" +
+      "      ]\n" +
+      "    }";
+  }
+
   var api = {
     renderHero: renderHero,
     renderSeo: renderSeo,
@@ -138,7 +196,9 @@
     renderAboutBio: renderAboutBio,
     renderAboutClinic: renderAboutClinic,
     renderSectionHeader: renderSectionHeader,
-    renderAboutCta: renderAboutCta
+    renderAboutCta: renderAboutCta,
+    renderFaqRows: renderFaqRows,
+    renderFaqJsonLd: renderFaqJsonLd
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (root) Object.keys(api).forEach(function (key) { root[key] = api[key]; });

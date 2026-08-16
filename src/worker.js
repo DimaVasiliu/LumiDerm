@@ -349,6 +349,12 @@ export default {
         return json({ error: "Use GET or POST." }, 405);
       }
 
+      // Public: "Ask us a question" form on the homepage FAQ. Emails the clinic.
+      if (apiPath === "/api/ask" && isPublicApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleAskQuestion(request, env);
+      }
+
       // Clean, mail-safe confirmation link: /api/confirm/<token> (no query string).
       if (url.pathname.startsWith("/api/confirm/") && isPublicApi) {
         return handleConfirmByToken(env, url.pathname.slice("/api/confirm/".length));
@@ -1089,6 +1095,97 @@ async function handleReviewSubmit(request, env) {
   return json({ ok: true, message: "Thank you! Your review has been sent to us for approval." });
 }
 
+// Public: homepage "Ask us a question" form. Emails the clinic inbox with the
+// visitor's address as reply-to, so a reply goes straight back to them. Nothing
+// is stored beyond a best-effort activity-log entry (used for rate limiting too).
+async function handleAskQuestion(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request." }, 400); }
+
+  // Honeypot: real people leave this empty. Pretend success for bots.
+  if (String(body.company || "").trim() !== "") return json({ ok: true, message: "Thank you!" });
+
+  const name = String(body.name || "").trim().slice(0, 80);
+  const email = String(body.email || "").trim().slice(0, 160);
+  const phone = String(body.phone || "").trim().slice(0, 40);
+  const treatment = String(body.treatment || "").trim().slice(0, 80);
+  const question = String(body.question || body.text || "").trim().slice(0, 2000);
+  if (!name) return json({ error: "Please add your name." }, 400);
+  if (!isEmail(email)) return json({ error: "Please add a valid email so we can reply." }, 400);
+  if (question.length < 5) return json({ error: "Please type your question." }, 400);
+
+  const ip = request.headers.get("cf-connecting-ip") || "";
+  // Rate limit: at most 5 questions per IP per hour (honeypot handles naive bots).
+  if (ip && env.SUBSCRIBERS) {
+    try {
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const recent = await env.SUBSCRIBERS.prepare(
+        "SELECT COUNT(*) AS c FROM admin_audit_log WHERE ip=?1 AND action='question.asked' AND created_at >= ?2"
+      ).bind(ip, since).first();
+      if (recent && recent.c >= 5) {
+        return json({ error: "Thanks! You've sent a few questions already — please email us directly or try again a little later." }, 429);
+      }
+    } catch { /* if the check fails, don't block a genuine question */ }
+  }
+
+  const auditDetail = name + " <" + email + ">" + (treatment ? " · " + treatment : "");
+
+  if (!env.RESEND_API_KEY) {
+    // No mailer configured — don't block the visitor; record it so it isn't lost.
+    await logAudit(env, request, { actor: email || name, action: "question.asked", detail: auditDetail, status: "no-mailer" });
+    return json({ ok: true, message: "Thanks! Your question has been received — we'll be in touch soon." });
+  }
+
+  const admins = csvEmails(env.ADMIN_EMAILS);
+  const clinicTo = env.CONTACT_EMAIL || admins.find((e) => /lumiderm/i.test(e)) || env.REPLY_TO || admins[0] || "info@lumidermaesthetics.co.uk";
+  const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
+  const cleanSubject = ("New website question from " + name + (treatment ? " · " + treatment : "")).replace(/[\r\n]+/g, " ").slice(0, 160);
+  const message = {
+    from,
+    to: [clinicTo],
+    reply_to: email,
+    subject: cleanSubject,
+    html: questionEmailHtml({ name, email, phone, treatment, question }),
+  };
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+    body: JSON.stringify(message),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    await logAudit(env, request, { actor: email || name, action: "question.asked", detail: auditDetail, status: "error " + res.status });
+    return json({ error: "Sorry — we couldn't send that just now. Please email info@lumidermaesthetics.co.uk directly. (" + text.slice(0, 120) + ")" }, 502);
+  }
+  await logAudit(env, request, { actor: email || name, action: "question.asked", detail: auditDetail, status: "ok" });
+  return json({ ok: true, message: "Thanks! Your question is on its way to the team — we'll reply by email soon." });
+}
+
+// The internal email the clinic receives for a homepage question.
+function questionEmailHtml(q) {
+  const row = (label, value) => value
+    ? `<tr><td style="padding:6px 0;font-family:Arial,sans-serif;font-size:13px;color:#a2968a;width:140px;vertical-align:top;">${label}</td>` +
+      `<td style="padding:6px 0;font-family:Arial,sans-serif;font-size:14px;color:#1c1a18;">${escapeHtml(value)}</td></tr>`
+    : "";
+  const questionHtml = escapeHtml(q.question).replace(/\n/g, "<br>");
+  return `<!doctype html><html><body style="margin:0;background:#f6f1ec;padding:24px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:6px;overflow:hidden;">
+<tr><td style="padding:26px 34px 8px;">
+<p style="margin:0 0 2px;font-family:Georgia,serif;font-size:16px;letter-spacing:.14em;text-transform:uppercase;color:#1c1a18;">Lumi&nbsp;Derm</p>
+<p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:12px;letter-spacing:.06em;color:#a2968a;">New question from the website</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+${row("Name", q.name)}${row("Email", q.email)}${row("Phone", q.phone)}${row("Treatment", q.treatment)}
+</table>
+</td></tr>
+<tr><td style="padding:6px 34px 26px;">
+<p style="margin:16px 0 6px;font-family:Arial,sans-serif;font-size:13px;color:#a2968a;">Their question</p>
+<div style="border-left:3px solid #b77b72;padding:6px 0 6px 14px;font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#1c1a18;">${questionHtml}</div>
+<p style="margin:22px 0 0;font-family:Arial,sans-serif;font-size:12px;line-height:1.6;color:#a2968a;">Reply straight to this email and it goes back to ${escapeHtml(q.name)}.</p>
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
 // Admin: list pending website submissions.
 async function handleReviewSubmissions(request, env) {
   if (!env.SUBSCRIBERS) return json({ ok: true, submissions: [] });
@@ -1679,6 +1776,7 @@ const GITHUB_PATH_ALLOW = [
   /^lumi-derm-website\/assets\/data\/(offers|reviews|prices|content)\.json$/,
   /^lumi-derm-website\/index\.html$/,
   /^lumi-derm-website\/pages\/[a-z0-9-]+\.html$/,
+  /^lumi-derm-website\/_headers$/, // FAQ publish updates the CSP JSON-LD hash here
   /^lumi-derm-website\/assets\/images\/[A-Za-z0-9._-]+\.(webp|jpe?g|png|gif|avif)$/i,
 ];
 function githubPathAllowed(path) {
@@ -1898,6 +1996,7 @@ function githubAction(path, method) {
   if (/reviews\.json$/.test(path)) return "publish.reviews";
   if (/prices\.json$/.test(path)) return "publish.prices";
   if (/content\.json$/.test(path)) return "publish.pages";
+  if (/_headers$/.test(path)) return "publish.faq";
   if (/assets\/images\//.test(path)) return "upload.image";
   return null; // .html files: skip (already covered by the json publish)
 }

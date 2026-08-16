@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260721-collapse2">
+    <link rel="stylesheet" href="admin.css?v=20260816-faq1">
   </head>
   <body>
     <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
@@ -42,6 +42,7 @@
           <button class="admin-nav-item" type="button" data-admin-panel="reviews">Reviews</button>
           <button class="admin-nav-item" type="button" data-admin-panel="media">Media</button>
           <button class="admin-nav-item" type="button" data-admin-panel="content">Pages</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="faq">FAQ</button>
           <button class="admin-nav-item" type="button" data-admin-panel="clients">Treatwell</button>
           <button class="admin-nav-item" type="button" data-admin-panel="settings">Settings</button>
         </nav>
@@ -856,6 +857,43 @@
             <p class="admin-hint">Legal pages, privacy wording, terms and clinical treatment descriptions are still managed by Dima because inaccurate edits there can create compliance or safety issues.</p>
           </section>
 
+          <!-- ===================== FAQ ===================== -->
+          <section class="admin-panel" id="faq" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Homepage</p>
+                <h2>Frequently asked questions</h2>
+                <p>Add, edit, reorder or remove the questions on your homepage. Answers can include links. When you <strong>Publish FAQ</strong>, the homepage and your Google listing update together.</p>
+              </div>
+              <button class="admin-button admin-button-secondary" type="button" data-faq-reload>Reload from website</button>
+            </div>
+            <div class="admin-publish-bar">
+              <div>
+                <strong>Publish to the website</strong>
+                <p data-faq-status>Your changes are saved in this browser only. Click publish to put them live.</p>
+              </div>
+              <div class="admin-publish-actions">
+                <a class="admin-button admin-button-secondary" href="../index.html#faq" target="_blank" rel="noopener">Preview live FAQ</a>
+                <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-faq-publish>Publish FAQ</button>
+              </div>
+            </div>
+
+            <div class="faq-admin">
+              <div class="faq-admin-main">
+                <div class="faq-admin-toolbar">
+                  <span class="faq-admin-count" data-faq-count>0 questions</span>
+                  <button class="admin-button admin-button-primary" type="button" data-faq-add>+ Add question</button>
+                </div>
+                <div class="faq-admin-list" data-faq-editor aria-live="polite"></div>
+                <p class="admin-hint">Drag a card by its handle to reorder, or use the arrows. Tip: keep answers short and friendly &mdash; two or three sentences is plenty.</p>
+              </div>
+              <aside class="faq-admin-preview">
+                <p class="admin-eyebrow">Live preview <small>how visitors see it</small></p>
+                <div class="faq-preview" data-faq-preview></div>
+              </aside>
+            </div>
+          </section>
+
           <!-- ===================== CLIENTS ===================== -->
           <section class="admin-panel" id="clients" data-admin-section>
             <div class="admin-section-head">
@@ -1015,8 +1053,8 @@
 
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
-    <script src="content-template.js?v=20260804-pages1"></script>
-    <script src="admin.js?v=20260804-pages1"></script>
+    <script src="content-template.js?v=20260816-faq1"></script>
+    <script src="admin.js?v=20260816-faq1"></script>
     <script src="sender.js?v=20260721-analytics1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>

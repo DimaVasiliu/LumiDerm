@@ -19,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260801-perf1">
+    <link rel="stylesheet" href="css/style.css?v=20260816-faqask2">
     <link rel="stylesheet" href="css/responsive.css?v=20260718-gallery5">
     <script type="application/ld+json">
 {
@@ -461,7 +461,10 @@
               <h2>Frequently asked questions</h2>
               <p>Everything you need before your visit. Still unsure? Tap the chat button and ask us anything.</p>
             </div>
-            <ul class="faq-minimal reveal" data-reveal data-faq-list>
+            <div class="faq-layout">
+              <div class="faq-questions">
+                <ul class="faq-minimal reveal" data-reveal data-faq-list>
+              <!-- FAQ:START · auto-generated from assets/data/content.json by the admin "FAQ" section. Edit there, not here. -->
               <li class="faq-row">
                 <button class="faq-q" type="button" data-faq-open aria-haspopup="dialog">
                   <span class="faq-q-text">Where is Lumi Derm located?</span>
@@ -516,8 +519,58 @@
                 </button>
                 <div class="faq-a-source" hidden><p>Call or text <a href="tel:07832839298">07832839298</a>, email <a href="mailto:info@lumidermaesthetics.co.uk">info@lumidermaesthetics.co.uk</a>, or message us on Instagram <a href="https://www.instagram.com/lumi.derm.aesthetic/" target="_blank" rel="noopener">@lumi.derm.aesthetic</a>.</p></div>
               </li>
-            </ul>
-            <p class="faq-note reveal" data-reveal>Still can't find your answer? <button class="faq-note-link" type="button" data-faq-chat>Chat with us</button> or call <a href="tel:07832839298">07832839298</a>.</p>
+              <!-- FAQ:END -->
+                </ul>
+                <p class="faq-note reveal" data-reveal>Still can't find your answer? <button class="faq-note-link" type="button" data-faq-chat>Chat with us</button> or call <a href="tel:07832839298">07832839298</a>.</p>
+              </div>
+              <aside class="faq-ask reveal" data-reveal>
+                <div class="faq-ask-card">
+                  <p class="eyebrow">Still curious?</p>
+                  <h3 class="faq-ask-title">Ask us anything</h3>
+                  <p class="faq-ask-lead">Can't see your question here? Send it over and Iulia's team will reply by email, usually within a day.</p>
+                  <form class="faq-ask-form" data-ask-form novalidate>
+                    <input class="faq-ask-hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+                    <div class="faq-ask-row">
+                      <label class="faq-ask-field">
+                        <span class="faq-ask-label">Your name</span>
+                        <input type="text" name="name" autocomplete="name" required maxlength="80">
+                      </label>
+                      <label class="faq-ask-field">
+                        <span class="faq-ask-label">Email</span>
+                        <input type="email" name="email" autocomplete="email" required maxlength="160">
+                      </label>
+                    </div>
+                    <div class="faq-ask-row">
+                      <label class="faq-ask-field">
+                        <span class="faq-ask-label">Phone <small>optional</small></span>
+                        <input type="tel" name="phone" autocomplete="tel" maxlength="40">
+                      </label>
+                      <label class="faq-ask-field">
+                        <span class="faq-ask-label">Treatment <small>optional</small></span>
+                        <select name="treatment">
+                          <option value="">Not sure yet</option>
+                          <option>Laser hair removal</option>
+                          <option>Skin treatments &amp; facials</option>
+                          <option>Injectables &amp; skin boosters</option>
+                          <option>Endospheres &amp; body</option>
+                          <option>Lashes &amp; brows</option>
+                          <option>Something else</option>
+                        </select>
+                      </label>
+                    </div>
+                    <label class="faq-ask-field">
+                      <span class="faq-ask-label">Your question</span>
+                      <textarea name="question" rows="2" required maxlength="2000" placeholder="Type your question here…"></textarea>
+                    </label>
+                    <div class="faq-ask-actions">
+                      <button class="btn btn-primary faq-ask-submit" type="submit">Send question</button>
+                      <p class="faq-ask-privacy">We'll only use your details to reply to you &mdash; no spam, ever.</p>
+                    </div>
+                    <p class="faq-ask-status" data-ask-status role="status" aria-live="polite"></p>
+                  </form>
+                </div>
+              </aside>
+            </div>
           </div>
         </section>
 
@@ -605,6 +658,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
     <script src="js/main.js?v=20260801-perf1" defer></script>
     <script src="js/reviews-form.js?v=20260721-reviewform1" defer></script>
+    <script src="js/ask-form.js?v=20260816-faqask1" defer></script>
     <script src="js/signup.js?v=20260721-consent1" defer></script>
     <script src="js/chatbot.js?v=20260801-perf1" defer></script>
   </body>
