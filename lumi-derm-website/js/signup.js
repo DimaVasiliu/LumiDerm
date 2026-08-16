@@ -63,7 +63,7 @@
             '</div>' +
             '<label>Email*<input type="email" name="email" required autocomplete="email" inputmode="email"></label>' +
             '<div class="signup-field">' +
-              '<span class="signup-field-label">Birthday <em>(optional)</em></span>' +
+              '<span class="signup-field-label">Birthday <em>(optional &mdash; get 15% off a treatment each year)</em></span>' +
               '<div class="signup-row">' +
                 '<select name="birth_day" aria-label="Birth day">' + dayOptions() + '</select>' +
                 '<select name="birth_month" aria-label="Birth month">' + monthOptions() + '</select>' +

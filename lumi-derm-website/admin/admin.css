@@ -2272,3 +2272,47 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
 .faq-preview-a > div { padding: 0 2px 14px; }
 .faq-preview-a p { margin: 0 0 8px; }
 .faq-preview-a a { color: var(--admin-rose-deep); }
+
+/* ============================ Birthday vouchers ============================ */
+.admin-collect-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.admin-collect-card p { margin: 4px 0 0; color: var(--admin-muted); font-size: 0.9rem; }
+
+.admin-voucher-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+
+.voucher-pill {
+  font-size: 0.82rem;
+  color: var(--admin-muted);
+  background: var(--admin-blush);
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+.voucher-pill strong { color: var(--admin-rose-deep); }
+
+.admin-voucher-table code { font-size: 0.9rem; font-weight: 700; color: var(--admin-ink); }
+.admin-voucher-table small { color: var(--admin-muted); }
+.voucher-actions { white-space: nowrap; }
+.voucher-actions .admin-button { padding: 5px 12px; font-size: 0.8rem; }
+
+.voucher-status {
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eee;
+  color: #555;
+}
+.voucher-status-active { background: #e5f3ec; color: #1f7a4d; }
+.voucher-status-requested { background: #eaf0f8; color: #2f5aa8; }
+.voucher-status-redeemed { background: #f1e8fb; color: #6b3fa0; }
+.voucher-status-expired { background: #f5eae8; color: #a5675f; }
+.voucher-status-cancelled { background: #fbe9e7; color: #b1362c; }

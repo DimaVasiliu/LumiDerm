@@ -7688,3 +7688,151 @@ body.tx-modal-active { overflow: hidden; }
 .review-form-done h3 { font-family: var(--font-heading, Georgia, serif); font-size: 1.5rem; margin: 0 0 0.5rem; }
 .review-form-done p { margin: 0 0 1.2rem; }
 .review-form-done .btn { margin: 0.25rem; }
+
+/* ===================== Birthday treat + capture pages ===================== */
+.birthday-page {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgb(242 216 217 / 45%), transparent 60%),
+    var(--color-ivory, #fbf7f1);
+}
+
+.birthday-topbar {
+  display: flex;
+  justify-content: center;
+  padding: 1.6rem 1rem 0;
+}
+
+.birthday-logo {
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-charcoal, #292426);
+  text-decoration: none;
+}
+
+.birthday-main {
+  display: flex;
+  justify-content: center;
+  padding: clamp(1.5rem, 5vw, 3.5rem) 1rem 4rem;
+}
+
+.birthday-card {
+  width: 100%;
+  max-width: 560px;
+  background: #fff;
+  border: 1px solid var(--color-line, rgb(112 83 84 / 16%));
+  border-radius: var(--radius-lg, 28px);
+  box-shadow: 0 30px 70px rgb(70 47 43 / 12%);
+  padding: clamp(1.6rem, 4vw, 2.6rem);
+  text-align: center;
+}
+
+.birthday-heading {
+  font-family: var(--font-heading, Georgia, serif);
+  font-weight: 400;
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  color: var(--color-charcoal, #292426);
+  margin: 0.3rem 0 0.8rem;
+}
+
+.birthday-lead {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-muted, #74696b);
+  margin: 0 0 1.2rem;
+}
+
+.birthday-code {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  align-items: center;
+  border: 1.5px dashed var(--color-rose, #c98f86);
+  border-radius: 14px;
+  padding: 1.1rem 1rem;
+  margin: 0 0 1rem;
+}
+.birthday-code span { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-muted, #74696b); }
+.birthday-code strong { font-family: var(--font-heading, Georgia, serif); font-size: 1.9rem; letter-spacing: 0.08em; color: var(--color-charcoal, #292426); }
+.birthday-code small { font-size: 0.85rem; color: var(--color-rose-deep, #a96f68); }
+
+.birthday-note { font-size: 0.9rem; line-height: 1.55; color: var(--color-muted, #74696b); margin: 0 0 1.4rem; }
+
+.birthday-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  justify-content: center;
+  margin: 0 0 1.6rem;
+}
+.birthday-actions .btn { flex: 1 1 190px; justify-content: center; }
+
+.birthday-form {
+  text-align: left;
+  border-top: 1px solid var(--color-line, rgb(112 83 84 / 16%));
+  padding-top: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.birthday-form-title {
+  font-family: var(--font-heading, Georgia, serif);
+  font-weight: 400;
+  font-size: 1.15rem;
+  color: var(--color-charcoal, #292426);
+  margin: 0 0 0.2rem;
+}
+.birthday-form label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem; font-weight: 700; color: var(--color-charcoal, #292426); }
+
+.birthday-form input,
+.birthday-form select,
+.birthday-form textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-line, rgb(112 83 84 / 16%));
+  border-radius: 10px;
+  background: #fff;
+  color: var(--color-charcoal, #292426);
+  font: inherit;
+  font-size: 0.94rem;
+  font-weight: 400;
+}
+.birthday-form textarea { resize: vertical; min-height: 68px; }
+
+.birthday-form input:focus,
+.birthday-form select:focus,
+.birthday-form textarea:focus {
+  outline: none;
+  border-color: var(--color-rose, #c98f86);
+  box-shadow: 0 0 0 3px rgb(201 143 134 / 20%);
+}
+.birthday-form .btn { margin-top: 0.3rem; justify-content: center; }
+
+.birthday-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+.birthday-dob { display: grid; grid-template-columns: 1fr 1.4fr; gap: 0.75rem; }
+
+.birthday-status { margin: 0; min-height: 1em; font-size: 0.86rem; color: var(--color-muted, #74696b); }
+.birthday-status.is-error { color: #b1362c; font-weight: 600; }
+.birthday-status:empty { display: none; }
+
+.birthday-fallback { font-size: 0.9rem; color: var(--color-muted, #74696b); margin: 0 0 1rem; }
+.birthday-fallback a { color: var(--color-rose-deep, #a96f68); font-weight: 700; }
+
+.birthday-done { text-align: center; }
+
+.birthday-tick {
+  width: 52px;
+  height: 52px;
+  margin: 0.4rem auto 0.9rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--color-rose-deep, #a96f68), var(--color-rose, #c98f86));
+  color: #fff;
+  font-size: 1.5rem;
+}

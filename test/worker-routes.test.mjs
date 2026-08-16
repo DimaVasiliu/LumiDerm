@@ -52,15 +52,30 @@ class MockD1 {
       const row = this.subscribers.find((s) => s.email === args[0]);
       return row || null;
     }
+    if (/SELECT email, first_name, status, consent_email, pref_birthday, pause_until FROM subscribers WHERE email/.test(sql)) {
+      const row = this.subscribers.find((s) => s.email === args[0]);
+      return row || null;
+    }
     if (/SELECT value FROM app_settings WHERE key='birthday'/.test(sql)) {
       const value = this.settings.get('birthday');
       return value ? { value } : null;
     }
     return null;
   }
-  _all(sql) {
+  _all(sql, args = []) {
     if (/FROM subscribers ORDER BY created_at DESC/.test(sql)) {
       return [...this.subscribers].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+    }
+    if (/FROM subscribers\s+WHERE status='confirmed' AND consent_email=1/.test(sql) && /birth_day IS NOT NULL/.test(sql)) {
+      const nowIso = args[0] || new Date().toISOString();
+      return this.subscribers.filter((s) => (
+        s.status === 'confirmed' &&
+        Number(s.consent_email) === 1 &&
+        Number(s.pref_birthday ?? 1) === 1 &&
+        (!s.pause_until || s.pause_until <= nowIso) &&
+        s.birth_day != null &&
+        s.birth_month != null
+      ));
     }
     if (/FROM campaign_sends/.test(sql)) return this.campaignSends;
     if (/FROM scheduled_campaigns/.test(sql)) return this.scheduledCampaigns.map((row) => ({
@@ -156,6 +171,11 @@ class MockD1 {
     if (/INSERT INTO app_settings/.test(sql)) {
       this.settings.set('birthday', args[0]);
       return { meta: { changes: 1 } };
+    }
+    if (/UPDATE subscribers SET birthday_sent_year/.test(sql)) {
+      const row = this.subscribers.find((s) => s.email === args[1]);
+      if (row) row.birthday_sent_year = args[0];
+      return { meta: { changes: row ? 1 : 0 } };
     }
     if (/INSERT INTO admin_audit_log/.test(sql)) {
       this.audit.push({ action: args[2], detail: args[3], status: args[5] });
@@ -396,6 +416,58 @@ test('birthday settings can be saved and read back', async () => {
   assert.equal(read.birthday.enabled, true);
   assert.equal(read.birthday.subject, 'Happy birthday');
   assert.equal(read.birthday.hour, 9);
+});
+
+function testLondonParts(date = new Date()) {
+  const parts = new globalThis.Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(date);
+  const map = {};
+  parts.forEach((p) => { if (p.type !== 'literal') map[p.type] = Number(p.value); });
+  return map;
+}
+
+test('birthday dashboard hides paused and birthday-opted-out subscribers', async () => {
+  const e = env();
+  const today = testLondonParts();
+  e.SUBSCRIBERS.subscribers.push(
+    { email: 'active@example.com', first_name: 'Active', status: 'confirmed', consent_email: 1, pref_birthday: 1, birth_day: today.day, birth_month: today.month },
+    { email: 'optout@example.com', first_name: 'Optout', status: 'confirmed', consent_email: 1, pref_birthday: 0, birth_day: today.day, birth_month: today.month },
+    { email: 'paused@example.com', first_name: 'Paused', status: 'confirmed', consent_email: 1, pref_birthday: 1, pause_until: '2999-01-01T00:00:00.000Z', birth_day: today.day, birth_month: today.month },
+  );
+
+  const res = await worker.fetch(req('/admin/api/birthdays', { headers: adminHeaders }), e);
+  assert.equal(res.status, 200);
+  const body = await json(res);
+  assert.deepEqual(body.birthdays.map((b) => b.email), ['active@example.com']);
+  assert.equal(body.today, 1);
+});
+
+test('manual birthday send respects birthday preference and pause settings', async () => {
+  const e = env();
+  e.SUBSCRIBERS.subscribers.push(
+    { email: 'optout@example.com', first_name: 'Optout', status: 'confirmed', consent_email: 1, pref_birthday: 0 },
+    { email: 'paused@example.com', first_name: 'Paused', status: 'confirmed', consent_email: 1, pref_birthday: 1, pause_until: '2999-01-01T00:00:00.000Z' },
+  );
+
+  const optout = await worker.fetch(req('/admin/api/birthdays/send', {
+    method: 'POST',
+    headers: { ...adminHeaders, 'content-type': 'application/json' },
+    body: JSON.stringify({ email: 'optout@example.com' }),
+  }), e);
+  assert.equal(optout.status, 400);
+  assert.match((await json(optout)).error, /opted out of birthday/i);
+
+  const paused = await worker.fetch(req('/admin/api/birthdays/send', {
+    method: 'POST',
+    headers: { ...adminHeaders, 'content-type': 'application/json' },
+    body: JSON.stringify({ email: 'paused@example.com' }),
+  }), e);
+  assert.equal(paused.status, 400);
+  assert.match((await json(paused)).error, /paused marketing emails/i);
 });
 
 function askBody(overrides = {}) {

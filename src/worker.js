@@ -330,6 +330,23 @@ export default {
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleBirthdaysSend(request, env);
       }
+      // Birthday vouchers: list (owner), redeem/cancel (owner), capture campaign.
+      if (apiPath === "/api/birthday/vouchers" && isAdminApi) {
+        const owner = requireOwner(request, env, "view birthday vouchers");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
+        return handleVoucherList(request, env);
+      }
+      if (apiPath === "/api/birthday/vouchers/resolve" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "redeem birthday vouchers");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
+        return handleVoucherResolve(request, env);
+      }
+      if (apiPath === "/api/birthday/collect-campaign" && isAdminApi) {
+        const owner = requireOwner(request, env, "send the birthday-collection email");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
+        return handleBirthdayCollectCampaign(request, env);
+      }
 
       if (apiPath === "/api/media" && isAdminApi) {
         return handleMediaList(request, env);
@@ -362,6 +379,22 @@ export default {
       if (apiPath === "/api/ask" && isPublicApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
         return handleAskQuestion(request, env);
+      }
+
+      // Public: birthday voucher — validate a link token and take a venue-only
+      // appointment request (never routes to Treatwell).
+      if (apiPath === "/api/birthday/voucher" && isPublicApi) {
+        if (request.method !== "GET") return json({ error: "Use GET." }, 405);
+        return handleVoucherLookup(request, env, url);
+      }
+      if (apiPath === "/api/birthday/request" && isPublicApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleVoucherRequest(request, env);
+      }
+      // Public: "add your birthday" capture form (tokenised link from an email).
+      if (apiPath === "/api/birthday/collect" && isPublicApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        return handleBirthdayCollect(request, env);
       }
 
       // Clean, mail-safe confirmation link: /api/confirm/<token> (no query string).
@@ -862,9 +895,11 @@ async function markEmailed(env, emails) {
 
 async function deliverCampaign(env, origin, opts) {
   const subject = String((opts && opts.subject) || "").trim();
-  const html = String((opts && opts.html) || "");
   const incoming = Array.isArray(opts && opts.recipients) ? opts.recipients : [];
   const audienceSource = String((opts && opts.audienceSource) || "scheduled").slice(0, 80);
+  const html = isBirthdayAudience(audienceSource)
+    ? sanitizeBirthdayEmailHtml(opts && opts.html)
+    : String((opts && opts.html) || "");
 
   if (!subject || !html) return { ok: false, sent: 0, suppressed: 0, invalid: 0, errors: ["Missing subject or body."] };
   if (!env.RESEND_API_KEY) return { ok: false, sent: 0, suppressed: 0, invalid: 0, errors: ["RESEND_API_KEY missing."] };
@@ -913,6 +948,18 @@ async function deliverCampaign(env, origin, opts) {
       .replaceAll("{{name}}", escapeHtml(who))
       .replaceAll("{{unsubscribe}}", unsubUrl)
       .replaceAll("{{preferences}}", preferencesUrl);
+    if (personalised.includes("{{birthday_capture}}")) {
+      personalised = personalised.replaceAll("{{birthday_capture}}", await buildBirthdayCaptureUrl(env, origin, person.email));
+    }
+    // Birthday sends: mint a unique venue-only voucher per recipient and inject
+    // the code + tokenised redemption link (with a fallback block if the template
+    // forgot the tokens).
+    if (isBirthdayAudience(audienceSource)) {
+      try {
+        const voucher = await mintBirthdayVoucher(env, origin, person);
+        if (voucher) personalised = applyVoucherTokens(personalised, voucher);
+      } catch (err) { /* if minting fails, still send the greeting */ }
+    }
     personalised = await trackCampaignLinks(env, origin, personalised, campaignId, person.email);
     const personalisedSubject = subject.replaceAll("{{name}}", who);
     const message = {
@@ -960,6 +1007,102 @@ async function deliverCampaign(env, origin, opts) {
   return { ok: errors.length === 0, sent, suppressed, invalid, errors, campaignId, skipped: { paused: pref.paused, topicOut: pref.topicOut, capped: pref.capped } };
 }
 
+const BIRTHDAY_REQUEST_URL = "https://lumidermaesthetics.com/pages/birthday-treat.html";
+function isBirthdayAudience(source) {
+  return /^birthday\b/i.test(String(source || ""));
+}
+function sanitizeBirthdayEmailHtml(html) {
+  return String(html || "")
+    .replace(/href="https?:\/\/(?:www\.)?treatwell\.co\.uk[^"]*"/gi, 'href="' + BIRTHDAY_REQUEST_URL + '"')
+    .replace(/href="https?:\/\/lumidermaesthetics\.com\/pages\/booking\.html[^"]*"/gi, 'href="' + BIRTHDAY_REQUEST_URL + '"')
+    .replace(/>Book your birthday treat</g, ">Request your birthday treat<")
+    .replace(/>Book</g, ">Contact<");
+}
+
+/* ---- Birthday vouchers: unique venue-only 15% code, 30-day window ---- */
+const VOUCHER_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous 0/O/1/I
+const VOUCHER_DAYS = 30;
+const VOUCHER_DISCOUNT = 15;
+
+function randomFromAlphabet(n) {
+  const bytes = new Uint8Array(n);
+  crypto.getRandomValues(bytes);
+  let out = "";
+  for (let i = 0; i < n; i += 1) out += VOUCHER_ALPHABET[bytes[i] % VOUCHER_ALPHABET.length];
+  return out;
+}
+function randomVoucherToken() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function formatVoucherDate(iso) {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: LONDON_TIME_ZONE });
+}
+function birthdayPageLink(origin, token) {
+  return `${origin}/pages/birthday-treat.html?t=${token}`;
+}
+
+// Create one voucher row and return the code + tokenised link for the email.
+async function mintBirthdayVoucher(env, origin, person) {
+  if (!env.SUBSCRIBERS) return null;
+  const issued = new Date();
+  const expires = new Date(issued.getTime() + VOUCHER_DAYS * 24 * 60 * 60 * 1000);
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const code = "BDAY-" + randomFromAlphabet(5);
+    const token = randomVoucherToken();
+    try {
+      await env.SUBSCRIBERS.prepare(
+        `INSERT INTO birthday_vouchers (code, token, email, subscriber_id, name, discount, status, issued_at, expires_at)
+         VALUES (?1,?2,?3,(SELECT id FROM subscribers WHERE email=?3),?4,?5,'active',?6,?7)`
+      ).bind(code, token, person.email, person.name || "", VOUCHER_DISCOUNT, issued.toISOString(), expires.toISOString()).run();
+      return { code, token, discount: VOUCHER_DISCOUNT, link: birthdayPageLink(origin, token), expiryLabel: formatVoucherDate(expires.toISOString()) };
+    } catch (err) {
+      if (attempt === 5) throw err; // unique collision — retried with fresh values
+    }
+  }
+  return null;
+}
+
+// A throwaway voucher for the admin test/preview send (nothing is stored).
+function sampleVoucher(origin) {
+  const expires = new Date(Date.now() + VOUCHER_DAYS * 24 * 60 * 60 * 1000);
+  return {
+    code: "BDAY-SAMPLE", token: "sample" + randomVoucherToken().slice(0, 10),
+    discount: VOUCHER_DISCOUNT, link: birthdayPageLink(origin, "sample" + randomVoucherToken().slice(0, 10)),
+    expiryLabel: formatVoucherDate(expires.toISOString()),
+  };
+}
+
+// Fill the {{birthday_*}} tokens; if the template forgot them, append a block so
+// every birthday email always carries the code + redemption link.
+function applyVoucherTokens(html, v) {
+  let out = String(html || "")
+    .replaceAll("{{birthday_code}}", escapeHtml(v.code))
+    .replaceAll("{{birthday_link}}", v.link)
+    .replaceAll("{{birthday_expiry}}", escapeHtml(v.expiryLabel))
+    .replaceAll("{{discount}}", String(v.discount));
+  if (!out.includes(v.code)) {
+    const block = voucherFallbackBlock(v);
+    out = out.includes("</body>") ? out.replace("</body>", block + "</body>") : out + block;
+  }
+  return out;
+}
+
+function voucherFallbackBlock(v) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ee;"><tr><td align="center" style="padding:8px 16px 32px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:100%;background:#fff;border-radius:4px;">
+<tr><td align="center" style="padding:28px 40px 32px;">
+<p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#a2968a;">Your birthday treat</p>
+<p style="margin:0 0 6px;font-family:Georgia,serif;font-size:24px;color:#1c1a18;">${v.discount}% off one treatment</p>
+<p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#4a443e;">Code <strong>${escapeHtml(v.code)}</strong> &middot; valid until ${escapeHtml(v.expiryLabel)}</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td align="center" bgcolor="#1c1a18" style="border-radius:2px;">
+<a href="${v.link}" style="display:inline-block;padding:14px 34px;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#fff;text-decoration:none;">Request birthday appointment</a>
+</td></tr></table>
+<p style="margin:16px 0 0;font-family:Arial,sans-serif;font-size:12px;line-height:1.6;color:#a2968a;">Redeemed and paid for at Lumi Derm only. Not valid for Treatwell bookings.</p>
+</td></tr></table></td></tr></table>`;
+}
+
 /* ------------------------------------------------------------------ */
 /* Cron: scheduled sends + birthday emails                             */
 /* ------------------------------------------------------------------ */
@@ -968,6 +1111,21 @@ async function runCron(event, env) {
   const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
   try { await sendDueScheduledCampaigns(env, origin); } catch (err) { /* keep going */ }
   try { await runBirthdayEmails(env, origin, event); } catch (err) { /* keep going */ }
+}
+
+const LONDON_TIME_ZONE = "Europe/London";
+function londonDateParts(date) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: LONDON_TIME_ZONE,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const map = {};
+  parts.forEach((p) => { if (p.type !== "literal") map[p.type] = Number(p.value); });
+  return { year: map.year, month: map.month, day: map.day, hour: map.hour };
 }
 
 async function sendDueScheduledCampaigns(env, origin) {
@@ -1011,11 +1169,12 @@ async function runBirthdayEmails(env, origin, event) {
 
   const now = new Date(event && event.scheduledTime ? event.scheduledTime : Date.now());
   const sendHour = Number.isInteger(cfg.hour) ? cfg.hour : 8;
-  if (now.getUTCHours() !== sendHour) return; // once a day, at the send hour (UTC)
+  const london = londonDateParts(now);
+  if (london.hour !== sendHour) return; // once a day, at the configured UK hour
 
-  const day = now.getUTCDate();
-  const month = now.getUTCMonth() + 1;
-  const year = now.getUTCFullYear();
+  const day = london.day;
+  const month = london.month;
+  const year = london.year;
 
   const nowIso = now.toISOString();
   const { results } = await env.SUBSCRIBERS.prepare(
@@ -1047,9 +1206,9 @@ async function runBirthdayEmails(env, origin, event) {
 
 const DEFAULT_BIRTHDAY_FIELDS = {
   headline: "Happy birthday, {{name}}!",
-  body: "Wishing you a wonderful day from all of us at Lumi Derm. To help you celebrate, enjoy a little birthday treat on your next visit this month.",
-  ctaLabel: "Book your birthday treat",
-  ctaUrl: "https://lumidermaesthetics.com/pages/booking.html",
+  body: "Wishing you a wonderful day from all of us at Lumi Derm. To help you celebrate, enjoy 15% off one treatment within 30 days of your birthday. This birthday treat is redeemed at the venue and cannot be applied to Treatwell bookings.",
+  ctaLabel: "Request your birthday treat",
+  ctaUrl: "https://lumidermaesthetics.com/#faq",
 };
 
 /* ------------------------------------------------------------------ */
@@ -1192,6 +1351,200 @@ ${row("Name", q.name)}${row("Email", q.email)}${row("Phone", q.phone)}${row("Tre
 <div style="border-left:3px solid #b77b72;padding:6px 0 6px 14px;font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#1c1a18;">${questionHtml}</div>
 <p style="margin:22px 0 0;font-family:Arial,sans-serif;font-size:12px;line-height:1.6;color:#a2968a;">Reply straight to this email and it goes back to ${escapeHtml(q.name)}.</p>
 </td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Birthday vouchers: public lookup + venue-only request + capture      */
+/* ------------------------------------------------------------------ */
+
+function voucherEffectiveStatus(row, nowIso) {
+  if (!row) return "missing";
+  if (row.status === "redeemed") return "redeemed";
+  if (row.status === "cancelled") return "cancelled";
+  if (row.expires_at && row.expires_at < (nowIso || new Date().toISOString())) return "expired";
+  return row.status === "requested" ? "requested" : "active";
+}
+
+// Public: validate a birthday link token, return the code + status for the page.
+async function handleVoucherLookup(request, env, url) {
+  if (!env.SUBSCRIBERS) return json({ error: "Not available." }, 503);
+  const token = String(url.searchParams.get("t") || "").trim();
+  if (!/^[a-z0-9]{8,40}$/i.test(token)) return json({ ok: false, status: "missing" }, 404);
+  const row = await env.SUBSCRIBERS.prepare(
+    "SELECT code, name, discount, status, expires_at FROM birthday_vouchers WHERE token=?1"
+  ).bind(token).first();
+  if (!row) return json({ ok: false, status: "missing" }, 404);
+  const status = voucherEffectiveStatus(row);
+  return json({
+    ok: status === "active" || status === "requested",
+    status, code: row.code, name: row.name || "",
+    discount: row.discount || VOUCHER_DISCOUNT, expires: formatVoucherDate(row.expires_at),
+  });
+}
+
+// Public: venue-only appointment request against a voucher token.
+async function handleVoucherRequest(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Not available." }, 503);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request." }, 400); }
+  if (String(body.company || "").trim() !== "") return json({ ok: true, message: "Thank you!" }); // honeypot
+
+  const token = String(body.token || "").trim();
+  if (!/^[a-z0-9]{8,40}$/i.test(token)) return json({ error: "This link isn't valid." }, 400);
+  const row = await env.SUBSCRIBERS.prepare(
+    "SELECT id, code, name, email, discount, status, expires_at FROM birthday_vouchers WHERE token=?1"
+  ).bind(token).first();
+  if (!row) return json({ error: "This birthday code wasn't found." }, 404);
+  const status = voucherEffectiveStatus(row);
+  if (status === "redeemed") return json({ error: "This code has already been redeemed." }, 409);
+  if (status === "cancelled") return json({ error: "This code is no longer active." }, 409);
+  if (status === "expired") return json({ error: "This birthday offer has expired." }, 410);
+
+  const treatment = String(body.treatment || "").trim().slice(0, 120);
+  const times = String(body.times || "").trim().slice(0, 300);
+  const phone = String(body.phone || "").trim().slice(0, 40);
+  const message = String(body.message || "").trim().slice(0, 1000);
+  if (!phone && !message) return json({ error: "Please add a phone number or a message so we can reach you." }, 400);
+
+  const ip = request.headers.get("cf-connecting-ip") || "";
+  if (ip) {
+    try {
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const recent = await env.SUBSCRIBERS.prepare(
+        "SELECT COUNT(*) AS c FROM admin_audit_log WHERE ip=?1 AND action='birthday.request' AND created_at >= ?2"
+      ).bind(ip, since).first();
+      if (recent && recent.c >= 8) return json({ error: "Thanks! We've got your request — please email us if it's urgent." }, 429);
+    } catch { /* ignore */ }
+  }
+
+  await env.SUBSCRIBERS.prepare(
+    `UPDATE birthday_vouchers SET status='requested', req_treatment=?1, req_times=?2, req_phone=?3, req_message=?4, requested_at=?5
+      WHERE id=?6 AND status IN ('active','requested')`
+  ).bind(treatment, times, phone, message, new Date().toISOString(), row.id).run();
+
+  if (env.RESEND_API_KEY) {
+    const admins = csvEmails(env.ADMIN_EMAILS);
+    const clinicTo = env.CONTACT_EMAIL || admins.find((e) => /lumiderm/i.test(e)) || env.REPLY_TO || admins[0] || "info@lumidermaesthetics.co.uk";
+    const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
+    const msg = {
+      from, to: [clinicTo],
+      subject: ("Birthday appointment request — " + row.code).replace(/[\r\n]+/g, " ").slice(0, 160),
+      html: voucherRequestEmailHtml({ code: row.code, name: row.name || "", email: row.email, discount: row.discount || VOUCHER_DISCOUNT, treatment, times, phone, message }),
+    };
+    if (isEmail(row.email)) msg.reply_to = row.email;
+    await fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" }, body: JSON.stringify(msg) }).catch(() => {});
+  }
+  await logAudit(env, request, { action: "birthday.request", detail: row.code + " " + (row.email || ""), status: "ok" });
+  return json({ ok: true, message: "Thanks! Your birthday appointment request is with the team — we'll be in touch to confirm a time." });
+}
+
+function voucherRequestEmailHtml(r) {
+  const line = (label, value) => value
+    ? `<tr><td style="padding:5px 0;font-family:Arial,sans-serif;font-size:13px;color:#a2968a;width:130px;vertical-align:top;">${label}</td><td style="padding:5px 0;font-family:Arial,sans-serif;font-size:14px;color:#1c1a18;">${escapeHtml(value)}</td></tr>`
+    : "";
+  return `<!doctype html><html><body style="margin:0;background:#f6f1ec;padding:24px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:6px;">
+<tr><td style="padding:26px 32px 20px;">
+<p style="margin:0 0 2px;font-family:Georgia,serif;font-size:16px;letter-spacing:.14em;text-transform:uppercase;color:#1c1a18;">Lumi&nbsp;Derm</p>
+<p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:12px;color:#a2968a;">Birthday appointment request</p>
+<p style="margin:0 0 14px;font-family:Georgia,serif;font-size:20px;color:#1c1a18;">${escapeHtml(r.code)} &middot; ${r.discount}% off one treatment</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+${line("Name", r.name)}${line("Email", r.email)}${line("Phone", r.phone)}${line("Treatment", r.treatment)}${line("Preferred times", r.times)}${line("Message", r.message)}
+</table>
+<p style="margin:18px 0 0;font-family:Arial,sans-serif;font-size:12px;line-height:1.6;color:#a2968a;">Reply to reach ${escapeHtml(r.name || "the client")}. Venue-only — not a Treatwell booking. Mark the code redeemed in the admin after their visit.</p>
+</td></tr></table></td></tr></table></body></html>`;
+}
+
+// Public: "add your birthday" capture (tokenised link from the collect email).
+async function handleBirthdayCollect(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Not available." }, 503);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request." }, 400); }
+  if (String(body.company || "").trim() !== "") return json({ ok: true, message: "Thank you!" }); // honeypot
+  const email = String(body.email || "").trim().toLowerCase();
+  const token = String(body.token || "");
+  if (!isEmail(email)) return json({ error: "Please add a valid email." }, 400);
+  if (!(await validEmailToken(env, email, token))) return json({ error: "This link isn't valid — use the button in your latest email." }, 400);
+  const day = clampInt(body.birth_day, 1, 31);
+  const month = clampInt(body.birth_month, 1, 12);
+  if (!day || !month) return json({ error: "Please choose your birth day and month." }, 400);
+  const res = await env.SUBSCRIBERS.prepare(
+    "UPDATE subscribers SET birth_day=?1, birth_month=?2 WHERE email=?3 AND status='confirmed'"
+  ).bind(day, month, email).run();
+  if (!(res.meta && res.meta.changes)) return json({ error: "We couldn't find your subscription." }, 404);
+  await logAudit(env, request, { action: "birthday.collected", detail: email, status: "ok" });
+  return json({ ok: true, message: "Thank you! We've saved your birthday — look out for a treat when it comes around." });
+}
+
+/* ---- Admin: voucher list, redeem/cancel, and the capture campaign ---- */
+
+async function handleVoucherList(request, env) {
+  if (!env.SUBSCRIBERS) return json({ ok: true, vouchers: [] });
+  const { results } = await env.SUBSCRIBERS.prepare(
+    `SELECT id, code, email, name, discount, status, issued_at, expires_at,
+            req_treatment, req_times, req_phone, req_message, requested_at, redeemed_at, redeemed_by
+       FROM birthday_vouchers ORDER BY issued_at DESC LIMIT 300`
+  ).all();
+  const now = new Date().toISOString();
+  return json({ ok: true, vouchers: (results || []).map((r) => ({ ...r, effective_status: voucherEffectiveStatus(r, now) })) });
+}
+
+async function handleVoucherResolve(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Not set up." }, 500);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  const id = parseInt(body.id, 10);
+  const action = String(body.action || "");
+  if (!id || ["redeem", "cancel", "reactivate"].indexOf(action) === -1) return json({ error: "Bad request." }, 400);
+  let sql, params, act;
+  if (action === "redeem") {
+    sql = "UPDATE birthday_vouchers SET status='redeemed', redeemed_at=?1, redeemed_by=?2 WHERE id=?3 AND status!='redeemed'";
+    params = [new Date().toISOString(), adminEmail(request) || "admin", id]; act = "birthday.redeemed";
+  } else if (action === "cancel") {
+    sql = "UPDATE birthday_vouchers SET status='cancelled' WHERE id=?1"; params = [id]; act = "birthday.cancelled";
+  } else {
+    sql = "UPDATE birthday_vouchers SET status='active', redeemed_at=NULL, redeemed_by=NULL WHERE id=?1"; params = [id]; act = "birthday.reactivated";
+  }
+  const res = await env.SUBSCRIBERS.prepare(sql).bind(...params).run();
+  await logAudit(env, request, { action: act, detail: "voucher " + id, status: "ok" });
+  return json({ ok: true, changed: res.meta && res.meta.changes ? res.meta.changes : 0 });
+}
+
+// GET = count of confirmed subscribers with no birthday; POST = send the capture email.
+async function handleBirthdayCollectCampaign(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Not set up." }, 500);
+  const { results } = await env.SUBSCRIBERS.prepare(
+    "SELECT email, first_name FROM subscribers WHERE status='confirmed' AND consent_email=1 AND (birth_day IS NULL OR birth_month IS NULL) LIMIT 500"
+  ).all();
+  const people = (results || []).map((r) => ({ email: r.email, name: r.first_name || "" }));
+  if (request.method === "GET") return json({ ok: true, count: people.length });
+  if (!people.length) return json({ ok: true, sent: 0, message: "Everyone already has a birthday on file." });
+  const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+  const result = await deliverCampaign(env, origin, {
+    subject: "Add your birthday for a yearly treat",
+    html: birthdayCollectEmailHtml(),
+    recipients: people, audienceSource: "collect-birthday",
+  });
+  await logAudit(env, request, { action: "birthday.collect_send", detail: (result.sent || 0) + " sent", status: result.ok ? "ok" : "partial" });
+  return json({ ok: result.ok, sent: result.sent || 0, errors: result.errors });
+}
+
+function birthdayCollectEmailHtml() {
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f1ee;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ee;"><tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:100%;background:#fff;border-radius:4px;">
+<tr><td align="center" style="padding:40px 40px 8px;"><p style="margin:0;font-family:Georgia,serif;font-size:22px;letter-spacing:.16em;text-transform:uppercase;color:#1c1a18;">Lumi&nbsp;Derm</p></td></tr>
+<tr><td style="padding:20px 40px 8px;">
+<h1 style="margin:0 0 18px;font-family:Georgia,serif;font-weight:400;font-size:26px;color:#1c1a18;">When's your birthday, {{name}}?</h1>
+<p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:16px;line-height:1.7;color:#4a443e;">Add your birthday and we'll send you a little treat each year &mdash; 15% off a treatment, our gift to you. It takes ten seconds.</p>
+<table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#1c1a18" style="border-radius:2px;">
+<a href="{{birthday_capture}}" style="display:inline-block;padding:16px 40px;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#fff;text-decoration:none;">Add my birthday</a>
+</td></tr></table>
+</td></tr>
+<tr><td style="padding:28px 40px 36px;"><p style="margin:0;border-top:1px solid #e8e2db;padding-top:22px;font-family:Arial,sans-serif;font-size:11px;line-height:1.6;color:#a2968a;">Lumi Derm Aesthetics &middot; London Docklands &middot; <a href="{{unsubscribe}}" style="color:#a2968a;">unsubscribe</a></p></td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -1495,17 +1848,21 @@ async function handleRevisionItem(request, env, url) {
 // Confirmed + consented subscribers whose birthday is today or within the next 7 days.
 async function handleBirthdaysList(request, env) {
   if (!env.SUBSCRIBERS) return json({ ok: true, birthdays: [], today: 0 });
+  const now = new Date();
+  const london = londonDateParts(now);
+  const nowIso = now.toISOString();
   const { results } = await env.SUBSCRIBERS.prepare(
     `SELECT email, first_name, birth_day, birth_month, birthday_sent_year
        FROM subscribers
       WHERE status='confirmed' AND consent_email=1
+        AND pref_birthday=1
+        AND (pause_until IS NULL OR pause_until <= ?1)
         AND birth_day IS NOT NULL AND birth_month IS NOT NULL
       LIMIT 3000`
-  ).all();
+  ).bind(nowIso).all();
 
-  const now = new Date();
-  const year = now.getUTCFullYear();
-  const startOfToday = Date.UTC(year, now.getUTCMonth(), now.getUTCDate());
+  const year = london.year;
+  const startOfToday = Date.UTC(year, london.month - 1, london.day);
   const WINDOW = 7;
   const list = [];
   for (const r of results || []) {
@@ -1535,11 +1892,17 @@ async function handleBirthdaysSend(request, env) {
   if (!isEmail(email)) return json({ error: "Invalid email." }, 400);
 
   const row = await env.SUBSCRIBERS.prepare(
-    "SELECT email, first_name, status, consent_email FROM subscribers WHERE email = ?1"
+    "SELECT email, first_name, status, consent_email, pref_birthday, pause_until FROM subscribers WHERE email = ?1"
   ).bind(email).first();
   if (!row) return json({ error: "That subscriber wasn't found." }, 404);
   if (row.status !== "confirmed" || !row.consent_email) {
     return json({ error: "That person hasn't confirmed marketing consent, so we can't email them." }, 400);
+  }
+  if (Number(row.pref_birthday) === 0) {
+    return json({ error: "That person has opted out of birthday treats." }, 400);
+  }
+  if (row.pause_until && Date.parse(row.pause_until) > Date.now()) {
+    return json({ error: "That person has paused marketing emails until " + String(row.pause_until).slice(0, 10) + "." }, 400);
   }
 
   const cfg = await getBirthdayConfig(env);
@@ -1552,7 +1915,7 @@ async function handleBirthdaysSend(request, env) {
   });
   if (!result.sent) return json({ error: (result.errors && result.errors[0]) || "Could not send." }, 502);
 
-  const year = new Date().getUTCFullYear();
+  const year = londonDateParts(new Date()).year;
   await env.SUBSCRIBERS.prepare("UPDATE subscribers SET birthday_sent_year=?1 WHERE email=?2").bind(year, row.email).run();
   await logAudit(env, request, { action: "birthday.manual_send", detail: email, status: "ok" });
   return json({ ok: true, sentTo: email });
@@ -1591,9 +1954,15 @@ function defaultBirthdayHtml() {
 </td></tr>
 <tr><td style="padding:20px 40px 8px;">
 <h1 style="margin:0 0 18px;font-family:Georgia,serif;font-weight:400;font-size:26px;color:#1c1a18;">Happy birthday, {{name}}!</h1>
-<p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:16px;line-height:1.7;color:#4a443e;">Wishing you a wonderful day from all of us at Lumi Derm. To help you celebrate, enjoy a little birthday treat on your next visit this month.</p>
+<p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:16px;line-height:1.7;color:#4a443e;">Wishing you a wonderful day from all of us at Lumi Derm. To help you celebrate, enjoy <strong>15% off one treatment</strong> as your birthday treat.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px;"><tr><td align="center" style="border:1px dashed #c9a196;border-radius:6px;padding:16px;">
+<p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#a2968a;">Your birthday code</p>
+<p style="margin:0 0 4px;font-family:Georgia,serif;font-size:26px;letter-spacing:.08em;color:#1c1a18;">{{birthday_code}}</p>
+<p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#7d746b;">Valid until {{birthday_expiry}}</p>
+</td></tr></table>
+<p style="margin:0 0 18px;font-family:Arial,sans-serif;font-size:14px;line-height:1.7;color:#7d746b;">This birthday treat is redeemed and paid for at Lumi Derm only, and cannot be applied to Treatwell bookings.</p>
 <table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#1c1a18" style="border-radius:2px;">
-<a href="https://lumidermaesthetics.com/pages/booking.html" style="display:inline-block;padding:16px 40px;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#fff;text-decoration:none;">Book your birthday treat</a>
+<a href="{{birthday_link}}" style="display:inline-block;padding:16px 40px;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#fff;text-decoration:none;">Request birthday appointment</a>
 </td></tr></table>
 <p style="margin:24px 0 0;font-family:Arial,sans-serif;font-size:14px;line-height:1.7;color:#7d746b;">If you enjoyed your Lumi Derm visit, it would mean so much if you could leave a quick Google review: <a href="${GOOGLE_REVIEW_URL}" style="color:#7d746b;text-decoration:underline;">write a review</a>.</p>
 </td></tr>
@@ -1754,10 +2123,12 @@ async function handleTestBirthday(request, env) {
   // Preview the on-screen (possibly unsaved) content if provided, else the saved config.
   const subjectRaw = String(body.subject || "").trim() || cfg.subject || "Happy birthday from Lumi Derm";
   const htmlRaw = String(body.html || "") || cfg.html || defaultBirthdayHtml();
+  const htmlSafe = sanitizeBirthdayEmailHtml(htmlRaw);
   // Bypass suppression for a test to the admin's own inbox.
   const unsubUrl = await buildUnsubscribeUrl(env, origin, to);
   const who = firstName(body.name) || "there";
-  const html = htmlRaw.replaceAll("{{name}}", escapeHtml(who)).replaceAll("{{unsubscribe}}", unsubUrl);
+  let html = htmlSafe.replaceAll("{{name}}", escapeHtml(who)).replaceAll("{{unsubscribe}}", unsubUrl);
+  html = applyVoucherTokens(html, sampleVoucher(origin)); // preview shows a sample code + link
   const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
   const message = { from, to: [to], subject: subjectRaw.replaceAll("{{name}}", who), html };
   if (env.REPLY_TO) message.reply_to = env.REPLY_TO;
@@ -2845,6 +3216,11 @@ async function buildUnsubscribeUrl(env, origin, email, campaignId) {
 async function buildPreferencesUrl(env, origin, email) {
   const token = await signEmail(env, email);
   return `${origin}/api/preferences?e=${encodeURIComponent(email)}&t=${token}`;
+}
+
+async function buildBirthdayCaptureUrl(env, origin, email) {
+  const token = await signEmail(env, email);
+  return `${origin}/pages/my-birthday.html?e=${encodeURIComponent(email)}&t=${token}`;
 }
 
 async function trackCampaignLinks(env, origin, html, campaignId, email) {

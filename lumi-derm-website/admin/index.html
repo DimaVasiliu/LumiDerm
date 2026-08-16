@@ -43,6 +43,7 @@
           <button class="admin-nav-item" type="button" data-admin-panel="media">Media</button>
           <button class="admin-nav-item" type="button" data-admin-panel="content">Pages</button>
           <button class="admin-nav-item" type="button" data-admin-panel="faq">FAQ</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="birthday">Birthday</button>
           <button class="admin-nav-item" type="button" data-admin-panel="clients">Treatwell</button>
           <button class="admin-nav-item" type="button" data-admin-panel="settings">Settings</button>
         </nav>
@@ -619,10 +620,10 @@
                   <label>Headline<input type="text" data-bday-headline placeholder="Happy birthday, {{name}}!"></label>
                   <label>Message<textarea rows="4" data-bday-message placeholder="Wishing you a wonderful day…"></textarea></label>
                   <div class="field-pair">
-                    <label>Button label<input type="text" data-bday-ctalabel placeholder="Book your birthday treat"></label>
-                    <label>Button link<input type="url" data-bday-ctaurl placeholder="https://lumidermaesthetics.com/pages/booking.html"></label>
+                    <label>Button label<input type="text" data-bday-ctalabel placeholder="Request your birthday treat"></label>
+                    <label>Button link<input type="url" data-bday-ctaurl placeholder="https://lumidermaesthetics.com/#faq"></label>
                   </div>
-                  <label>Send at <small>(hour of day, UK time &mdash; may run an hour later in summer)</small><select data-bday-hour></select></label>
+                  <label>Send at <small>(UK time)</small><select data-bday-hour></select></label>
                 </div>
                 <div class="admin-card">
                   <p class="admin-eyebrow">Live preview</p>
@@ -894,6 +895,35 @@
             </div>
           </section>
 
+          <!-- ===================== BIRTHDAY ===================== -->
+          <section class="admin-panel" id="birthday" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Birthday treats</p>
+                <h2>Birthday vouchers</h2>
+                <p>Each birthday email sends a unique <strong>15% off one treatment</strong> code, valid 30 days, redeemed and paid for in-studio (never Treatwell). Mark a code redeemed after the visit so it can't be used again.</p>
+              </div>
+              <button class="admin-button admin-button-secondary" type="button" data-vouchers-reload>Reload</button>
+            </div>
+
+            <div class="admin-card admin-collect-card">
+              <div>
+                <p class="admin-eyebrow">Grow your list</p>
+                <strong>Collect birthdays</strong>
+                <p data-collect-count>Checking how many subscribers still need a birthday…</p>
+              </div>
+              <button class="admin-button admin-button-primary" type="button" data-collect-send>Send “add your birthday” email</button>
+            </div>
+
+            <div class="admin-voucher-summary" data-voucher-summary></div>
+            <div class="admin-table-wrap">
+              <table class="admin-table admin-voucher-table">
+                <thead><tr><th>Code</th><th>Client</th><th>Status</th><th>Request</th><th>Expires</th><th>Action</th></tr></thead>
+                <tbody data-vouchers-body><tr><td colspan="6">Loading vouchers…</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+
           <!-- ===================== CLIENTS ===================== -->
           <section class="admin-panel" id="clients" data-admin-section>
             <div class="admin-section-head">
@@ -1054,7 +1084,7 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260816-faq1"></script>
-    <script src="admin.js?v=20260816-publish1"></script>
+    <script src="admin.js?v=20260816-bday1"></script>
     <script src="sender.js?v=20260721-analytics1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>

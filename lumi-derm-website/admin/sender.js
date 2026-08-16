@@ -14,6 +14,7 @@
   var DRAFT_STORE = "lumi-derm-mail-draft-v1";
 
   var BOOKING_URL = "https://lumidermaesthetics.com/pages/booking.html";
+  var BIRTHDAY_REQUEST_URL = "https://lumidermaesthetics.com/#faq";
   var SITE_URL = "https://lumidermaesthetics.com";
   var GOOGLE_REVIEW_URL = "https://www.google.com/search?client=mobilesearchapp&sca_esv=89317be53c67f56a&channel=iss&cs=0&hl=en_GB&rlz=1MDAPLA_en-GBGB1173GB1173&v=432.8.954074404&output=search&kgmid=%2Fg%2F11zkv1js2p&q=Lumi%20Derm%20Aesthetics&shem=epsd1%2Cltae%2Crimspwouoe&shndl=30&source=sh%2Fx%2Floc%2Fact%2Fm1%2F5&kgs=0f7f27e36b2d2ca9";
 
@@ -711,6 +712,9 @@
     var greeting = forPreview ? "Sarah" : "{{name}}";
 
     var bodyHtml = paragraphs(String(m.body || "").replace(/\{\{name\}\}/g, greeting));
+    var footerAction = m.noBookingLinks
+      ? '<a href="' + SITE_URL + '/#faq" style="color:#7d746b;text-decoration:none;">Contact</a>'
+      : '<a href="' + BOOKING_URL + '" style="color:#7d746b;text-decoration:none;">Book</a>';
 
     return (
       '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
@@ -786,9 +790,7 @@
       SITE_URL +
       '" style="color:#7d746b;text-decoration:none;">Website</a>' +
       '<span style="color:#d8cfc5;">&nbsp;&nbsp;&middot;&nbsp;&nbsp;</span>' +
-      '<a href="' +
-      BOOKING_URL +
-      '" style="color:#7d746b;text-decoration:none;">Book</a>' +
+      footerAction +
       '<span style="color:#d8cfc5;">&nbsp;&nbsp;&middot;&nbsp;&nbsp;</span>' +
       '<a href="https://www.instagram.com/lumi.derm.aesthetic/" style="color:#7d746b;text-decoration:none;">Instagram</a>' +
       "</p>" +
@@ -1128,9 +1130,9 @@
   var BDAY_DEFAULTS = {
     subject: "Happy birthday from Lumi Derm 🎂",
     headline: "Happy birthday, {{name}}!",
-    body: "Wishing you a wonderful day from all of us at Lumi Derm. To help you celebrate, enjoy a little birthday treat on your next visit this month.",
-    ctaLabel: "Book your birthday treat",
-    ctaUrl: BOOKING_URL
+    body: "Wishing you a wonderful day from all of us at Lumi Derm. To help you celebrate, enjoy 15% off one treatment within 30 days of your birthday. This birthday treat is redeemed at the venue and cannot be applied to Treatwell bookings.",
+    ctaLabel: "Request your birthday treat",
+    ctaUrl: BIRTHDAY_REQUEST_URL
   };
 
   function bdayVal(sel) { var el = $(sel); return el ? String(el.value || "") : ""; }
@@ -1145,7 +1147,8 @@
       body: bdayVal("[data-bday-message]") || BDAY_DEFAULTS.body,
       ctaLabel: bdayVal("[data-bday-ctalabel]") || BDAY_DEFAULTS.ctaLabel,
       ctaUrl: bdayVal("[data-bday-ctaurl]") || BDAY_DEFAULTS.ctaUrl,
-      heroImage: ""
+      heroImage: "",
+      noBookingLinks: true
     };
   }
 
@@ -1167,7 +1170,7 @@
         set("[data-bday-headline]", f.headline || BDAY_DEFAULTS.headline);
         set("[data-bday-message]", f.body || BDAY_DEFAULTS.body);
         set("[data-bday-ctalabel]", f.ctaLabel || BDAY_DEFAULTS.ctaLabel);
-        set("[data-bday-ctaurl]", f.ctaUrl || BDAY_DEFAULTS.ctaUrl);
+        set("[data-bday-ctaurl]", !f.ctaUrl || f.ctaUrl === BOOKING_URL ? BDAY_DEFAULTS.ctaUrl : f.ctaUrl);
         set("[data-bday-hour]", String(typeof b.hour === "number" ? b.hour : 8));
         updateBirthdayPreview();
       })

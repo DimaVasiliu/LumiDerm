@@ -28,7 +28,7 @@ const defaultOffers = [
 // Prices are now data-driven from assets/data/prices.json (loaded at runtime by
 // loadPricesFromJson). The treatments page is regenerated from that file on publish.
 
-const panelTitles = { dashboard: "Overview", guide: "Guide & help", offers: "Offers", prices: "Prices", sender: "Send email", subscribers: "Subscribers", reviews: "Reviews", media: "Media", content: "Pages", faq: "FAQ", clients: "Treatwell", settings: "Settings" };
+const panelTitles = { dashboard: "Overview", guide: "Guide & help", offers: "Offers", prices: "Prices", sender: "Send email", subscribers: "Subscribers", reviews: "Reviews", media: "Media", content: "Pages", faq: "FAQ", birthday: "Birthday", clients: "Treatwell", settings: "Settings" };
 
 let state = loadDraft();
 let selectedOfferIndex = 0;
@@ -98,6 +98,7 @@ function runApp() {
   bindReviews();
   bindContent();
   bindFaq();
+  bindBirthdayVouchers();
   bindSettings();
   bindGenericToasts();
   bindPublishing();
@@ -325,7 +326,120 @@ function goPanel(id, navButtons, panels) {
   panels.forEach((p) => p.classList.toggle("is-active", p.id === id));
   const title = document.querySelector("[data-panel-title]");
   if (title) title.textContent = panelTitles[id] || "Admin";
+  if (id === "birthday") loadBirthdayVouchers();
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ---------------- Birthday vouchers ---------------- */
+function bindBirthdayVouchers() {
+  document.querySelector("[data-vouchers-reload]")?.addEventListener("click", () => loadBirthdayVouchers());
+  document.querySelector("[data-collect-send]")?.addEventListener("click", sendCollectBirthdays);
+  document.querySelector("[data-vouchers-body]")?.addEventListener("click", onVoucherAction);
+}
+
+async function loadBirthdayVouchers() {
+  loadCollectCount();
+  const body = document.querySelector("[data-vouchers-body]");
+  if (!body) return;
+  try {
+    const res = await fetch("/admin/api/birthday/vouchers", { credentials: "same-origin", cache: "no-store" });
+    const data = await ldReadJson(res);
+    if (!res.ok) throw new Error(data.error || "Could not load vouchers.");
+    renderVouchers(data.vouchers || []);
+  } catch (err) {
+    body.innerHTML = '<tr><td colspan="6">' + escapeHtml(ldFriendlyError(err)) + "</td></tr>";
+  }
+}
+
+function voucherPill(label, n) { return '<span class="voucher-pill"><strong>' + n + "</strong> " + label + "</span>"; }
+
+function renderVouchers(list) {
+  const body = document.querySelector("[data-vouchers-body]");
+  const summary = document.querySelector("[data-voucher-summary]");
+  if (!body) return;
+  if (summary) {
+    const by = (s) => list.filter((v) => v.effective_status === s).length;
+    summary.innerHTML = voucherPill("Active", by("active")) + voucherPill("Requested", by("requested")) + voucherPill("Redeemed", by("redeemed")) + voucherPill("Expired", by("expired"));
+  }
+  if (!list.length) { body.innerHTML = '<tr><td colspan="6">No birthday vouchers yet. They appear here once birthday emails go out.</td></tr>'; return; }
+  body.innerHTML = list.map(voucherRow).join("");
+}
+
+function voucherRow(v) {
+  const req = [v.req_treatment, v.req_times, v.req_phone, v.req_message].filter(Boolean).join(" · ");
+  const status = v.effective_status || v.status;
+  let action;
+  if (status === "active" || status === "requested") {
+    action = '<button class="admin-button admin-button-primary" data-voucher-action="redeem" data-voucher-id="' + v.id + '">Redeem</button> ' +
+             '<button class="admin-button admin-button-secondary" data-voucher-action="cancel" data-voucher-id="' + v.id + '">Cancel</button>';
+  } else {
+    action = '<button class="admin-button admin-button-secondary" data-voucher-action="reactivate" data-voucher-id="' + v.id + '">Reactivate</button>';
+  }
+  return "<tr>" +
+    "<td><code>" + escapeHtml(v.code) + "</code></td>" +
+    "<td>" + escapeHtml(v.name || "—") + "<br><small>" + escapeHtml(v.email || "") + "</small></td>" +
+    '<td><span class="voucher-status voucher-status-' + status + '">' + status + "</span></td>" +
+    "<td>" + (req ? "<small>" + escapeHtml(req) + "</small>" : "<small>—</small>") + "</td>" +
+    "<td><small>" + escapeHtml(voucherDate(v.expires_at)) + "</small></td>" +
+    '<td class="voucher-actions">' + action + "</td>" +
+    "</tr>";
+}
+function voucherDate(iso) { if (!iso) return ""; const d = new Date(iso); return isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); }
+
+async function onVoucherAction(e) {
+  const btn = e.target.closest("[data-voucher-action]");
+  if (!btn) return;
+  const id = Number(btn.dataset.voucherId), action = btn.dataset.voucherAction;
+  if (action === "cancel") {
+    const ok = await ldConfirm({ title: "Cancel this voucher?", body: "The code will stop working immediately. You can reactivate it later.", confirmLabel: "Cancel voucher" });
+    if (!ok) return;
+  }
+  btn.disabled = true;
+  try {
+    const res = await fetch("/admin/api/birthday/vouchers/resolve", {
+      method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id, action }),
+    });
+    const data = await ldReadJson(res);
+    if (!res.ok) throw new Error(data.error || "Could not update the voucher.");
+    toast(action === "redeem" ? "Marked redeemed." : action === "cancel" ? "Voucher cancelled." : "Voucher reactivated.");
+    loadBirthdayVouchers();
+  } catch (err) { btn.disabled = false; toast(ldFriendlyError(err)); }
+}
+
+async function loadCollectCount() {
+  const el = document.querySelector("[data-collect-count]");
+  if (!el) return;
+  try {
+    const res = await fetch("/admin/api/birthday/collect-campaign", { credentials: "same-origin", cache: "no-store" });
+    const data = await ldReadJson(res);
+    if (!res.ok) throw new Error(data.error || "");
+    const n = data.count || 0;
+    el.textContent = n === 0
+      ? "Every confirmed subscriber already has a birthday on file."
+      : n + " confirmed subscriber" + (n === 1 ? "" : "s") + " have no birthday yet — send them a friendly ask.";
+  } catch { el.textContent = "Couldn't check how many subscribers need a birthday."; }
+}
+
+async function sendCollectBirthdays() {
+  const ok = await ldConfirm({
+    title: "Send the birthday-collection email?",
+    body: "This emails confirmed subscribers who have no birthday on file, inviting them to add it for a yearly treat.",
+    confirmLabel: "Send email",
+  });
+  if (!ok) return;
+  const btn = document.querySelector("[data-collect-send]");
+  if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
+  try {
+    const res = await fetch("/admin/api/birthday/collect-campaign", {
+      method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: "{}",
+    });
+    const data = await ldReadJson(res);
+    if (!res.ok) throw new Error(data.error || "Could not send.");
+    toast("Sent to " + (data.sent || 0) + " subscriber" + (data.sent === 1 ? "" : "s") + ".");
+    loadCollectCount();
+  } catch (err) { toast(ldFriendlyError(err)); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = "Send “add your birthday” email"; } }
 }
 
 /* ---------------- Top actions ---------------- */
