@@ -264,6 +264,15 @@ export default {
         return handleGithubProxy(request, env);
       }
 
+      // Atomic publish: commit every changed file in ONE commit and keep the
+      // CSP JSON-LD hash in sync, so a publish can never half-apply or break CI.
+      if (apiPath === "/api/publish" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "publish website changes");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
+        return handleAtomicPublish(request, env);
+      }
+
       if (apiPath === "/api/audit" && isAdminApi) {
         if (request.method === "GET") return handleAuditList(request, env);
         const owner = requireOwner(request, env, "record export actions");
@@ -1964,6 +1973,151 @@ async function handleGithubProxy(request, env) {
     status: ghRes.status,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
   });
+}
+
+/* ------------------------------------------------------------------ */
+/* Atomic publish: one commit per publish, CSP hash always in sync     */
+/* ------------------------------------------------------------------ */
+
+const JSONLD_BLOCK_RE = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/;
+
+async function sha256Base64(str) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  const bytes = new Uint8Array(digest);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 1) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+function b64ToUtf8(b64) {
+  const bin = atob(String(b64 || "").replace(/\s+/g, ""));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
+function ghApi(env, method, apiPath, body) {
+  return fetch("https://api.github.com/repos/" + env.GITHUB_REPO + apiPath, {
+    method,
+    headers: {
+      Authorization: "Bearer " + env.GITHUB_TOKEN,
+      Accept: "application/vnd.github+json",
+      "User-Agent": "LumiDerm-Admin-Worker",
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
+async function ghReadFileText(env, branch, repoPath) {
+  const res = await ghApi(env, "GET", "/contents/" + repoPath + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now());
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Could not read " + repoPath + " (" + res.status + ").");
+  const data = await res.json();
+  return b64ToUtf8(data.content || "");
+}
+
+// If index.html is being published and its JSON-LD block changed, recompute the
+// sha256 in _headers so the CSP always matches the page (adds/patches _headers in
+// the same commit). This is the safeguard that a contact/hero/FAQ edit can no
+// longer silently break the structured-data hash and block the deploy.
+async function syncCspHeaders(env, branch, files) {
+  const idx = files.find((f) => f.path === "lumi-derm-website/index.html");
+  if (!idx) return files;
+  const newMatch = idx.content.match(JSONLD_BLOCK_RE);
+  if (!newMatch) return files;
+  const newHash = await sha256Base64(newMatch[1]);
+
+  let oldHash = null;
+  const currentIndex = await ghReadFileText(env, branch, "lumi-derm-website/index.html").catch(() => null);
+  if (currentIndex) {
+    const cm = currentIndex.match(JSONLD_BLOCK_RE);
+    if (cm) oldHash = await sha256Base64(cm[1]);
+  }
+  if (oldHash && oldHash === newHash) return files; // structured data unchanged
+
+  let headersEntry = files.find((f) => f.path === "lumi-derm-website/_headers");
+  let headersText = headersEntry ? headersEntry.content : await ghReadFileText(env, branch, "lumi-derm-website/_headers");
+  if (!headersText) return files;
+  if (headersText.includes("'sha256-" + newHash + "'")) return files; // already correct
+
+  if (oldHash && headersText.includes("'sha256-" + oldHash + "'")) {
+    headersText = headersText.replace("'sha256-" + oldHash + "'", "'sha256-" + newHash + "'");
+  } else {
+    throw new Error("Could not sync the security-policy hash — the homepage structured data changed but _headers didn't match. Nothing was published; ask Dima to refresh _headers.");
+  }
+  if (headersEntry) headersEntry.content = headersText;
+  else files.push({ path: "lumi-derm-website/_headers", content: headersText });
+  return files;
+}
+
+// Create ONE commit containing every file, via the Git Data API (tree + commit +
+// ref update). Either the whole publish lands or none of it does.
+async function githubAtomicCommit(env, branch, message, files) {
+  const refRes = await ghApi(env, "GET", "/git/ref/heads/" + encodeURIComponent(branch));
+  if (!refRes.ok) throw new Error("Could not read the branch (" + refRes.status + ").");
+  const baseSha = (await refRes.json()).object.sha;
+
+  const commitRes = await ghApi(env, "GET", "/git/commits/" + baseSha);
+  if (!commitRes.ok) throw new Error("Could not read the latest commit (" + commitRes.status + ").");
+  const baseTree = (await commitRes.json()).tree.sha;
+
+  const treeRes = await ghApi(env, "POST", "/git/trees", {
+    base_tree: baseTree,
+    tree: files.map((f) => ({ path: f.path, mode: "100644", type: "blob", content: f.content })),
+  });
+  if (!treeRes.ok) throw new Error("Could not stage the changes (" + treeRes.status + ").");
+  const newTree = (await treeRes.json()).sha;
+
+  const newCommitRes = await ghApi(env, "POST", "/git/commits", { message, tree: newTree, parents: [baseSha] });
+  if (!newCommitRes.ok) throw new Error("Could not create the commit (" + newCommitRes.status + ").");
+  const newCommit = (await newCommitRes.json()).sha;
+
+  const patchRes = await ghApi(env, "PATCH", "/git/refs/heads/" + encodeURIComponent(branch), { sha: newCommit, force: false });
+  if (!patchRes.ok) {
+    const t = await patchRes.text().catch(() => "");
+    throw new Error("Could not update the branch (" + patchRes.status + "). " + t.slice(0, 120));
+  }
+  return newCommit;
+}
+
+async function handleAtomicPublish(request, env) {
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) {
+    return json({ error: "GitHub publishing isn't configured on the server yet. Ask Dima to set the GITHUB_TOKEN secret." }, 503);
+  }
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+
+  const message = String(body.message || "Update website (via admin)").replace(/[\r\n]+/g, " ").slice(0, 200);
+  const rawFiles = Array.isArray(body.files) ? body.files : [];
+  if (!rawFiles.length) return json({ error: "No changes to publish." }, 400);
+  if (rawFiles.length > 20) return json({ error: "Too many files in one publish." }, 400);
+
+  const files = [];
+  for (const f of rawFiles) {
+    const path = String((f && f.path) || "").replace(/^\/+/, "");
+    if (!githubPathAllowed(path)) return json({ error: "That file path is not allowed for publishing: " + path }, 403);
+    if (typeof (f && f.content) !== "string") return json({ error: "Missing content for " + path }, 400);
+    if (f.content.length > 800000) return json({ error: "That file is too large to publish: " + path }, 413);
+    if (files.some((x) => x.path === path)) return json({ error: "Duplicate file in publish: " + path }, 400);
+    files.push({ path, content: f.content });
+  }
+
+  const branch = env.GITHUB_BRANCH || "main";
+  try {
+    await syncCspHeaders(env, branch, files);
+    const sha = await githubAtomicCommit(env, branch, message, files);
+    await logAudit(env, request, {
+      action: "publish.pages",
+      detail: files.map((f) => f.path.replace("lumi-derm-website/", "")).join(", ").slice(0, 480),
+      status: "ok",
+    });
+    return json({ ok: true, commit: sha, files: files.map((f) => f.path) });
+  } catch (err) {
+    const msg = String((err && err.message) || err);
+    await logAudit(env, request, { action: "publish.pages", detail: msg.slice(0, 200), status: "error" });
+    return json({ error: msg }, 502);
+  }
 }
 
 /* ------------------------------------------------------------------ */

@@ -368,10 +368,10 @@
                 <label>Display price<input type="text" data-offer-field="price" placeholder="From £34"></label>
                 <label>Badge<input type="text" data-offer-field="badge" placeholder="Save 15%"></label>
                 <label>Short description<textarea rows="3" data-offer-field="description"></textarea></label>
-                <label>Image<select data-offer-field="image"></select></label>
                 <label>Image description <small>(alt text &mdash; helps SEO &amp; shows if the photo can&rsquo;t load in an email)</small><input type="text" data-offer-field="alt" placeholder="e.g. Relaxing facial treatment at Lumi Derm"></label>
-                <label>Upload a new photo<input type="file" accept="image/*" data-offer-image-upload></label>
-                <p class="admin-help" data-image-upload-status>JPG, PNG or WebP, under 3MB. It is added to the website and selected automatically.</p>
+                <input type="hidden" data-offer-field="image">
+                <label>Upload photo<input type="file" accept="image/*" data-offer-image-upload></label>
+                <p class="admin-help" data-image-upload-status>JPG, PNG or WebP. The photo is selected automatically after upload.</p>
                 <label>Links to treatment<select data-offer-field="service">
                   <option value="">— none (general booking) —</option>
                   <option value="prp-consultation">PRP consultation</option>
@@ -1054,7 +1054,7 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260816-faq1"></script>
-    <script src="admin.js?v=20260816-faq1"></script>
+    <script src="admin.js?v=20260816-publish1"></script>
     <script src="sender.js?v=20260721-analytics1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>

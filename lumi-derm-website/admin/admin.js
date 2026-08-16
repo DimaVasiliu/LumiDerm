@@ -369,7 +369,7 @@ function importAll(e) {
 /* ---------------- Offers ---------------- */
 function bindOffers() {
   document.querySelector("[data-add-offer]")?.addEventListener("click", () => {
-    state.offers.push({ title: "New offer", category: "Offer", price: "From £", badge: "", description: "Short offer description.", image: imageOptions[0], service: "", status: "Draft", featured: false, expires: "", note: "Ongoing offer" });
+    state.offers.push({ title: "New offer", category: "Offer", price: "From £", badge: "", description: "Short offer description.", image: "", alt: "", service: "", status: "Draft", featured: false, expires: "", note: "Ongoing offer" });
     selectedOfferIndex = state.offers.length - 1;
     renderOffers();
     saveDraft("New offer added \u2014 fill it in below, then Save changes.");
@@ -481,6 +481,7 @@ function populateOfferEditor() {
     else f.value = offer[key] || "";
   });
   renderOfferPreview();
+  updateOfferImageStatus();
 }
 
 function renderOfferPreview() {
@@ -1314,10 +1315,8 @@ function setContentStatus(message) {
 // hash in _headers in sync.
 let faqDragFrom = null;
 const FAQ_INDEX_REPO_PATH = "lumi-derm-website/index.html";
-const FAQ_HEADERS_REPO_PATH = "lumi-derm-website/_headers";
 const FAQ_LIST_MARKERS = /(<!-- FAQ:START[\s\S]*?-->)[\s\S]*?(<!-- FAQ:END -->)/;
 const FAQ_JSONLD_RE = /\{\s*"@type":\s*"FAQPage"[\s\S]*?\}(?=\s*\]\s*\}\s*<\/script>)/;
-const FAQ_JSONLD_BLOCK_RE = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/;
 
 function faqList() {
   if (!state.content) state.content = mergeContent({});
@@ -1500,14 +1499,6 @@ function renderFaqPreview() {
   });
 }
 
-async function sha256Base64(str) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-  let bin = "";
-  new Uint8Array(buf).forEach((b) => { bin += String.fromCharCode(b); });
-  return btoa(bin);
-}
-function faqSleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
-
 async function publishFaq() {
   if (!ghReady) { toast("Publishing isn't set up on the server yet — ask Dima."); return false; }
   if (typeof window.renderFaqRows !== "function" || typeof window.renderFaqJsonLd !== "function") {
@@ -1527,73 +1518,42 @@ async function publishFaq() {
   if (btn) { btn.disabled = true; btn.textContent = "Publishing…"; }
   setFaqStatus("Publishing FAQ…");
   recordDraftVersion("content", "Before publishing FAQ", state.content);
-  const branch = "main";
   try {
-    // 1) content.json — replace only the faq key, preserving other page text.
-    const cur = await ghRequest(CONTENT_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
-    let json = {}, sha;
-    if (cur.ok) { const m = await cur.json(); sha = m.sha; try { json = JSON.parse(decodeB64(m.content)); } catch { json = {}; } }
+    // content.json — replace only the faq key, preserving the rest of the page text.
+    let json = {};
+    const cur = await ghRequest(CONTENT_REPO_PATH + "?ref=main&_=" + Date.now(), { method: "GET" });
+    if (cur.ok) { try { json = JSON.parse(decodeB64((await cur.json()).content)); } catch { json = {}; } }
     else if (cur.status !== 404) { const e = await cur.json().catch(() => ({})); throw new Error(ghError(cur.status, e.message)); }
+    const prevFaq = JSON.stringify(Array.isArray(json.faq) ? json.faq : []);
     json.faq = clean;
-    const jb = { message: "Update FAQ (via admin)", content: b64(JSON.stringify(json, null, 2) + "\n"), branch };
-    if (sha) jb.sha = sha;
-    const pj = await ghRequest(CONTENT_REPO_PATH, { method: "PUT", body: JSON.stringify(jb) });
-    if (!pj.ok) { const e = await pj.json().catch(() => ({})); throw new Error(ghError(pj.status, e.message)); }
+    const faqDataChanged = prevFaq !== JSON.stringify(clean);
 
-    // 2) index.html — visible accordion rows + FAQPage structured data.
-    const rows = window.renderFaqRows(clean);
-    const faqLd = window.renderFaqJsonLd(clean);
-    let oldLd = null, newLd = null, indexChanged = false;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const curH = await ghRequest(FAQ_INDEX_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
-      if (!curH.ok) { const e = await curH.json().catch(() => ({})); throw new Error(ghError(curH.status, e.message)); }
-      const meta = await curH.json();
-      const before = decodeB64(meta.content);
-      if (!FAQ_LIST_MARKERS.test(before)) throw new Error("The FAQ markers weren’t found on the homepage — ask Dima to check index.html.");
-      let out = before.replace(FAQ_LIST_MARKERS, (m, p1, p2) => p1 + "\n" + rows + "\n              " + p2);
-      oldLd = (before.match(FAQ_JSONLD_BLOCK_RE) || [])[1] || null;
-      if (FAQ_JSONLD_RE.test(out)) out = out.replace(FAQ_JSONLD_RE, () => faqLd);
-      newLd = (out.match(FAQ_JSONLD_BLOCK_RE) || [])[1] || null;
-      if (out === before) { indexChanged = false; break; }
-      const put = await ghRequest(FAQ_INDEX_REPO_PATH, { method: "PUT", body: JSON.stringify({ message: "Update FAQ (via admin)", content: b64(out), sha: meta.sha, branch }) });
-      if (put.ok) { indexChanged = true; break; }
-      if (put.status === 409 && attempt < 2) { await faqSleep(500); continue; }
-      const e = await put.json().catch(() => ({})); throw new Error(ghError(put.status, e.message));
-    }
+    // index.html — visible accordion rows + FAQPage structured data. The Worker
+    // recomputes the CSP hash for us, so we never touch _headers here.
+    const before = await ghReadRepoFile(FAQ_INDEX_REPO_PATH);
+    if (!FAQ_LIST_MARKERS.test(before)) throw new Error("The FAQ markers weren’t found on the homepage — ask Dima to check index.html.");
+    let out = before.replace(FAQ_LIST_MARKERS, (m, p1, p2) => p1 + "\n" + window.renderFaqRows(clean) + "\n              " + p2);
+    if (FAQ_JSONLD_RE.test(out)) out = out.replace(FAQ_JSONLD_RE, () => window.renderFaqJsonLd(clean));
+    const indexChanged = out !== before;
 
-    // 3) _headers — keep the CSP JSON-LD hash in sync when the structured data changed.
-    if (indexChanged && oldLd != null && newLd != null && oldLd !== newLd) {
-      const oldHash = await sha256Base64(oldLd);
-      const newHash = await sha256Base64(newLd);
-      for (let attempt = 0; attempt < 3; attempt += 1) {
-        const curHd = await ghRequest(FAQ_HEADERS_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
-        if (!curHd.ok) { const e = await curHd.json().catch(() => ({})); throw new Error(ghError(curHd.status, e.message)); }
-        const meta = await curHd.json();
-        const before = decodeB64(meta.content);
-        if (!before.includes("'sha256-" + oldHash + "'")) {
-          throw new Error("The security-policy hash didn’t match the homepage — ask Dima to refresh _headers. Your text changes are safe.");
-        }
-        const after = before.replace("'sha256-" + oldHash + "'", "'sha256-" + newHash + "'");
-        if (after === before) break;
-        const put = await ghRequest(FAQ_HEADERS_REPO_PATH, { method: "PUT", body: JSON.stringify({ message: "Update FAQ structured-data hash (via admin)", content: b64(after), sha: meta.sha, branch }) });
-        if (put.ok) break;
-        if (put.status === 409 && attempt < 2) { await faqSleep(500); continue; }
-        const e = await put.json().catch(() => ({})); throw new Error(ghError(put.status, e.message));
-      }
-    }
-
-    state.content.faq = clean;
-    state.publishedAt = new Date().toISOString();
-    saveDraft(null);
-    renderFaq();
-    if (indexChanged) {
-      setFaqStatus("Published. Tracking the deploy in Settings → Latest publish & deploy.");
-      startDeployWatch();
-      toast("FAQ published — deploying now. You'll get a note when it's live.");
-    } else {
+    if (!faqDataChanged && !indexChanged) {
+      resetContentBaseline(state.content);
       setFaqStatus("Already up to date — nothing changed since the last publish.");
       toast("FAQ already matches the website.");
+      return true;
     }
+
+    const files = [{ path: CONTENT_REPO_PATH, content: JSON.stringify(json, null, 2) + "\n" }];
+    if (indexChanged) files.push({ path: FAQ_INDEX_REPO_PATH, content: out });
+
+    // One atomic commit; the Worker adds/patches _headers if the JSON-LD changed.
+    await ghPublishFiles(files, "Update FAQ (via admin)");
+
+    state.content.faq = clean;
+    resetContentBaseline(state.content);
+    setFaqStatus("Published in one commit. Tracking the deploy in Settings → Latest publish & deploy.");
+    startDeployWatch();
+    toast("FAQ published — deploying now. You'll get a note when it's live.");
     return true;
   } catch (err) {
     setFaqStatus("Publish failed: " + ldFriendlyError(err));
@@ -1663,7 +1623,7 @@ function bindGenericToasts() {
 
 /* ---------------- Render + metrics ---------------- */
 function renderAll() {
-  renderOfferImageOptions();
+  updateOfferImageStatus();
   renderOffers();
   renderPrices();
   renderContent();
@@ -1673,17 +1633,13 @@ function renderAll() {
   updateLastSaved();
 }
 
-function renderOfferImageOptions() {
-  const select = document.querySelector('[data-offer-field="image"]'); if (!select) return;
+function updateOfferImageStatus() {
+  const status = document.querySelector("[data-image-upload-status]"); if (!status) return;
   const offer = state.offers[selectedOfferIndex];
-  const wanted = offer ? String(offer.image || "") : "";
-  const opts = [];
-  mediaCache.forEach((m) => opts.push([m.url, "Uploaded — " + m.key.replace(/^uploads\//, "")]));
-  imageOptions.forEach((img) => opts.push([img, img]));
-  // Keep the current offer's image selectable even if it isn't in either list.
-  if (wanted && !opts.some((o) => o[0] === wanted)) opts.unshift([wanted, "Current — " + wanted.replace(/^.*\//, "")]);
-  select.innerHTML = opts.map((o) => `<option value="${escapeAttr(o[0])}">${escapeHtml(o[1])}</option>`).join("");
-  if (wanted) select.value = wanted;
+  const image = offer ? String(offer.image || "") : "";
+  status.textContent = image
+    ? "Selected photo: " + image.replace(/^.*\//, "") + ". Upload another photo to replace it."
+    : "No photo selected yet. Upload a photo before publishing this offer live.";
 }
 
 /* ---------------- Media library (R2 uploads + stock assets) ---------------- */
@@ -1736,7 +1692,7 @@ async function loadMedia() {
     const data = await ldReadJson(res);
     mediaCache = data.media || [];
     renderMedia();
-    renderOfferImageOptions();
+    updateOfferImageStatus();
   } catch (err) {
     setMediaStatus(ldFriendlyError(err), "error");
   }
@@ -2009,8 +1965,31 @@ const SITE_PAGE_PATHS = [
    the GitHub token from a Cloudflare secret. Nothing sensitive is stored in the
    browser any more — the repo/branch/token all live server-side. */
 const GH_PROXY = "/admin/api/github";
+const GH_PUBLISH = "/admin/api/publish";
 const GH_HEALTH = "/admin/api/github/health";
 let ghReady = true; // optimistic; refined by the server health check below
+
+// Atomic publish: send every changed file to the Worker, which commits them in
+// ONE commit and keeps the CSP JSON-LD hash in sync. files: [{path, content}].
+async function ghPublishFiles(files, message) {
+  const res = await fetch(GH_PUBLISH, {
+    method: "POST",
+    credentials: "same-origin",
+    cache: "no-store",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ message, files }),
+  });
+  const payload = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(payload.error || ("Publish failed (" + res.status + ")."));
+  return payload;
+}
+
+// Read a file's current text from the repo through the read-only proxy.
+async function ghReadRepoFile(repoPath) {
+  const res = await ghRequest(repoPath + "?ref=main&_=" + Date.now(), { method: "GET" });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(ghError(res.status, e.message)); }
+  return decodeB64((await res.json()).content);
+}
 
 // probe === true does a live GitHub call (button); otherwise it's the cheap
 // page-load check that only reports whether the server secret is set.
@@ -2171,9 +2150,11 @@ async function publishOffers(options) {
   const button = document.querySelector("[data-publish-offers]");
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
   setPublishStatus("Publishing to the website…");
-  recordDraftVersion("offers", "Before publishing offers", state.offers);
 
   try {
+    const validation = validateOffersForPublish(state.offers);
+    if (!validation.ok) throw new Error(validation.message);
+    recordDraftVersion("offers", "Before publishing offers", state.offers);
     const branch = "main";
     const content = b64(JSON.stringify({ offers: toOffersJson(state.offers) }, null, 2) + "\n");
 
@@ -2220,6 +2201,17 @@ async function publishOffers(options) {
   } finally {
     if (button) { button.disabled = false; button.textContent = "Publish offers"; }
   }
+}
+
+function validateOffersForPublish(offers) {
+  const missingImage = (offers || []).find((o) => (
+    String(o.status || "live").toLowerCase() !== "draft" &&
+    !String(o.image || "").trim()
+  ));
+  if (missingImage) {
+    return { ok: false, message: "Upload a photo for \"" + (missingImage.title || "this live offer") + "\" before publishing." };
+  }
+  return { ok: true };
 }
 
 /* ---------- Publish prices: rewrite prices.json AND the treatments page ---------- */
@@ -2325,22 +2317,14 @@ function applyOps(text, ops) {
 }
 
 // GET (fresh) -> transform -> PUT only if changed, retry on 409. Returns true if committed.
-async function commitTransformedFile(repoPath, branch, transform, message) {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const current = await ghRequest(repoPath + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
-    if (!current.ok) { const e = await current.json().catch(() => ({})); throw new Error(ghError(current.status, e.message)); }
-    const meta = await current.json();
-    const before = decodeB64(meta.content);
-    const after = transform(before);
-    if (after === before) return false;
-    const body = { message, content: b64(after), sha: meta.sha, branch };
-    const put = await ghRequest(repoPath, { method: "PUT", body: JSON.stringify(body) });
-    if (put.ok) return true;
-    if (put.status === 409 && attempt < 2) { await new Promise((r) => setTimeout(r, 500)); continue; }
-    const e = await put.json().catch(() => ({}));
-    throw new Error(ghError(put.status, e.message));
-  }
-  return false;
+// After a successful publish, re-baseline the editor to the just-published values
+// so every field returns to a clean "in sync with the website" state — no leftover
+// draft, no half-typed text lingering after the commit.
+function resetContentBaseline(content) {
+  state.content = mergeContent(content || state.content || {});
+  state.publishedAt = new Date().toISOString();
+  saveDraft(null);
+  renderContent(); // re-populates page-text + FAQ fields from the clean baseline
 }
 
 async function publishContent() {
@@ -2355,11 +2339,11 @@ async function publishContent() {
   try {
     const branch = "main";
 
-    // 1) authoritative "old" values + sha from the live content.json
-    let oldContent = structuredClone(DEFAULT_CONTENT), sha;
+    // 1) authoritative "old" values from the live content.json (for change diff)
+    let oldContent = structuredClone(DEFAULT_CONTENT);
     const cur = await ghRequest(CONTENT_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
     if (cur.ok) {
-      const m = await cur.json(); sha = m.sha;
+      const m = await cur.json();
       try { oldContent = mergeContent(JSON.parse(decodeB64(m.content))); } catch { /* keep default */ }
     } else if (cur.status !== 404) { const e = await cur.json().catch(() => ({})); throw new Error(ghError(cur.status, e.message)); }
     state.content = mergeContent(state.content);
@@ -2374,11 +2358,8 @@ async function publishContent() {
       return true;
     }
 
-    // 2) commit the data file (source of truth the admin reloads from)
-    const jsonBody = { message: "Update page text data (via admin)", content: b64(JSON.stringify(state.content, null, 2) + "\n"), branch };
-    if (sha) jsonBody.sha = sha;
-    const putJson = await ghRequest(CONTENT_REPO_PATH, { method: "PUT", body: JSON.stringify(jsonBody) });
-    if (!putJson.ok) { const e = await putJson.json().catch(() => ({})); throw new Error(ghError(putJson.status, e.message)); }
+    // 2) the data file (source of truth the admin reloads from) always goes first
+    const files = [{ path: CONTENT_REPO_PATH, content: JSON.stringify(state.content, null, 2) + "\n" }];
 
     // 3) rewrite each page: index.html gets SEO (head) + hero + contact; the rest get contact only
     const heroHtml = window.renderHero(state.content.hero || {});
@@ -2405,29 +2386,29 @@ async function publishContent() {
         [BOOKING_SUPPORT_MARKERS, () => window.renderBookingSupport(pages.booking && pages.booking.support)]
       ]
     };
-    let changed = 0;
     for (const repoPath of SITE_PAGE_PATHS) {
       const isHome = repoPath.endsWith("/index.html");
-      const transform = (html) => {
-        let out = html;
-        if (isHome && seoChanged && seoHtml && SEO_MARKERS.test(out)) out = out.replace(SEO_MARKERS, "$1\n    " + seoHtml + "\n    $2");
-        if (isHome && heroChanged && HERO_MARKERS.test(out)) out = out.replace(HERO_MARKERS, "$1\n              " + heroHtml + "\n              $2");
-        if (pagesChanged && pageRenderers[repoPath]) {
-          pageRenderers[repoPath].forEach(([markers, render]) => {
-            if (markers.test(out)) out = out.replace(markers, "$1\n            " + render() + "\n            $2");
-          });
-        }
-        if (ops.length) out = applyOps(out, ops);
-        return out;
-      };
-      if (await commitTransformedFile(repoPath, branch, transform, "Update page text (via admin)")) changed += 1;
+      const before = await ghReadRepoFile(repoPath);
+      let out = before;
+      if (isHome && seoChanged && seoHtml && SEO_MARKERS.test(out)) out = out.replace(SEO_MARKERS, "$1\n    " + seoHtml + "\n    $2");
+      if (isHome && heroChanged && HERO_MARKERS.test(out)) out = out.replace(HERO_MARKERS, "$1\n              " + heroHtml + "\n              $2");
+      if (pagesChanged && pageRenderers[repoPath]) {
+        pageRenderers[repoPath].forEach(([markers, render]) => {
+          if (markers.test(out)) out = out.replace(markers, "$1\n            " + render() + "\n            $2");
+        });
+      }
+      if (ops.length) out = applyOps(out, ops);
+      if (out !== before) files.push({ path: repoPath, content: out });
     }
 
-    state.publishedAt = new Date().toISOString();
-    saveDraft(null);
-    setContentStatus("Published " + changed + " page" + (changed === 1 ? "" : "s") + ". Tracking the deploy in Settings → Latest publish & deploy.");
+    // 4) one atomic commit (Worker keeps the CSP hash in sync automatically)
+    await ghPublishFiles(files, "Update page text (via admin)");
+    const changed = files.length - 1;
+
+    resetContentBaseline(state.content);
+    setContentStatus("Published " + changed + " page" + (changed === 1 ? "" : "s") + ". The editor is back in sync — tracking the deploy in Settings → Latest publish & deploy.");
     startDeployWatch();
-    toast("Published — deploying now. You'll get a note when it's live.");
+    toast("Published in one commit — deploying now. You'll get a note when it's live.");
     return true;
   } catch (err) {
     setContentStatus("Publish failed: " + ldFriendlyError(err));
@@ -2439,28 +2420,11 @@ async function publishContent() {
 }
 
 /* ---------- Delete = actually delete (publishes the removal immediately) ---------- */
-const STOCK_IMAGES = imageOptions.slice(); // ships with the site — never delete these files
-
-async function deleteRepoImage(name) {
-  if (!ghReady || !name) return;
-  const branch = "main";
-  const path = IMAGES_REPO_DIR + name;
-  const current = await ghRequest(path + "?ref=" + encodeURIComponent(branch), { method: "GET" });
-  if (!current.ok) return; // not there, nothing to do
-  const sha = (await current.json()).sha;
-  await ghRequest(path, {
-    method: "DELETE",
-    body: JSON.stringify({ message: "Remove unused offer image " + name + " (via admin)", sha, branch })
-  });
-}
-
 async function deleteOffer(index) {
   const offer = state.offers[index];
   if (!offer) return;
   const label = offer.title || "this offer";
   if (!confirm('Delete "' + label + '"?\n\nIt will be removed from the website straight away.')) return;
-
-  const image = offer.image || "";
 
   state.offers.splice(index, 1);
   selectedOfferIndex = Math.max(0, Math.min(selectedOfferIndex, state.offers.length - 1));
@@ -2472,14 +2436,6 @@ async function deleteOffer(index) {
   if (!ok) {
     toast("Deleted here, but publishing failed \u2014 click \u201cPublish offers\u201d to retry.");
     return;
-  }
-
-  // Tidy up: delete the photo too, but only if it was uploaded for this offer
-  // and no remaining offer still uses it.
-  const stillUsed = state.offers.some((o) => (o.image || "") === image);
-  const isUploaded = image && STOCK_IMAGES.indexOf(image) === -1;
-  if (isUploaded && !stillUsed) {
-    try { await deleteRepoImage(image); } catch (err) { /* non-fatal */ }
   }
 
   setPublishStatus("Deleted. Tracking the deploy in Settings \u2192 Latest publish & deploy.");
@@ -2916,58 +2872,7 @@ function renderAuditLog(entries) {
   }).join("");
 }
 
-/* ---------- Image upload: photo -> repo -> website ---------- */
-const IMAGES_REPO_DIR = "lumi-derm-website/assets/images/";
-
-function safeImageName(original) {
-  const dot = original.lastIndexOf(".");
-  let base = (dot > 0 ? original.slice(0, dot) : original).toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-  let ext = (dot > 0 ? original.slice(dot + 1) : "jpg").toLowerCase();
-  if (["jpg", "jpeg", "png", "webp", "avif"].indexOf(ext) === -1) ext = "jpg";
-  if (!base) base = "photo";
-  // trim again after truncating so we never end up with a double dash
-  base = base.slice(0, 40).replace(/-+$/, "");
-  // timestamp keeps it unique so nothing is ever overwritten
-  return "offer-" + base + "-" + Date.now().toString(36) + "." + ext;
-}
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result);
-      resolve(result.slice(result.indexOf(",") + 1)); // strip the data: prefix
-    };
-    reader.onerror = () => reject(new Error("Could not read that file."));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function uploadImage(file) {
-  if (!ghReady) {
-    toast("Publishing isn't set up on the server yet — ask Dima.");
-    return null;
-  }
-  if (!/^image\//.test(file.type)) throw new Error("That file is not an image.");
-  if (file.size > 3 * 1024 * 1024) throw new Error("That image is larger than 3MB. Please use a smaller one.");
-
-  const branch = "main";
-  const name = safeImageName(file.name);
-  const path = IMAGES_REPO_DIR + name;
-  const content = await fileToBase64(file);
-
-  const put = await ghRequest(path, {
-    method: "PUT",
-    body: JSON.stringify({ message: "Add offer image " + name + " (via admin)", content, branch })
-  });
-  if (!put.ok) {
-    const e = await put.json().catch(() => ({}));
-    throw new Error(ghError(put.status, e.message));
-  }
-  return name;
-}
-
+/* ---------- Image upload: photo -> R2 media -> offer ---------- */
 function bindImageUpload() {
   const input = document.querySelector("[data-offer-image-upload]");
   const status = document.querySelector("[data-image-upload-status]");
@@ -2980,17 +2885,17 @@ function bindImageUpload() {
 
     try {
       // Uploads now go to R2 (returns a /media/... URL). loadMedia() inside
-      // uploadMedia refreshes the media cache + the offer image options.
+      // uploadMedia refreshes the media cache.
       const url = await uploadMedia(file);
       if (!url) { if (status) status.textContent = "Upload failed."; event.target.value = ""; return; }
 
-      renderOfferImageOptions();
-      const select = document.querySelector('[data-offer-field="image"]');
-      if (select) select.value = url;
+      const imageField = document.querySelector('[data-offer-field="image"]');
+      if (imageField) imageField.value = url;
 
       const offer = state.offers[selectedOfferIndex];
       if (offer) { offer.image = url; saveDraft(null); }
       renderOfferPreview();
+      updateOfferImageStatus();
 
       if (status) status.textContent = "Uploaded and selected. Publish the offer to put it live.";
       toast("Photo uploaded.");
