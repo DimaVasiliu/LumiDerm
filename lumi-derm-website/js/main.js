@@ -651,10 +651,12 @@ async function initReviewsFeed() {
    (rAF + light smoothing so a mouse wheel glides instead of jumping). The card in the
    centre gently zooms while the clinic backdrop reveals and drifts behind the track.
    Desktop only; reduced-motion / narrow screens keep the plain carousel. */
-/* ===================== Treatment Index (data-driven from offers.json) =====================
-   Offers are edited in the admin (/admin/) which commits assets/data/offers.json to GitHub.
-   Cloudflare redeploys and the homepage picks the changes up automatically. */
-const OFFERS_SOURCE = 'assets/data/offers.json';
+/* ===================== Treatment Index (live from /api/offers) =====================
+   Offers are edited in the admin (/admin/) and saved to Cloudflare D1 — they go
+   live instantly, no deploy. If the API is ever unreachable we fall back to the
+   static assets/data/offers.json snapshot. */
+const OFFERS_SOURCE = '/api/offers';
+const OFFERS_FALLBACK = 'assets/data/offers.json';
 
 function tiEscape(value) {
   return String(value == null ? '' : value)
@@ -719,13 +721,15 @@ async function initTreatmentIndex() {
   const emptyEl = document.querySelector('[data-tindex-empty]');
 
   let offers = [];
-  try {
-    const res = await fetch(OFFERS_SOURCE, { cache: 'no-cache' });
-    if (res.ok) {
+  for (const url of [OFFERS_SOURCE, OFFERS_FALLBACK]) {
+    try {
+      const res = await fetch(url, { cache: 'no-cache' });
+      if (!res.ok) continue;
       const data = await res.json();
       offers = Array.isArray(data) ? data : (Array.isArray(data.offers) ? data.offers : []);
-    }
-  } catch (err) { /* fall through to the empty state */ }
+      break; // got a usable response
+    } catch (err) { /* try the next source */ }
+  }
 
   // Only live, unexpired offers — featured first, original order otherwise.
   const live = offers.filter(tiIsLive);

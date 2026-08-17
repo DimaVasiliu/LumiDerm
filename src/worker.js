@@ -305,6 +305,17 @@ export default {
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleAdminReviewsSave(request, env);
       }
+      // Offers served live from D1 (like reviews): publish writes here, no deploy.
+      if (apiPath === "/api/offers" && isAdminApi) {
+        if (request.method === "GET") return handleAdminOffersList(env);
+        return json({ error: "Use GET." }, 405);
+      }
+      if (apiPath === "/api/offers/save" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "publish offers");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
+        return handleAdminOffersSave(request, env);
+      }
       if (apiPath === "/api/reviews/google" && isAdminApi) {
         return handleGoogleReviews(request, env);
       }
@@ -373,6 +384,12 @@ export default {
         if (request.method === "GET") return handlePublicReviews(env);
         if (request.method === "POST") return handleReviewSubmit(request, env);
         return json({ error: "Use GET or POST." }, 405);
+      }
+
+      // Public: homepage offers feed (live + unexpired only).
+      if (apiPath === "/api/offers" && isPublicApi) {
+        if (request.method !== "GET") return json({ error: "Use GET." }, 405);
+        return handlePublicOffers(env);
       }
 
       // Public: "Ask us a question" form on the homepage FAQ. Emails the clinic.
@@ -1797,6 +1814,144 @@ async function snapshotReviewsRevision(env, request) {
     }));
     if (!reviews.length) return; // nothing worth snapshotting yet
     await insertRevision(env, "reviews", "Before a review change", { summary, reviews }, adminEmail(request));
+  } catch { /* history is a safety net, never block the save */ }
+}
+
+/* ------------------------------------------------------------------ */
+/* Offers served live from D1 (publish writes here, no deploy)         */
+/* ------------------------------------------------------------------ */
+
+function londonYmd(date) {
+  const p = londonDateParts(date || new Date());
+  return p.year + "-" + String(p.month).padStart(2, "0") + "-" + String(p.day).padStart(2, "0");
+}
+
+function offerToPublic(o) {
+  return {
+    title: o.title || "", category: o.category || "", description: o.description || "",
+    price: o.price || "", badge: o.badge || "", image: o.image || "", alt: o.alt || "",
+    service: o.service || "", status: o.status || "live",
+    featured: o.featured === 1 || o.featured === true, expires: o.expires || "", note: o.note || "",
+  };
+}
+
+async function fallbackOffersFromAssets(env) {
+  if (!env.ASSETS) return { offers: [] };
+  try {
+    const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+    const res = await env.ASSETS.fetch(new Request(origin + "/assets/data/offers.json"));
+    if (!res.ok) return { offers: [] };
+    const data = await res.json();
+    return { offers: Array.isArray(data) ? data : (Array.isArray(data && data.offers) ? data.offers : []) };
+  } catch { return { offers: [] }; }
+}
+
+// Public: only live, unexpired offers, featured first. Falls back to the static
+// offers.json (via ASSETS) only if the D1 table is missing/empty.
+async function handlePublicOffers(env) {
+  if (env.SUBSCRIBERS) {
+    try {
+      const today = londonYmd();
+      const { results } = await env.SUBSCRIBERS.prepare(
+        `SELECT title, category, description, price, badge, image, alt, service, status, featured, expires, note
+           FROM offers WHERE status='live' AND (expires IS NULL OR expires='' OR expires >= ?1)
+          ORDER BY featured DESC, sort_order ASC, id ASC`
+      ).bind(today).all();
+      const offers = (results || []).map(offerToPublic);
+      if (offers.length) return json({ offers });
+      const any = await env.SUBSCRIBERS.prepare("SELECT COUNT(*) AS c FROM offers").first();
+      if (any && any.c > 0) return json({ offers: [] }); // table exists but nothing live now
+    } catch { /* table not migrated / D1 down → static fallback */ }
+  }
+  const fb = await fallbackOffersFromAssets(env);
+  const today = londonYmd();
+  const live = (fb.offers || []).filter((o) =>
+    String(o.status || "live").toLowerCase() !== "draft" && (!o.expires || o.expires >= today));
+  return json({ offers: live.map(offerToPublic) });
+}
+
+// Admin: every offer (all statuses) for the manager UI.
+async function handleAdminOffersList(env) {
+  if (!env.SUBSCRIBERS) return json({ ok: true, offers: [] });
+  try {
+    const { results } = await env.SUBSCRIBERS.prepare(
+      `SELECT id, title, category, description, price, badge, image, alt, service, status, featured, expires, note, sort_order
+         FROM offers ORDER BY sort_order ASC, id ASC`
+    ).all();
+    return json({ ok: true, offers: (results || []).map((o) => ({ ...offerToPublic(o), id: o.id })) });
+  } catch {
+    const fb = await fallbackOffersFromAssets(env); // table not migrated yet
+    return json({ ok: true, offers: (fb.offers || []).map(offerToPublic), fallback: true });
+  }
+}
+
+// Admin: replace the whole offer set in one transaction. Instant + live.
+async function handleAdminOffersSave(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Offers aren't set up yet." }, 500);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  const list = Array.isArray(body.offers) ? body.offers : [];
+  if (list.length > 100) return json({ error: "Too many offers." }, 400);
+
+  // Validate: title required; no two LIVE offers with the same title.
+  const liveTitles = new Set();
+  for (const o of list) {
+    const title = String(o.title || "").trim();
+    if (!title) return json({ error: "Every offer needs a title." }, 400);
+    const status = String(o.status || "live").toLowerCase() === "draft" ? "draft" : "live";
+    if (status === "live") {
+      const key = title.toLowerCase();
+      if (liveTitles.has(key)) return json({ error: 'Two live offers share the title "' + title + '". Rename or hide one.' }, 400);
+      liveTitles.add(key);
+    }
+  }
+
+  await snapshotOffersRevision(env, request);
+
+  const now = new Date().toISOString();
+  const stmts = [env.SUBSCRIBERS.prepare("DELETE FROM offers")];
+  const insert = env.SUBSCRIBERS.prepare(
+    `INSERT INTO offers (title, category, description, price, badge, image, alt, service, status, featured, expires, note, sort_order, created_at, updated_at)
+     VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)`
+  );
+  list.forEach((o, i) => {
+    const status = String(o.status || "live").toLowerCase() === "draft" ? "draft" : "live";
+    stmts.push(insert.bind(
+      String(o.title || "").slice(0, 160),
+      String(o.category || "").slice(0, 80),
+      String(o.description || "").slice(0, 600),
+      String(o.price || "").slice(0, 40),
+      String(o.badge || "").slice(0, 40),
+      String(o.image || "").slice(0, 300),
+      String(o.alt || "").slice(0, 200),
+      String(o.service || "").slice(0, 80),
+      status,
+      (o.featured === true || o.featured === 1) ? 1 : 0,
+      String(o.expires || "").slice(0, 10),
+      String(o.note || "").slice(0, 120),
+      i, now, now
+    ));
+  });
+  await env.SUBSCRIBERS.batch(stmts);
+  const live = list.filter((o) => String(o.status || "live").toLowerCase() !== "draft").length;
+  await logAudit(env, request, { action: "offers.saved", detail: list.length + " offers (" + live + " live)", status: "ok" });
+  return json({ ok: true, saved: list.length, live });
+}
+
+async function snapshotOffersRevision(env, request) {
+  if (!env.SUBSCRIBERS) return;
+  try {
+    const last = await env.SUBSCRIBERS.prepare(
+      "SELECT created_at FROM revisions WHERE kind='offers' ORDER BY id DESC LIMIT 1"
+    ).first();
+    if (last && last.created_at && (Date.now() - Date.parse(last.created_at)) < 3 * 60 * 1000) return;
+    const { results } = await env.SUBSCRIBERS.prepare(
+      `SELECT title, category, description, price, badge, image, alt, service, status, featured, expires, note
+         FROM offers ORDER BY sort_order ASC, id ASC`
+    ).all();
+    const offers = (results || []).map(offerToPublic);
+    if (!offers.length) return;
+    await insertRevision(env, "offers", "Before an offers change", { offers }, adminEmail(request));
   } catch { /* history is a safety net, never block the save */ }
 }
 

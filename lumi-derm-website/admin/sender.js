@@ -10,7 +10,7 @@
   "use strict";
 
   var ADMIN_API = "/admin/api";
-  var OFFERS_URL = "../assets/data/offers.json";
+  var OFFERS_URL = "/api/offers"; // live offers from D1 (falls back to the static file server-side)
   var DRAFT_STORE = "lumi-derm-mail-draft-v1";
 
   var BOOKING_URL = "https://lumidermaesthetics.com/pages/booking.html";

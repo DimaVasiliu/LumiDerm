@@ -2065,13 +2065,10 @@ function ldConfirm(opts) {
 window.ldConfirm = ldConfirm;
 
 /* =====================================================================
-   PUBLISHING — offers created here go live on the homepage.
-   The homepage reads assets/data/offers.json. Publishing commits that
-   file to GitHub; Cloudflare then rebuilds the site (about a minute).
+   PUBLISHING — offers created here go live on the homepage instantly.
+   Offers save to Cloudflare D1 via the Worker (/admin/api/offers/save) — no
+   GitHub commit and no deploy; a homepage refresh shows them.
    ===================================================================== */
-const OFFERS_JSON_URL = "../assets/data/offers.json";                    // what the homepage reads
-const OFFERS_REPO_PATH = "lumi-derm-website/assets/data/offers.json";    // path inside the repo
-const REVIEWS_REPO_PATH = "lumi-derm-website/assets/data/reviews.json";  // homepage reviews feed
 const PRICES_REPO_PATH = "lumi-derm-website/assets/data/prices.json";    // treatments-page prices data
 const SERVICES_REPO_PATH = "lumi-derm-website/pages/services.html";      // treatments page (rendered from prices.json)
 const PRICES_MARKERS = /(<!-- PRICES:START[\s\S]*?-->)[\s\S]*?(<!-- PRICES:END -->)/; // section rewritten on publish
@@ -2214,21 +2211,20 @@ function fromOffersJson(list) {
   }));
 }
 
-/* Pull the offers that are actually on the website right now */
+/* Pull the offers that are actually on the website right now (live from D1) */
 async function loadOffersFromSite(announce) {
   try {
-    const res = await fetch(OFFERS_JSON_URL + "?t=" + Date.now(), { cache: "no-store" });
+    const res = await fetch("/admin/api/offers", { cache: "no-store", credentials: "same-origin" });
     if (!res.ok) throw new Error("not found");
     const data = await res.json();
-    const list = Array.isArray(data) ? data : data.offers;
-    if (!Array.isArray(list)) throw new Error("bad shape");
+    const list = Array.isArray(data.offers) ? data.offers : [];
     state.offers = fromOffersJson(list);
     selectedOfferIndex = 0;
     renderOffers();
     saveDraft(announce ? "Loaded the offers currently on the website." : null);
     setPublishStatus("In sync with the website.");
   } catch (err) {
-    if (announce) toast("Could not read the website's offers file.");
+    if (announce) toast("Could not read the current offers.");
   }
 }
 
@@ -2283,65 +2279,40 @@ async function ghRequest(path, options) {
   });
 }
 
-/* THE BUTTON: create offers -> click Publish -> live on the homepage */
+/* THE BUTTON: create offers -> click Publish -> live on the homepage instantly.
+   Offers now save straight to Cloudflare D1 via the Worker — no GitHub commit,
+   no deploy. A refresh of the homepage shows them. */
 async function publishOffers(options) {
   // NOTE: called both as a click handler (options = Event) and internally ({ silent: true })
   const silent = !!(options && options.silent === true);
-  if (!ghReady) {
-    toast("Publishing isn't set up on the server yet — ask Dima.");
-    return false;
-  }
   const button = document.querySelector("[data-publish-offers]");
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
-  setPublishStatus("Publishing to the website…");
+  setPublishStatus("Saving to the website…");
 
   try {
     if (syncCurrentOfferEditorToState()) renderOffers();
     const validation = validateOffersForPublish(state.offers);
     if (!validation.ok) throw new Error(validation.message);
     recordDraftVersion("offers", "Before publishing offers", state.offers);
-    const branch = "main";
-    const content = b64(JSON.stringify({ offers: toOffersJson(state.offers) }, null, 2) + "\n");
 
-    // Read the current sha and commit — retrying with a fresh sha on 409, which
-    // happens when GitHub served a stale sha (cache) or the file moved on.
-    let put;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      // 1. current file sha (cache-busted so it's never stale)
-      let sha;
-      const current = await ghRequest(
-        OFFERS_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(),
-        { method: "GET" }
-      );
-      if (current.ok) sha = (await current.json()).sha;
-      else if (current.status !== 404) {
-        const e = await current.json().catch(() => ({}));
-        throw new Error(ghError(current.status, e.message));
-      }
-
-      // 2. commit the new offers
-      const body = { message: "Update homepage offers (via admin)", content, branch };
-      if (sha) body.sha = sha;
-
-      put = await ghRequest(OFFERS_REPO_PATH, { method: "PUT", body: JSON.stringify(body) });
-      if (put.ok) break;
-      if (put.status === 409 && attempt < 2) {
-        await new Promise((r) => setTimeout(r, 500)); // brief pause, then re-read sha
-        continue;
-      }
-      const e = await put.json().catch(() => ({}));
-      throw new Error(ghError(put.status, e.message));
-    }
+    const res = await fetch("/admin/api/offers/save", {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ offers: toOffersJson(state.offers) }),
+    });
+    const data = await ldReadJson(res);
+    if (!res.ok) throw new Error(data.error || "Could not save offers.");
 
     state.publishedAt = new Date().toISOString();
     saveDraft(null);
-    setPublishStatus("Published. Tracking the deploy in Settings → Latest publish & deploy.");
-    startDeployWatch();
-    if (!silent) toast("Published — deploying now. You'll get a note when it's live (about a minute).");
+    setPublishStatus("Saved — offers are live now. Refresh the homepage to see them.");
+    if (!silent) toast("Saved — offers are live now.");
     return true;
   } catch (err) {
-    setPublishStatus("Publish failed: " + ldFriendlyError(err));
-    toast("Publish failed: " + ldFriendlyError(err));
+    setPublishStatus("Save failed: " + ldFriendlyError(err));
+    if (!silent) toast("Save failed: " + ldFriendlyError(err));
     return false;
   } finally {
     if (button) { button.disabled = false; button.textContent = "Publish offers"; }
