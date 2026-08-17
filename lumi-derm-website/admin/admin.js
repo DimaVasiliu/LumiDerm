@@ -503,6 +503,12 @@ function bindOffers() {
     });
     if (!fresh.title || !fresh.title.trim()) { toast("Give the offer a title first."); return; }
     fresh.featured = fresh.featured === true;
+    if (isNewOfferPlaceholder(state.offers[selectedOfferIndex])) {
+      state.offers[selectedOfferIndex] = fresh;
+      renderOffers();
+      saveDraft("New offer saved.");
+      return;
+    }
     state.offers.push(fresh);
     selectedOfferIndex = state.offers.length - 1;
     renderOffers();
@@ -510,6 +516,19 @@ function bindOffers() {
   });
 
   document.querySelectorAll("[data-offer-field]").forEach((f) => f.addEventListener("input", renderOfferPreview));
+}
+
+function isNewOfferPlaceholder(offer) {
+  return !!offer &&
+    String(offer.title || "") === "New offer" &&
+    String(offer.category || "") === "Offer" &&
+    String(offer.price || "") === "From £" &&
+    String(offer.description || "") === "Short offer description." &&
+    !String(offer.badge || "").trim() &&
+    !String(offer.service || "").trim() &&
+    String(offer.status || "Draft").toLowerCase() === "draft" &&
+    !String(offer.expires || "").trim() &&
+    String(offer.note || "") === "Ongoing offer";
 }
 
 function renderOffers() {
@@ -2325,7 +2344,40 @@ function validateOffersForPublish(offers) {
   if (missingImage) {
     return { ok: false, message: "Upload a photo for \"" + (missingImage.title || "this live offer") + "\" before publishing." };
   }
+  const duplicate = findDuplicateVisibleOffer(offers || []);
+  if (duplicate) {
+    return { ok: false, message: "Remove one duplicate before publishing: \"" + (duplicate.title || "Untitled offer") + "\" appears twice." };
+  }
   return { ok: true };
+}
+
+function offerVisibleOnSite(offer) {
+  if (!offer || String(offer.status || "live").toLowerCase() === "draft") return false;
+  if (!offer.expires) return true;
+  const end = new Date(String(offer.expires) + "T23:59:59");
+  if (isNaN(end.getTime())) return true;
+  return end.getTime() >= Date.now();
+}
+
+function duplicateOfferKey(offer) {
+  return [
+    offer.title,
+    offer.category,
+    offer.price,
+    offer.service,
+    offer.expires,
+  ].map((v) => String(v || "").trim().toLowerCase()).join("|");
+}
+
+function findDuplicateVisibleOffer(offers) {
+  const seen = new Map();
+  for (const offer of offers) {
+    if (!offerVisibleOnSite(offer)) continue;
+    const key = duplicateOfferKey(offer);
+    if (seen.has(key)) return offer;
+    seen.set(key, offer);
+  }
+  return null;
 }
 
 /* ---------- Publish prices: rewrite prices.json AND the treatments page ---------- */

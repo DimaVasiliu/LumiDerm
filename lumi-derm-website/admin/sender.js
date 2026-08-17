@@ -1130,9 +1130,10 @@
   var BDAY_DEFAULTS = {
     subject: "Happy birthday from Lumi Derm 🎂",
     headline: "Happy birthday, {{name}}!",
-    body: "Wishing you a wonderful day from all of us at Lumi Derm. To help you celebrate, enjoy 15% off one treatment within 30 days of your birthday. This birthday treat is redeemed at the venue and cannot be applied to Treatwell bookings.",
-    ctaLabel: "Request your birthday treat",
-    ctaUrl: BIRTHDAY_REQUEST_URL
+    body: "Wishing you a wonderful day from all of us at Lumi Derm. To help you celebrate, enjoy 15% off one treatment as your birthday treat. Your code is {{birthday_code}}, valid until {{birthday_expiry}}. Redeemed and paid for at the venue only — it cannot be applied to Treatwell bookings.",
+    ctaLabel: "Request birthday appointment",
+    // The button always goes to the client's unique voucher page (auto-filled per recipient).
+    ctaUrl: "{{birthday_link}}"
   };
 
   function bdayVal(sel) { var el = $(sel); return el ? String(el.value || "") : ""; }
@@ -1146,7 +1147,8 @@
       headline: bdayVal("[data-bday-headline]") || BDAY_DEFAULTS.headline,
       body: bdayVal("[data-bday-message]") || BDAY_DEFAULTS.body,
       ctaLabel: bdayVal("[data-bday-ctalabel]") || BDAY_DEFAULTS.ctaLabel,
-      ctaUrl: bdayVal("[data-bday-ctaurl]") || BDAY_DEFAULTS.ctaUrl,
+      // Always the per-recipient voucher page — not an editable link.
+      ctaUrl: "{{birthday_link}}",
       heroImage: "",
       noBookingLinks: true
     };

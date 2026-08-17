@@ -231,7 +231,7 @@
               <div class="guide-card-head"><h3>Offers &mdash; the cards on your homepage</h3><button class="guide-jump" type="button" data-go="offers">Open Offers &rarr;</button></div>
               <p>The <strong>Offers</strong> tab controls the treatment/offer cards visitors see on the homepage.</p>
               <ul class="guide-list">
-                <li><strong>Add an offer:</strong> click <em>Add offer</em>, fill in the boxes, then <em>Save as new offer</em>.</li>
+                <li><strong>Add an offer:</strong> click <em>Add offer</em>, fill in the boxes, then <em>Save changes</em>.</li>
                 <li><strong>Edit an offer:</strong> click it in the list, change the boxes, then <em>Save changes</em>.</li>
                 <li><strong>Delete an offer:</strong> open it and use delete &mdash; it disappears from the website too once published.</li>
                 <li>When you&rsquo;re happy, click <strong>Publish offers</strong>. Live in about a minute.</li>
@@ -618,11 +618,9 @@
                 <div class="admin-editor">
                   <label>Subject<input type="text" data-bday-subject placeholder="Happy birthday from Lumi Derm"></label>
                   <label>Headline<input type="text" data-bday-headline placeholder="Happy birthday, {{name}}!"></label>
-                  <label>Message<textarea rows="4" data-bday-message placeholder="Wishing you a wonderful day…"></textarea></label>
-                  <div class="field-pair">
-                    <label>Button label<input type="text" data-bday-ctalabel placeholder="Request your birthday treat"></label>
-                    <label>Button link<input type="url" data-bday-ctaurl placeholder="https://lumidermaesthetics.com/#faq"></label>
-                  </div>
+                  <label>Message <small>use {{birthday_code}} and {{birthday_expiry}} to show the code</small><textarea rows="4" data-bday-message placeholder="Wishing you a wonderful day…"></textarea></label>
+                  <label>Button label<input type="text" data-bday-ctalabel placeholder="Request birthday appointment"></label>
+                  <p class="admin-hint">The button automatically links each person to their own birthday code page — nothing to set here.</p>
                   <label>Send at <small>(UK time)</small><select data-bday-hour></select></label>
                 </div>
                 <div class="admin-card">
@@ -1085,7 +1083,7 @@
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260816-faq1"></script>
     <script src="admin.js?v=20260816-bday1"></script>
-    <script src="sender.js?v=20260721-analytics1"></script>
+    <script src="sender.js?v=20260816-bday1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>
 </html>
