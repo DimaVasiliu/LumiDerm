@@ -316,6 +316,18 @@ export default {
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleAdminOffersSave(request, env);
       }
+      if (apiPath === "/api/offers/upsert" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "publish offers");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
+        return handleAdminOfferUpsert(request, env);
+      }
+      if (apiPath === "/api/offers/delete" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "delete offers");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
+        return handleAdminOfferDelete(request, env);
+      }
       if (apiPath === "/api/reviews/google" && isAdminApi) {
         return handleGoogleReviews(request, env);
       }
@@ -1936,6 +1948,78 @@ async function handleAdminOffersSave(request, env) {
   const live = list.filter((o) => String(o.status || "live").toLowerCase() !== "draft").length;
   await logAudit(env, request, { action: "offers.saved", detail: list.length + " offers (" + live + " live)", status: "ok" });
   return json({ ok: true, saved: list.length, live });
+}
+
+function normaliseOfferForSave(o) {
+  const status = String(o.status || "live").toLowerCase() === "draft" ? "draft" : "live";
+  return {
+    title: String(o.title || "").trim().slice(0, 160),
+    category: String(o.category || "").slice(0, 80),
+    description: String(o.description || "").slice(0, 600),
+    price: String(o.price || "").slice(0, 40),
+    badge: String(o.badge || "").slice(0, 40),
+    image: String(o.image || "").slice(0, 300),
+    alt: String(o.alt || "").slice(0, 200),
+    service: String(o.service || "").slice(0, 80),
+    status,
+    featured: (o.featured === true || o.featured === 1) ? 1 : 0,
+    expires: String(o.expires || "").slice(0, 10),
+    note: String(o.note || "").slice(0, 120),
+  };
+}
+
+// Admin: save ONE offer (insert or update by id). Live offers go on the site
+// instantly; drafts are saved but hidden. Only this offer is validated.
+async function handleAdminOfferUpsert(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Offers aren't set up yet." }, 500);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  const src = body.offer || body;
+  const id = parseInt(src.id, 10) || null;
+  const o = normaliseOfferForSave(src);
+  if (!o.title) return json({ error: "Please add a title." }, 400);
+  if (o.status === "live" && !o.description.trim()) {
+    return json({ error: "A live offer needs a short description — add one, or set it to Draft." }, 400);
+  }
+  if (o.status === "live") {
+    const dup = await env.SUBSCRIBERS.prepare(
+      "SELECT id FROM offers WHERE status='live' AND lower(title)=lower(?1) AND id != ?2"
+    ).bind(o.title, id || -1).first();
+    if (dup) return json({ error: 'Another live offer already uses the title "' + o.title + '". Rename or hide one.' }, 400);
+  }
+
+  await snapshotOffersRevision(env, request);
+  const now = new Date().toISOString();
+  if (id) {
+    const res = await env.SUBSCRIBERS.prepare(
+      `UPDATE offers SET title=?1, category=?2, description=?3, price=?4, badge=?5, image=?6, alt=?7, service=?8, status=?9, featured=?10, expires=?11, note=?12, updated_at=?13
+        WHERE id=?14`
+    ).bind(o.title, o.category, o.description, o.price, o.badge, o.image, o.alt, o.service, o.status, o.featured, o.expires, o.note, now, id).run();
+    if (!(res.meta && res.meta.changes)) return json({ error: "That offer no longer exists — reload and try again." }, 404);
+    await logAudit(env, request, { action: "offers.saved", detail: "updated #" + id + " (" + o.status + ")", status: "ok" });
+    return json({ ok: true, id, status: o.status });
+  }
+  const maxRow = await env.SUBSCRIBERS.prepare("SELECT MAX(sort_order) AS m FROM offers").first();
+  const sort = (maxRow && maxRow.m != null ? maxRow.m : -1) + 1;
+  const res = await env.SUBSCRIBERS.prepare(
+    `INSERT INTO offers (title, category, description, price, badge, image, alt, service, status, featured, expires, note, sort_order, created_at, updated_at)
+     VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)`
+  ).bind(o.title, o.category, o.description, o.price, o.badge, o.image, o.alt, o.service, o.status, o.featured, o.expires, o.note, sort, now, now).run();
+  const newId = res.meta && res.meta.last_row_id ? res.meta.last_row_id : null;
+  await logAudit(env, request, { action: "offers.saved", detail: "new #" + newId + " (" + o.status + ")", status: "ok" });
+  return json({ ok: true, id: newId, status: o.status });
+}
+
+async function handleAdminOfferDelete(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Offers aren't set up yet." }, 500);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  const id = parseInt(body.id, 10);
+  if (!id) return json({ error: "Bad request." }, 400);
+  await snapshotOffersRevision(env, request);
+  const res = await env.SUBSCRIBERS.prepare("DELETE FROM offers WHERE id=?1").bind(id).run();
+  await logAudit(env, request, { action: "offers.deleted", detail: "#" + id, status: "ok" });
+  return json({ ok: true, changed: res.meta && res.meta.changes ? res.meta.changes : 0 });
 }
 
 async function snapshotOffersRevision(env, request) {

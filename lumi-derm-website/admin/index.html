@@ -65,7 +65,7 @@
             <button class="admin-button admin-button-secondary" type="button" data-undo-local>Undo local edit</button>
             <button class="admin-button admin-button-secondary" type="button" data-import-admin title="Import a website content-drafts backup (offers, prices, reviews, page text). Not subscribers.">Import drafts</button>
             <button class="admin-button admin-button-secondary" type="button" data-export-admin title="Download a backup of your website content drafts (offers, prices, reviews, page text). Not subscribers or personal data.">Export drafts</button>
-            <button class="admin-button admin-button-primary" type="button" data-publish-demo>Publish offers</button>
+            <button class="admin-button admin-button-primary" type="button" data-publish-demo>Manage offers</button>
             <input type="file" accept="application/json" data-import-file hidden>
           </div>
         </header>
@@ -118,7 +118,7 @@
               <div class="admin-card-head"><div><p class="admin-eyebrow">Getting started</p><h2>How this works</h2></div><button class="guide-jump" type="button" data-go="guide">Open the full guide &rarr;</button></div>
               <ol class="admin-steps compact">
                 <li><strong>Edit anything here</strong><span>Offers, prices, reviews and page text. Everything saves as you go in this browser.</span></li>
-                <li><strong>Click Publish</strong><span>On the Offers tab, Publish offers puts your changes on the live website in about a minute.</span></li>
+                <li><strong>Save &amp; publish</strong><span>On the Offers tab, each offer has its own <em>Save &amp; publish</em> button — Live offers appear on the website straight away.</span></li>
                 <li><strong>New here?</strong><span>Open the <strong>Guide &amp; help</strong> tab for a plain-language walkthrough of everything.</span></li>
               </ol>
             </section>
@@ -231,10 +231,10 @@
               <div class="guide-card-head"><h3>Offers &mdash; the cards on your homepage</h3><button class="guide-jump" type="button" data-go="offers">Open Offers &rarr;</button></div>
               <p>The <strong>Offers</strong> tab controls the treatment/offer cards visitors see on the homepage.</p>
               <ul class="guide-list">
-                <li><strong>Add an offer:</strong> click <em>Add offer</em>, fill in the boxes, then <em>Publish offers</em> when it is ready.</li>
-                <li><strong>Edit an offer:</strong> click it in the list and change the boxes. <em>Save changes</em> keeps it in this browser; <em>Publish offers</em> puts it live.</li>
-                <li><strong>Delete an offer:</strong> open it and use delete &mdash; it disappears from the website too once published.</li>
-                <li>When you&rsquo;re happy, click <strong>Publish offers</strong>. Live in about a minute.</li>
+                <li><strong>Add an offer:</strong> click <em>Add offer</em>, fill in the boxes, set it to <em>Live</em>, then <em>Save &amp; publish this offer</em>.</li>
+                <li><strong>Edit an offer:</strong> click it in the list, change the boxes, and <em>Save &amp; publish this offer</em> &mdash; only that offer updates.</li>
+                <li><strong>Live vs Draft:</strong> Live offers show on the homepage instantly; Draft offers are saved but hidden until you set them Live.</li>
+                <li><strong>Delete an offer:</strong> open it and click <em>Delete this offer</em> &mdash; it&rsquo;s removed from the website straight away.</li>
               </ul>
               <p>What each box means:</p>
               <ul class="guide-list">
@@ -332,21 +332,12 @@
               <div>
                 <p class="admin-eyebrow">Homepage</p>
                 <h2>Offers carousel</h2>
-                <p>Create offer cards, change the order, hide seasonal cards, and edit prices. Drag-free reordering with the arrows.</p>
+                <p>Each offer saves on its own — pick it in the list, edit it, choose <strong>Live</strong> or <strong>Draft</strong>, then <strong>Save &amp; publish</strong>. Live offers appear on the homepage straight away; drafts are kept hidden.</p>
               </div>
               <div class="admin-actions-inline">
                 <button class="admin-button admin-button-secondary" type="button" data-reload-offers>Reload from website</button>
-                <button class="admin-button admin-button-primary" type="button" data-add-offer>Add offer</button>
-              </div>
-            </div>
-            <div class="admin-publish-bar">
-              <div>
-                <strong>Publish to the website</strong>
-                <p data-publish-status>Your changes are saved in this browser only. Click publish to put them live.</p>
-              </div>
-              <div class="admin-publish-actions">
                 <a class="admin-button admin-button-secondary" href="../index.html#offers" target="_blank" rel="noopener" data-preview-offers>Preview live offers</a>
-                <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-offers>Publish offers</button>
+                <button class="admin-button admin-button-primary" type="button" data-add-offer>Add offer</button>
               </div>
             </div>
             <div class="admin-layout">
@@ -362,7 +353,7 @@
                 <p class="admin-eyebrow">Offer editor</p>
                 <div class="offer-editing-banner" data-offer-editing-banner>
                   <strong data-offer-editing>No offer selected</strong>
-                  <span>Changes below apply to this offer. To create a new one, click <b>Add offer</b>.</span>
+                  <span>Edit this offer, then <b>Save &amp; publish</b> to put just this one live. To create a new one, click <b>Add offer</b>.</span>
                 </div>
                 <label>Title<input type="text" data-offer-field="title" placeholder="15% off your first visit"></label>
                 <label>Category<input type="text" data-offer-field="category" placeholder="New client offer"></label>
@@ -401,9 +392,10 @@
                 <label>Note <small>(used when there is no end date)</small><input type="text" data-offer-field="note" placeholder="Ongoing offer"></label>
                 <label class="admin-check"><input type="checkbox" data-offer-field="featured"> Featured (shows first)</label>
                 <div class="admin-actions-inline start">
-                  <button class="admin-button admin-button-primary" type="button" data-save-offer>Save changes</button>
-                  <button class="admin-button admin-button-secondary" type="button" data-save-new-offer>Save as NEW offer</button>
+                  <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-save-publish-offer>Save &amp; publish this offer</button>
+                  <button class="admin-button admin-button-secondary" type="button" data-delete-offer-editor>Delete this offer</button>
                 </div>
+                <p class="admin-status" data-publish-status></p>
                 <div class="offer-preview" data-offer-preview></div>
               </aside>
             </div>
@@ -1082,7 +1074,7 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260816-faq1"></script>
-    <script src="admin.js?v=20260817-offers1"></script>
+    <script src="admin.js?v=20260817-offers2"></script>
     <script src="sender.js?v=20260817-offers1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>

@@ -447,7 +447,7 @@ function bindTopActions() {
   document.querySelectorAll("[data-export-admin]").forEach((b) => b.addEventListener("click", exportAll));
   document.querySelectorAll("[data-import-admin]").forEach((b) => b.addEventListener("click", () => document.querySelector("[data-import-file]").click()));
   document.querySelector("[data-import-file]")?.addEventListener("change", importAll);
-  document.querySelector("[data-publish-demo]")?.addEventListener("click", () => { goPanel("offers"); publishOffers(); });
+  document.querySelector("[data-publish-demo]")?.addEventListener("click", () => goPanel("offers"));
   document.querySelector("[data-undo-local]")?.addEventListener("click", undoLastLocalEdit);
   document.querySelector("[data-birthday-reload]")?.addEventListener("click", loadBirthdays);
 }
@@ -489,27 +489,59 @@ function bindOffers() {
     saveDraft("New offer added \u2014 fill it in below, then Publish offers.");
     document.querySelector('[data-offer-field="title"]')?.focus();
   });
-  document.querySelector("[data-save-offer]")?.addEventListener("click", () => {
-    const offer = state.offers[selectedOfferIndex]; if (!offer) return;
-    Object.assign(offer, readOfferEditorFields());
-    renderOffers(); saveDraft("Offer saved.");
-  });
-  document.querySelector("[data-save-new-offer]")?.addEventListener("click", () => {
-    const fresh = readOfferEditorFields();
-    if (!fresh.title || !fresh.title.trim()) { toast("Give the offer a title first."); return; }
-    if (isNewOfferPlaceholder(state.offers[selectedOfferIndex])) {
-      state.offers[selectedOfferIndex] = fresh;
-      renderOffers();
-      saveDraft("New offer saved.");
-      return;
-    }
-    state.offers.push(fresh);
-    selectedOfferIndex = state.offers.length - 1;
-    renderOffers();
-    saveDraft("Added as a new offer (nothing was overwritten).");
-  });
-
+  document.querySelector("[data-save-publish-offer]")?.addEventListener("click", () => saveAndPublishOffer());
+  document.querySelector("[data-delete-offer-editor]")?.addEventListener("click", () => deleteOffer(selectedOfferIndex));
   document.querySelectorAll("[data-offer-field]").forEach((f) => f.addEventListener("input", renderOfferPreview));
+}
+
+/* One offer at a time: validate + save just this offer to D1 (live now if Live). */
+function toOfferPayload(o) {
+  return {
+    id: o.id || null,
+    title: o.title || "", category: o.category || "", description: o.description || "",
+    price: o.price || "", badge: o.badge || "", image: normalizeOfferImage(o.image), alt: o.alt || "",
+    service: o.service || "",
+    status: String(o.status || "live").toLowerCase() === "draft" ? "draft" : "live",
+    featured: o.featured === true, expires: o.expires || "", note: o.note || "",
+  };
+}
+
+async function saveAndPublishOffer() {
+  const offer = state.offers[selectedOfferIndex];
+  if (!offer) { toast("Pick an offer from the list first."); return; }
+  Object.assign(offer, readOfferEditorFields());
+  if (offerVisibleOnSite(offer)) {
+    const reason = incompleteLiveOfferReason(offer);
+    if (reason) { setPublishStatus("Not published: " + reason + "."); toast("Finish this offer first: " + reason + "."); return; }
+  } else if (!(offer.title || "").trim()) {
+    setPublishStatus("A draft still needs a title before it can be saved.");
+    toast("Give the offer a title first."); return;
+  }
+
+  const btn = document.querySelector("[data-save-publish-offer]");
+  if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
+  setPublishStatus("Saving…");
+  recordDraftVersion("offers", "Before saving an offer", state.offers);
+  try {
+    const res = await fetch("/admin/api/offers/upsert", {
+      method: "POST", credentials: "same-origin", cache: "no-store",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ offer: toOfferPayload(offer) }),
+    });
+    const data = await ldReadJson(res);
+    if (!res.ok) throw new Error(data.error || "Could not save the offer.");
+    if (data.id) offer.id = data.id; // remember the D1 id for future edits
+    saveDraft(null);
+    renderOffers();
+    const liveNow = String(offer.status || "").toLowerCase() === "live";
+    setPublishStatus(liveNow ? "Saved — live on the homepage now (refresh to see it)." : "Saved as a draft — hidden from the site until you set it Live.");
+    toast(liveNow ? "Offer is live now." : "Draft saved.");
+  } catch (err) {
+    setPublishStatus("Save failed: " + ldFriendlyError(err));
+    toast("Save failed: " + ldFriendlyError(err));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "Save & publish this offer"; }
+  }
 }
 
 function readOfferEditorFields() {
@@ -527,19 +559,6 @@ function syncCurrentOfferEditorToState() {
   Object.assign(offer, readOfferEditorFields());
   saveDraft(null);
   return true;
-}
-
-function isNewOfferPlaceholder(offer) {
-  return !!offer &&
-    String(offer.title || "") === "New offer" &&
-    String(offer.category || "") === "Offer" &&
-    String(offer.price || "") === "From £" &&
-    String(offer.description || "") === "Short offer description." &&
-    !String(offer.badge || "").trim() &&
-    !String(offer.service || "").trim() &&
-    ["draft", "live"].includes(String(offer.status || "Draft").toLowerCase()) &&
-    !String(offer.expires || "").trim() &&
-    String(offer.note || "") === "Ongoing offer";
 }
 
 function renderOffers() {
@@ -2196,6 +2215,7 @@ function toOffersJson(offers) {
 /* offers.json shape -> admin shape */
 function fromOffersJson(list) {
   return list.map((o) => ({
+    id: o.id || null,
     title: o.title || "",
     category: o.category || "",
     description: o.description || "",
@@ -2576,28 +2596,39 @@ async function publishContent() {
   }
 }
 
-/* ---------- Delete = actually delete (publishes the removal immediately) ---------- */
+/* ---------- Delete one offer straight from D1 (instant) ---------- */
 async function deleteOffer(index) {
   const offer = state.offers[index];
   if (!offer) return;
   const label = offer.title || "this offer";
-  if (!confirm('Delete "' + label + '"?\n\nIt will be removed from the website straight away.')) return;
+  const ok = await ldConfirm({
+    title: "Delete this offer?",
+    body: "\u201c" + label + "\u201d will be removed from the website straight away.",
+    confirmLabel: "Delete offer",
+  });
+  if (!ok) return;
 
+  const id = offer.id;
   state.offers.splice(index, 1);
   selectedOfferIndex = Math.max(0, Math.min(selectedOfferIndex, state.offers.length - 1));
   renderOffers();
   saveDraft(null);
 
-  setPublishStatus("Removing \u201c" + label + "\u201d from the website\u2026");
-  const ok = await publishOffers({ silent: true });
-  if (!ok) {
-    toast("Deleted here, but publishing failed \u2014 click \u201cPublish offers\u201d to retry.");
-    return;
+  if (!id) { toast("Offer removed."); return; } // was never saved to the site
+  setPublishStatus("Removing \u201c" + label + "\u201d\u2026");
+  try {
+    const res = await fetch("/admin/api/offers/delete", {
+      method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    const data = await ldReadJson(res);
+    if (!res.ok) throw new Error(data.error || "Could not delete the offer.");
+    setPublishStatus("Deleted \u2014 removed from the site.");
+    toast("\u201c" + label + "\u201d deleted.");
+  } catch (err) {
+    setPublishStatus("Delete failed: " + ldFriendlyError(err));
+    toast("Delete failed: " + ldFriendlyError(err) + " Use Reload from website to resync.");
   }
-
-  setPublishStatus("Deleted. Tracking the deploy in Settings \u2192 Latest publish & deploy.");
-  startDeployWatch();
-  toast("\u201c" + label + "\u201d deleted \u2014 deploying the removal now.");
 }
 
 function bindPublishing() {
