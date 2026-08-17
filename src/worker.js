@@ -2759,13 +2759,21 @@ async function handleAtomicPublish(request, env) {
 // path is deliberately left untouched. Adding page-text pages here later is a
 // one-line change per page once their content lives in D1.
 const CONTENT_PAGE_BY_PATH = {
+  "/": "home", "/index.html": "home",
   "/pages/services.html": "services", "/pages/services": "services",
+  "/pages/about.html": "about", "/pages/about": "about",
+  "/pages/booking.html": "booking", "/pages/booking": "booking",
 };
 // Marker regions injected on each page (must match the admin's markers).
 const PAGE_REGIONS = {
   home: ["SEO", "HERO"],
   services: ["SERVICES_HERO", "PRICES"],
-  about: ["ABOUT_HERO", "ABOUT_BIO", "ABOUT_CLINIC", "ABOUT_CONCERNS", "ABOUT_TREATMENTS", "ABOUT_BENEFITS", "ABOUT_JOURNEY", "ABOUT_CTA"],
+  about: [
+    "ABOUT_HERO", "ABOUT_STATS", "ABOUT_BIO_IMAGE", "ABOUT_BIO",
+    "ABOUT_CLINIC", "ABOUT_CLINIC_IMAGE", "ABOUT_CONCERNS", "ABOUT_CONCERN_CARDS",
+    "ABOUT_TREATMENTS", "ABOUT_BENEFITS", "ABOUT_BENEFIT_CARDS",
+    "ABOUT_JOURNEY", "ABOUT_JOURNEY_STEPS", "ABOUT_CTA",
+  ],
   booking: ["BOOKING_HERO", "BOOKING_PICKER", "BOOKING_WIDGET", "BOOKING_SUPPORT"],
 };
 const REPOPATH_REGIONS = {

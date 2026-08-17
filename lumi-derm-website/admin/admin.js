@@ -933,7 +933,15 @@ function renderPriceEditor(editor) {
     }
   });
 
+  html += `
+    <div class="price-editor-publish">
+      <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-tx-publish-one>Save &amp; publish prices</button>
+      <p class="admin-hint">Publishes your price changes to the live Treatments &amp; prices page straight away.</p>
+    </div>`;
+
   editor.innerHTML = html;
+
+  editor.querySelector("[data-tx-publish-one]")?.addEventListener("click", () => { publishPrices(); });
 
   editor.querySelector("[data-tx-headline]")?.addEventListener("change", (e) => {
     t.headline = escapeHtml(e.target.value.trim()); saveDraft("Headline updated."); updateNavHeadline(); renderTreatmentCards();
@@ -1944,7 +1952,6 @@ function openReviewEditor(index) {
    Homepage hero is rendered from content.json between the HERO markers in
    index.html. Contact details are stored in content.json and, on publish,
    replaced (exact-string) everywhere they appear across the site. */
-const CONTENT_JSON_URL = "../assets/data/content.json";
 const CONTACT_KEYS = ["phone", "email", "address", "instagramUrl", "instagramHandle", "facebookUrl", "facebookHandle"];
 
 // Current live values on the site (used as fallback if content.json is missing).
@@ -1984,7 +1991,13 @@ const DEFAULT_CONTENT = {
           "The aim is to support healthier-looking skin, soften what bothers you and help you feel more comfortable in your own skin."
         ],
         signature: "the practitioner",
-        role: "Founder & Lead Practitioner, Lumi Derm Aesthetics"
+        role: "Founder & Lead Practitioner, Lumi Derm Aesthetics",
+        image: {
+          src: "../assets/images/lumi-derm-practitioner-about.webp",
+          alt: "The lead aesthetic practitioner at Lumi Derm Aesthetics",
+          width: "1200",
+          height: "1500"
+        }
       },
       clinic: {
         eyebrow: "The clinic",
@@ -1993,12 +2006,30 @@ const DEFAULT_CONTENT = {
         cards: [
           { title: "What the clinic offers", copy: "Facials, chemical peels, skin boosters, mesotherapy, PRP, laser hair removal, vascular laser treatments, electrolysis for hair and blemish removal, lymphatic drainage and Endospheres therapy." },
           { title: "What matters", copy: "Appointments are one-to-one, treatment plans are tailored, and product choices are considered carefully." }
-        ]
+        ],
+        image: {
+          src: "../assets/images/about-lumi-derm-studio.webp",
+          alt: "Lumi Derm Aesthetics treatment studio in London Docklands"
+        }
       },
+      stats: [
+        { num: "10+", label: "Years' experience" },
+        { num: "5.0★", label: "From 47 reviews" },
+        { num: "16", label: "Advanced treatments" },
+        { num: "E14", label: "London Docklands" }
+      ],
       concerns: {
         eyebrow: "How the clinic can help",
         title: "The concerns we can help with",
-        copy: "Most clients come in with something specific they want to improve: hair growth, texture, dullness, redness, thinning hair, puffiness or skin that no longer feels like theirs. These are the concerns treated most often."
+        copy: "Most clients come in with something specific they want to improve: hair growth, texture, dullness, redness, thinning hair, puffiness or skin that no longer feels like theirs. These are the concerns treated most often.",
+        items: [
+          { chip: "Unwanted hair", title: "Endless shaving, waxing & ingrown hairs", copy: "Constant regrowth, irritation and ingrowns are exhausting to manage. Treatments reduce hair long-term — and permanently where suitable.", helpLabel: "How it helps:", help: "Cynosure Elite laser & Apilus electrolysis" },
+          { chip: "Dull & tired skin", title: "Skin that's lost its glow", copy: "Dullness, rough texture and congestion can make skin look tired. We resurface, brighten and rebalance with treatments chosen around your skin tolerance.", helpLabel: "How it helps:", help: "Facials, peels & microneedling" },
+          { chip: "Lines & firmness", title: "Early lines & loss of firmness", copy: "As collagen slows, skin can feel less bouncy and defined. Hydration and bio-remodelling treatments support smoother, fresher-looking skin.", helpLabel: "How it helps:", help: "Profhilo, polynucleotides & skin boosters" },
+          { chip: "Tone & redness", title: "Pigmentation, redness & thread veins", copy: "Uneven tone, sun spots and visible vessels can be distracting. Suitable concerns are targeted carefully, with patch tests and realistic expectations.", helpLabel: "How it helps:", help: "Laser skin rejuvenation & vascular" },
+          { chip: "Hair loss", title: "Thinning hair & shedding", copy: "Noticing more scalp or slower growth? Regenerative treatments can nourish the follicles and support stronger, fuller hair.", helpLabel: "How it helps:", help: "PRP, mesotherapy & polynucleotides" },
+          { chip: "Puffiness & contour", title: "Puffiness & sluggish circulation", copy: "Fluid retention and heaviness can affect how the face and body feel. Drainage-focused treatments support a lighter, smoother appearance.", helpLabel: "How it helps:", help: "Endospheres therapy & body treatments" }
+        ]
       },
       treatments: {
         eyebrow: "What the clinic offers",
@@ -2008,12 +2039,26 @@ const DEFAULT_CONTENT = {
       benefits: {
         eyebrow: "Advice based on your concern",
         title: "We only recommend what is right for you",
-        copy: ""
+        copy: "",
+        items: [
+          { icon: "consultation", title: "Consultation first", copy: "Every plan starts with your suitability, goals and realistic expectations — not a hard sell." },
+          { icon: "shield", title: "Honest advice", copy: "We only recommend what will genuinely help you, and we will always tell you if something is not right." },
+          { icon: "star", title: "Results that look like you", copy: "Natural-looking outcomes that refresh and support your features without making treatment the first thing people notice." },
+          { icon: "safety", title: "Safety first", copy: "To ensure your safety, patch tests are required for certain treatments." },
+          { icon: "plan", title: "Tailored plans & courses", copy: "Personalised treatment plans built around your concerns." },
+          { icon: "studio", title: "Calm, private studio", copy: "Relaxed one-to-one appointments in a modern Docklands studio, close to South Quay and Crossharbour." }
+        ]
       },
       journey: {
         eyebrow: "What to expect",
         title: "Carefully tailored treatments",
-        copy: ""
+        copy: "",
+        steps: [
+          { number: "1", title: "Consultation", copy: "We talk through your skin, goals and suitability — with a patch test if your treatment needs one." },
+          { number: "2", title: "Your plan", copy: "We build a personalised plan with clear expectations and timings." },
+          { number: "3", title: "Treatment", copy: "Carefully tailored treatments using medical-grade, trusted technology." },
+          { number: "4", title: "Aftercare & results", copy: "Clear aftercare to protect your results, with reviews along the way to keep you on track." }
+        ]
       },
       cta: {
         title: "Ready when you are",
@@ -2051,6 +2096,16 @@ const DEFAULT_CONTENT = {
 };
 
 function contentReady() { return state.content && state.content.hero && state.content.contact; }
+function aboutArray(data, key, fallback) {
+  return Array.isArray(data && data.pages && data.pages.about && data.pages.about[key])
+    ? data.pages.about[key]
+    : structuredClone(fallback || []);
+}
+function aboutNestedArray(data, section, key, fallback) {
+  return Array.isArray(data && data.pages && data.pages.about && data.pages.about[section] && data.pages.about[section][key])
+    ? data.pages.about[section][key]
+    : structuredClone(fallback || []);
+}
 function mergeContent(data) {
   return {
     seo: { ...DEFAULT_CONTENT.seo, ...(data && data.seo ? data.seo : {}) },
@@ -2062,12 +2117,34 @@ function mergeContent(data) {
         ...DEFAULT_CONTENT.pages.about,
         ...(data && data.pages && data.pages.about ? data.pages.about : {}),
         hero: { ...DEFAULT_CONTENT.pages.about.hero, ...(data && data.pages && data.pages.about && data.pages.about.hero ? data.pages.about.hero : {}) },
-        bio: { ...DEFAULT_CONTENT.pages.about.bio, ...(data && data.pages && data.pages.about && data.pages.about.bio ? data.pages.about.bio : {}) },
-        clinic: { ...DEFAULT_CONTENT.pages.about.clinic, ...(data && data.pages && data.pages.about && data.pages.about.clinic ? data.pages.about.clinic : {}) },
-        concerns: { ...DEFAULT_CONTENT.pages.about.concerns, ...(data && data.pages && data.pages.about && data.pages.about.concerns ? data.pages.about.concerns : {}) },
+        bio: {
+          ...DEFAULT_CONTENT.pages.about.bio,
+          ...(data && data.pages && data.pages.about && data.pages.about.bio ? data.pages.about.bio : {}),
+          image: { ...DEFAULT_CONTENT.pages.about.bio.image, ...(data && data.pages && data.pages.about && data.pages.about.bio && data.pages.about.bio.image ? data.pages.about.bio.image : {}) }
+        },
+        clinic: {
+          ...DEFAULT_CONTENT.pages.about.clinic,
+          ...(data && data.pages && data.pages.about && data.pages.about.clinic ? data.pages.about.clinic : {}),
+          cards: aboutNestedArray(data, "clinic", "cards", DEFAULT_CONTENT.pages.about.clinic.cards),
+          image: { ...DEFAULT_CONTENT.pages.about.clinic.image, ...(data && data.pages && data.pages.about && data.pages.about.clinic && data.pages.about.clinic.image ? data.pages.about.clinic.image : {}) }
+        },
+        stats: aboutArray(data, "stats", DEFAULT_CONTENT.pages.about.stats),
+        concerns: {
+          ...DEFAULT_CONTENT.pages.about.concerns,
+          ...(data && data.pages && data.pages.about && data.pages.about.concerns ? data.pages.about.concerns : {}),
+          items: aboutNestedArray(data, "concerns", "items", DEFAULT_CONTENT.pages.about.concerns.items)
+        },
         treatments: { ...DEFAULT_CONTENT.pages.about.treatments, ...(data && data.pages && data.pages.about && data.pages.about.treatments ? data.pages.about.treatments : {}) },
-        benefits: { ...DEFAULT_CONTENT.pages.about.benefits, ...(data && data.pages && data.pages.about && data.pages.about.benefits ? data.pages.about.benefits : {}) },
-        journey: { ...DEFAULT_CONTENT.pages.about.journey, ...(data && data.pages && data.pages.about && data.pages.about.journey ? data.pages.about.journey : {}) },
+        benefits: {
+          ...DEFAULT_CONTENT.pages.about.benefits,
+          ...(data && data.pages && data.pages.about && data.pages.about.benefits ? data.pages.about.benefits : {}),
+          items: aboutNestedArray(data, "benefits", "items", DEFAULT_CONTENT.pages.about.benefits.items)
+        },
+        journey: {
+          ...DEFAULT_CONTENT.pages.about.journey,
+          ...(data && data.pages && data.pages.about && data.pages.about.journey ? data.pages.about.journey : {}),
+          steps: aboutNestedArray(data, "journey", "steps", DEFAULT_CONTENT.pages.about.journey.steps)
+        },
         cta: { ...DEFAULT_CONTENT.pages.about.cta, ...(data && data.pages && data.pages.about && data.pages.about.cta ? data.pages.about.cta : {}) }
       },
       services: {
@@ -2124,14 +2201,19 @@ function bindContent() {
     setContentPath(f.dataset.contentList, paragraphList(f.value));
     saveDraft("Page text updated.");
   }));
+  document.querySelectorAll("[data-about-add]").forEach((btn) => btn.addEventListener("click", () => {
+    addAboutItem(btn.dataset.aboutAdd);
+  }));
 }
 
 async function loadContentFromJson(announce, force) {
   try {
-    const r = await fetch(CONTENT_JSON_URL + "?t=" + Date.now(), { cache: "no-store" });
+    // Read the live page text from D1 (what publishes now write to), falling back
+    // to the static content.json file when D1 is empty. Mirrors how prices load.
+    const r = await fetch("/admin/api/content", { cache: "no-store", credentials: "same-origin" });
     if (r.ok) {
       const data = await r.json();
-      const live = mergeContent(data);
+      const live = mergeContent((data && data.content) || DEFAULT_CONTENT);
       if (force || !contentReady()) {
         state.content = structuredClone(live);
         saveDraft(announce ? "Loaded the text currently on the website." : null);
@@ -2142,7 +2224,7 @@ async function loadContentFromJson(announce, force) {
     }
   } catch {
     if (!contentReady()) state.content = mergeContent(DEFAULT_CONTENT);
-    if (announce) toast("Could not read the website's text file.");
+    if (announce) toast("Could not read the website's text.");
   }
   renderContent();
 }
@@ -2165,11 +2247,104 @@ function renderContent() {
     const list = getContentPath(f.dataset.contentList);
     setVal(`[data-content-list="${f.dataset.contentList}"]`, (Array.isArray(list) ? list : []).map(decodeHtml).join("\n\n"));
   });
+  renderAboutDynamicEditors();
   renderFaq();
 }
 
 function setContentStatus(message) {
   const el = document.querySelector("[data-content-status]"); if (el) el.textContent = message;
+}
+
+function aboutList(kind) {
+  state.content = mergeContent(state.content || {});
+  const about = state.content.pages.about;
+  if (kind === "stats") return about.stats;
+  if (kind === "concerns") return about.concerns.items;
+  if (kind === "benefits") return about.benefits.items;
+  if (kind === "journey") return about.journey.steps;
+  return [];
+}
+
+function createAboutItem(kind) {
+  if (kind === "stats") return { num: "New", label: "Stat label" };
+  if (kind === "concerns") return { chip: "Concern", title: "New concern", copy: "Describe the concern.", helpLabel: "How it helps:", help: "Relevant treatments" };
+  if (kind === "benefits") return { icon: "star", title: "New benefit", copy: "Describe the client benefit." };
+  if (kind === "journey") return { number: "", title: "New step", copy: "Describe this step." };
+  return {};
+}
+
+function aboutFields(kind) {
+  if (kind === "stats") return [["num", "Number"], ["label", "Label"]];
+  if (kind === "concerns") return [["chip", "Chip"], ["title", "Title"], ["copy", "Copy", "textarea"], ["helpLabel", "Help label"], ["help", "Treatment/help text"]];
+  if (kind === "benefits") return [["icon", "Icon"], ["title", "Title"], ["copy", "Copy", "textarea"]];
+  if (kind === "journey") return [["number", "Number"], ["title", "Title"], ["copy", "Copy", "textarea"]];
+  return [];
+}
+
+function renderAboutDynamicEditors() {
+  ["stats", "concerns", "benefits", "journey"].forEach((kind) => {
+    const box = document.querySelector(`[data-about-list="${kind}"]`);
+    if (!box) return;
+    const list = aboutList(kind);
+    if (!list.length) {
+      box.innerHTML = '<p class="admin-help">No items yet.</p>';
+      return;
+    }
+    box.innerHTML = list.map((item, index) => {
+      const fields = aboutFields(kind).map(([key, label, type]) => {
+        const value = escapeAttr(decodeHtml(item[key] || ""));
+        if (type === "textarea") {
+          return `<label>${label}<textarea rows="3" data-about-field="${kind}:${index}:${key}">${escapeHtml(decodeHtml(item[key] || ""))}</textarea></label>`;
+        }
+        return `<label>${label}<input type="text" value="${value}" data-about-field="${kind}:${index}:${key}"></label>`;
+      }).join("");
+      return `
+        <article class="content-repeat-item">
+          <div class="content-repeat-item-head">
+            <strong>${escapeHtml((item.title || item.label || item.num || "Item").toString())}</strong>
+            <div class="price-inline-actions">
+              <button class="tiny-button" type="button" data-about-action="up" data-about-kind="${kind}" data-about-index="${index}" ${index === 0 ? "disabled" : ""}>Move up</button>
+              <button class="tiny-button" type="button" data-about-action="down" data-about-kind="${kind}" data-about-index="${index}" ${index >= list.length - 1 ? "disabled" : ""}>Move down</button>
+              <button class="tiny-button danger" type="button" data-about-action="delete" data-about-kind="${kind}" data-about-index="${index}">Delete</button>
+            </div>
+          </div>
+          <div class="content-repeat-fields">${fields}</div>
+        </article>`;
+    }).join("");
+    box.querySelectorAll("[data-about-field]").forEach((field) => field.addEventListener("change", () => {
+      const [fieldKind, rawIndex, key] = field.dataset.aboutField.split(":");
+      const row = aboutList(fieldKind)[Number(rawIndex)];
+      if (!row) return;
+      row[key] = escapeHtml(field.value.trim());
+      saveDraft("About page item updated.");
+      renderAboutDynamicEditors();
+    }));
+    box.querySelectorAll("[data-about-action]").forEach((btn) => btn.addEventListener("click", async () => {
+      const kind = btn.dataset.aboutKind;
+      const index = Number(btn.dataset.aboutIndex);
+      const list = aboutList(kind);
+      if (!list[index]) return;
+      if (btn.dataset.aboutAction === "delete") {
+        const ok = await ldConfirm({ title: "Delete this About item?", body: "This removes it from the About page draft. It will not affect the live site until you publish.", confirmLabel: "Delete", danger: true });
+        if (!ok) return;
+        list.splice(index, 1);
+      } else {
+        const dir = btn.dataset.aboutAction === "up" ? -1 : 1;
+        const to = index + dir;
+        if (to < 0 || to >= list.length) return;
+        [list[index], list[to]] = [list[to], list[index]];
+      }
+      saveDraft("About page item updated.");
+      renderAboutDynamicEditors();
+    }));
+  });
+}
+
+function addAboutItem(kind) {
+  const list = aboutList(kind);
+  list.push(createAboutItem(kind));
+  saveDraft("About page item added.");
+  renderAboutDynamicEditors();
 }
 
 /* ---------------- FAQ (homepage) ---------------- */
@@ -2797,12 +2972,18 @@ const CONTENT_REPO_PATH = "lumi-derm-website/assets/data/content.json";  // hero
 const HERO_MARKERS = /(<!-- HERO:START[\s\S]*?-->)[\s\S]*?(<!-- HERO:END -->)/; // homepage hero block
 const SEO_MARKERS = /(<!-- SEO:START[\s\S]*?-->)[\s\S]*?(<!-- SEO:END -->)/;    // homepage <head> title + meta description
 const ABOUT_HERO_MARKERS = /(<!-- ABOUT_HERO:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_HERO:END -->)/;
+const ABOUT_STATS_MARKERS = /(<!-- ABOUT_STATS:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_STATS:END -->)/;
+const ABOUT_BIO_IMAGE_MARKERS = /(<!-- ABOUT_BIO_IMAGE:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_BIO_IMAGE:END -->)/;
 const ABOUT_BIO_MARKERS = /(<!-- ABOUT_BIO:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_BIO:END -->)/;
 const ABOUT_CLINIC_MARKERS = /(<!-- ABOUT_CLINIC:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_CLINIC:END -->)/;
+const ABOUT_CLINIC_IMAGE_MARKERS = /(<!-- ABOUT_CLINIC_IMAGE:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_CLINIC_IMAGE:END -->)/;
 const ABOUT_CONCERNS_MARKERS = /(<!-- ABOUT_CONCERNS:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_CONCERNS:END -->)/;
+const ABOUT_CONCERN_CARDS_MARKERS = /(<!-- ABOUT_CONCERN_CARDS:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_CONCERN_CARDS:END -->)/;
 const ABOUT_TREATMENTS_MARKERS = /(<!-- ABOUT_TREATMENTS:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_TREATMENTS:END -->)/;
 const ABOUT_BENEFITS_MARKERS = /(<!-- ABOUT_BENEFITS:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_BENEFITS:END -->)/;
+const ABOUT_BENEFIT_CARDS_MARKERS = /(<!-- ABOUT_BENEFIT_CARDS:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_BENEFIT_CARDS:END -->)/;
 const ABOUT_JOURNEY_MARKERS = /(<!-- ABOUT_JOURNEY:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_JOURNEY:END -->)/;
+const ABOUT_JOURNEY_STEPS_MARKERS = /(<!-- ABOUT_JOURNEY_STEPS:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_JOURNEY_STEPS:END -->)/;
 const ABOUT_CTA_MARKERS = /(<!-- ABOUT_CTA:START[\s\S]*?-->)[\s\S]*?(<!-- ABOUT_CTA:END -->)/;
 const SERVICES_HERO_MARKERS = /(<!-- SERVICES_HERO:START[\s\S]*?-->)[\s\S]*?(<!-- SERVICES_HERO:END -->)/;
 const BOOKING_HERO_MARKERS = /(<!-- BOOKING_HERO:START[\s\S]*?-->)[\s\S]*?(<!-- BOOKING_HERO:END -->)/;
@@ -3246,95 +3427,204 @@ function resetContentBaseline(content) {
   renderContent(); // re-populates page-text + FAQ fields from the clean baseline
 }
 
-async function publishContent() {
+/* ---------- Publish page text: one button per section ----------
+   Each section (SEO, homepage hero, contact, About, treatments intro, booking
+   intro) publishes on its own. We always start from the LIVE content.json, swap
+   in just this section's edits, rewrite only that section's page region(s), and
+   commit once — so publishing one section never disturbs another section's
+   unpublished edits. Contact details still fan out across every page. */
+const HOME_REPO_PATH = "lumi-derm-website/index.html";
+const ABOUT_REPO_PATH = "lumi-derm-website/pages/about.html";
+const BOOKING_REPO_PATH = "lumi-derm-website/pages/booking.html";
+
+const CONTENT_SECTIONS = {
+  seo: {
+    label: "SEO",
+    pick: (c) => (c && c.seo) || {},
+    apply: (dst, src) => { dst.seo = structuredClone((src && src.seo) || {}); },
+    build: async (files, merged) => {
+      if (typeof window.renderSeo !== "function") return;
+      const before = await ghReadRepoFile(HOME_REPO_PATH);
+      if (!SEO_MARKERS.test(before)) return;
+      const out = before.replace(SEO_MARKERS, "$1\n    " + window.renderSeo(merged.seo || {}) + "\n    $2");
+      if (out !== before) files.push({ path: HOME_REPO_PATH, content: out });
+    }
+  },
+  hero: {
+    label: "Homepage hero",
+    pick: (c) => (c && c.hero) || {},
+    apply: (dst, src) => { dst.hero = structuredClone((src && src.hero) || {}); },
+    build: async (files, merged) => {
+      const before = await ghReadRepoFile(HOME_REPO_PATH);
+      if (!HERO_MARKERS.test(before)) return;
+      const out = before.replace(HERO_MARKERS, "$1\n              " + window.renderHero(merged.hero || {}) + "\n              $2");
+      if (out !== before) files.push({ path: HOME_REPO_PATH, content: out });
+    }
+  },
+  contact: {
+    label: "Contact details",
+    pick: (c) => (c && c.contact) || {},
+    apply: (dst, src) => { dst.contact = structuredClone((src && src.contact) || {}); },
+    build: async (files, merged, oldContent) => {
+      const ops = contactOps(oldContent.contact || {}, merged.contact || {});
+      if (!ops.length) return;
+      for (const repoPath of SITE_PAGE_PATHS) {
+        const before = await ghReadRepoFile(repoPath);
+        const out = applyOps(before, ops);
+        if (out !== before) files.push({ path: repoPath, content: out });
+      }
+    }
+  },
+  about: {
+    label: "About page",
+    pick: (c) => (c && c.pages && c.pages.about) || {},
+    apply: (dst, src) => { dst.pages = dst.pages || {}; dst.pages.about = structuredClone((src && src.pages && src.pages.about) || {}); },
+    build: async (files, merged) => {
+      const about = (merged.pages && merged.pages.about) || {};
+      const before = await ghReadRepoFile(ABOUT_REPO_PATH);
+      let out = before;
+      [
+        [ABOUT_HERO_MARKERS, () => window.renderSimpleHero(about.hero)],
+        [ABOUT_STATS_MARKERS, () => window.renderAboutStats(about.stats)],
+        [ABOUT_BIO_IMAGE_MARKERS, () => window.renderAboutImage(about.bio && about.bio.image)],
+        [ABOUT_BIO_MARKERS, () => window.renderAboutBio(about.bio)],
+        [ABOUT_CLINIC_MARKERS, () => window.renderAboutClinic(about.clinic)],
+        [ABOUT_CLINIC_IMAGE_MARKERS, () => window.renderAboutImage(about.clinic && about.clinic.image)],
+        [ABOUT_CONCERNS_MARKERS, () => window.renderSectionHeader(about.concerns)],
+        [ABOUT_CONCERN_CARDS_MARKERS, () => window.renderAboutConcernCards(about.concerns)],
+        [ABOUT_TREATMENTS_MARKERS, () => window.renderSectionHeader(about.treatments)],
+        [ABOUT_BENEFITS_MARKERS, () => window.renderSectionHeader(about.benefits)],
+        [ABOUT_BENEFIT_CARDS_MARKERS, () => window.renderAboutBenefitCards(about.benefits)],
+        [ABOUT_JOURNEY_MARKERS, () => window.renderSectionHeader(about.journey)],
+        [ABOUT_JOURNEY_STEPS_MARKERS, () => window.renderAboutJourneySteps(about.journey)],
+        [ABOUT_CTA_MARKERS, () => window.renderAboutCta(about.cta)]
+      ].forEach(([markers, render]) => { if (markers.test(out)) out = out.replace(markers, "$1\n            " + render() + "\n            $2"); });
+      if (out !== before) files.push({ path: ABOUT_REPO_PATH, content: out });
+    }
+  },
+  services: {
+    label: "Treatments intro",
+    pick: (c) => (c && c.pages && c.pages.services) || {},
+    apply: (dst, src) => { dst.pages = dst.pages || {}; dst.pages.services = structuredClone((src && src.pages && src.pages.services) || {}); },
+    build: async (files, merged) => {
+      const before = await ghReadRepoFile(SERVICES_REPO_PATH);
+      if (!SERVICES_HERO_MARKERS.test(before)) return;
+      const hero = (merged.pages && merged.pages.services && merged.pages.services.hero) || {};
+      const out = before.replace(SERVICES_HERO_MARKERS, "$1\n            " + window.renderSimpleHero({ ...hero, leadClass: "treatment-intro" }) + "\n            $2");
+      if (out !== before) files.push({ path: SERVICES_REPO_PATH, content: out });
+    }
+  },
+  booking: {
+    label: "Booking intro",
+    pick: (c) => (c && c.pages && c.pages.booking) || {},
+    apply: (dst, src) => { dst.pages = dst.pages || {}; dst.pages.booking = structuredClone((src && src.pages && src.pages.booking) || {}); },
+    build: async (files, merged) => {
+      const b = (merged.pages && merged.pages.booking) || {};
+      const before = await ghReadRepoFile(BOOKING_REPO_PATH);
+      let out = before;
+      [
+        [BOOKING_HERO_MARKERS, () => window.renderBookingHero(b.hero)],
+        [BOOKING_PICKER_MARKERS, () => window.renderBookingPicker(b.picker)],
+        [BOOKING_WIDGET_MARKERS, () => window.renderBookingWidget(b.widget)],
+        [BOOKING_SUPPORT_MARKERS, () => window.renderBookingSupport(b.support)]
+      ].forEach(([markers, render]) => { if (markers.test(out)) out = out.replace(markers, "$1\n            " + render() + "\n            $2"); });
+      if (out !== before) files.push({ path: BOOKING_REPO_PATH, content: out });
+    }
+  }
+};
+
+function setSectionStatus(sectionId, message) {
+  const el = document.querySelector('[data-section-status="' + sectionId + '"]');
+  if (el) el.textContent = message || "";
+}
+
+// Which regions each About publish stores in D1 (must mirror the Worker's
+// PAGE_REGIONS.about). Regions whose markers aren't present are simply skipped.
+const ABOUT_REGIONS = [
+  "ABOUT_HERO", "ABOUT_STATS", "ABOUT_BIO_IMAGE", "ABOUT_BIO",
+  "ABOUT_CLINIC", "ABOUT_CLINIC_IMAGE", "ABOUT_CONCERNS", "ABOUT_CONCERN_CARDS",
+  "ABOUT_TREATMENTS", "ABOUT_BENEFITS", "ABOUT_BENEFIT_CARDS",
+  "ABOUT_JOURNEY", "ABOUT_JOURNEY_STEPS", "ABOUT_CTA",
+];
+
+// Transport per Pages section. "d1" = instant edge-render (fragments + content
+// saved to D1, injected live by the Worker). "github" = contact details, which
+// fan out across every page's footer (not a marker region) and need a commit.
+const SECTION_TRANSPORT = {
+  seo: { transport: "d1", regions: ["SEO"] },
+  hero: { transport: "d1", regions: ["HERO"] },
+  about: { transport: "d1", regions: ABOUT_REGIONS },
+  services: { transport: "d1", regions: ["SERVICES_HERO"] },
+  booking: { transport: "d1", regions: ["BOOKING_HERO", "BOOKING_PICKER", "BOOKING_WIDGET", "BOOKING_SUPPORT"] },
+  contact: { transport: "github" },
+};
+
+async function publishContentSection(sectionId) {
+  const cfg = CONTENT_SECTIONS[sectionId];
+  if (!cfg) return false;
   if (!ghReady) { toast("Publishing isn't set up on the server yet — ask Dima."); return false; }
   if (typeof window.renderHero !== "function") { toast("Page template didn’t load — hard-refresh the admin and try again."); return false; }
   if (!contentReady()) { toast("No page text loaded yet — click “Reload from website” first."); return false; }
 
-  const button = document.querySelector("[data-publish-content]");
+  const button = document.querySelector('[data-publish-section="' + sectionId + '"]');
+  const idleLabel = button ? button.textContent : "Publish";
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
-  setContentStatus("Publishing page text…");
-  recordDraftVersion("content", "Before publishing page text", state.content);
+  setSectionStatus(sectionId, "Publishing…");
+  recordDraftVersion("content", "Before publishing " + cfg.label, state.content);
   try {
-    const branch = "main";
-
-    // 1) authoritative "old" values from the live content.json (for change diff)
+    const t = SECTION_TRANSPORT[sectionId] || { transport: "github" };
+    // 1) authoritative CURRENT content = D1 (what the editor reloads from), file
+    //    fallback. Merging onto this preserves other sections' published edits.
     let oldContent = structuredClone(DEFAULT_CONTENT);
-    const cur = await ghRequest(CONTENT_REPO_PATH + "?ref=" + encodeURIComponent(branch) + "&_=" + Date.now(), { method: "GET" });
-    if (cur.ok) {
-      const m = await cur.json();
-      try { oldContent = mergeContent(JSON.parse(decodeB64(m.content))); } catch { /* keep default */ }
-    } else if (cur.status !== 404) { const e = await cur.json().catch(() => ({})); throw new Error(ghError(cur.status, e.message)); }
+    try {
+      const r = await fetch("/admin/api/content", { cache: "no-store", credentials: "same-origin" });
+      if (r.ok) { const d = await r.json(); if (d && d.content) oldContent = mergeContent(d.content); }
+    } catch { /* keep default */ }
     state.content = mergeContent(state.content);
 
-    const heroChanged = JSON.stringify(oldContent.hero || {}) !== JSON.stringify(state.content.hero || {});
-    const seoChanged = JSON.stringify(oldContent.seo || {}) !== JSON.stringify(state.content.seo || {});
-    const pagesChanged = JSON.stringify(oldContent.pages || {}) !== JSON.stringify(state.content.pages || {});
-    const ops = contactOps(oldContent.contact || {}, state.content.contact || {});
-    if (!heroChanged && !seoChanged && !pagesChanged && !ops.length) {
-      setContentStatus("Nothing to publish — no changes since last time.");
-      toast("No page-text changes to publish.");
+    // 2) nothing changed in this section?
+    if (JSON.stringify(cfg.pick(oldContent)) === JSON.stringify(cfg.pick(state.content))) {
+      setSectionStatus(sectionId, "Nothing to publish — no changes in this section.");
+      toast("No changes to publish in " + cfg.label + ".");
       return true;
     }
 
-    // 2) the data file (source of truth the admin reloads from) always goes first
-    const files = [{ path: CONTENT_REPO_PATH, content: JSON.stringify(state.content, null, 2) + "\n" }];
+    // 3) merged = current content with ONLY this section swapped in
+    const merged = structuredClone(oldContent);
+    cfg.apply(merged, state.content);
 
-    // 3) rewrite each page: index.html gets SEO (head) + hero + contact; the rest get contact only
-    const heroHtml = window.renderHero(state.content.hero || {});
-    const seoHtml = typeof window.renderSeo === "function" ? window.renderSeo(state.content.seo || {}) : null;
-    const pages = state.content.pages || {};
-    const pageRenderers = {
-      "lumi-derm-website/pages/about.html": [
-        [ABOUT_HERO_MARKERS, () => window.renderSimpleHero(pages.about && pages.about.hero)],
-        [ABOUT_BIO_MARKERS, () => window.renderAboutBio(pages.about && pages.about.bio)],
-        [ABOUT_CLINIC_MARKERS, () => window.renderAboutClinic(pages.about && pages.about.clinic)],
-        [ABOUT_CONCERNS_MARKERS, () => window.renderSectionHeader(pages.about && pages.about.concerns)],
-        [ABOUT_TREATMENTS_MARKERS, () => window.renderSectionHeader(pages.about && pages.about.treatments)],
-        [ABOUT_BENEFITS_MARKERS, () => window.renderSectionHeader(pages.about && pages.about.benefits)],
-        [ABOUT_JOURNEY_MARKERS, () => window.renderSectionHeader(pages.about && pages.about.journey)],
-        [ABOUT_CTA_MARKERS, () => window.renderAboutCta(pages.about && pages.about.cta)]
-      ],
-      "lumi-derm-website/pages/services.html": [
-        [SERVICES_HERO_MARKERS, () => window.renderSimpleHero({ ...(pages.services && pages.services.hero), leadClass: "treatment-intro" })]
-      ],
-      "lumi-derm-website/pages/booking.html": [
-        [BOOKING_HERO_MARKERS, () => window.renderBookingHero(pages.booking && pages.booking.hero)],
-        [BOOKING_PICKER_MARKERS, () => window.renderBookingPicker(pages.booking && pages.booking.picker)],
-        [BOOKING_WIDGET_MARKERS, () => window.renderBookingWidget(pages.booking && pages.booking.widget)],
-        [BOOKING_SUPPORT_MARKERS, () => window.renderBookingSupport(pages.booking && pages.booking.support)]
-      ]
-    };
-    for (const repoPath of SITE_PAGE_PATHS) {
-      const isHome = repoPath.endsWith("/index.html");
-      const before = await ghReadRepoFile(repoPath);
-      let out = before;
-      if (isHome && seoChanged && seoHtml && SEO_MARKERS.test(out)) out = out.replace(SEO_MARKERS, "$1\n    " + seoHtml + "\n    $2");
-      if (isHome && heroChanged && HERO_MARKERS.test(out)) out = out.replace(HERO_MARKERS, "$1\n              " + heroHtml + "\n              $2");
-      if (pagesChanged && pageRenderers[repoPath]) {
-        pageRenderers[repoPath].forEach(([markers, render]) => {
-          if (markers.test(out)) out = out.replace(markers, "$1\n            " + render() + "\n            $2");
-        });
-      }
-      if (ops.length) out = applyOps(out, ops);
-      if (out !== before) files.push({ path: repoPath, content: out });
+    if (t.transport === "d1") {
+      // Instant: store the rendered region fragments + the full content in D1;
+      // the Worker edge-renders them into the live page straight away.
+      const pageFiles = [];
+      await cfg.build(pageFiles, merged, oldContent);
+      const pages = {};
+      pageFiles.forEach((f) => { pages[f.path] = f.content; });
+      await ghPublishContent({ content: merged, regions: t.regions, pages });
+      setSectionStatus(sectionId, "Published — live now. Refresh the page to see it.");
+      setContentStatus("Last published: " + cfg.label + " (live now).");
+      toast(cfg.label + " published — live now.");
+    } else {
+      // Contact details fan out across every page's footer (not a marker region),
+      // so they go through a GitHub commit. We also mirror the content into D1 so
+      // the editor keeps reloading a consistent picture.
+      const files = [{ path: CONTENT_REPO_PATH, content: JSON.stringify(merged, null, 2) + "\n" }];
+      await cfg.build(files, merged, oldContent);
+      await ghPublishFiles(files, "Update " + cfg.label + " (via admin)");
+      try { await ghPublishContent({ content: merged }); } catch { /* editor mirror is best-effort */ }
+      const changed = files.length - 1;
+      setSectionStatus(sectionId, "Published — deploying now (~1 min). You'll get a note when it's live.");
+      setContentStatus("Last published: " + cfg.label + " (" + changed + " page" + (changed === 1 ? "" : "s") + ").");
+      startDeployWatch();
+      toast(cfg.label + " published — deploying now.");
     }
-
-    // 4) one atomic commit (Worker keeps the CSP hash in sync automatically)
-    await ghPublishFiles(files, "Update page text (via admin)");
-    const changed = files.length - 1;
-
-    resetContentBaseline(state.content);
-    setContentStatus("Published " + changed + " page" + (changed === 1 ? "" : "s") + ". The editor is back in sync — tracking the deploy in Settings → Latest publish & deploy.");
-    startDeployWatch();
-    toast("Published in one commit — deploying now. You'll get a note when it's live.");
     return true;
   } catch (err) {
-    setContentStatus("Publish failed: " + ldFriendlyError(err));
+    setSectionStatus(sectionId, "Publish failed: " + ldFriendlyError(err));
     toast("Publish failed: " + ldFriendlyError(err));
     return false;
   } finally {
-    if (button) { button.disabled = false; button.textContent = "Publish page text"; }
+    if (button) { button.disabled = false; button.textContent = idleLabel; }
   }
 }
 
@@ -3378,7 +3668,7 @@ function bindPublishing() {
   document.querySelector("[data-publish-reviews]")?.addEventListener("click", publishReviews);
   document.querySelector("[data-publish-prices]")?.addEventListener("click", publishPrices);
   document.querySelector("[data-publish-treatments]")?.addEventListener("click", publishTreatmentCards);
-  document.querySelector("[data-publish-content]")?.addEventListener("click", publishContent);
+  document.querySelectorAll("[data-publish-section]").forEach((b) => b.addEventListener("click", () => publishContentSection(b.dataset.publishSection)));
   document.querySelector("[data-reload-offers]")?.addEventListener("click", async () => {
     const ok = await ldConfirm({
       title: "Reload live offers?",
@@ -3600,7 +3890,7 @@ function renderOnboardingChecklist(d) {
 
 function applyRoleControls() {
   const restricted = [
-    "[data-publish-offers]", "[data-publish-reviews]", "[data-publish-prices]", "[data-publish-treatments]", "[data-publish-content]",
+    "[data-publish-offers]", "[data-publish-reviews]", "[data-publish-prices]", "[data-publish-treatments]", "[data-publish-section]",
     "[data-send-campaign]", "[data-send-test]", "[data-schedule-toggle]", "[data-bday-save]", "[data-bday-test]",
     "[data-media-upload-btn]", "[data-offer-image-upload]", "[data-mail-banner-upload]",
     "[data-subs-export]", "[data-subs-import]", "[data-export-admin]", "[data-import-admin]",

@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260817-treatments1">
+    <link rel="stylesheet" href="admin.css?v=20260817-about-dynamic1">
   </head>
   <body>
     <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
@@ -157,7 +157,15 @@
                 </div>
                 <div class="guide-analysis-item">
                   <strong>Prices</strong>
-                  <p>Update treatment prices and price notes for the treatments page, then publish the price changes when they are ready.</p>
+                  <p>Update treatment prices and price notes. Each treatment now has its own <em>Save &amp; publish prices</em> button right in the editor, so you can change one price and publish it on the spot.</p>
+                </div>
+                <div class="guide-analysis-item">
+                  <strong>Treatment cards</strong>
+                  <p>Add a brand-new treatment card (or a new treatment group) to the Treatments &amp; prices page and publish just that card. Editing existing cards lives under &ldquo;Edit existing cards (advanced)&rdquo;.</p>
+                </div>
+                <div class="guide-analysis-item">
+                  <strong>FAQ</strong>
+                  <p>Add, edit, reorder or delete the questions on your homepage. One publish updates the homepage and your Google listing together.</p>
                 </div>
                 <div class="guide-analysis-item">
                   <strong>Send email</strong>
@@ -256,16 +264,41 @@
 
             <section class="admin-card guide-card">
               <div class="guide-card-head"><h3>Pages &mdash; website words you can change</h3><button class="guide-jump" type="button" data-go="content">Open Pages &rarr;</button></div>
-              <p>The <strong>Pages</strong> tab controls the safer text areas that change from time to time. These edits save in this browser first, then go live when you click <strong>Publish page text</strong>.</p>
+              <p>The <strong>Pages</strong> tab controls the safer text areas that change from time to time. <strong>Each section now has its own Publish button</strong> &mdash; change one part and publish just that part, without touching the others.</p>
               <ul class="guide-list">
-                <li><strong>Homepage hero</strong> &mdash; the main headline and supporting line on the homepage.</li>
-                <li><strong>Contact details</strong> &mdash; phone, email, address and social links. These update everywhere they appear on the website.</li>
-                <li><strong>About page</strong> &mdash; hero text, About me paragraphs, clinic intro/cards, section headings and the final call-to-action.</li>
-                <li><strong>Treatments page intro</strong> &mdash; the top text above the treatment menu. Prices themselves stay in the <strong>Prices</strong> tab.</li>
+                <li><strong>SEO</strong> &mdash; the Google title and description for the homepage. Its own <em>Publish SEO</em> button.</li>
+                <li><strong>Homepage hero</strong> &mdash; the main headline and supporting line. Its own <em>Publish homepage hero</em> button.</li>
+                <li><strong>Contact details</strong> &mdash; phone, email, address and social links. <em>Publish contact details</em> updates them everywhere they appear on the website.</li>
+                <li><strong>About page</strong> &mdash; hero text, About paragraphs, clinic intro/cards, section headings and the final call-to-action. Its own <em>Publish About page</em> button.</li>
+                <li><strong>Treatments page intro</strong> &mdash; the top text above the treatment menu. Prices stay in the <strong>Prices</strong> tab.</li>
                 <li><strong>Booking page intro</strong> &mdash; the top booking text, treatment chooser copy, calendar intro and help strip.</li>
               </ul>
               <p class="guide-tip"><strong>About paragraphs:</strong> put a blank line between paragraphs in the About box. The website will turn each one into a separate paragraph.</p>
+              <p class="guide-tip"><strong>One section at a time:</strong> you only need to click the Publish button for the section you changed. Most page-text sections (SEO, homepage hero, About, Treatments intro, Booking intro) now go live <strong>instantly</strong>. <strong>Contact details</strong> are the exception &mdash; they update every page&rsquo;s footer, so they take about a minute. Prices, offers, treatment cards and reviews are instant too.</p>
               <p class="guide-warn"><strong>Still managed by Dima:</strong> legal pages, privacy/cookie/terms wording and detailed clinical treatment descriptions. Those can create compliance or safety issues if changed casually.</p>
+            </section>
+
+            <section class="admin-card guide-card">
+              <div class="guide-card-head"><h3>Treatment cards &mdash; add a new treatment</h3><button class="guide-jump" type="button" data-go="treatments">Open Treatment cards &rarr;</button></div>
+              <p>The <strong>Treatment cards</strong> tab is for <strong>adding a brand-new treatment</strong> to the Treatments &amp; prices page. You don&rsquo;t scroll through everything that&rsquo;s already there &mdash; you just build the new card.</p>
+              <ul class="guide-list">
+                <li><strong>Group:</strong> pick an existing group (e.g. &ldquo;Facials&rdquo;) or choose <em>New group&hellip;</em> and type a new group title.</li>
+                <li><strong>Fill the card:</strong> title, subtitle, the &ldquo;from &pound;&hellip;&rdquo; price shown on the card, a description (leave a blank line between paragraphs), price rows (name / cost / small note), an optional highlight badge and note, and the button label.</li>
+                <li><strong>Live preview</strong> on the right shows exactly how the card will look.</li>
+                <li><strong>Add &amp; publish this card</strong> puts just that new card live straight away &mdash; nothing else on the page changes.</li>
+                <li><strong>Editing or removing existing cards</strong> lives under <em>Edit existing cards (advanced)</em> at the bottom, and quick price changes stay in the <strong>Prices</strong> tab.</li>
+              </ul>
+            </section>
+
+            <section class="admin-card guide-card">
+              <div class="guide-card-head"><h3>FAQ &mdash; the questions on your homepage</h3><button class="guide-jump" type="button" data-go="faq">Open FAQ &rarr;</button></div>
+              <p>The <strong>FAQ</strong> tab is your full question list. You can manage every Q&amp;A yourself.</p>
+              <ul class="guide-list">
+                <li><strong>Add a question:</strong> click <em>+ Add question</em>, type the question and answer (answers can include links), then <em>Publish FAQ</em>.</li>
+                <li><strong>Edit or delete:</strong> change any answer in place, or click <em>Delete</em> to remove a question you no longer need.</li>
+                <li><strong>Reorder:</strong> drag a card by its handle, or use the up/down arrows.</li>
+                <li><strong>One publish does both:</strong> <em>Publish FAQ</em> updates the homepage accordion <em>and</em> your Google listing together, so they always match.</li>
+              </ul>
             </section>
 
             <section class="admin-card guide-card">
@@ -297,7 +330,9 @@
               <h3>The other tabs <span class="guide-hint">(click a name to open it)</span></h3>
               <ul class="guide-list">
 	                <li><button class="guide-link" type="button" data-go="reviews">Reviews</button> &mdash; choose which client reviews show on the homepage, then <strong>Publish reviews</strong>. Goes live like offers.</li>
-	                <li><button class="guide-link" type="button" data-go="prices">Prices</button> &mdash; update treatment prices and publish them to the treatments page.</li>
+	                <li><button class="guide-link" type="button" data-go="prices">Prices</button> &mdash; update treatment prices; each treatment has its own <em>Save &amp; publish prices</em> button.</li>
+	                <li><button class="guide-link" type="button" data-go="treatments">Treatment cards</button> &mdash; add a new treatment card or group, with its own publish button.</li>
+	                <li><button class="guide-link" type="button" data-go="faq">FAQ</button> &mdash; add, edit, reorder or delete homepage questions, then publish.</li>
 	                <li><button class="guide-link" type="button" data-go="media">Media</button> &mdash; the photos available to use in offers.</li>
 	                <li><button class="guide-link" type="button" data-go="content">Pages</button> &mdash; edit homepage, About, Treatments intro, Booking intro and contact details, then publish. Contact changes update everywhere on the site.</li>
 	                <li><button class="guide-link" type="button" data-go="clients">Treatwell</button> &mdash; your booking system stays the home for bookings, payments and client records.</li>
@@ -322,6 +357,7 @@
               <ul class="guide-list">
                 <li><strong>Change didn&rsquo;t appear?</strong> Did you click <em>Publish</em>? Then wait a minute and refresh the website page (hold Shift and click reload).</li>
                 <li><strong>&ldquo;Publishing failed&rdquo;?</strong> Try Publish again &mdash; it usually works on the second try. If it keeps failing, tell Dima.</li>
+                <li><strong>Admin shows something old that you already removed from the website?</strong> That&rsquo;s a saved draft in <em>this browser</em>, not the live site. Click <em>Reload from website</em> (in Prices or Treatment cards) to pull the current live version and clear the old draft.</li>
                 <li><strong>Email won&rsquo;t send?</strong> Check the <em>Send email</em> tab has a green &ldquo;Ready&rdquo; and that you ticked the confirmation box.</li>
                 <li><strong>Still stuck?</strong> Nothing you did is broken &mdash; just message Dima and describe what you clicked.</li>
               </ul>
@@ -831,24 +867,21 @@
               <div>
                 <p class="admin-eyebrow">Pages</p>
                 <h2>Website page text</h2>
-                <p>Edit homepage, About, Treatments intro, Booking intro and contact details, then <strong>Publish page text</strong>. Contact changes update everywhere they appear across the site.</p>
+                <p>Edit homepage, About, Treatments intro, Booking intro, contact details and SEO. Each section has its <strong>own publish button</strong> so you can update just one part at a time. Contact changes update everywhere they appear across the site.</p>
               </div>
               <button class="admin-button admin-button-secondary" type="button" data-reload-content>Reload from website</button>
             </div>
-            <div class="admin-publish-bar">
-              <div>
-                <strong>Publish to the website</strong>
-                <p data-content-status>Your changes are saved in this browser only. Click publish to put them live.</p>
-              </div>
-              <div class="admin-publish-actions">
-                <a class="admin-button admin-button-secondary" href="../index.html" target="_blank" rel="noopener" data-preview-content>Preview live page</a>
-                <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-content>Publish page text</button>
-              </div>
-            </div>
+            <p class="admin-status" data-content-status></p>
+            <p class="admin-hint">Each section below has its own <strong>Publish</strong> button &mdash; change one part and publish just that part. Most sections go live <strong>instantly</strong>; contact details take about a minute. Your edits are saved in this browser until you publish.</p>
             <section class="admin-card admin-editor">
               <p class="admin-eyebrow">Search engines (SEO) <small>how the homepage appears in Google and when shared</small></p>
               <label>Page title <small>shown as the blue link in Google &mdash; aim for ~55&ndash;60 characters</small><input type="text" data-content-seo="title" maxlength="70"></label>
               <label>Meta description <small>the grey summary under the title &mdash; aim for ~150&ndash;160 characters</small><textarea rows="3" data-content-seo="description" maxlength="180"></textarea></label>
+              <div class="section-publish">
+                <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-section="seo">Publish SEO</button>
+                <a class="admin-button admin-button-secondary" href="../index.html" target="_blank" rel="noopener">Preview</a>
+                <p class="admin-status" data-section-status="seo"></p>
+              </div>
             </section>
             <div class="admin-grid admin-grid-2">
               <section class="admin-card admin-editor">
@@ -856,6 +889,11 @@
                 <label>Eyebrow <small>small line above the headline</small><input type="text" data-content-hero="eyebrow"></label>
                 <label>Headline <small>use a new line for the line break</small><textarea rows="2" data-content-hero="title"></textarea></label>
                 <label>Supporting line<textarea rows="3" data-content-hero="lead"></textarea></label>
+                <div class="section-publish">
+                  <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-section="hero">Publish homepage hero</button>
+                  <a class="admin-button admin-button-secondary" href="../index.html" target="_blank" rel="noopener">Preview</a>
+                  <p class="admin-status" data-section-status="hero"></p>
+                </div>
               </section>
               <section class="admin-card admin-editor">
                 <p class="admin-eyebrow">Contact details <small>updated everywhere on the site</small></p>
@@ -866,6 +904,11 @@
                 <label>Instagram handle <small>the @name shown as the link text</small><input type="text" data-content-contact="instagramHandle"></label>
                 <label>Facebook link<input type="url" data-content-contact="facebookUrl"></label>
                 <label>Facebook name <small>the text shown as the link</small><input type="text" data-content-contact="facebookHandle"></label>
+                <div class="section-publish">
+                  <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-section="contact">Publish contact details</button>
+                  <p class="admin-status" data-section-status="contact"></p>
+                </div>
+                <p class="admin-hint">Contact details update everywhere they appear across the whole site.</p>
               </section>
             </div>
             <section class="admin-card admin-editor">
@@ -885,10 +928,18 @@
                 <label>Signature role<input type="text" data-content-page="pages.about.bio.role"></label>
               </div>
               <div class="field-pair">
+                <label>Portrait image URL<input type="text" data-content-page="pages.about.bio.image.src" placeholder="../assets/images/lumi-derm-practitioner-about.webp"></label>
+                <label>Portrait alt text<input type="text" data-content-page="pages.about.bio.image.alt"></label>
+              </div>
+              <div class="field-pair">
                 <label>Clinic eyebrow<input type="text" data-content-page="pages.about.clinic.eyebrow"></label>
                 <label>Clinic headline<input type="text" data-content-page="pages.about.clinic.title"></label>
               </div>
               <label>Clinic intro<textarea rows="3" data-content-page="pages.about.clinic.lead"></textarea></label>
+              <div class="field-pair">
+                <label>Clinic image URL<input type="text" data-content-page="pages.about.clinic.image.src" placeholder="../assets/images/about-lumi-derm-studio.webp"></label>
+                <label>Clinic image alt text<input type="text" data-content-page="pages.about.clinic.image.alt"></label>
+              </div>
               <div class="field-pair">
                 <label>Clinic card 1 heading<input type="text" data-content-page="pages.about.clinic.cards.0.title"></label>
                 <label>Clinic card 2 heading<input type="text" data-content-page="pages.about.clinic.cards.1.title"></label>
@@ -911,6 +962,31 @@
                 <label>CTA headline<input type="text" data-content-page="pages.about.cta.title"></label>
                 <label>CTA supporting line<input type="text" data-content-page="pages.about.cta.copy"></label>
               </div>
+              <div class="content-repeat-head">
+                <div><strong>Hero stats</strong><p class="admin-help">Shown under the About page headline.</p></div>
+                <button class="tiny-button" type="button" data-about-add="stats">Add stat</button>
+              </div>
+              <div class="content-repeat-list" data-about-list="stats"></div>
+              <div class="content-repeat-head">
+                <div><strong>Concern cards</strong><p class="admin-help">The cards under “The concerns we can help with”.</p></div>
+                <button class="tiny-button" type="button" data-about-add="concerns">Add concern</button>
+              </div>
+              <div class="content-repeat-list" data-about-list="concerns"></div>
+              <div class="content-repeat-head">
+                <div><strong>Benefit cards</strong><p class="admin-help">Icon names: consultation, shield, star, safety, plan, studio.</p></div>
+                <button class="tiny-button" type="button" data-about-add="benefits">Add benefit</button>
+              </div>
+              <div class="content-repeat-list" data-about-list="benefits"></div>
+              <div class="content-repeat-head">
+                <div><strong>Journey steps</strong><p class="admin-help">The “What to expect” timeline.</p></div>
+                <button class="tiny-button" type="button" data-about-add="journey">Add step</button>
+              </div>
+              <div class="content-repeat-list" data-about-list="journey"></div>
+              <div class="section-publish">
+                <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-section="about">Publish About page</button>
+                <a class="admin-button admin-button-secondary" href="../pages/about.html" target="_blank" rel="noopener">Preview</a>
+                <p class="admin-status" data-section-status="about"></p>
+              </div>
             </section>
             <div class="admin-grid admin-grid-2">
               <section class="admin-card admin-editor">
@@ -918,6 +994,11 @@
                 <label>Eyebrow<input type="text" data-content-page="pages.services.hero.eyebrow"></label>
                 <label>Headline<input type="text" data-content-page="pages.services.hero.title"></label>
                 <label>Supporting line<textarea rows="4" data-content-page="pages.services.hero.lead"></textarea></label>
+                <div class="section-publish">
+                  <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-section="services">Publish treatments intro</button>
+                  <a class="admin-button admin-button-secondary" href="../pages/services.html" target="_blank" rel="noopener">Preview</a>
+                  <p class="admin-status" data-section-status="services"></p>
+                </div>
               </section>
               <section class="admin-card admin-editor">
                 <p class="admin-eyebrow">Booking page intro</p>
@@ -929,6 +1010,11 @@
                 <label>Calendar supporting line<textarea rows="3" data-content-page="pages.booking.widget.copy"></textarea></label>
                 <label>Help strip headline<input type="text" data-content-page="pages.booking.support.title"></label>
                 <label>Help strip supporting line<textarea rows="2" data-content-page="pages.booking.support.copy"></textarea></label>
+                <div class="section-publish">
+                  <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-section="booking">Publish booking intro</button>
+                  <a class="admin-button admin-button-secondary" href="../pages/booking.html" target="_blank" rel="noopener">Preview</a>
+                  <p class="admin-status" data-section-status="booking"></p>
+                </div>
               </section>
             </div>
             <p class="admin-hint">Legal pages, privacy wording, terms and clinical treatment descriptions are still managed by Dima because inaccurate edits there can create compliance or safety issues.</p>
@@ -940,7 +1026,7 @@
               <div>
                 <p class="admin-eyebrow">Homepage</p>
                 <h2>Frequently asked questions</h2>
-                <p>Add, edit, reorder or remove the questions on your homepage. Answers can include links. When you <strong>Publish FAQ</strong>, the homepage and your Google listing update together.</p>
+                <p>This is your full question list &mdash; <strong>add a new Q&amp;A</strong>, edit any answer, drag to reorder, or <strong>delete</strong> one you no longer need. Answers can include links. One <strong>Publish FAQ</strong> updates the homepage and your Google listing together.</p>
               </div>
               <button class="admin-button admin-button-secondary" type="button" data-faq-reload>Reload from website</button>
             </div>
@@ -1159,8 +1245,8 @@
 
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
-    <script src="content-template.js?v=20260816-faq1"></script>
-    <script src="admin.js?v=20260817-treatments2"></script>
+    <script src="content-template.js?v=20260817-about-dynamic1"></script>
+    <script src="admin.js?v=20260817-about-dynamic1"></script>
     <script src="sender.js?v=20260817-offers1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>

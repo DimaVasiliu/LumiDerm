@@ -71,7 +71,13 @@
           "The aim is to support healthier-looking skin, soften what bothers you and help you feel more comfortable in your own skin."
         ],
         "signature": "the practitioner",
-        "role": "Founder & Lead Practitioner, Lumi Derm Aesthetics"
+        "role": "Founder & Lead Practitioner, Lumi Derm Aesthetics",
+        "image": {
+          "src": "../assets/images/lumi-derm-practitioner-about.webp",
+          "alt": "The lead aesthetic practitioner at Lumi Derm Aesthetics",
+          "width": "1200",
+          "height": "1500"
+        }
       },
       "clinic": {
         "eyebrow": "The clinic",
@@ -86,12 +92,78 @@
             "title": "What matters",
             "copy": "Appointments are one-to-one, treatment plans are tailored, and product choices are considered carefully."
           }
-        ]
+        ],
+        "image": {
+          "src": "../assets/images/about-lumi-derm-studio.webp",
+          "alt": "Lumi Derm Aesthetics treatment studio in London Docklands"
+        }
       },
+      "stats": [
+        {
+          "num": "10+",
+          "label": "Years' experience"
+        },
+        {
+          "num": "5.0★",
+          "label": "From 47 reviews"
+        },
+        {
+          "num": "16",
+          "label": "Advanced treatments"
+        },
+        {
+          "num": "E14",
+          "label": "London Docklands"
+        }
+      ],
       "concerns": {
         "eyebrow": "How the clinic can help",
         "title": "The concerns we can help with",
-        "copy": "Most clients come in with something specific they want to improve: hair growth, texture, dullness, redness, thinning hair, puffiness or skin that no longer feels like theirs. These are the concerns treated most often."
+        "copy": "Most clients come in with something specific they want to improve: hair growth, texture, dullness, redness, thinning hair, puffiness or skin that no longer feels like theirs. These are the concerns treated most often.",
+        "items": [
+          {
+            "chip": "Unwanted hair",
+            "title": "Endless shaving, waxing & ingrown hairs",
+            "copy": "Constant regrowth, irritation and ingrowns are exhausting to manage. Treatments reduce hair long-term — and permanently where suitable.",
+            "helpLabel": "How it helps:",
+            "help": "Cynosure Elite laser & Apilus electrolysis"
+          },
+          {
+            "chip": "Dull & tired skin",
+            "title": "Skin that's lost its glow",
+            "copy": "Dullness, rough texture and congestion can make skin look tired. We resurface, brighten and rebalance with treatments chosen around your skin tolerance.",
+            "helpLabel": "How it helps:",
+            "help": "Facials, peels & microneedling"
+          },
+          {
+            "chip": "Lines & firmness",
+            "title": "Early lines & loss of firmness",
+            "copy": "As collagen slows, skin can feel less bouncy and defined. Hydration and bio-remodelling treatments support smoother, fresher-looking skin.",
+            "helpLabel": "How it helps:",
+            "help": "Profhilo, polynucleotides & skin boosters"
+          },
+          {
+            "chip": "Tone & redness",
+            "title": "Pigmentation, redness & thread veins",
+            "copy": "Uneven tone, sun spots and visible vessels can be distracting. Suitable concerns are targeted carefully, with patch tests and realistic expectations.",
+            "helpLabel": "How it helps:",
+            "help": "Laser skin rejuvenation & vascular"
+          },
+          {
+            "chip": "Hair loss",
+            "title": "Thinning hair & shedding",
+            "copy": "Noticing more scalp or slower growth? Regenerative treatments can nourish the follicles and support stronger, fuller hair.",
+            "helpLabel": "How it helps:",
+            "help": "PRP, mesotherapy & polynucleotides"
+          },
+          {
+            "chip": "Puffiness & contour",
+            "title": "Puffiness & sluggish circulation",
+            "copy": "Fluid retention and heaviness can affect how the face and body feel. Drainage-focused treatments support a lighter, smoother appearance.",
+            "helpLabel": "How it helps:",
+            "help": "Endospheres therapy & body treatments"
+          }
+        ]
       },
       "treatments": {
         "eyebrow": "What the clinic offers",
@@ -101,12 +173,66 @@
       "benefits": {
         "eyebrow": "Advice based on your concern",
         "title": "We only recommend what is right for you",
-        "copy": ""
+        "copy": "",
+        "items": [
+          {
+            "icon": "consultation",
+            "title": "Consultation first",
+            "copy": "Every plan starts with your suitability, goals and realistic expectations — not a hard sell."
+          },
+          {
+            "icon": "shield",
+            "title": "Honest advice",
+            "copy": "We only recommend what will genuinely help you, and we will always tell you if something is not right."
+          },
+          {
+            "icon": "star",
+            "title": "Results that look like you",
+            "copy": "Natural-looking outcomes that refresh and support your features without making treatment the first thing people notice."
+          },
+          {
+            "icon": "safety",
+            "title": "Safety first",
+            "copy": "To ensure your safety, patch tests are required for certain treatments."
+          },
+          {
+            "icon": "plan",
+            "title": "Tailored plans & courses",
+            "copy": "Personalised treatment plans built around your concerns."
+          },
+          {
+            "icon": "studio",
+            "title": "Calm, private studio",
+            "copy": "Relaxed one-to-one appointments in a modern Docklands studio, close to South Quay and Crossharbour."
+          }
+        ]
       },
       "journey": {
         "eyebrow": "What to expect",
         "title": "Carefully tailored treatments",
-        "copy": ""
+        "copy": "",
+        "steps": [
+          {
+            "number": "1",
+            "title": "Consultation",
+            "copy": "We talk through your skin, goals and suitability — with a patch test if your treatment needs one."
+          },
+          {
+            "number": "2",
+            "title": "Your plan",
+            "copy": "We build a personalised plan with clear expectations and timings."
+          },
+          {
+            "number": "3",
+            "title": "Treatment",
+            "copy": "Carefully tailored treatments using medical-grade, trusted technology."
+          },
+          {
+            "number": "4",
+            "title": "Aftercare & results",
+            "copy": "Clear aftercare to protect your results, with reviews along the way to keep you on track."
+          }
+        ]
       },
       "cta": {
         "title": "Ready when you are",
