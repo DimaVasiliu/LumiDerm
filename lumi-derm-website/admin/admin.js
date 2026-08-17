@@ -483,26 +483,20 @@ function importAll(e) {
 /* ---------------- Offers ---------------- */
 function bindOffers() {
   document.querySelector("[data-add-offer]")?.addEventListener("click", () => {
-    state.offers.push({ title: "New offer", category: "Offer", price: "From £", badge: "", description: "Short offer description.", image: "", alt: "", service: "", status: "Draft", featured: false, expires: "", note: "Ongoing offer" });
+    state.offers.push({ title: "New offer", category: "Offer", price: "From £", badge: "", description: "Short offer description.", image: "", alt: "", service: "", status: "Live", featured: false, expires: "", note: "Ongoing offer" });
     selectedOfferIndex = state.offers.length - 1;
     renderOffers();
-    saveDraft("New offer added \u2014 fill it in below, then Save changes.");
+    saveDraft("New offer added \u2014 fill it in below, then Publish offers.");
     document.querySelector('[data-offer-field="title"]')?.focus();
   });
   document.querySelector("[data-save-offer]")?.addEventListener("click", () => {
     const offer = state.offers[selectedOfferIndex]; if (!offer) return;
-    document.querySelectorAll("[data-offer-field]").forEach((f) => {
-      offer[f.dataset.offerField] = f.type === "checkbox" ? f.checked : f.value;
-    });
+    Object.assign(offer, readOfferEditorFields());
     renderOffers(); saveDraft("Offer saved.");
   });
   document.querySelector("[data-save-new-offer]")?.addEventListener("click", () => {
-    const fresh = {};
-    document.querySelectorAll("[data-offer-field]").forEach((f) => {
-      fresh[f.dataset.offerField] = f.type === "checkbox" ? f.checked : f.value;
-    });
+    const fresh = readOfferEditorFields();
     if (!fresh.title || !fresh.title.trim()) { toast("Give the offer a title first."); return; }
-    fresh.featured = fresh.featured === true;
     if (isNewOfferPlaceholder(state.offers[selectedOfferIndex])) {
       state.offers[selectedOfferIndex] = fresh;
       renderOffers();
@@ -518,6 +512,23 @@ function bindOffers() {
   document.querySelectorAll("[data-offer-field]").forEach((f) => f.addEventListener("input", renderOfferPreview));
 }
 
+function readOfferEditorFields() {
+  const data = {};
+  document.querySelectorAll("[data-offer-field]").forEach((f) => {
+    data[f.dataset.offerField] = f.type === "checkbox" ? f.checked : f.value;
+  });
+  data.featured = data.featured === true;
+  return data;
+}
+
+function syncCurrentOfferEditorToState() {
+  const offer = state.offers[selectedOfferIndex];
+  if (!offer || !document.querySelector("[data-offer-field]")) return false;
+  Object.assign(offer, readOfferEditorFields());
+  saveDraft(null);
+  return true;
+}
+
 function isNewOfferPlaceholder(offer) {
   return !!offer &&
     String(offer.title || "") === "New offer" &&
@@ -526,7 +537,7 @@ function isNewOfferPlaceholder(offer) {
     String(offer.description || "") === "Short offer description." &&
     !String(offer.badge || "").trim() &&
     !String(offer.service || "").trim() &&
-    String(offer.status || "Draft").toLowerCase() === "draft" &&
+    ["draft", "live"].includes(String(offer.status || "Draft").toLowerCase()) &&
     !String(offer.expires || "").trim() &&
     String(offer.note || "") === "Ongoing offer";
 }
@@ -2285,6 +2296,7 @@ async function publishOffers(options) {
   setPublishStatus("Publishing to the website…");
 
   try {
+    if (syncCurrentOfferEditorToState()) renderOffers();
     const validation = validateOffersForPublish(state.offers);
     if (!validation.ok) throw new Error(validation.message);
     recordDraftVersion("offers", "Before publishing offers", state.offers);
@@ -2337,18 +2349,26 @@ async function publishOffers(options) {
 }
 
 function validateOffersForPublish(offers) {
-  const missingImage = (offers || []).find((o) => (
-    String(o.status || "live").toLowerCase() !== "draft" &&
-    !String(o.image || "").trim()
-  ));
-  if (missingImage) {
-    return { ok: false, message: "Upload a photo for \"" + (missingImage.title || "this live offer") + "\" before publishing." };
+  const incomplete = (offers || []).find((o) => offerVisibleOnSite(o) && incompleteLiveOfferReason(o));
+  if (incomplete) {
+    return { ok: false, message: "Finish the live offer \"" + (incomplete.title || "New offer") + "\" before publishing: " + incompleteLiveOfferReason(incomplete) + "." };
   }
   const duplicate = findDuplicateVisibleOffer(offers || []);
   if (duplicate) {
     return { ok: false, message: "Remove one duplicate before publishing: \"" + (duplicate.title || "Untitled offer") + "\" appears twice." };
   }
   return { ok: true };
+}
+
+function incompleteLiveOfferReason(offer) {
+  const title = String(offer.title || "").trim();
+  const price = String(offer.price || "").trim();
+  const description = String(offer.description || "").trim();
+  if (!title || title.toLowerCase() === "new offer") return "replace the placeholder title";
+  if (!price || price.toLowerCase() === "from £") return "add the display price";
+  if (!description || description === "Short offer description.") return "add the short description";
+  if (!String(offer.image || "").trim()) return "upload a photo";
+  return "";
 }
 
 function offerVisibleOnSite(offer) {
