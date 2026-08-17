@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=20260816-faq1">
+    <link rel="stylesheet" href="admin.css?v=20260817-treatments1">
   </head>
   <body>
     <!-- Soft lock screen (cosmetic only). Real protection is Cloudflare Access on /admin/* (enabled). -->
@@ -37,6 +37,7 @@
           <button class="admin-nav-item" type="button" data-admin-panel="guide">Guide &amp; help</button>
           <button class="admin-nav-item" type="button" data-admin-panel="offers">Offers</button>
           <button class="admin-nav-item" type="button" data-admin-panel="prices">Prices</button>
+          <button class="admin-nav-item" type="button" data-admin-panel="treatments">Treatment cards</button>
           <button class="admin-nav-item" type="button" data-admin-panel="sender">Send email</button>
           <button class="admin-nav-item" type="button" data-admin-panel="subscribers">Subscribers</button>
           <button class="admin-nav-item" type="button" data-admin-panel="reviews">Reviews</button>
@@ -105,6 +106,7 @@
                   <button class="quick-action" type="button" data-go="sender"><strong>Send an email</strong><span>Build a campaign for your subscribers</span></button>
                   <button class="quick-action" type="button" data-go="reviews"><strong>Approve reviews</strong><span>Clear the pending queue</span></button>
                   <button class="quick-action" type="button" data-go="prices"><strong>Edit prices</strong><span>Update treatment prices and publish</span></button>
+                  <button class="quick-action" type="button" data-go="treatments"><strong>Edit treatment cards</strong><span>Add or change Treatments page cards</span></button>
                 </div>
               </section>
 
@@ -409,9 +411,11 @@
               <div>
                 <p class="admin-eyebrow">Treatment menu</p>
                 <h2>Prices</h2>
-                <p>Edit the prices, instalment notes and the &ldquo;from &pound;&hellip;&rdquo; headline on the <strong>Treatments &amp; prices</strong> page. Pick a treatment on the left, change what you need, then <strong>Publish prices</strong>. The descriptions and table layout stay the same &mdash; you&rsquo;re only changing the numbers and notes.</p>
+                <p>Edit the prices, instalment notes and the &ldquo;from &pound;&hellip;&rdquo; headline on the <strong>Treatments &amp; prices</strong> page. Pick a treatment on the left, change what you need, then publish the prices. Use <strong>Treatment cards</strong> when you need to add or rewrite a card.</p>
               </div>
-              <button class="admin-button admin-button-secondary" type="button" data-reload-prices>Reload from website</button>
+              <div class="admin-actions-inline">
+                <button class="admin-button admin-button-secondary" type="button" data-reload-prices>Reload from website</button>
+              </div>
             </div>
             <div class="admin-publish-bar">
               <div>
@@ -427,6 +431,86 @@
               <nav class="admin-card price-nav" data-price-nav aria-label="Choose a treatment to edit"></nav>
               <section class="admin-card admin-editor price-editor" data-price-editor></section>
             </div>
+          </section>
+
+          <!-- ===================== TREATMENT CARDS ===================== -->
+          <section class="admin-panel" id="treatments" data-admin-section>
+            <div class="admin-section-head">
+              <div>
+                <p class="admin-eyebrow">Treatments page</p>
+                <h2>Add a treatment card</h2>
+                <p>Create a new treatment card and publish it straight to the <strong>Treatments &amp; prices</strong> page. Pick an existing group or start a new one. To change prices on cards already on the page, use the <strong>Prices</strong> tab.</p>
+              </div>
+            </div>
+            <div class="admin-layout admin-layout-prices">
+              <section class="admin-card admin-editor" data-tx-add-form>
+                <p class="admin-eyebrow">New card</p>
+                <label>Treatment group
+                  <select data-txnew="groupChoice"></select>
+                </label>
+                <label data-txnew-newgroup-wrap hidden>New group title
+                  <input type="text" data-txnew="newGroup" placeholder="e.g. Advanced facials">
+                </label>
+                <label>Card title <small>(shown on the button)</small>
+                  <input type="text" data-txnew="title" placeholder="e.g. Dermaplaning facial">
+                </label>
+                <label>Subtitle <small>(small line under the title)</small>
+                  <input type="text" data-txnew="sub" placeholder="e.g. Exfoliating facial &middot; 45 min">
+                </label>
+                <label>Price shown on the card <small>(the collapsed view)</small>
+                  <input type="text" data-txnew="headline" placeholder="e.g. from &pound;70">
+                </label>
+                <label>Description <small>(what it is, who it&rsquo;s for, what to expect &mdash; leave a blank line between paragraphs)</small>
+                  <textarea rows="5" data-txnew="description" placeholder="Describe the treatment&hellip;"></textarea>
+                </label>
+                <p class="admin-eyebrow">Prices</p>
+                <div class="txnew-rows" data-txnew-rows></div>
+                <button class="admin-button admin-button-secondary tiny-button" type="button" data-txnew-addrow>Add price row</button>
+                <label>Highlight badge <small>(optional &mdash; e.g. &ldquo;Up to 15% off off-peak&rdquo;)</small>
+                  <input type="text" data-txnew="pill" placeholder="Optional highlight">
+                </label>
+                <label>Note <small>(optional &mdash; e.g. a patch-test or consultation note)</small>
+                  <input type="text" data-txnew="note" placeholder="Optional note">
+                </label>
+                <label>Button label
+                  <input type="text" data-txnew="bookLabel" placeholder="Book now">
+                </label>
+                <div class="admin-actions-inline start">
+                  <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-txnew-publish>Add &amp; publish this card</button>
+                  <button class="admin-button admin-button-secondary" type="button" data-txnew-reset>Clear form</button>
+                </div>
+                <p class="admin-status" data-txnew-status></p>
+              </section>
+              <section class="admin-card">
+                <p class="admin-eyebrow">Live preview</p>
+                <p class="admin-hint">This is how the new card will look on the page (shown expanded).</p>
+                <div class="tx-preview" data-txnew-preview></div>
+              </section>
+            </div>
+
+            <details class="admin-card admin-advanced" data-tx-advanced>
+              <summary><strong>Edit existing cards (advanced)</strong> &mdash; change or remove cards already on the page</summary>
+              <div class="admin-advanced-body">
+                <div class="admin-actions-inline">
+                  <button class="admin-button admin-button-secondary" type="button" data-add-treatment-group>Add treatment group</button>
+                  <button class="admin-button admin-button-secondary" type="button" data-reload-treatments>Reload from website</button>
+                </div>
+                <div class="admin-publish-bar">
+                  <div>
+                    <strong>Publish treatment cards</strong>
+                    <p data-treatment-status>Your changes are saved in this browser only. Click publish to put the treatment cards live.</p>
+                  </div>
+                  <div class="admin-publish-actions">
+                    <a class="admin-button admin-button-secondary" href="../pages/services.html" target="_blank" rel="noopener" data-preview-treatments>Preview live treatments</a>
+                    <button class="admin-button admin-button-primary admin-publish-btn" type="button" data-publish-treatments>Publish treatment cards</button>
+                  </div>
+                </div>
+                <div class="admin-layout admin-layout-prices">
+                  <nav class="admin-card price-nav" data-treatment-nav aria-label="Choose a treatment card to edit"></nav>
+                  <section class="admin-card admin-editor price-editor" data-treatment-editor></section>
+                </div>
+              </div>
+            </details>
           </section>
 
           <!-- ===================== SEND EMAIL ===================== -->
@@ -1076,7 +1160,7 @@
     <div class="admin-toast" data-admin-toast-region role="status" aria-live="polite"></div>
     <script src="prices-template.js?v=20260720-prices1"></script>
     <script src="content-template.js?v=20260816-faq1"></script>
-    <script src="admin.js?v=20260817-prices1"></script>
+    <script src="admin.js?v=20260817-treatments2"></script>
     <script src="sender.js?v=20260817-offers1"></script>
     <script src="subscribers.js?v=20260721-ux1"></script>
   </body>

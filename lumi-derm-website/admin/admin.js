@@ -28,7 +28,7 @@ const defaultOffers = [
 // Prices are now data-driven from assets/data/prices.json (loaded at runtime by
 // loadPricesFromJson). The treatments page is regenerated from that file on publish.
 
-const panelTitles = { dashboard: "Overview", guide: "Guide & help", offers: "Offers", prices: "Prices", sender: "Send email", subscribers: "Subscribers", reviews: "Reviews", media: "Media", content: "Pages", faq: "FAQ", birthday: "Birthday", clients: "Treatwell", settings: "Settings" };
+const panelTitles = { dashboard: "Overview", guide: "Guide & help", offers: "Offers", prices: "Prices", treatments: "Treatment cards", sender: "Send email", subscribers: "Subscribers", reviews: "Reviews", media: "Media", content: "Pages", faq: "FAQ", birthday: "Birthday", clients: "Treatwell", settings: "Settings" };
 
 let state = loadDraft();
 let selectedOfferIndex = 0;
@@ -95,6 +95,8 @@ function runApp() {
   bindTopActions();
   bindOffers();
   bindPrices();
+  bindTreatmentCards();
+  bindTreatmentAddForm();
   bindReviews();
   bindContent();
   bindFaq();
@@ -265,7 +267,7 @@ function applyRevisionPayload(kind, payload) {
     state.offers = structuredClone(payload || []); selectedOfferIndex = 0; renderOffers();
     saveDraft("Offers restored from version history.");
   } else if (kind === "prices") {
-    state.prices = structuredClone(payload || { groups: [] }); selectedTx = { gi: 0, ti: 0 }; renderPrices();
+    state.prices = structuredClone(payload || { groups: [] }); selectedTx = { gi: 0, ti: 0 }; renderPrices(); renderTreatmentCards();
     saveDraft("Prices restored from version history.");
   } else if (kind === "content") {
     state.content = structuredClone(payload || {}); renderContent();
@@ -326,6 +328,8 @@ function goPanel(id, navButtons, panels) {
   panels.forEach((p) => p.classList.toggle("is-active", p.id === id));
   const title = document.querySelector("[data-panel-title]");
   if (title) title.textContent = panelTitles[id] || "Admin";
+  if (id === "prices") renderPrices();
+  if (id === "treatments") { renderTreatmentCards(); refreshTreatmentGroupSelect(); renderTreatmentAddPreview(); }
   if (id === "birthday") loadBirthdayVouchers();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -662,11 +666,10 @@ function renderOfferPreview() {
     </div>`;
 }
 
-/* ---------------- Prices (treatments page) ----------------
+/* ---------------- Treatments page cards ----------------
    The treatments page (pages/services.html) is generated from
-   assets/data/prices.json between the PRICES markers. the clinic owner edits price
-   values, instalment notes and the "from £X" headline here; the
-   descriptions and table layout are fixed. Publishing rewrites both
+   assets/data/prices.json between the PRICES markers. The clinic owner edits
+   groups, cards, content blocks, prices and CTAs here; publishing rewrites both
    prices.json and the marked section of services.html. */
 const PRICES_JSON_URL = "../assets/data/prices.json";
 
@@ -683,9 +686,34 @@ function bindPrices() {
   });
 }
 
+function bindTreatmentCards() {
+  document.querySelector("[data-add-treatment-group]")?.addEventListener("click", () => {
+    ensurePricesData();
+    const group = createTreatmentGroup();
+    state.prices.groups.push(group);
+    selectedTx = { gi: state.prices.groups.length - 1, ti: 0 };
+    saveDraft("Treatment group added.");
+    renderPrices();
+    renderTreatmentCards();
+  });
+
+  document.querySelector("[data-reload-treatments]")?.addEventListener("click", async () => {
+    const ok = await ldConfirm({
+      title: "Reload live treatment cards?",
+      body: "This replaces the local treatment cards in this browser with the treatment content currently on the website. You can use Undo local edit straight after if needed.",
+      confirmLabel: "Reload treatment cards"
+    });
+    if (!ok) return;
+    recordDraftVersion("prices", "Before reloading live treatment cards", state.prices);
+    loadPricesFromJson(true, true);
+  });
+}
+
 async function loadPricesFromJson(announce, force) {
   if (!force && state.prices && Array.isArray(state.prices.groups) && state.prices.groups.length) {
-    renderPrices(); return;
+    renderPrices();
+    renderTreatmentCards();
+    return;
   }
   try {
     const r = await fetch("/admin/api/content", { cache: "no-store", credentials: "same-origin" });
@@ -695,11 +723,14 @@ async function loadPricesFromJson(announce, force) {
     state.prices = { groups: Array.isArray(p.groups) ? p.groups : [] };
     selectedTx = { gi: 0, ti: 0 };
     renderPrices();
-    saveDraft(announce ? "Loaded the prices currently on the website." : null);
+    renderTreatmentCards();
+    saveDraft(announce ? "Loaded the treatments currently on the website." : null);
     setPricesStatus("In sync with the website.");
+    setTreatmentStatus("In sync with the website.");
   } catch {
-    if (announce) toast("Could not read the current prices.");
+    if (announce) toast("Could not read the current treatments.");
     renderPrices();
+    renderTreatmentCards();
   }
 }
 
@@ -707,20 +738,131 @@ function setPricesStatus(message) {
   const el = document.querySelector("[data-prices-status]"); if (el) el.textContent = message;
 }
 
+function setTreatmentStatus(message) {
+  const el = document.querySelector("[data-treatment-status]"); if (el) el.textContent = message;
+}
+
 // Strip tags for plain-text contexts (e.g. building nav labels). Keeps entities.
 function stripTags(v) { return String(v == null ? "" : v).replace(/<[^>]*>/g, ""); }
 // Decode HTML entities to plain text for editing inside <input> values.
 function decodeHtml(v) { const el = document.createElement("textarea"); el.innerHTML = String(v == null ? "" : v); return el.value; }
 
+function ensurePricesData() {
+  if (!state.prices || !Array.isArray(state.prices.groups)) state.prices = { groups: [] };
+  state.prices.groups.forEach((g) => {
+    if (!Array.isArray(g.treatments)) g.treatments = [];
+    g.treatments.forEach((t) => { if (!Array.isArray(t.detail)) t.detail = []; });
+  });
+}
+
+function normaliseSelectedTx() {
+  ensurePricesData();
+  const groups = state.prices.groups;
+  if (!groups.length) { selectedTx = { gi: 0, ti: 0 }; return; }
+  selectedTx.gi = Math.max(0, Math.min(selectedTx.gi || 0, groups.length - 1));
+  const treatments = groups[selectedTx.gi].treatments || [];
+  selectedTx.ti = Math.max(0, Math.min(selectedTx.ti || 0, Math.max(0, treatments.length - 1)));
+}
+
 function currentTx() {
+  normaliseSelectedTx();
   const g = state.prices && state.prices.groups ? state.prices.groups[selectedTx.gi] : null;
   return g && g.treatments ? g.treatments[selectedTx.ti] : null;
+}
+
+function currentTxGroup() {
+  normaliseSelectedTx();
+  return state.prices && state.prices.groups ? state.prices.groups[selectedTx.gi] : null;
+}
+
+function plainTreatmentHtml(v) {
+  return escapeHtml(String(v || "").trim());
+}
+
+function richTreatmentHtml(v) {
+  let s = escapeHtml(String(v || "").trim());
+  const allowed = ["br", "strong", "em", "b", "i", "small"];
+  allowed.forEach((tag) => {
+    const open = new RegExp("&lt;" + tag + "\\s*\\/??&gt;", "gi");
+    const close = new RegExp("&lt;\\/" + tag + "&gt;", "gi");
+    s = s.replace(open, (m) => m.includes("/") || tag === "br" ? "<" + tag + ">" : "<" + tag + ">")
+      .replace(close, "</" + tag + ">");
+  });
+  s = s.replace(/<br><\/br>/gi, "<br>").replace(/<br>/gi, "<br>");
+  return s;
+}
+
+function treatmentSlug(v) {
+  const base = decodeHtml(stripTags(v || ""))
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 56);
+  return base || "new-treatment";
+}
+
+function uniqueTreatmentId(base, tx) {
+  const wanted = treatmentSlug(base);
+  const used = new Set();
+  (state.prices.groups || []).forEach((g) => (g.treatments || []).forEach((t) => {
+    if (t !== tx && t.id) used.add(String(t.id));
+  }));
+  let id = wanted;
+  let n = 2;
+  while (used.has(id)) {
+    id = wanted + "-" + n;
+    n += 1;
+  }
+  return id;
+}
+
+function createTreatmentCard(groupTitle) {
+  const title = "New treatment";
+  const id = uniqueTreatmentId(title);
+  return {
+    id,
+    title,
+    sub: groupTitle ? plainTreatmentHtml(decodeHtml(stripTags(groupTitle))) : "Treatment category",
+    headline: "from £",
+    service: id,
+    bookLabel: "Book treatment",
+    detail: [
+      { type: "p", html: "Describe the treatment, who it is for and what to expect." },
+      { type: "pricelist", rows: [{ name: "Treatment", cost: "£", costSmall: "" }] },
+      { type: "note", text: "Consultation confirms suitability before treatment." }
+    ]
+  };
+}
+
+function createTreatmentGroup() {
+  const group = { title: "New treatment group", treatments: [] };
+  group.treatments.push(createTreatmentCard(group.title));
+  return group;
+}
+
+function createTreatmentBlock(type) {
+  if (type === "subhead") return { type: "subhead", text: "New section" };
+  if (type === "note") return { type: "note", text: "Add a short note." };
+  if (type === "pill") return { type: "pill", text: "Highlight important treatment information." };
+  if (type === "table") return { type: "table", columns: ["Area", "Price"], rows: [["Treatment", "£"]] };
+  if (type === "pricelist") return { type: "pricelist", rows: [{ name: "Treatment", cost: "£", costSmall: "" }] };
+  return { type: "p", html: "Add treatment description." };
+}
+
+function saveTreatmentDraft(message, rerender) {
+  saveDraft(message);
+  if (rerender) {
+    renderPrices();
+    renderTreatmentCards();
+  }
 }
 
 function renderPrices() {
   const nav = document.querySelector("[data-price-nav]");
   const editor = document.querySelector("[data-price-editor]");
   if (!nav || !editor) return;
+  normaliseSelectedTx();
   const groups = (state.prices && state.prices.groups) || [];
   if (!groups.length) {
     nav.innerHTML = "";
@@ -729,15 +871,17 @@ function renderPrices() {
   }
   nav.innerHTML = groups.map((g, gi) => `
     <div class="price-nav-group">
-      <p class="price-nav-title">${stripTags(g.title)}</p>
+      <p class="price-nav-title">${stripTags(g.title || "Untitled group")}</p>
       ${(g.treatments || []).map((t, ti) => `
         <button type="button" class="price-nav-item ${gi === selectedTx.gi && ti === selectedTx.ti ? "is-selected" : ""}" data-price-pick="${gi}:${ti}">
-          <span>${stripTags(t.title)}</span><small>${escapeHtml(decodeHtml(t.headline || ""))}</small>
+          <span>${stripTags(t.title || "Untitled card")}</span><small>${escapeHtml(decodeHtml(t.headline || ""))}</small>
         </button>`).join("")}
     </div>`).join("");
   nav.querySelectorAll("[data-price-pick]").forEach((b) => b.addEventListener("click", () => {
     const parts = b.dataset.pricePick.split(":").map(Number);
-    selectedTx = { gi: parts[0], ti: parts[1] }; renderPrices();
+    selectedTx = { gi: parts[0], ti: parts[1] };
+    renderPrices();
+    renderTreatmentCards();
   }));
   renderPriceEditor(editor);
 }
@@ -745,13 +889,13 @@ function renderPrices() {
 function renderPriceEditor(editor) {
   const t = currentTx();
   if (!t) { editor.innerHTML = '<p class="admin-hint">Pick a treatment on the left to edit its prices.</p>'; return; }
-  const groupTitle = stripTags(state.prices.groups[selectedTx.gi].title);
+  const groupTitle = stripTags(state.prices.groups[selectedTx.gi].title || "Treatment group");
 
   let html = `
     <div class="price-editor-head">
       <p class="admin-eyebrow">${groupTitle}</p>
-      <h3>${stripTags(t.title)}</h3>
-      <p class="admin-hint">Change the prices, notes and the headline below. The description and table layout stay the same.</p>
+      <h3>${stripTags(t.title || "Untitled card")}</h3>
+      <p class="admin-hint">Change the prices, notes and the headline below. Use the Treatment cards tab for titles, descriptions, sections and buttons.</p>
     </div>
     <label class="price-headline">Headline price <small>the &ldquo;from &pound;&hellip;&rdquo; shown on the card</small>
       <input type="text" value="${escapeAttr(decodeHtml(t.headline || ""))}" data-tx-headline>
@@ -787,13 +931,12 @@ function renderPriceEditor(editor) {
     } else if (b.type === "note") {
       html += `<label class="price-note-edit">Note<input type="text" value="${escapeAttr(decodeHtml(b.text || ""))}" data-tx-note="${bi}"></label>`;
     }
-    // b.type === "p" (description prose) is intentionally not editable here.
   });
 
   editor.innerHTML = html;
 
   editor.querySelector("[data-tx-headline]")?.addEventListener("change", (e) => {
-    t.headline = escapeHtml(e.target.value.trim()); saveDraft("Headline updated."); updateNavHeadline();
+    t.headline = escapeHtml(e.target.value.trim()); saveDraft("Headline updated."); updateNavHeadline(); renderTreatmentCards();
   });
   editor.querySelectorAll("[data-tx-cell]").forEach((inp) => inp.addEventListener("change", () => {
     const p = inp.dataset.txCell.split(":").map(Number);
@@ -815,11 +958,569 @@ function renderPriceEditor(editor) {
   }));
 }
 
+function renderTreatmentCards() {
+  const nav = document.querySelector("[data-treatment-nav]");
+  const editor = document.querySelector("[data-treatment-editor]");
+  if (!nav || !editor) return;
+  normaliseSelectedTx();
+  const groups = (state.prices && state.prices.groups) || [];
+  if (!groups.length) {
+    nav.innerHTML = `
+      <div class="price-nav-empty">
+        <p class="admin-hint">No treatment cards loaded yet.</p>
+        <button class="admin-button admin-button-secondary" type="button" data-treatment-action="add-group">Add treatment group</button>
+      </div>`;
+    editor.innerHTML = '<p class="admin-hint">Click &ldquo;Reload from website&rdquo; to load the live treatment cards, or add a new treatment group.</p>';
+    bindTreatmentNav(nav);
+    refreshTreatmentGroupSelect();
+    return;
+  }
+  nav.innerHTML = `
+    <div class="price-nav-head">
+      <strong>${groups.length} group${groups.length === 1 ? "" : "s"}</strong>
+      <button class="tiny-button primary" type="button" data-treatment-action="add-group">Add group</button>
+    </div>
+    ${groups.map((g, gi) => `
+    <div class="price-nav-group">
+      <div class="price-nav-title-row">
+        <p class="price-nav-title">${stripTags(g.title || "Untitled group")}</p>
+        <button class="tiny-button" type="button" data-treatment-action="add-treatment" data-group-index="${gi}">Add card</button>
+      </div>
+      ${(g.treatments || []).map((t, ti) => `
+        <button type="button" class="price-nav-item ${gi === selectedTx.gi && ti === selectedTx.ti ? "is-selected" : ""}" data-treatment-pick="${gi}:${ti}">
+          <span>${stripTags(t.title || "Untitled card")}</span><small>${escapeHtml(decodeHtml(t.headline || ""))}</small>
+        </button>`).join("")}
+      ${(g.treatments || []).length ? "" : '<p class="admin-hint">No cards in this group yet.</p>'}
+    </div>`).join("")}`;
+  bindTreatmentNav(nav);
+  renderTreatmentCardEditor(editor);
+  refreshTreatmentGroupSelect();
+}
+
+/* ---------------- Add a treatment card (simple, add-only flow) ----------------
+   Mirrors the Offers "add new → publish just this one" pattern. She fills a
+   single new card, picks an existing group (or types a new group title), and
+   publishes; we append that one card to the live menu and edge-render it — the
+   existing cards are never shown or altered here (edit them in the advanced
+   section or the Prices tab). Reuses the same D1 publish path as Prices. */
+function txnewEl(name) { return document.querySelector('[data-txnew="' + name + '"]'); }
+
+function setTxnewStatus(message) {
+  const el = document.querySelector("[data-txnew-status]"); if (el) el.textContent = message || "";
+}
+
+function priceRowHtml() {
+  return '<div class="txnew-row" data-txnew-row>' +
+    '<input type="text" data-txnew-cell="name" placeholder="Name (e.g. Face + Neck · 1 session)">' +
+    '<input type="text" data-txnew-cell="cost" placeholder="£100">' +
+    '<input type="text" data-txnew-cell="small" placeholder="small note (e.g. 45 min)">' +
+    '<button type="button" class="tiny-button" data-txnew-delrow aria-label="Remove row">✕</button>' +
+    "</div>";
+}
+
+function toggleNewGroupInput() {
+  const wrap = document.querySelector("[data-txnew-newgroup-wrap]");
+  const sel = txnewEl("groupChoice");
+  if (wrap && sel) wrap.hidden = sel.value !== "__new__";
+}
+
+function refreshTreatmentGroupSelect() {
+  const sel = txnewEl("groupChoice");
+  if (!sel) return;
+  ensurePricesData();
+  const prev = sel.value;
+  const opts = (state.prices.groups || []).map((g, i) =>
+    '<option value="' + i + '">' + escapeHtml(decodeHtml(stripTags(g.title || "Untitled group"))) + "</option>").join("");
+  sel.innerHTML = opts + '<option value="__new__">➕ New group…</option>';
+  if (prev && (prev === "__new__" || sel.querySelector('option[value="' + prev + '"]'))) sel.value = prev;
+  toggleNewGroupInput();
+}
+
+function currentAddGroupTitle() {
+  const sel = txnewEl("groupChoice");
+  if (!sel) return "";
+  if (sel.value === "__new__") return decodeHtml(stripTags(txnewEl("newGroup") ? txnewEl("newGroup").value : "")).trim();
+  const g = (state.prices.groups || [])[parseInt(sel.value, 10)];
+  return g ? decodeHtml(stripTags(g.title || "")) : "";
+}
+
+// Split a textarea into paragraphs on blank lines; collapse single newlines to spaces.
+function splitParagraphs(text) {
+  return String(text || "").split(/\n\s*\n/).map((p) => p.replace(/\s*\n\s*/g, " ").trim()).filter(Boolean);
+}
+
+function buildNewTxFromForm() {
+  ensurePricesData();
+  const titlePlain = decodeHtml(stripTags(txnewEl("title") ? txnewEl("title").value : "")).trim();
+  const sub = txnewEl("sub") ? txnewEl("sub").value.trim() : "";
+  const headline = txnewEl("headline") ? txnewEl("headline").value.trim() : "";
+  const desc = txnewEl("description") ? txnewEl("description").value : "";
+  const pill = txnewEl("pill") ? txnewEl("pill").value.trim() : "";
+  const note = txnewEl("note") ? txnewEl("note").value.trim() : "";
+  const bookLabel = (txnewEl("bookLabel") && txnewEl("bookLabel").value.trim()) || "Book now";
+
+  const rows = [];
+  document.querySelectorAll("[data-txnew-row]").forEach((r) => {
+    const name = r.querySelector('[data-txnew-cell="name"]').value.trim();
+    const cost = r.querySelector('[data-txnew-cell="cost"]').value.trim();
+    const small = r.querySelector('[data-txnew-cell="small"]').value.trim();
+    if (name || cost) rows.push({ name: richTreatmentHtml(name), cost: plainTreatmentHtml(cost), costSmall: plainTreatmentHtml(small) });
+  });
+
+  const detail = [];
+  splitParagraphs(desc).forEach((p) => detail.push({ type: "p", html: richTreatmentHtml(p) }));
+  if (rows.length) detail.push({ type: "pricelist", rows });
+  if (pill) detail.push({ type: "pill", text: richTreatmentHtml(pill) });
+  if (note) detail.push({ type: "note", text: richTreatmentHtml(note) });
+
+  return {
+    id: uniqueTreatmentId(titlePlain || "new-treatment"),
+    title: plainTreatmentHtml(titlePlain),
+    sub: plainTreatmentHtml(sub),
+    headline: plainTreatmentHtml(headline),
+    service: "",
+    bookLabel: plainTreatmentHtml(bookLabel),
+    detail
+  };
+}
+
+function renderTreatmentAddPreview() {
+  const box = document.querySelector("[data-txnew-preview]");
+  if (!box) return;
+  if (typeof window.renderTreatmentLibrary !== "function") { box.innerHTML = '<p class="admin-hint">Preview will appear once the template loads.</p>'; return; }
+  const tx = buildNewTxFromForm();
+  const groupTitle = currentAddGroupTitle() || "New group";
+  box.innerHTML = window.renderTreatmentLibrary({ groups: [{ title: plainTreatmentHtml(groupTitle), treatments: [tx] }] });
+  const detail = box.querySelector(".tx-card-detail"); if (detail) detail.hidden = false;
+}
+
+function resetTreatmentAddForm() {
+  ["title", "sub", "headline", "description", "pill", "note", "newGroup"].forEach((n) => { const el = txnewEl(n); if (el) el.value = ""; });
+  const bl = txnewEl("bookLabel"); if (bl) bl.value = "";
+  const rows = document.querySelector("[data-txnew-rows]"); if (rows) rows.innerHTML = priceRowHtml();
+  const sel = txnewEl("groupChoice"); if (sel && sel.options.length) sel.selectedIndex = 0;
+  toggleNewGroupInput();
+  renderTreatmentAddPreview();
+}
+
+function bindTreatmentAddForm() {
+  const form = document.querySelector("[data-tx-add-form]");
+  if (!form || form.dataset.bound) return;
+  form.dataset.bound = "1";
+  refreshTreatmentGroupSelect();
+  const rows = document.querySelector("[data-txnew-rows]");
+  if (rows && !rows.children.length) rows.innerHTML = priceRowHtml();
+
+  form.addEventListener("input", renderTreatmentAddPreview);
+  const sel = txnewEl("groupChoice");
+  if (sel) sel.addEventListener("change", () => { toggleNewGroupInput(); renderTreatmentAddPreview(); });
+  const addRow = document.querySelector("[data-txnew-addrow]");
+  if (addRow) addRow.addEventListener("click", () => {
+    const c = document.querySelector("[data-txnew-rows]"); if (c) c.insertAdjacentHTML("beforeend", priceRowHtml());
+    renderTreatmentAddPreview();
+  });
+  if (rows) rows.addEventListener("click", (e) => {
+    const del = e.target.closest("[data-txnew-delrow]"); if (!del) return;
+    const all = document.querySelectorAll("[data-txnew-row]");
+    if (all.length > 1) del.closest("[data-txnew-row]").remove();
+    else del.closest("[data-txnew-row]").querySelectorAll("input").forEach((i) => { i.value = ""; });
+    renderTreatmentAddPreview();
+  });
+  const pub = document.querySelector("[data-txnew-publish]");
+  if (pub) pub.addEventListener("click", publishNewTreatmentCard);
+  const reset = document.querySelector("[data-txnew-reset]");
+  if (reset) reset.addEventListener("click", resetTreatmentAddForm);
+  renderTreatmentAddPreview();
+}
+
+async function publishNewTreatmentCard() {
+  if (typeof window.renderTreatmentLibrary !== "function") { toast("Treatment template didn’t load — hard-refresh the admin and try again."); return false; }
+  const titlePlain = decodeHtml(stripTags(txnewEl("title") ? txnewEl("title").value : "")).trim();
+  if (!titlePlain) { setTxnewStatus("Add a card title first."); toast("Add a card title first."); return false; }
+
+  const sel = txnewEl("groupChoice");
+  const isNewGroup = sel && sel.value === "__new__";
+  let newGroupTitle = "";
+  if (isNewGroup) {
+    newGroupTitle = decodeHtml(stripTags(txnewEl("newGroup") ? txnewEl("newGroup").value : "")).trim();
+    if (!newGroupTitle) { setTxnewStatus("Type a name for the new group."); toast("Type a new group name first."); return false; }
+  }
+
+  if (!(await ldConfirm({
+    title: "Add & publish this card?",
+    body: "This adds “" + titlePlain + "” to the Treatments & prices page and publishes it live straight away. Continue?",
+    confirmLabel: "Add & publish"
+  }))) return false;
+
+  const button = document.querySelector("[data-txnew-publish]");
+  if (button) { button.disabled = true; button.textContent = "Publishing…"; }
+  setTxnewStatus("Publishing…");
+  ensurePricesData();
+  recordDraftVersion("prices", "Before adding a treatment card", state.prices);
+  try {
+    // Build the new card (unique id computed against the current menu) and
+    // append it — existing cards are left exactly as they are.
+    const tx = buildNewTxFromForm();
+    let group;
+    if (isNewGroup) {
+      group = { title: plainTreatmentHtml(newGroupTitle), treatments: [] };
+      state.prices.groups.push(group);
+    } else {
+      group = state.prices.groups[parseInt(sel.value, 10)];
+      if (!group) { group = { title: plainTreatmentHtml("Treatments"), treatments: [] }; state.prices.groups.push(group); }
+    }
+    group.treatments.push(tx);
+
+    const rendered = window.renderTreatmentLibrary(state.prices);
+    const before = await ghReadRepoFile(SERVICES_REPO_PATH);
+    if (!PRICES_MARKERS.test(before)) throw new Error("The price markers weren’t found in services.html — ask Dima to check the page.");
+    const pageHtml = before.replace(PRICES_MARKERS, (m, s, e) => s + "\n\n" + rendered + "\n\n          " + e);
+    await ghPublishContent({ prices: state.prices, regions: ["PRICES"], pages: { [SERVICES_REPO_PATH]: pageHtml } });
+
+    state.publishedAt = new Date().toISOString();
+    saveDraft(null);
+    setTxnewStatus("Added and live now. Refresh the Treatments page to see “" + titlePlain + "”.");
+    toast("Treatment card added and published.");
+    resetTreatmentAddForm();
+    refreshTreatmentGroupSelect();
+    renderPrices();
+    renderTreatmentCards();
+    return true;
+  } catch (err) {
+    setTxnewStatus("Save failed: " + ldFriendlyError(err));
+    toast("Save failed: " + ldFriendlyError(err));
+    return false;
+  } finally {
+    if (button) { button.disabled = false; button.textContent = "Add & publish this card"; }
+  }
+}
+
+function bindTreatmentNav(nav) {
+  nav.querySelectorAll("[data-treatment-pick]").forEach((b) => b.addEventListener("click", () => {
+    const parts = b.dataset.treatmentPick.split(":").map(Number);
+    selectedTx = { gi: parts[0], ti: parts[1] };
+    renderPrices();
+    renderTreatmentCards();
+  }));
+  nav.querySelectorAll("[data-treatment-action]").forEach((btn) => btn.addEventListener("click", () => {
+    const action = btn.dataset.treatmentAction;
+    ensurePricesData();
+    if (action === "add-group") {
+      state.prices.groups.push(createTreatmentGroup());
+      selectedTx = { gi: state.prices.groups.length - 1, ti: 0 };
+      saveTreatmentDraft("Treatment group added.", true);
+    } else if (action === "add-treatment") {
+      const gi = Number(btn.dataset.groupIndex);
+      const group = state.prices.groups[gi];
+      if (!group) return;
+      group.treatments.push(createTreatmentCard(group.title));
+      selectedTx = { gi, ti: group.treatments.length - 1 };
+      saveTreatmentDraft("Treatment card added.", true);
+    }
+  }));
+}
+
+function renderTreatmentCardEditor(editor) {
+  const t = currentTx();
+  const group = currentTxGroup();
+  if (!group) { editor.innerHTML = '<p class="admin-hint">Add a treatment group to start editing the Treatments page.</p>'; return; }
+  if (!t) {
+    editor.innerHTML = `
+      <div class="price-editor-head">
+        <p class="admin-eyebrow">Treatment group</p>
+        <h3>${stripTags(group.title || "Untitled group")}</h3>
+        <p class="admin-hint">This group has no cards yet.</p>
+      </div>
+      <div class="admin-actions-inline start">
+        <button class="admin-button admin-button-primary" type="button" data-price-action="add-treatment-current">Add treatment card</button>
+        <button class="admin-button admin-button-secondary" type="button" data-price-action="delete-group">Delete group</button>
+      </div>`;
+    bindPriceEditor(editor, group, null);
+    return;
+  }
+  const groupTitle = stripTags(group.title || "Treatment group");
+
+  let html = `
+    <div class="price-editor-head">
+      <p class="admin-eyebrow">${groupTitle}</p>
+      <h3>${stripTags(t.title || "Untitled card")}</h3>
+      <p class="admin-hint">Edit the group title, card text, booking button and the content that opens inside this treatment card.</p>
+    </div>
+    <section class="price-card-section">
+      <div class="price-section-head">
+        <strong>Group</strong>
+        <div class="price-inline-actions">
+          <button class="tiny-button" type="button" data-price-action="move-group-up" ${selectedTx.gi === 0 ? "disabled" : ""}>Move up</button>
+          <button class="tiny-button" type="button" data-price-action="move-group-down" ${selectedTx.gi >= state.prices.groups.length - 1 ? "disabled" : ""}>Move down</button>
+          <button class="tiny-button danger" type="button" data-price-action="delete-group">Delete group</button>
+        </div>
+      </div>
+      <label>Group title <small>shown as treatment-group-title</small>
+        <input type="text" value="${escapeAttr(decodeHtml(stripTags(group.title || "")))}" data-price-field="group-title">
+      </label>
+    </section>
+    <section class="price-card-section">
+      <div class="price-section-head">
+        <strong>Treatment card</strong>
+        <div class="price-inline-actions">
+          <button class="tiny-button" type="button" data-price-action="move-treatment-up" ${selectedTx.ti === 0 ? "disabled" : ""}>Move up</button>
+          <button class="tiny-button" type="button" data-price-action="move-treatment-down" ${selectedTx.ti >= (group.treatments || []).length - 1 ? "disabled" : ""}>Move down</button>
+          <button class="tiny-button" type="button" data-price-action="duplicate-treatment">Duplicate</button>
+          <button class="tiny-button danger" type="button" data-price-action="delete-treatment">Delete card</button>
+        </div>
+      </div>
+      <div class="price-field-grid">
+        <label>Card ID <small>page anchor, auto-formatted</small><input type="text" value="${escapeAttr(t.id || "")}" data-price-field="id"></label>
+        <label>Card title <small>shown as tx-title</small><input type="text" value="${escapeAttr(decodeHtml(stripTags(t.title || "")))}" data-price-field="title"></label>
+        <label>Subtitle <small>shown as tx-sub</small><input type="text" value="${escapeAttr(decodeHtml(stripTags(t.sub || "")))}" data-price-field="sub"></label>
+        <label>Headline price <small>shown as tx-price</small><input type="text" value="${escapeAttr(decodeHtml(stripTags(t.headline || "")))}" data-price-field="headline"></label>
+        <label>Booking service slug <small>booking.html?service=...</small><input type="text" value="${escapeAttr(t.service || "")}" data-price-field="service"></label>
+        <label>Button label <small>shown in the opened card</small><input type="text" value="${escapeAttr(decodeHtml(stripTags(t.bookLabel || "")))}" data-price-field="bookLabel"></label>
+      </div>
+    </section>
+    <section class="price-card-section">
+      <div class="price-section-head">
+        <strong>Opened card content</strong>
+      </div>
+      <div class="price-block-tools" aria-label="Add content block">
+        <button class="tiny-button" type="button" data-add-block="p">Add paragraph</button>
+        <button class="tiny-button" type="button" data-add-block="subhead">Add subheading</button>
+        <button class="tiny-button" type="button" data-add-block="pricelist">Add price list</button>
+        <button class="tiny-button" type="button" data-add-block="table">Add table</button>
+        <button class="tiny-button" type="button" data-add-block="pill">Add highlight</button>
+        <button class="tiny-button" type="button" data-add-block="note">Add note</button>
+      </div>
+      <div class="price-block-list">`;
+
+  (t.detail || []).forEach((b, bi) => {
+    html += renderTreatmentBlockEditor(b, bi, t.detail.length);
+  });
+
+  html += `</div></section>`;
+  editor.innerHTML = html;
+  bindPriceEditor(editor, group, t);
+}
+
+function renderTreatmentBlockEditor(b, bi, count) {
+  const label = { p: "Paragraph", subhead: "Subheading", table: "Price table", pricelist: "Price list", pill: "Highlight", note: "Note" }[b.type] || "Content block";
+  let body = "";
+  if (b.type === "p") {
+    body = `<label>Paragraph text <small>simple formatting: &lt;strong&gt;, &lt;em&gt;, &lt;br&gt;</small><textarea class="price-html-edit" data-block-field="${bi}:html">${escapeHtml(decodeHtml(b.html || ""))}</textarea></label>`;
+  } else if (b.type === "subhead") {
+    body = `<label>Subheading text<input type="text" value="${escapeAttr(decodeHtml(stripTags(b.text || "")))}" data-block-field="${bi}:text"></label>`;
+  } else if (b.type === "pill") {
+    body = `<label>Highlight text<input type="text" value="${escapeAttr(decodeHtml(stripTags(b.text || "")))}" data-block-field="${bi}:text"></label>`;
+  } else if (b.type === "note") {
+    body = `<label>Note text<input type="text" value="${escapeAttr(decodeHtml(stripTags(b.text || "")))}" data-block-field="${bi}:text"></label>`;
+  } else if (b.type === "pricelist") {
+    body = `<div class="price-list-edit">`;
+    (b.rows || []).forEach((row, ri) => {
+      body += `
+        <div class="price-list-row price-list-row-edit">
+          <label>Name<input type="text" value="${escapeAttr(decodeHtml(row.name || ""))}" data-list-field="${bi}:${ri}:name"></label>
+          <label>Price<input type="text" class="price-list-cost" value="${escapeAttr(decodeHtml(row.cost || ""))}" data-list-field="${bi}:${ri}:cost"></label>
+          <label>Small note<input type="text" class="price-list-small" value="${escapeAttr(decodeHtml(row.costSmall || ""))}" data-list-field="${bi}:${ri}:costSmall" placeholder="e.g. pay in 2 instalments"></label>
+          <button class="tiny-button danger" type="button" data-block-action="delete-list-row" data-block-index="${bi}" data-row-index="${ri}">Delete row</button>
+        </div>`;
+    });
+    body += `<button class="tiny-button" type="button" data-block-action="add-list-row" data-block-index="${bi}">Add price row</button></div>`;
+  } else if (b.type === "table") {
+    const cols = Array.isArray(b.columns) && b.columns.length ? b.columns : ["Area", "Price"];
+    const rows = Array.isArray(b.rows) ? b.rows : [];
+    body = `<div class="price-table-tools"><strong>Columns</strong><button class="tiny-button" type="button" data-block-action="add-table-column" data-block-index="${bi}">Add column</button></div>
+      <div class="price-table-columns">`;
+    cols.forEach((c, ci) => {
+      body += `<label>Column ${ci + 1}<input type="text" value="${escapeAttr(decodeHtml(c || ""))}" data-table-column="${bi}:${ci}"></label>
+        <button class="tiny-button danger" type="button" data-block-action="delete-table-column" data-block-index="${bi}" data-column-index="${ci}" ${cols.length <= 1 ? "disabled" : ""}>Delete column</button>`;
+    });
+    body += `</div><div class="price-table-edit"><table><tbody>`;
+    rows.forEach((row, ri) => {
+      body += `<tr>`;
+      cols.forEach((c, ci) => {
+        body += `<td><input type="text" value="${escapeAttr(decodeHtml(row[ci] || ""))}" data-table-cell="${bi}:${ri}:${ci}" aria-label="Table row ${ri + 1}, column ${ci + 1}"></td>`;
+      });
+      body += `<td class="price-row-tools"><button class="tiny-button danger" type="button" data-block-action="delete-table-row" data-block-index="${bi}" data-row-index="${ri}">Delete row</button></td></tr>`;
+    });
+    body += `</tbody></table></div><button class="tiny-button" type="button" data-block-action="add-table-row" data-block-index="${bi}">Add table row</button>`;
+  }
+  return `
+    <article class="price-block-edit">
+      <div class="price-block-head">
+        <strong>${label}</strong>
+        <div class="price-inline-actions">
+          <button class="tiny-button" type="button" data-block-action="move-block-up" data-block-index="${bi}" ${bi === 0 ? "disabled" : ""}>Move up</button>
+          <button class="tiny-button" type="button" data-block-action="move-block-down" data-block-index="${bi}" ${bi >= count - 1 ? "disabled" : ""}>Move down</button>
+          <button class="tiny-button danger" type="button" data-block-action="delete-block" data-block-index="${bi}">Delete</button>
+        </div>
+      </div>
+      ${body}
+    </article>`;
+}
+
+function bindPriceEditor(editor, group, t) {
+  editor.querySelectorAll("[data-price-field]").forEach((inp) => inp.addEventListener("change", () => {
+    if (inp.dataset.priceField === "group-title") {
+      group.title = plainTreatmentHtml(inp.value);
+      saveTreatmentDraft("Treatment group updated.", true);
+      return;
+    }
+    if (!t) return;
+    const key = inp.dataset.priceField;
+    if (key === "id") {
+      t.id = uniqueTreatmentId(inp.value, t);
+      if (!t.service || treatmentSlug(t.service) === treatmentSlug(inp.value)) t.service = t.id;
+      saveTreatmentDraft("Card ID updated.", true);
+    } else if (key === "service") {
+      t.service = treatmentSlug(inp.value);
+      saveTreatmentDraft("Booking link updated.", false);
+    } else {
+      t[key] = plainTreatmentHtml(inp.value);
+      saveTreatmentDraft("Treatment card updated.", key === "title" || key === "headline");
+    }
+  }));
+
+  editor.querySelectorAll("[data-block-field]").forEach((inp) => inp.addEventListener("change", () => {
+    if (!t) return;
+    const [bi, field] = inp.dataset.blockField.split(":");
+    const block = t.detail[Number(bi)];
+    if (!block) return;
+    block[field] = field === "html" ? richTreatmentHtml(inp.value) : plainTreatmentHtml(inp.value);
+    saveTreatmentDraft("Treatment content updated.", false);
+  }));
+
+  editor.querySelectorAll("[data-list-field]").forEach((inp) => inp.addEventListener("change", () => {
+    if (!t) return;
+    const [bi, ri, field] = inp.dataset.listField.split(":");
+    const row = t.detail[Number(bi)]?.rows?.[Number(ri)];
+    if (!row) return;
+    row[field] = field === "name" ? richTreatmentHtml(inp.value) : plainTreatmentHtml(inp.value);
+    saveTreatmentDraft("Price row updated.", false);
+  }));
+
+  editor.querySelectorAll("[data-table-column]").forEach((inp) => inp.addEventListener("change", () => {
+    if (!t) return;
+    const [bi, ci] = inp.dataset.tableColumn.split(":").map(Number);
+    const block = t.detail[bi];
+    if (!block || block.type !== "table") return;
+    block.columns[ci] = richTreatmentHtml(inp.value);
+    saveTreatmentDraft("Table column updated.", false);
+  }));
+
+  editor.querySelectorAll("[data-table-cell]").forEach((inp) => inp.addEventListener("change", () => {
+    if (!t) return;
+    const [bi, ri, ci] = inp.dataset.tableCell.split(":").map(Number);
+    const block = t.detail[bi];
+    if (!block || block.type !== "table" || !block.rows[ri]) return;
+    block.rows[ri][ci] = richTreatmentHtml(inp.value);
+    saveTreatmentDraft("Table cell updated.", false);
+  }));
+
+  editor.querySelectorAll("[data-add-block]").forEach((btn) => btn.addEventListener("click", () => {
+    if (!t) return;
+    t.detail.push(createTreatmentBlock(btn.dataset.addBlock));
+    saveTreatmentDraft("Content block added.", true);
+  }));
+
+  editor.querySelectorAll("[data-price-action], [data-block-action]").forEach((btn) => btn.addEventListener("click", async () => {
+    const action = btn.dataset.priceAction || btn.dataset.blockAction;
+    await handlePriceEditorAction(action, btn, group, t);
+  }));
+}
+
+async function handlePriceEditorAction(action, btn, group, t) {
+  ensurePricesData();
+  if (action === "add-treatment-current") {
+    group.treatments.push(createTreatmentCard(group.title));
+    selectedTx.ti = group.treatments.length - 1;
+    saveTreatmentDraft("Treatment card added.", true);
+  } else if (action === "move-group-up" || action === "move-group-down") {
+    const dir = action === "move-group-up" ? -1 : 1;
+    const to = selectedTx.gi + dir;
+    if (to < 0 || to >= state.prices.groups.length) return;
+    [state.prices.groups[selectedTx.gi], state.prices.groups[to]] = [state.prices.groups[to], state.prices.groups[selectedTx.gi]];
+    selectedTx.gi = to;
+    saveTreatmentDraft("Treatment group moved.", true);
+  } else if (action === "delete-group") {
+    const ok = await ldConfirm({ title: "Delete treatment group?", body: "This removes the group and every card inside it from the Treatments page draft.", confirmLabel: "Delete group", danger: true });
+    if (!ok) return;
+    state.prices.groups.splice(selectedTx.gi, 1);
+    normaliseSelectedTx();
+    saveTreatmentDraft("Treatment group deleted.", true);
+  } else if (action === "move-treatment-up" || action === "move-treatment-down") {
+    const rows = group.treatments || [];
+    const dir = action === "move-treatment-up" ? -1 : 1;
+    const to = selectedTx.ti + dir;
+    if (to < 0 || to >= rows.length) return;
+    [rows[selectedTx.ti], rows[to]] = [rows[to], rows[selectedTx.ti]];
+    selectedTx.ti = to;
+    saveTreatmentDraft("Treatment card moved.", true);
+  } else if (action === "duplicate-treatment" && t) {
+    const copy = structuredClone(t);
+    copy.title = plainTreatmentHtml(decodeHtml(stripTags(t.title || "Treatment")) + " copy");
+    copy.id = uniqueTreatmentId(copy.title, copy);
+    copy.service = copy.id;
+    group.treatments.splice(selectedTx.ti + 1, 0, copy);
+    selectedTx.ti += 1;
+    saveTreatmentDraft("Treatment card duplicated.", true);
+  } else if (action === "delete-treatment" && t) {
+    const ok = await ldConfirm({ title: "Delete treatment card?", body: "This removes the selected treatment card from the Treatments page draft.", confirmLabel: "Delete card", danger: true });
+    if (!ok) return;
+    group.treatments.splice(selectedTx.ti, 1);
+    normaliseSelectedTx();
+    saveTreatmentDraft("Treatment card deleted.", true);
+  } else if (action && action.startsWith("move-block") && t) {
+    const bi = Number(btn.dataset.blockIndex);
+    const dir = action === "move-block-up" ? -1 : 1;
+    const to = bi + dir;
+    if (to < 0 || to >= t.detail.length) return;
+    [t.detail[bi], t.detail[to]] = [t.detail[to], t.detail[bi]];
+    saveTreatmentDraft("Content block moved.", true);
+  } else if (action === "delete-block" && t) {
+    t.detail.splice(Number(btn.dataset.blockIndex), 1);
+    saveTreatmentDraft("Content block deleted.", true);
+  } else if (action === "add-list-row" && t) {
+    const block = t.detail[Number(btn.dataset.blockIndex)];
+    if (!block || block.type !== "pricelist") return;
+    block.rows.push({ name: "New item", cost: "£", costSmall: "" });
+    saveTreatmentDraft("Price row added.", true);
+  } else if (action === "delete-list-row" && t) {
+    const block = t.detail[Number(btn.dataset.blockIndex)];
+    if (!block || block.type !== "pricelist") return;
+    block.rows.splice(Number(btn.dataset.rowIndex), 1);
+    saveTreatmentDraft("Price row deleted.", true);
+  } else if (action === "add-table-column" && t) {
+    const block = t.detail[Number(btn.dataset.blockIndex)];
+    if (!block || block.type !== "table") return;
+    block.columns.push("New column");
+    (block.rows || []).forEach((row) => row.push(""));
+    saveTreatmentDraft("Table column added.", true);
+  } else if (action === "delete-table-column" && t) {
+    const block = t.detail[Number(btn.dataset.blockIndex)];
+    if (!block || block.type !== "table" || block.columns.length <= 1) return;
+    const ci = Number(btn.dataset.columnIndex);
+    block.columns.splice(ci, 1);
+    (block.rows || []).forEach((row) => row.splice(ci, 1));
+    saveTreatmentDraft("Table column deleted.", true);
+  } else if (action === "add-table-row" && t) {
+    const block = t.detail[Number(btn.dataset.blockIndex)];
+    if (!block || block.type !== "table") return;
+    block.rows.push((block.columns || ["Area", "Price"]).map((c, i) => (i === 0 ? "New row" : "")));
+    saveTreatmentDraft("Table row added.", true);
+  } else if (action === "delete-table-row" && t) {
+    const block = t.detail[Number(btn.dataset.blockIndex)];
+    if (!block || block.type !== "table") return;
+    block.rows.splice(Number(btn.dataset.rowIndex), 1);
+    saveTreatmentDraft("Table row deleted.", true);
+  }
+}
+
 // Update just the selected nav item's headline label (no full re-render, keeps scroll).
 function updateNavHeadline() {
   const t = currentTx(); if (!t) return;
   const small = document.querySelector(`[data-price-pick="${selectedTx.gi}:${selectedTx.ti}"] small`);
   if (small) small.textContent = decodeHtml(t.headline || "");
+  const treatmentSmall = document.querySelector(`[data-treatment-pick="${selectedTx.gi}:${selectedTx.ti}"] small`);
+  if (treatmentSmall) treatmentSmall.textContent = decodeHtml(t.headline || "");
 }
 
 /* ---------------- Reviews ---------------- */
@@ -1789,6 +2490,7 @@ function renderAll() {
   updateOfferImageStatus();
   renderOffers();
   renderPrices();
+  renderTreatmentCards();
   renderContent();
   renderMedia();
   renderReviews();
@@ -2448,20 +3150,30 @@ async function publishServicesHtml(branch, renderedSection) {
   }
 }
 
-async function publishPrices() {
-  if (typeof window.renderTreatmentLibrary !== "function") { toast("Price template didn’t load — hard-refresh the admin and try again."); return false; }
-  if (!state.prices || !(state.prices.groups || []).length) { toast("No prices loaded yet — click “Reload from website” first."); return false; }
+async function publishTreatmentMenu(opts) {
+  if (typeof window.renderTreatmentLibrary !== "function") { toast("Treatment template didn’t load — hard-refresh the admin and try again."); return false; }
+  if (!state.prices || !(state.prices.groups || []).length) { toast("No treatments loaded yet — click “Reload from website” first."); return false; }
+  normaliseSelectedTx();
+  const cfg = Object.assign({
+    buttonSelector: "[data-publish-prices]",
+    idleLabel: "Publish prices",
+    confirmTitle: "Publish prices?",
+    confirmLabel: "Publish prices",
+    snapshotLabel: "Before publishing prices",
+    successToast: "Prices are live now.",
+    status: setPricesStatus
+  }, opts || {});
 
   if (!(await ldConfirm({
-    title: "Publish prices?",
+    title: cfg.confirmTitle,
     body: "This updates the live Treatments & prices page for everyone visiting the website, straight away. Continue?",
-    confirmLabel: "Publish prices"
+    confirmLabel: cfg.confirmLabel
   }))) return false;
 
-  const button = document.querySelector("[data-publish-prices]");
+  const button = document.querySelector(cfg.buttonSelector);
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
-  setPricesStatus("Saving to the treatments page…");
-  recordDraftVersion("prices", "Before publishing prices", state.prices);
+  cfg.status("Saving to the treatments page…");
+  recordDraftVersion("prices", cfg.snapshotLabel, state.prices);
   try {
     // Render the treatments section and drop it into the page template's PRICES
     // markers; the Worker stores just that region and injects it live (edge-render).
@@ -2474,16 +3186,32 @@ async function publishPrices() {
 
     state.publishedAt = new Date().toISOString();
     saveDraft(null);
-    setPricesStatus("Saved — the treatments page is live now. Refresh it to see the changes.");
-    toast("Prices are live now.");
+    cfg.status("Saved — the treatments page is live now. Refresh it to see the changes.");
+    toast(cfg.successToast);
     return true;
   } catch (err) {
-    setPricesStatus("Save failed: " + ldFriendlyError(err));
+    cfg.status("Save failed: " + ldFriendlyError(err));
     toast("Save failed: " + ldFriendlyError(err));
     return false;
   } finally {
-    if (button) { button.disabled = false; button.textContent = "Publish prices"; }
+    if (button) { button.disabled = false; button.textContent = cfg.idleLabel; }
   }
+}
+
+async function publishPrices() {
+  return publishTreatmentMenu();
+}
+
+async function publishTreatmentCards() {
+  return publishTreatmentMenu({
+    buttonSelector: "[data-publish-treatments]",
+    idleLabel: "Publish treatment cards",
+    confirmTitle: "Publish treatment cards?",
+    confirmLabel: "Publish treatment cards",
+    snapshotLabel: "Before publishing treatment cards",
+    successToast: "Treatment cards are live now.",
+    status: setTreatmentStatus
+  });
 }
 
 /* ---------- Publish page text: hero markers (home) + site-wide contact details ---------- */
@@ -2649,6 +3377,7 @@ function bindPublishing() {
   document.querySelector("[data-publish-offers]")?.addEventListener("click", publishOffers);
   document.querySelector("[data-publish-reviews]")?.addEventListener("click", publishReviews);
   document.querySelector("[data-publish-prices]")?.addEventListener("click", publishPrices);
+  document.querySelector("[data-publish-treatments]")?.addEventListener("click", publishTreatmentCards);
   document.querySelector("[data-publish-content]")?.addEventListener("click", publishContent);
   document.querySelector("[data-reload-offers]")?.addEventListener("click", async () => {
     const ok = await ldConfirm({
@@ -2679,7 +3408,7 @@ const AUDIT_LABELS = {
   "campaign.send": "Sent campaign", "campaign.test": "Sent test email",
   "campaign.schedule": "Scheduled campaign", "campaign.cancel": "Cancelled scheduled send",
   "publish.offers": "Published offers", "publish.reviews": "Published reviews",
-  "publish.prices": "Published prices", "publish.pages": "Published page text",
+  "publish.prices": "Published prices", "publish.treatments": "Published treatment cards", "publish.pages": "Published page text",
   "upload.image": "Uploaded image", "delete.image": "Deleted image",
   "subscriber.delete": "Deleted subscriber", "subscriber.export": "Exported subscribers (CSV)",
   "subscriber.import": "Imported subscribers (CSV)",
@@ -2871,7 +3600,7 @@ function renderOnboardingChecklist(d) {
 
 function applyRoleControls() {
   const restricted = [
-    "[data-publish-offers]", "[data-publish-reviews]", "[data-publish-prices]", "[data-publish-content]",
+    "[data-publish-offers]", "[data-publish-reviews]", "[data-publish-prices]", "[data-publish-treatments]", "[data-publish-content]",
     "[data-send-campaign]", "[data-send-test]", "[data-schedule-toggle]", "[data-bday-save]", "[data-bday-test]",
     "[data-media-upload-btn]", "[data-offer-image-upload]", "[data-mail-banner-upload]",
     "[data-subs-export]", "[data-subs-import]", "[data-export-admin]", "[data-import-admin]",

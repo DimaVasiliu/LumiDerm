@@ -13,6 +13,7 @@ const tabs = [
   ['guide', 'Guide & help'],
   ['offers', 'Offers'],
   ['prices', 'Prices'],
+  ['treatments', 'Treatment cards'],
   ['sender', 'Send email'],
   ['subscribers', 'Subscribers'],
   ['reviews', 'Reviews'],

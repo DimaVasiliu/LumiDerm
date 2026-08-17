@@ -721,6 +721,36 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
   overflow-y: auto;
 }
 
+.price-nav-head,
+.price-nav-title-row,
+.price-section-head,
+.price-block-head,
+.price-inline-actions,
+.price-block-tools,
+.price-table-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.price-nav-head,
+.price-section-head,
+.price-block-head,
+.price-table-tools {
+  justify-content: space-between;
+}
+
+.price-nav-head strong,
+.price-section-head strong,
+.price-block-head strong,
+.price-table-tools strong {
+  color: var(--admin-accent-dark);
+  font-weight: 900;
+}
+
+.price-nav-title-row { justify-content: space-between; }
+.price-nav-empty { display: grid; gap: 0.8rem; }
 .price-nav-group { display: grid; gap: 0.35rem; }
 
 .price-nav-title {
@@ -761,6 +791,40 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
 .price-editor-head { margin-bottom: 0.4rem; }
 .price-editor-head h3 { margin: 0.1rem 0 0.35rem; font-family: var(--font-heading); font-size: 1.5rem; }
 
+.price-card-section,
+.price-block-edit {
+  display: grid;
+  gap: 0.8rem;
+  border: 1px solid rgb(68 52 49 / 10%);
+  border-radius: 16px;
+  padding: 0.9rem;
+  background: rgb(255 255 255 / 64%);
+}
+
+.price-field-grid,
+.price-table-columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.price-block-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.price-block-tools {
+  justify-content: flex-start;
+}
+
+.price-html-edit {
+  min-height: 130px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
 .price-headline { display: block; margin: 0.6rem 0 0.4rem; }
 .price-headline small { font-weight: 400; opacity: 0.65; }
 
@@ -793,7 +857,8 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
   padding-right: 0.8rem;
 }
 .price-table-edit tbody tr { border-top: 1px solid rgb(68 52 49 / 7%); }
-.price-table-edit td input { min-width: 68px; text-align: center; }
+.price-table-edit td input { min-width: 92px; text-align: left; }
+.price-table-edit .price-row-tools { min-width: 112px; }
 
 .price-list-edit {
   display: grid;
@@ -814,6 +879,14 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
 }
 .price-list-name { font-weight: 600; font-size: 0.9rem; }
 .price-list-row > * { min-width: 0; }
+
+.price-list-row-edit {
+  grid-template-columns: 1fr;
+  padding: 0.75rem;
+  border: 1px solid rgb(68 52 49 / 8%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 70%);
+}
 .price-list-cost { max-width: 150px; }
 
 .price-list-small {
@@ -828,18 +901,32 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
 
 @media (width >= 900px) {
   .admin-layout.admin-layout-prices {
-    grid-template-columns: minmax(260px, 0.92fr) minmax(420px, 1.08fr);
+    grid-template-columns: minmax(280px, 0.76fr) minmax(560px, 1.24fr);
     align-items: start;
+  }
+
+  .price-field-grid,
+  .price-table-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .price-list-row {
     grid-template-columns: minmax(110px, 0.9fr) minmax(92px, 140px) minmax(0, 1.1fr);
     gap: 0.5rem;
   }
+
+  .price-list-row-edit {
+    grid-template-columns: minmax(140px, 1fr) minmax(92px, 130px) minmax(160px, 1fr) auto;
+    align-items: end;
+  }
 }
 
 @media (width >= 900px) and (width <= 1180px) {
   .price-list-row {
+    grid-template-columns: minmax(0, 1fr) minmax(92px, 140px);
+  }
+
+  .price-list-row-edit {
     grid-template-columns: minmax(0, 1fr) minmax(92px, 140px);
   }
 
@@ -2316,3 +2403,67 @@ tr[data-offer-row].drag-over td { box-shadow: inset 0 2px 0 var(--admin-accent);
 .voucher-status-redeemed { background: #f1e8fb; color: #6b3fa0; }
 .voucher-status-expired { background: #f5eae8; color: #a5675f; }
 .voucher-status-cancelled { background: #fbe9e7; color: #b1362c; }
+
+/* ---------- Add a treatment card ---------- */
+.txnew-rows { display: grid; gap: 8px; margin: 6px 0 10px; }
+
+.txnew-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.7fr 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+.txnew-row input { margin: 0; }
+.txnew-row .tiny-button { padding: 6px 10px; line-height: 1; }
+
+@media (width <= 720px) {
+  .txnew-row { grid-template-columns: 1fr 1fr; }
+  .txnew-row .tiny-button { grid-column: 2; justify-self: end; }
+}
+
+.admin-advanced { margin-top: 18px; }
+
+.admin-advanced > summary {
+  cursor: pointer;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  color: var(--admin-ink, #333);
+  list-style: revert;
+}
+.admin-advanced[open] > summary { border-bottom: 1px solid rgb(0 0 0 / 8%); margin-bottom: 14px; }
+.admin-advanced-body { display: grid; gap: 14px; }
+
+/* ---------- Treatment card live preview (uses the site's tx-* markup) ---------- */
+.tx-preview { display: grid; gap: 12px; }
+.tx-preview .treatment-group { display: grid; gap: 10px; }
+.tx-preview .treatment-group-title { font-size: 1rem; font-weight: 700; margin: 0; color: var(--admin-accent, #b07d62); }
+.tx-preview .tx-card { border: 1px solid rgb(0 0 0 / 12%); border-radius: 12px; background: #fff; overflow: hidden; }
+
+.tx-preview .tx-card-btn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #faf7f4;
+  border: 0;
+  text-align: left;
+  cursor: default;
+}
+.tx-preview .tx-head { display: grid; gap: 2px; }
+.tx-preview .tx-title { font-weight: 700; }
+.tx-preview .tx-sub { font-size: 0.82rem; color: #777; }
+.tx-preview .tx-price { font-weight: 700; color: var(--admin-accent, #b07d62); white-space: nowrap; }
+.tx-preview .tx-detail { padding: 12px 14px; display: grid; gap: 8px; }
+.tx-preview .tx-detail p { margin: 0; font-size: 0.9rem; line-height: 1.5; color: #444; }
+.tx-preview .tx-subhead { font-weight: 700; color: #333; }
+.tx-preview .tx-pricelist { display: grid; gap: 4px; }
+.tx-preview .tx-row { display: flex; justify-content: space-between; gap: 12px; font-size: 0.9rem; border-bottom: 1px dashed rgb(0 0 0 / 8%); padding-bottom: 3px; }
+.tx-preview .tx-cost { font-weight: 600; white-space: nowrap; }
+.tx-preview .tx-cost small { font-weight: 400; color: #888; margin-left: 4px; }
+.tx-preview .tx-pricetable { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.tx-preview .tx-pricetable th, .tx-preview .tx-pricetable td { border: 1px solid rgb(0 0 0 / 10%); padding: 4px 6px; text-align: left; }
+.tx-preview .tx-note { font-size: 0.82rem; color: #8a6d5f; margin: 0; }
+.tx-preview .tx-pill { display: inline-block; font-size: 0.78rem; background: #f1e7df; color: #6b4c39; padding: 3px 10px; border-radius: 999px; }
+.tx-preview .tx-actions .btn { display: inline-block; margin-top: 4px; padding: 8px 14px; border-radius: 999px; background: var(--admin-accent, #b07d62); color: #fff; font-size: 0.85rem; text-decoration: none; }

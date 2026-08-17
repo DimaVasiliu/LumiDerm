@@ -1650,6 +1650,7 @@ body:has(.price-modal-open:checked) {
 .about-image img,
 .gallery-item img {
   width: 100%;
+  height: auto;
   object-fit: cover;
 }
 
@@ -1661,6 +1662,30 @@ body:has(.price-modal-open:checked) {
 
 .about-image img {
   aspect-ratio: 4 / 5;
+}
+
+.about-bio .about-image {
+  width: 100%;
+  align-self: start;
+  border-radius: var(--radius-lg);
+}
+
+.about-bio .about-image img {
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: center;
+}
+
+.about-venue .about-image {
+  width: 100%;
+  align-self: start;
+  border-radius: var(--radius-lg);
+}
+
+.about-venue .about-image img {
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: center;
 }
 
 .feature-list {

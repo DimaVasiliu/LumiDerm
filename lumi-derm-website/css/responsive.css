@@ -388,6 +388,18 @@
     grid-template-columns: 0.82fr 1fr;
   }
 
+  .about-bio {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.05fr);
+    align-items: start;
+    max-width: 1080px;
+  }
+
+  .about-venue {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.85fr);
+    align-items: start;
+    max-width: 1080px;
+  }
+
   .split.reverse {
     grid-template-columns: 1fr 0.82fr;
   }
