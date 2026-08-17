@@ -1,103 +1,6 @@
 {
   "groups": [
     {
-      "title": "Consultations &amp; patch tests",
-      "treatments": [
-        {
-          "id": "prp-consultation",
-          "title": "PRP(Platelet rich plasma) Consultation",
-          "sub": "Cosmetic Injectables",
-          "headline": "£10 · 20 min",
-          "service": "prp-consultation",
-          "bookLabel": "Book PRP consultation",
-          "detail": [
-            {
-              "type": "p",
-              "html": "Book this consultation before PRP so Iulia can confirm suitability, answer questions and recommend the right face, body, scalp or hair-loss treatment plan."
-            },
-            {
-              "type": "pricelist",
-              "rows": [
-                {
-                  "name": "PRP(Platelet rich plasma) Consultation",
-                  "cost": "£10",
-                  "costSmall": "20 min"
-                }
-              ]
-            },
-            {
-              "type": "note",
-              "text": "Cleanup time: 10 minutes."
-            }
-          ]
-        },
-        {
-          "id": "laser-rejuvenation-patch-test",
-          "title": "Laser Skin Rejuvenation Compulsory Patch Test",
-          "sub": "Patch test for Hair",
-          "headline": "£10 · 20 min",
-          "service": "laser-rejuvenation-patch-test",
-          "bookLabel": "Book patch test",
-          "detail": [
-            {
-              "type": "p",
-              "html": "Your comfort and safety are paramount. The trained professionals will give you a small assessment, testing a small patch of skin to detect any potential sensitivities."
-            },
-            {
-              "type": "p",
-              "html": "A Patch Test service isn't just a precaution — it's a promise that your well-being comes first, so you can indulge in the treatments you love with complete peace of mind."
-            },
-            {
-              "type": "p",
-              "html": "Book now for service with a style."
-            },
-            {
-              "type": "pricelist",
-              "rows": [
-                {
-                  "name": "Laser Skin Rejuvenation Compulsory Patch Test",
-                  "cost": "£10",
-                  "costSmall": "20 min"
-                }
-              ]
-            },
-            {
-              "type": "note",
-              "text": "Cleanup time: 15 minutes."
-            }
-          ]
-        },
-        {
-          "id": "hair-loss-consultation",
-          "title": "Hair Loss Consultation",
-          "sub": "Cosmetic Injectables",
-          "headline": "£10 · 20 min",
-          "service": "hair-loss-consultation",
-          "bookLabel": "Book hair loss consultation",
-          "detail": [
-            {
-              "type": "p",
-              "html": "Book this consultation before hair loss treatment so Iulia can assess your scalp and hair concerns, confirm suitability and recommend the right mesotherapy, PRP or combined plan."
-            },
-            {
-              "type": "pricelist",
-              "rows": [
-                {
-                  "name": "Hair Loss Consultation",
-                  "cost": "£10",
-                  "costSmall": "20 min"
-                }
-              ]
-            },
-            {
-              "type": "note",
-              "text": "Cleanup time: 10 minutes."
-            }
-          ]
-        }
-      ]
-    },
-    {
       "title": "Laser &amp; hair removal · Cynosure Elite",
       "treatments": [
         {
@@ -317,6 +220,38 @@
           ]
         },
         {
+          "id": "laser-rejuvenation-patch-test",
+          "title": "Laser Skin Rejuvenation Compulsory Patch Test",
+          "sub": "Patch test for Hair",
+          "headline": "£10 · 20 min",
+          "service": "laser-rejuvenation-patch-test",
+          "bookLabel": "Book patch test",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Your comfort and safety are paramount. The trained professionals will give you a small assessment, testing a small patch of skin to detect any potential sensitivities."
+            },
+            {
+              "type": "p",
+              "html": "A Patch Test service isn't just a precaution — it's a promise that your well-being comes first, so you can indulge in the treatments you love with complete peace of mind."
+            },
+            {
+              "type": "p",
+              "html": "Book now for service with a style."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Laser Skin Rejuvenation Compulsory Patch Test",
+                  "cost": "£10",
+                  "costSmall": "20 min"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "id": "laser-rejuvenation",
           "title": "Laser Skin Rejuvenation",
           "sub": "Facials - Foto RF™ Skin Rejuvenation",
@@ -372,6 +307,38 @@
           ]
         },
         {
+          "id": "laser-veins-patch-test",
+          "title": "Laser Veins Compulsory Patch Test",
+          "sub": "Patch test for Hair",
+          "headline": "£10 · 20 min",
+          "service": "laser-veins-patch-test",
+          "bookLabel": "Book patch test",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Your comfort and safety are paramount. The trained professionals will give you a small assessment, testing a small patch of skin to detect any potential sensitivities or allergic reactions to the products."
+            },
+            {
+              "type": "p",
+              "html": "A Patch Test service isn't just a precaution — it's a promise that your well-being comes first, so you can indulge in the treatments you love with complete peace of mind."
+            },
+            {
+              "type": "p",
+              "html": "Book now for service with a style."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Laser Veins Compulsory Patch Test",
+                  "cost": "£10",
+                  "costSmall": "20 min"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "id": "vascular-treatment",
           "title": "Laser Veins Treatment/Single session(Package available)",
           "sub": "Laser Treatment - Thread Veins",
@@ -410,43 +377,7 @@
             },
             {
               "type": "note",
-              "text": "Cleanup time: 15 minutes."
-            }
-          ]
-        },
-        {
-          "id": "laser-veins-patch-test",
-          "title": "Laser Veins Compulsory Patch Test",
-          "sub": "Patch test for Hair",
-          "headline": "£10 · 20 min",
-          "service": "laser-veins-patch-test",
-          "bookLabel": "Book patch test",
-          "detail": [
-            {
-              "type": "p",
-              "html": "Your comfort and safety are paramount. The trained professionals will give you a small assessment, testing a small patch of skin to detect any potential sensitivities or allergic reactions to the products."
-            },
-            {
-              "type": "p",
-              "html": "A Patch Test service isn't just a precaution — it's a promise that your well-being comes first, so you can indulge in the treatments you love with complete peace of mind."
-            },
-            {
-              "type": "p",
-              "html": "Book now for service with a style."
-            },
-            {
-              "type": "pricelist",
-              "rows": [
-                {
-                  "name": "Laser Veins Compulsory Patch Test",
-                  "cost": "£10",
-                  "costSmall": "20 min"
-                }
-              ]
-            },
-            {
-              "type": "note",
-              "text": "Cleanup time: 10 minutes."
+              "text": "Patch test required 24 hours before your first session."
             }
           ]
         },
@@ -510,6 +441,30 @@
     {
       "title": "Injectables &amp; regeneration",
       "treatments": [
+        {
+          "id": "prp-consultation",
+          "title": "PRP(Platelet rich plasma) Consultation",
+          "sub": "Cosmetic Injectables",
+          "headline": "£10 · 20 min",
+          "service": "prp-consultation",
+          "bookLabel": "Book PRP consultation",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Book this consultation before PRP so the clinic owner can confirm suitability, answer questions and recommend the right face, body, scalp or hair-loss treatment plan."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "PRP(Platelet rich plasma) Consultation",
+                  "cost": "£10",
+                  "costSmall": "20 min"
+                }
+              ]
+            }
+          ]
+        },
         {
           "id": "prp",
           "title": "PRP(Platelet Rich Plasma)",
@@ -584,7 +539,7 @@
             },
             {
               "type": "note",
-              "text": "Cleanup time: 15 minutes. Consultation confirms suitability before treatment."
+              "text": "Consultation confirms suitability before treatment."
             }
           ]
         },
@@ -754,6 +709,30 @@
           ]
         },
         {
+          "id": "hair-loss-consultation",
+          "title": "Hair Loss Consultation",
+          "sub": "Cosmetic Injectables",
+          "headline": "£10 · 20 min",
+          "service": "hair-loss-consultation",
+          "bookLabel": "Book hair loss consultation",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Book this consultation before hair loss treatment so the clinic owner can assess your scalp and hair concerns, confirm suitability and recommend the right mesotherapy, PRP or combined plan."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Hair Loss Consultation",
+                  "cost": "£10",
+                  "costSmall": "20 min"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "id": "hair-loss",
           "title": "Hair loss treatments",
           "sub": "Hair mesotherapy &amp; PRP",
@@ -767,7 +746,7 @@
             },
             {
               "type": "p",
-              "html": "<strong>What to expect:</strong> the most suitable option and course length depend on the cause and pattern of thinning. Iulia will assess your goals and explain the recommended schedule before treatment begins."
+              "html": "<strong>What to expect:</strong> the most suitable option and course length depend on the cause and pattern of thinning. the practitioner will assess your goals and explain the recommended schedule before treatment begins."
             },
             {
               "type": "pricelist",
@@ -1162,6 +1141,34 @@
             {
               "type": "note",
               "text": "Consultation confirms suitability before treatment. Courses of 6 pay in 2 instalments; courses of 12 pay in 3 instalments."
+            }
+          ]
+        },
+        {
+          "id": "lashes-brows-patch-test",
+          "title": "Lash &amp; brow tint patch test",
+          "sub": "Required before lift or tint",
+          "headline": "£1 · 10 min",
+          "service": "lashes-brows-patch-test",
+          "bookLabel": "Book lash &amp; brow patch test",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Book this quick patch test at least 48 hours before any lash lift, lash tint, brow tint or brow lamination so the clinic owner can check product sensitivity before your treatment."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Lash &amp; brow tint patch test",
+                  "cost": "£1",
+                  "costSmall": "10 min"
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "text": "Mandatory 48 hours before any lash lift, brow lift or tint."
             }
           ]
         },

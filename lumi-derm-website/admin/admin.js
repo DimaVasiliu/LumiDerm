@@ -14,7 +14,7 @@ const imageOptions = [
   "offer-skin-boosters.webp", "offer-lip-boosters.webp", "offer-mesotherapy.webp",
   "offer-facials.webp", "offer-microneedling.webp", "offer-peels.webp",
   "offer-exosomes.webp", "offer-lashes-brows.webp", "offer-hair-loss-treatment.webp",
-  "iulia-professional-portrait.webp", "about-lumi-derm-studio.webp",
+  "practitioner-professional-portrait.webp", "about-lumi-derm-studio.webp",
   "gallery-preview-01.webp", "gallery-preview-02.webp"
 ];
 
@@ -664,7 +664,7 @@ function renderOfferPreview() {
 
 /* ---------------- Prices (treatments page) ----------------
    The treatments page (pages/services.html) is generated from
-   assets/data/prices.json between the PRICES markers. Iulia edits price
+   assets/data/prices.json between the PRICES markers. the clinic owner edits price
    values, instalment notes and the "from £X" headline here; the
    descriptions and table layout are fixed. Publishing rewrites both
    prices.json and the marked section of services.html. */
@@ -1270,37 +1270,37 @@ const DEFAULT_CONTENT = {
     about: {
       hero: {
         eyebrow: "Meet your practitioner",
-        title: "Hi, I'm Iulia.",
+        title: "Meet your practitioner.",
         lead: "An aesthetic practitioner with over 10 years' experience in laser, advanced skin and body treatments, offering practical advice, careful treatment planning and results that still look like you."
       },
       bio: {
-        eyebrow: "About me",
+        eyebrow: "About the clinic",
         title: "Clinically minded care, delivered calmly",
         paragraphs: [
-          "I founded Lumi Derm Aesthetics to offer advanced skincare the way I believe it should be: unhurried, personalised and honest. Over the past decade I've trained across laser, injectable, regenerative and body treatments, and I work with technology and products I trust.",
-          "Every appointment begins with a real conversation. I take time to understand your skin, your goals and your lifestyle, then recommend what is likely to help and what is worth leaving alone. If a treatment is not right for you, I will say so.",
+          "Lumi Derm Aesthetics was founded to offer advanced skincare the way it should be: unhurried, personalised and honest. The practitioner has trained across laser, injectable, regenerative and body treatments, and works with technology and products chosen for safety, quality and results.",
+          "Every appointment begins with a real conversation. Your practitioner takes time to understand your skin, your goals and your lifestyle, then recommends what is likely to help and what is worth leaving alone. If a treatment is not right for you, you will be told clearly.",
           "The aim is not to change your face or chase trends. It is to support healthier-looking skin, soften what bothers you and help you feel more comfortable in your own skin."
         ],
-        signature: "Iulia",
+        signature: "the practitioner",
         role: "Founder & Lead Practitioner, Lumi Derm Aesthetics"
       },
       clinic: {
         eyebrow: "The clinic",
         title: "A quiet Docklands studio for skin, laser and body care",
-        lead: "Lumi Derm Aesthetics is a modern, private treatment space in London Docklands. The menu is broad, but the approach is simple: choose the treatment that fits the concern, explain it clearly, and keep each appointment focused on the person in front of me.",
+        lead: "Lumi Derm Aesthetics is a modern, private treatment space in London Docklands. The menu is broad, but the approach is simple: choose the treatment that fits the concern, explain it clearly, and keep each appointment focused on the client in the room.",
         cards: [
-          { title: "What I offer", copy: "Facials, chemical peels, skin boosters, mesotherapy, PRP, laser hair removal, vascular laser treatments, electrolysis for hair and blemish removal, lymphatic drainage and Endospheres therapy." },
+          { title: "What the clinic offers", copy: "Facials, chemical peels, skin boosters, mesotherapy, PRP, laser hair removal, vascular laser treatments, electrolysis for hair and blemish removal, lymphatic drainage and Endospheres therapy." },
           { title: "How to get here", copy: "South Quay and Crossharbour stations are both about a 4-minute walk away. If you are driving, there is free and paid parking nearby, including ASDA parking around 10 minutes away on foot." },
           { title: "What matters", copy: "Appointments are one-to-one, treatment plans are tailored, and product choices are considered, with cruelty-free options used where they fit the treatment." }
         ]
       },
       concerns: {
-        eyebrow: "How I can help",
-        title: "The concerns I help you solve",
-        copy: "Most clients come in with something specific they want to improve: hair growth, texture, dullness, redness, thinning hair, puffiness or skin that no longer feels like theirs. These are the concerns I help with most often."
+        eyebrow: "How the clinic can help",
+        title: "The concerns your practitioner can help you solve",
+        copy: "Most clients come in with something specific they want to improve: hair growth, texture, dullness, redness, thinning hair, puffiness or skin that no longer feels like theirs. These are the concerns treated most often."
       },
       treatments: {
-        eyebrow: "What I do",
+        eyebrow: "What the clinic offers",
         title: "Advanced treatments, planned with restraint",
         copy: "The clinic offers laser, regenerative, skin and body treatments, but the plan stays focused: what is useful, what is safe, and what makes sense for your skin."
       },

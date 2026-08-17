@@ -1,6 +1,6 @@
 # Email sending — setup
 
-One-time technical setup. **Dima does this once; Iulia never sees it.**
+One-time technical setup. **Dima does this once; the clinic owner never sees it.**
 
 After this, she opens `/admin/` → **Send email** → drops in the Treatwell CSV → ticks offers → **Send**.
 
@@ -19,7 +19,7 @@ From the client export of 14 July 2026:
 
 **We can only email the 15.** The importer enforces this — it reads the `opt-in state` column and discards every `N` row automatically. There is no setting to override it short of deliberately choosing "I have consent another way".
 
-The real job is turning those 70 into opted-in clients. Iulia asks at checkout — *"Would you like to hear about our offers by email?"* — and ticks the box in Treatwell. Re-export in a few months and the list will be worth sending to.
+The real job is turning those 70 into opted-in clients. the clinic owner asks at checkout — *"Would you like to hear about our offers by email?"* — and ticks the box in Treatwell. Re-export in a few months and the list will be worth sending to.
 
 ---
 
@@ -90,7 +90,7 @@ It prints an `id`. Paste it into `wrangler.jsonc`, replacing `REPLACE_WITH_KV_NA
 Generate two long random strings:
 
 ```bash
-openssl rand -hex 32   # this is SEND_KEY   — give this one to Iulia
+openssl rand -hex 32   # this is SEND_KEY   — give this one to the clinic owner
 openssl rand -hex 32   # this is UNSUB_SECRET — nobody needs to see this
 ```
 
@@ -128,13 +128,13 @@ git push origin main
 Cloudflare → **Zero Trust → Access → Applications → Add an application** → Self-hosted:
 
 - Domain: `lumidermaesthetics.com`, path: `admin`
-- Policy: Allow → Emails → Iulia's address and yours
+- Policy: Allow → Emails → the clinic owner's address and yours
 
 Repeat for `cms` if it's still there. Without this, anyone who finds `/admin/` can read the send key out of the page and email your clients.
 
 ## 8. Hand over the key
 
-Give Iulia the `SEND_KEY` string once. She pastes it into **Settings → Sending connection → Send key → Save key**, then clicks **Test sending**. It should say *Ready*.
+Give the clinic owner the `SEND_KEY` string once. She pastes it into **Settings → Sending connection → Send key → Save key**, then clicks **Test sending**. It should say *Ready*.
 
 That's it. She never touches any of this again.
 

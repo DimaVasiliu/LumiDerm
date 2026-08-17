@@ -1,6 +1,6 @@
 # Media library (image uploads) — setup
 
-Iulia can upload her own images in **Media** and **Send email**. They're stored in
+the clinic owner can upload her own images in **Media** and **Send email**. They're stored in
 **Cloudflare R2** (object storage, free tier: 10 GB) and served from
 `https://lumidermaesthetics.com/media/<key>` — a stable URL that works on the site,
 in offers, and in email campaigns.
@@ -36,7 +36,7 @@ cheap, scalable place for them.
 
 ---
 
-## How Iulia uses it
+## How the clinic owner uses it
 
 - **Media tab:** click **Upload image** to add any photo. Uploaded images show a **Delete**
   button; the built-in stock images are read-only.

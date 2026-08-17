@@ -78,7 +78,7 @@ Copy/paste and adjust. Replace `[Name]` with Connect's personalisation field. **
 > **Book your consultation →** https://lumidermaesthetics.com/pages/booking.html
 >
 > Offer ends 31 August. See you soon,
-> Iulia — Lumi Derm Aesthetics, London Docklands
+> Lumi Derm Aesthetics, London Docklands
 
 ---
 
@@ -97,7 +97,7 @@ Copy/paste and adjust. Replace `[Name]` with Connect's personalisation field. **
 >
 > Available until 30 September.
 >
-> Iulia — Lumi Derm Aesthetics
+> Lumi Derm Aesthetics
 
 ---
 
@@ -116,7 +116,7 @@ Copy/paste and adjust. Replace `[Name]` with Connect's personalisation field. **
 >
 > **Plan your course →** https://lumidermaesthetics.com/pages/booking.html
 >
-> Iulia — Lumi Derm Aesthetics
+> Lumi Derm Aesthetics
 
 ---
 
@@ -136,7 +136,7 @@ Copy/paste and adjust. Replace `[Name]` with Connect's personalisation field. **
 > **Book a consultation →** https://lumidermaesthetics.com/pages/booking.html
 >
 > Lovely to hear from you either way,
-> Iulia — Lumi Derm Aesthetics
+> Lumi Derm Aesthetics
 
 ---
 
@@ -154,7 +154,7 @@ Copy/paste and adjust. Replace `[Name]` with Connect's personalisation field. **
 > **Book your treat →** https://lumidermaesthetics.com/pages/booking.html
 >
 > Have a wonderful day,
-> Iulia — Lumi Derm Aesthetics
+> Lumi Derm Aesthetics
 
 ---
 
@@ -173,7 +173,7 @@ Copy/paste and adjust. Replace `[Name]` with Connect's personalisation field. **
 >
 > Any questions before you come in, just reply to this email.
 >
-> Iulia — Lumi Derm Aesthetics
+> Lumi Derm Aesthetics
 
 ---
 

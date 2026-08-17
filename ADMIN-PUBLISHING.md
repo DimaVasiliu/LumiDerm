@@ -1,6 +1,6 @@
 # Admin → Website: how offers go live
 
-**For Iulia it's three steps:** open `/admin/` → create the offer → click **Publish offers**. About a minute later it's on the homepage. She never sees GitHub.
+**For the practitioner it's three steps:** open `/admin/` → create the offer → click **Publish offers**. About a minute later it's on the homepage. She never sees GitHub.
 
 To make that work, **you set it up once** (10 minutes). She never repeats this.
 
@@ -14,7 +14,7 @@ The homepage reads its offers from one file:
 lumi-derm-website/assets/data/offers.json
 ```
 
-When Iulia clicks **Publish offers**, the admin writes that file straight to GitHub. Cloudflare sees the commit and rebuilds the site (~1 min). That's the whole loop.
+When the clinic owner clicks **Publish offers**, the admin writes that file straight to GitHub. Cloudflare sees the commit and rebuilds the site (~1 min). That's the whole loop.
 
 ---
 
@@ -57,13 +57,13 @@ The token lives in the browser, so `/admin/` must not be public.
 Cloudflare dashboard → **Zero Trust → Access → Applications → Add an application** → *Self-hosted*
 
 - **Domain:** `lumidermaesthetics.com`, **Path:** `admin`
-- **Policy:** Allow → *Emails* → Iulia's email + yours
+- **Policy:** Allow → *Emails* → the clinic owner's email + yours
 
 Do the same for `/cms`. Both are already `noindex` + blocked in `robots.txt`, but that only stops search engines, not people.
 
 ---
 
-## What Iulia does (every time)
+## What the clinic owner does (every time)
 
 1. Open `/admin/` → **Offers**
 2. **Add offer** (or click *Edit* on one), fill in the fields, **Save offer**
@@ -107,4 +107,4 @@ Do the same for `/cms`. Both are already `noindex` + blocked in `robots.txt`, bu
 
 ## Later, if you want to remove the token from her browser
 
-The publish button calls one function (`publishOffers` in `admin/admin.js`). Point it at a small Cloudflare Worker that holds the token server-side instead, and **nothing changes for Iulia** — same button, same flow.
+The publish button calls one function (`publishOffers` in `admin/admin.js`). Point it at a small Cloudflare Worker that holds the token server-side instead, and **nothing changes for the practitioner** — same button, same flow.

@@ -2,7 +2,7 @@
 
 ## Verdict
 
-The admin is already a useful lightweight CMS, but before this pass it only let Iulia safely edit homepage hero text, homepage SEO, contact details, offers, prices, reviews, media and email campaigns. The About page and most inner-page intro text were still static HTML, so she could not change them herself.
+The admin is already a useful lightweight CMS, but before this pass it only let the clinic owner safely edit homepage hero text, homepage SEO, contact details, offers, prices, reviews, media and email campaigns. The About page and most inner-page intro text were still static HTML, so she could not change them herself.
 
 This pass expands the editable page-text model so she can now manage the copy she specifically asked about: About page copy plus key Treatments and Booking intro/support text.
 
@@ -46,7 +46,7 @@ I did not make legal, privacy, cookies, policy wording or clinical treatment des
 
 The current practical split is:
 
-- Iulia can edit marketing/page intro copy that changes often.
+- the clinic owner can edit marketing/page intro copy that changes often.
 - Prices and offers remain fully admin-editable.
 - Legal and clinical detail copy should remain developer/owner-managed unless a stricter review workflow is added.
 

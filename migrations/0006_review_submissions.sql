@@ -1,6 +1,6 @@
 -- Lumi Derm — client review submissions (from the website "Leave a review" form)
 -- Submitted reviews land here as 'pending' and appear in Admin → Reviews for
--- Iulia to approve (import into the review list) or reject. Nothing is public
+-- the clinic owner to approve (import into the review list) or reject. Nothing is public
 -- until she approves and publishes it.
 -- Apply with:
 --   npx wrangler d1 migrations apply lumidermdb --remote

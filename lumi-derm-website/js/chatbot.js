@@ -39,7 +39,7 @@ const LUMI_CHAT_CONFIG = {
     "(Book Now page). Phone 07832839298, email info@lumidermaesthetics.co.uk, Instagram " +
     "@lumi.derm.aesthetic. Treatments include laser hair removal & skin, electrolysis, PRP, skin " +
     "boosters, mesotherapy, facials, peels, microneedling, Endospheres, lashes and brows; laser from £40. " +
-    "Be warm, concise and helpful. For clinical/medical specifics, recommend a consultation with Iulia. " +
+    "Be warm, concise and helpful. For clinical/medical specifics, recommend a consultation with the practitioner. " +
     "Never invent prices or policies you are unsure about — point them to booking or contact instead.",
 };
 
@@ -93,7 +93,7 @@ const LUMI_KB = [
   {
     id: 'pain',
     keywords: ['hurt', 'pain', 'painful', 'downtime', 'recovery', 'side effects', 'safe'],
-    answer: "Most treatments are comfortable and well tolerated, with only mild, short-lived redness possible and minimal downtime. Iulia will talk you through what to expect beforehand.",
+    answer: "Most treatments are comfortable and well tolerated, with only mild, short-lived redness possible and minimal downtime. the practitioner will talk you through what to expect beforehand.",
   },
   {
     id: 'hours',

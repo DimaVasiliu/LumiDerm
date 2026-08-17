@@ -23,7 +23,7 @@ payment details, Access cookies or recovery codes in this repository or chat.
 ## TREATWELL-WIDGET-001 Verify official widget
 
 - **Status:** OFFICIAL CODE SUPPLIED; INTEGRATED LOCALLY; PRODUCTION VERIFICATION REQUIRED
-- **Owner:** Iulia/developer
+- **Owner:** clinic owner/developer
 - **Service:** Treatwell Connect
 - **Steps:**
   1. In Treatwell Connect, use **Online booking -> Booking Widget -> Show me how it looks** and
@@ -40,7 +40,7 @@ payment details, Access cookies or recovery codes in this repository or chat.
 ## TREATWELL-CATALOG-001 Reconcile the live treatment menu
 
 - **Status:** REQUIRED BEFORE FINAL ACCEPTANCE
-- **Owner:** Iulia
+- **Owner:** clinic owner
 - **Steps:** Compare every website treatment with the live Treatwell menu. Confirm public name,
   category, price, duration, practitioner, online availability, package terms and any venue-only
   instalment wording. Record mismatches in a non-secret table and identify the approved value.
@@ -50,7 +50,7 @@ payment details, Access cookies or recovery codes in this repository or chat.
 ## TREATWELL-FLOW-001 Verify booking and payment behaviour
 
 - **Status:** REQUIRED BEFORE FINAL ACCEPTANCE
-- **Owner:** Iulia
+- **Owner:** clinic owner
 - **Steps:**
   1. Record the current cancellation/no-show, deposit/prepayment and rescheduling rules in
      Treatwell Connect.
@@ -64,7 +64,7 @@ payment details, Access cookies or recovery codes in this repository or chat.
 ## TREATWELL-MARKETING-001 Confirm communication features
 
 - **Status:** REQUIRED BEFORE CAMPAIGN SENDING
-- **Owner:** Iulia
+- **Owner:** clinic owner
 - **Action:** Ask Treatwell Partner Support which bulk email, SMS, rebooking and review-request
   features are enabled, how consent/unsubscribe is managed, and whether client segments can be used
   without exporting data. Until confirmed, the custom admin creates copy drafts only.
@@ -72,7 +72,7 @@ payment details, Access cookies or recovery codes in this repository or chat.
 ## GOOGLE-GBP-001 Complete Google review access
 
 - **Status:** THREE SUPPORT CASES OPEN; WAITING FOR REVIEW
-- **Owner:** Iulia/developer
+- **Owner:** clinic owner/developer
 - **Action:** Keep one primary Google case, request closure of duplicate cases, monitor the owner
   email and do not submit more applications. Approval is confirmed by Google's response and the
   applicable Business Profile API quota. OAuth credentials are configured only after approval.
@@ -89,6 +89,6 @@ payment details, Access cookies or recovery codes in this repository or chat.
 ## LEGAL-REVIEW-001 Review public policies
 
 - **Status:** REQUIRED BEFORE FINAL ACCEPTANCE
-- **Owner:** Iulia/legal adviser
+- **Owner:** clinic owner/legal adviser
 - **Action:** Review privacy, cookies, booking/cancellation, treatment consent, marketing consent,
   record retention and provider roles against the actual Treatwell and clinic configuration.

@@ -36,7 +36,7 @@
       body: "",
       ctaLabel: "Book your consultation",
       ctaUrl: BOOKING_URL,
-      ctaAuto: true,         // true = button link follows the ticked offer; false = Iulia set it herself
+      ctaAuto: true,         // true = button link follows the ticked offer; false = the clinic owner set it manually
       heroImage: ""          // optional banner image URL (/media/... in R2)
     }
   };
@@ -608,7 +608,7 @@
     return url;
   }
 
-  // Recompute the button link from the selection — unless Iulia typed her own.
+  // Recompute the button link from the selection — unless the clinic owner typed a custom.
   function applyAutoCta() {
     if (state.mail.ctaAuto !== false) {
       state.mail.ctaUrl = autoCtaUrl();
@@ -773,7 +773,7 @@
           "</a></td></tr></table>"
         : "") +
       '<p style="margin:34px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.7;color:#4a443e;">See you soon,<br>' +
-      '<span style="font-family:Georgia,serif;font-size:17px;color:#1c1a18;">Iulia</span></p>' +
+      '<span style="font-family:Georgia,serif;font-size:17px;color:#1c1a18;">the practitioner</span></p>' +
       "</td></tr>" +
       // footer
       '<tr><td style="padding:24px 40px 38px;">' +

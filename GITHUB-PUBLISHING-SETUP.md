@@ -6,7 +6,7 @@ secret, never in the browser.** The admin calls a Worker proxy
 (`/admin/api/github`) which injects the token, owns the repo/branch, and only allows
 writes to the site's own data + page files.
 
-This is a one-time setup. After it's done, Iulia never touches anything — there are no
+This is a one-time setup. After it's done, the clinic owner never touches anything — there are no
 token fields in the admin any more.
 
 ---

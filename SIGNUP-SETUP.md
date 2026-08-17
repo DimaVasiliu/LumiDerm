@@ -2,7 +2,7 @@
 
 Collect new-client emails on the website, with proper UK GDPR/PECR consent, stored securely and visible in the admin. Feeds the email marketing we already built.
 
-**One-time technical setup is Dima's. After that, Iulia just watches the Subscribers tab fill up.**
+**One-time technical setup is Dima's. After that, the clinic owner just watches the Subscribers tab fill up.**
 
 ---
 
@@ -11,7 +11,7 @@ Collect new-client emails on the website, with proper UK GDPR/PECR consent, stor
 1. A gentle popup appears once per visitor (after ~18s) inviting them to join the list.
 2. They enter first name + email (last name, birthday day/month, and interest are optional) and **tick an unticked consent box**.
 3. They get a **confirmation email** (double opt-in). They're only added once they click the link.
-4. Confirmed subscribers appear in **Admin → Subscribers**, where Iulia can export them to CSV and feed them into **Send email**.
+4. Confirmed subscribers appear in **Admin → Subscribers**, where the clinic owner can export them to CSV and feed them into **Send email**.
 5. Unsubscribes (from any campaign) are recorded automatically and never emailed again.
 
 Personal data lives in a **Cloudflare D1 database** — never in the website's git repo.
@@ -79,7 +79,7 @@ Once the ICO registration comes through, open `lumi-derm-website/pages/privacy.h
 
 ---
 
-## How Iulia uses it
+## How the clinic owner uses it
 
 - **Admin → Subscribers** shows everyone who signed up, their status (Confirmed / Pending / Unsubscribed), and when they consented.
 - **Export confirmed (CSV)** downloads the consented list.

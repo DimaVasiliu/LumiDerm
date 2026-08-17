@@ -267,6 +267,19 @@
       prep: ['Arrive makeup-free around eyes', 'Book patch test if needed', 'Share sensitivity history'],
       aftercare: ['Avoid water initially if advised', 'Avoid rubbing the area', 'Follow product guidance'],
     },
+    {
+      slug: 'lashes-brows-patch-test',
+      group: 'body',
+      title: 'Lash & brow tint patch test',
+      category: 'Patch test',
+      summary: 'A quick sensitivity check required 48 hours before any lift or tint.',
+      price: '£1',
+      duration: '10 minutes',
+      image: '../assets/images/offer-lashes-brows.webp',
+      best: ['Lash lift preparation', 'Tint sensitivity check', 'Brow lamination preparation'],
+      prep: ['Book at least 48 hours before treatment', 'Share sensitivity history', 'Avoid makeup around the test area'],
+      aftercare: ['Keep the tested area calm', 'Tell the clinic if irritation appears', 'Book the full treatment after clearance'],
+    },
   ];
 
   const cardsRoot = document.querySelector('[data-booking-cards]');

@@ -889,6 +889,7 @@ async function initTreatmentIndex() {
     { slug: 'microneedling', name: 'Microneedling', cat: 'Skin renewal', kw: 'microneedling needling collagen exosome' },
     { slug: 'exosomes', name: 'Exosomes', cat: 'Skin science', kw: 'exosome regeneration repair' },
     { slug: 'endospheres', name: 'Endospheres therapy', cat: 'Body therapy', kw: 'endospheres body lymphatic contouring cellulite drainage' },
+    { slug: 'lashes-brows-patch-test', name: 'Lash & brow tint patch test', cat: 'Patch test', kw: 'lash brow tint lift lamination patch test sensitivity' },
     { slug: 'lashes-brows', name: 'Lashes & brows', cat: 'Finishing beauty', kw: 'lash brow lift tint lamination' }
   ].map((s) => ({ ...s, hay: (s.name + ' ' + s.cat + ' ' + s.kw).toLowerCase() }));
 

@@ -11,7 +11,7 @@ online booking.
 
 ## How it works, step by step
 
-1. **Send.** When the birthday cron runs (or Iulia sends manually), for each recipient the
+1. **Send.** When the birthday cron runs (or the clinic owner sends manually), for each recipient the
    Worker **mints one voucher** — a unique code (e.g. `BDAY-8K4P`) and an unguessable link
    token — saves it to the database (30-day expiry), and injects both into that person's email.
 2. **Email.** The birthday email shows the greeting + the offer, very explicitly worded:
@@ -24,9 +24,9 @@ online booking.
    **"Pay at the venue only"**, **"Not valid for Treatwell bookings"**, and a simple
    **appointment request form** (preferred treatment, preferred dates/times, phone, message).
    The page has **no Treatwell widget and no Treatwell button** — nothing to "swap out."
-4. **Request.** The client submits the form. It emails Iulia (like the FAQ "ask" form we just
+4. **Request.** The client submits the form. It emails the practitioner (like the FAQ "ask" form we just
    built) with their code, preferred treatment and times, and contact details.
-5. **Confirm.** Iulia replies to arrange the time manually. No booking system needed — a
+5. **Confirm.** The clinic team replies to arrange the time manually. No booking system needed — a
    birthday redemption is a "contact us + pay at venue" flow by nature.
 6. **Redeem.** At the appointment the client shows the code and pays in-studio (15% off).
 7. **Mark used.** In the admin, a **Birthday vouchers** list shows issued / requested /
@@ -59,7 +59,7 @@ Status is computed on read too: past `expires_at` and not redeemed ⇒ shown as 
    `npx wrangler d1 migrations apply lumidermdb --remote`. (I can also create the table directly
    via my Cloudflare access, but the migration-file route keeps the repo and DB in sync — recommended.)
 2. **Birthday email template** — change the CTA from `booking.html` (→ Treatwell) to the birthday
-   link, and update the wording. If Iulia has a **custom** birthday template saved in settings,
+   link, and update the wording. If the clinic owner has a **custom** birthday template saved in settings,
    it also needs the new CTA, so the editor will get a "Birthday link" button/token.
 3. **Voucher minting hook** in all three send paths: the cron, the manual "send" button, and the
    test/preview send (test should mint a throwaway/sample code, not a real one).
