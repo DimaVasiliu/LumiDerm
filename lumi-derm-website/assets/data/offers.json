@@ -41,6 +41,20 @@
       "featured": false,
       "expires": "2026-08-31",
       "note": "Ongoing offer"
+    },
+    {
+      "title": "New offer",
+      "category": "Offer",
+      "description": "Short offer description.",
+      "price": "From £",
+      "badge": "",
+      "image": "/media/uploads/mswtahag-404ac123.webp",
+      "alt": "",
+      "service": "",
+      "status": "draft",
+      "featured": false,
+      "expires": "",
+      "note": "Ongoing offer"
     }
   ]
 }
