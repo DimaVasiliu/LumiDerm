@@ -5,6 +5,10 @@
 	// for /api/* and /admin/api/* routes (marketing email sending,
 	// subscribers, campaign admin + unsubscribe).
 	"name": "lumiderm",
+	// The site's Cloudflare account (info@lumidermaesthetics.co.uk). Pinning it here
+	// means `wrangler` always targets the right account even when the CLI is logged
+	// into more than one — so `d1 migrations apply` no longer hits "database not found".
+	"account_id": "31f4dd95e52a8ca9deba2fd43f5a7f43",
 	"main": "src/worker.js",
 	"compatibility_date": "2026-06-28",
 	"assets": {
