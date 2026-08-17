@@ -118,6 +118,14 @@ export default {
     }
 
     if (!isPublicApi && !isAdminApi) {
+      // Edge-render: inject live prices/page-text from D1 into the static page,
+      // server-side, so edits are instant AND search engines still see the real
+      // content. Fail-safe: if D1 is empty or anything goes wrong, the untouched
+      // static page is served (identical to today).
+      const contentPage = CONTENT_PAGE_BY_PATH[url.pathname];
+      if (contentPage && request.method === "GET") {
+        return serveEdgeRenderedPage(env, request, contentPage);
+      }
       return env.ASSETS.fetch(request);
     }
 
@@ -271,6 +279,18 @@ export default {
         const owner = requireOwner(request, env, "publish website changes");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleAtomicPublish(request, env);
+      }
+
+      // Live prices + page text (edge-rendered from D1, no GitHub/deploy).
+      if (apiPath === "/api/content" && isAdminApi) {
+        if (request.method === "GET") return handleSiteContentGet(env);
+        return json({ error: "Use GET." }, 405);
+      }
+      if (apiPath === "/api/content/save" && isAdminApi) {
+        if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+        const owner = requireOwner(request, env, "publish page text and prices");
+        if (!owner.ok) return json({ error: owner.reason }, 403);
+        return handleSiteContentSave(request, env);
       }
 
       if (apiPath === "/api/audit" && isAdminApi) {
@@ -2731,6 +2751,163 @@ async function handleAtomicPublish(request, env) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Live prices + page text: edge-rendered from D1 into the static page  */
+/* ------------------------------------------------------------------ */
+
+// Which served paths are edge-rendered from D1. Only the treatments page (prices)
+// is D1-backed today; page text still deploys via GitHub, so the homepage serving
+// path is deliberately left untouched. Adding page-text pages here later is a
+// one-line change per page once their content lives in D1.
+const CONTENT_PAGE_BY_PATH = {
+  "/pages/services.html": "services", "/pages/services": "services",
+};
+// Marker regions injected on each page (must match the admin's markers).
+const PAGE_REGIONS = {
+  home: ["SEO", "HERO"],
+  services: ["SERVICES_HERO", "PRICES"],
+  about: ["ABOUT_HERO", "ABOUT_BIO", "ABOUT_CLINIC", "ABOUT_CONCERNS", "ABOUT_TREATMENTS", "ABOUT_BENEFITS", "ABOUT_JOURNEY", "ABOUT_CTA"],
+  booking: ["BOOKING_HERO", "BOOKING_PICKER", "BOOKING_WIDGET", "BOOKING_SUPPORT"],
+};
+const REPOPATH_REGIONS = {
+  "lumi-derm-website/index.html": PAGE_REGIONS.home,
+  "lumi-derm-website/pages/services.html": PAGE_REGIONS.services,
+  "lumi-derm-website/pages/about.html": PAGE_REGIONS.about,
+  "lumi-derm-website/pages/booking.html": PAGE_REGIONS.booking,
+};
+
+function markerRegionRe(region) {
+  return new RegExp("(<!-- " + region + ":START[\\s\\S]*?-->)([\\s\\S]*?)(<!-- " + region + ":END -->)");
+}
+// Replace the inner content of each marker region with the stored fragment.
+function injectContentFragments(text, regions, fragMap) {
+  let out = text;
+  for (const region of regions) {
+    const html = fragMap["frag:" + region];
+    if (html == null) continue;
+    const re = markerRegionRe(region);
+    if (re.test(out)) out = out.replace(re, (m, s, _inner, e) => s + html + e);
+  }
+  return out;
+}
+function extractRegionInner(text, region) {
+  const m = text.match(markerRegionRe(region));
+  return m ? m[2] : null;
+}
+async function loadContentFragments(env, regions) {
+  const keys = regions.map((r) => "frag:" + r);
+  const { results } = await env.SUBSCRIBERS.prepare(
+    "SELECT key, value FROM site_content WHERE key IN (" + keys.map((_, i) => "?" + (i + 1)).join(",") + ")"
+  ).bind(...keys).all();
+  const map = {};
+  (results || []).forEach((r) => { map[r.key] = r.value; });
+  return map;
+}
+
+// Serve a content page with the live fragments injected. Any failure or an empty
+// D1 falls back to the untouched static page.
+async function serveEdgeRenderedPage(env, request, page) {
+  const assetRes = await env.ASSETS.fetch(request);
+  const ct = assetRes.headers.get("content-type") || "";
+  if (!assetRes.ok || !/text\/html/i.test(ct)) return assetRes;
+  let text;
+  try { text = await assetRes.text(); } catch { return assetRes; }
+  let out = text;
+  try {
+    if (env.SUBSCRIBERS) {
+      const regions = PAGE_REGIONS[page] || [];
+      const fragMap = await loadContentFragments(env, regions);
+      if (Object.keys(fragMap).length) out = injectContentFragments(text, regions, fragMap);
+    }
+  } catch { out = text; }
+  const headers = new Headers(assetRes.headers);
+  headers.delete("content-length");
+  return new Response(out, { status: 200, headers });
+}
+
+async function readAssetJson(env, path) {
+  if (!env.ASSETS) return null;
+  try {
+    const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+    const res = await env.ASSETS.fetch(new Request(origin + path));
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+// Admin: current structured content + prices for the editor (D1, else the file).
+async function handleSiteContentGet(env) {
+  const out = { content: null, prices: null };
+  if (env.SUBSCRIBERS) {
+    try {
+      const { results } = await env.SUBSCRIBERS.prepare(
+        "SELECT key, value FROM site_content WHERE key IN ('content','prices')"
+      ).all();
+      (results || []).forEach((r) => { try { out[r.key] = JSON.parse(r.value); } catch { /* ignore */ } });
+    } catch { /* fall back to files */ }
+  }
+  if (!out.content) out.content = await readAssetJson(env, "/assets/data/content.json");
+  if (!out.prices) out.prices = await readAssetJson(env, "/assets/data/prices.json");
+  return json({ ok: true, content: out.content, prices: out.prices });
+}
+
+// Admin: save structured content/prices + the rendered page fragments to D1.
+// The browser sends the fully rendered page HTML; we extract each region's inner
+// so the edge injector reproduces exactly what the admin rendered.
+async function handleSiteContentSave(request, env) {
+  if (!env.SUBSCRIBERS) return json({ error: "Live content isn't set up yet." }, 500);
+  let body;
+  try { body = await request.json(); } catch { return json({ error: "Invalid request body." }, 400); }
+  await snapshotContentRevision(env, request);
+
+  const now = new Date().toISOString();
+  const stmts = [];
+  const up = (k, v) => stmts.push(env.SUBSCRIBERS.prepare(
+    "INSERT INTO site_content (key, value, updated_at) VALUES (?1,?2,?3) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at"
+  ).bind(k, v, now));
+
+  if (body.content && typeof body.content === "object") up("content", JSON.stringify(body.content));
+  if (body.prices && typeof body.prices === "object") up("prices", JSON.stringify(body.prices));
+
+  // Optional whitelist so a prices publish only touches PRICES (not SERVICES_HERO)
+  // and a page-text publish only touches its own regions.
+  const only = Array.isArray(body.regions) ? new Set(body.regions) : null;
+  const pages = (body.pages && typeof body.pages === "object") ? body.pages : {};
+  const saved = [];
+  for (const repoPath of Object.keys(pages)) {
+    const regions = REPOPATH_REGIONS[repoPath];
+    if (!regions) continue;
+    const html = String(pages[repoPath] || "");
+    if (html.length > 900000) continue;
+    for (const region of regions) {
+      if (only && !only.has(region)) continue;
+      const inner = extractRegionInner(html, region);
+      if (inner != null) { up("frag:" + region, inner); saved.push(region); }
+    }
+  }
+  if (!stmts.length) return json({ ok: true, saved: 0 });
+  await env.SUBSCRIBERS.batch(stmts);
+  await logAudit(env, request, { action: "publish.pages", detail: saved.join(",").slice(0, 480) || "content", status: "ok" });
+  return json({ ok: true, regions: saved });
+}
+
+async function snapshotContentRevision(env, request) {
+  if (!env.SUBSCRIBERS) return;
+  try {
+    const last = await env.SUBSCRIBERS.prepare(
+      "SELECT created_at FROM revisions WHERE kind='content' ORDER BY id DESC LIMIT 1"
+    ).first();
+    if (last && last.created_at && (Date.now() - Date.parse(last.created_at)) < 3 * 60 * 1000) return;
+    const { results } = await env.SUBSCRIBERS.prepare(
+      "SELECT key, value FROM site_content WHERE key IN ('content','prices')"
+    ).all();
+    if (!results || !results.length) return;
+    const snap = {};
+    results.forEach((r) => { snap[r.key] = r.value; });
+    await insertRevision(env, "content", "Before a page-text/prices change", snap, adminEmail(request));
+  } catch { /* history is a safety net */ }
+}
+
+/* ------------------------------------------------------------------ */
 /* Admin: audit log                                                    */
 /* ------------------------------------------------------------------ */
 // Best-effort, server-side record of who did what. Never throws — a logging
@@ -3780,3 +3957,4 @@ function timingSafeEqual(a, b) {
 // Named exports of pure, side-effect-free helpers so they can be unit-tested
 // without a full request/D1 harness. (The Worker entrypoint stays the default export.)
 export { safeCampaignTarget, isApprovedCampaignHost, topicColumn, clampInt, isEmail };
+export { PAGE_REGIONS, REPOPATH_REGIONS, extractRegionInner, injectContentFragments };

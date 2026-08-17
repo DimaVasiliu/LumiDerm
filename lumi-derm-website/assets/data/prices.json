@@ -1,7 +1,7 @@
 {
   "groups": [
     {
-      "title": "Laser &amp; hair removal · Cynosure Elite",
+      "title": "Laser hair removal · Cynosure Elite",
       "treatments": [
         {
           "id": "laser-hair-removal",
@@ -218,11 +218,16 @@
               "text": "Instalment payments for packages available at the venue."
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "title": "Laser skin rejuvenation · Foto RF",
+      "treatments": [
         {
           "id": "laser-rejuvenation-patch-test",
           "title": "Laser Skin Rejuvenation Compulsory Patch Test",
-          "sub": "Patch test for Hair",
+          "sub": "Patch test for Foto RF skin rejuvenation",
           "headline": "£10 · 20 min",
           "service": "laser-rejuvenation-patch-test",
           "bookLabel": "Book patch test",
@@ -305,11 +310,16 @@
               "text": "Instalment payments for packages available at the venue."
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "title": "Vascular laser · Thread veins",
+      "treatments": [
         {
           "id": "laser-veins-patch-test",
           "title": "Laser Veins Compulsory Patch Test",
-          "sub": "Patch test for Hair",
+          "sub": "Patch test for vascular laser",
           "headline": "£10 · 20 min",
           "service": "laser-veins-patch-test",
           "bookLabel": "Book patch test",
@@ -380,7 +390,12 @@
               "text": "Patch test required 24 hours before your first session."
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "title": "Electrolysis · Apilus permanent hair removal",
+      "treatments": [
         {
           "id": "electrolysis",
           "title": "Electrolysis",
@@ -439,7 +454,7 @@
       ]
     },
     {
-      "title": "Injectables &amp; regeneration",
+      "title": "PRP &amp; hair regeneration",
       "treatments": [
         {
           "id": "prp-consultation",
@@ -543,6 +558,91 @@
             }
           ]
         },
+        {
+          "id": "hair-loss-consultation",
+          "title": "Hair Loss Consultation",
+          "sub": "Cosmetic Injectables",
+          "headline": "£10 · 20 min",
+          "service": "hair-loss-consultation",
+          "bookLabel": "Book hair loss consultation",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Book this consultation before hair loss treatment so the clinic owner can assess your scalp and hair concerns, confirm suitability and recommend the right mesotherapy, PRP or combined plan."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Hair Loss Consultation",
+                  "cost": "£10",
+                  "costSmall": "20 min"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "hair-loss",
+          "title": "Hair loss treatments",
+          "sub": "Hair mesotherapy &amp; PRP",
+          "headline": "from £140",
+          "service": "hair-loss",
+          "bookLabel": "Book a hair consultation",
+          "detail": [
+            {
+              "type": "p",
+              "html": "Hair loss treatment plans are tailored after consultation and may use scalp mesotherapy, PRP, or a staged combination of both. Mesotherapy delivers targeted nutrients into the scalp to support hair quality, while PRP uses your own concentrated platelets and growth factors to support circulation and follicle activity."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> the most suitable option and course length depend on the cause and pattern of thinning. The practitioner will assess your goals and explain the recommended schedule before treatment begins."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
+                {
+                  "name": "Hair mesotherapy · 1 session",
+                  "cost": "£140",
+                  "costSmall": "40 min"
+                },
+                {
+                  "name": "Hair mesotherapy · 3 sessions",
+                  "cost": "£390",
+                  "costSmall": "40 min each · pay in 2 instalments at the venue"
+                },
+                {
+                  "name": "PRP for hair loss · 1 session",
+                  "cost": "£240",
+                  "costSmall": "50 min"
+                },
+                {
+                  "name": "PRP for hair loss · 3 sessions",
+                  "cost": "£650",
+                  "costSmall": "50 min each · pay in 2 instalments at the venue"
+                },
+                {
+                  "name": "PRP for hair loss · 5 sessions",
+                  "cost": "£950",
+                  "costSmall": "50 min each · pay in 3 instalments at the venue"
+                }
+              ]
+            },
+            {
+              "type": "pill",
+              "text": "PRP: up to 20% off last-minute &amp; off-peak bookings"
+            },
+            {
+              "type": "note",
+              "text": "Consultation confirms suitability before treatment."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Skin boosters &amp; regenerative injectables",
+      "treatments": [
         {
           "id": "profhilo",
           "title": "Profhilo",
@@ -709,86 +809,6 @@
           ]
         },
         {
-          "id": "hair-loss-consultation",
-          "title": "Hair Loss Consultation",
-          "sub": "Cosmetic Injectables",
-          "headline": "£10 · 20 min",
-          "service": "hair-loss-consultation",
-          "bookLabel": "Book hair loss consultation",
-          "detail": [
-            {
-              "type": "p",
-              "html": "Book this consultation before hair loss treatment so the clinic owner can assess your scalp and hair concerns, confirm suitability and recommend the right mesotherapy, PRP or combined plan."
-            },
-            {
-              "type": "pricelist",
-              "rows": [
-                {
-                  "name": "Hair Loss Consultation",
-                  "cost": "£10",
-                  "costSmall": "20 min"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "hair-loss",
-          "title": "Hair loss treatments",
-          "sub": "Hair mesotherapy &amp; PRP",
-          "headline": "from £140",
-          "service": "hair-loss",
-          "bookLabel": "Book a hair consultation",
-          "detail": [
-            {
-              "type": "p",
-              "html": "Hair loss treatment plans are tailored after consultation and may use scalp mesotherapy, PRP, or a staged combination of both. Mesotherapy delivers targeted nutrients into the scalp to support hair quality, while PRP uses your own concentrated platelets and growth factors to support circulation and follicle activity."
-            },
-            {
-              "type": "p",
-              "html": "<strong>What to expect:</strong> the most suitable option and course length depend on the cause and pattern of thinning. the practitioner will assess your goals and explain the recommended schedule before treatment begins."
-            },
-            {
-              "type": "pricelist",
-              "rows": [
-                {
-                  "name": "Hair mesotherapy · 1 session",
-                  "cost": "£140",
-                  "costSmall": "40 min"
-                },
-                {
-                  "name": "Hair mesotherapy · 3 sessions",
-                  "cost": "£390",
-                  "costSmall": "40 min each · pay in 2 instalments at the venue"
-                },
-                {
-                  "name": "PRP for hair loss · 1 session",
-                  "cost": "£240",
-                  "costSmall": "50 min"
-                },
-                {
-                  "name": "PRP for hair loss · 3 sessions",
-                  "cost": "£650",
-                  "costSmall": "50 min each · pay in 2 instalments at the venue"
-                },
-                {
-                  "name": "PRP for hair loss · 5 sessions",
-                  "cost": "£950",
-                  "costSmall": "50 min each · pay in 3 instalments at the venue"
-                }
-              ]
-            },
-            {
-              "type": "pill",
-              "text": "PRP: up to 20% off last-minute &amp; off-peak bookings"
-            },
-            {
-              "type": "note",
-              "text": "Consultation confirms suitability before treatment."
-            }
-          ]
-        },
-        {
           "id": "lip-boosters",
           "title": "Lip boosters",
           "sub": "SkinFill Bacio · hydration",
@@ -877,7 +897,7 @@
       ]
     },
     {
-      "title": "Facials, peels &amp; skin",
+      "title": "Facials, peels &amp; skin renewal",
       "treatments": [
         {
           "id": "facials",
@@ -1073,7 +1093,7 @@
       ]
     },
     {
-      "title": "Body &amp; finishing",
+      "title": "Body contouring &amp; sculpting",
       "treatments": [
         {
           "id": "endospheres",
@@ -1143,24 +1163,29 @@
               "text": "Consultation confirms suitability before treatment. Courses of 6 pay in 2 instalments; courses of 12 pay in 3 instalments."
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "title": "Lashes &amp; brows",
+      "treatments": [
         {
           "id": "lashes-brows-patch-test",
-          "title": "Lash &amp; brow tint patch test",
-          "sub": "Required before lift or tint",
+          "title": "Lash &amp; brow patch test",
+          "sub": "Required before tint, lift or lamination",
           "headline": "£1 · 10 min",
           "service": "lashes-brows-patch-test",
           "bookLabel": "Book lash &amp; brow patch test",
           "detail": [
             {
               "type": "p",
-              "html": "Book this quick patch test at least 48 hours before any lash lift, lash tint, brow tint or brow lamination so the clinic owner can check product sensitivity before your treatment."
+              "html": "Book this quick patch test at least 48 hours before any lash lift, lash tint, brow tint or brow lamination so the practitioner can check product sensitivity before your treatment."
             },
             {
               "type": "pricelist",
               "rows": [
                 {
-                  "name": "Lash &amp; brow tint patch test",
+                  "name": "Lash &amp; brow patch test",
                   "cost": "£1",
                   "costSmall": "10 min"
                 }
@@ -1168,29 +1193,25 @@
             },
             {
               "type": "note",
-              "text": "Mandatory 48 hours before any lash lift, brow lift or tint."
+              "text": "Mandatory 48 hours before any lash lift, brow lamination or tint."
             }
           ]
         },
         {
-          "id": "lashes-brows",
-          "title": "Lashes &amp; brows",
-          "sub": "LVL · lamination · lift &amp; tint",
+          "id": "brow-lamination",
+          "title": "Brow lamination &amp; tint",
+          "sub": "Brow lamination · tint · waxing add-on",
           "headline": "from £45",
-          "service": "lashes-brows",
-          "bookLabel": "Book lashes &amp; brows",
+          "service": "brow-lamination",
+          "bookLabel": "Book brow treatment",
           "detail": [
             {
               "type": "p",
-              "html": "Our lash and brow treatments give you a polished, wake-up-and-go finish with zero daily effort. A lash lift curls and lifts your natural lashes from the root to make them look longer and more open, while a tint adds definition and depth without mascara."
+              "html": "Brow treatments shape, lift and define your natural brows for a fuller, groomed finish without daily styling. Brow lamination sets the hairs into a smoother lifted shape, while tint deepens and defines fair or sparse brows."
             },
             {
               "type": "p",
-              "html": "For brows, lamination brushes and sets the hairs into a fuller, groomed shape, and a tint deepens and defines — perfect for sparse, unruly or fair brows. Optional brow waxing tidies the shape."
-            },
-            {
-              "type": "p",
-              "html": "<strong>What to expect:</strong> natural-looking results lasting several weeks. A patch test (£1) is required 48 hours before any lift or tint."
+              "html": "<strong>What to expect:</strong> natural-looking definition lasting several weeks. Optional brow waxing tidies the shape. A patch test (£1) is required 48 hours before tint or lamination."
             },
             {
               "type": "pricelist",
@@ -1207,9 +1228,39 @@
                 },
                 {
                   "name": "Add-on: brow waxing",
-                  "cost": "£10",
-                  "costSmall": ""
-                },
+                  "cost": "£10"
+                }
+              ]
+            },
+            {
+              "type": "pill",
+              "text": "Up to 10% off last-minute &amp; off-peak bookings"
+            },
+            {
+              "type": "note",
+              "text": "Patch test required 48 hours before (£1) for any brow tint or lamination."
+            }
+          ]
+        },
+        {
+          "id": "lash-lift",
+          "title": "Lash lift &amp; tint",
+          "sub": "Natural lash lift · optional tint",
+          "headline": "from £50",
+          "service": "lash-lift",
+          "bookLabel": "Book lash lift",
+          "detail": [
+            {
+              "type": "p",
+              "html": "A lash lift curls and lifts your natural lashes from the root so they look longer, darker and more open without extensions. Add tint for extra depth and definition without daily mascara."
+            },
+            {
+              "type": "p",
+              "html": "<strong>What to expect:</strong> a low-maintenance, natural-looking finish that lasts several weeks. A patch test (£1) is required 48 hours before any lift or tint."
+            },
+            {
+              "type": "pricelist",
+              "rows": [
                 {
                   "name": "Lash lift",
                   "cost": "£50",
@@ -1228,7 +1279,7 @@
             },
             {
               "type": "note",
-              "text": "Patch test required 48 hours before (£1) for any lift &amp; tint."
+              "text": "Patch test required 48 hours before (£1) for any lash lift or tint."
             }
           ]
         }

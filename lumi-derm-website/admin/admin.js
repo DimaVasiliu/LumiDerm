@@ -688,16 +688,17 @@ async function loadPricesFromJson(announce, force) {
     renderPrices(); return;
   }
   try {
-    const r = await fetch(PRICES_JSON_URL + "?t=" + Date.now(), { cache: "no-store" });
+    const r = await fetch("/admin/api/content", { cache: "no-store", credentials: "same-origin" });
     if (!r.ok) throw new Error("unavailable");
     const data = await r.json();
-    state.prices = { groups: Array.isArray(data.groups) ? data.groups : [] };
+    const p = (data && data.prices) || {};
+    state.prices = { groups: Array.isArray(p.groups) ? p.groups : [] };
     selectedTx = { gi: 0, ti: 0 };
     renderPrices();
     saveDraft(announce ? "Loaded the prices currently on the website." : null);
     setPricesStatus("In sync with the website.");
   } catch {
-    if (announce) toast("Could not read the website's prices file.");
+    if (announce) toast("Could not read the current prices.");
     renderPrices();
   }
 }
@@ -1269,17 +1270,17 @@ const DEFAULT_CONTENT = {
   pages: {
     about: {
       hero: {
-        eyebrow: "Meet your practitioner",
-        title: "Meet your practitioner.",
-        lead: "An aesthetic practitioner with over 10 years' experience in laser, advanced skin and body treatments, offering practical advice, careful treatment planning and results that still look like you."
+        eyebrow: "About Lumi Derm",
+        title: "Professional aesthetic care, carefully delivered.",
+        lead: "Advanced skin, laser and body treatments planned around your concerns, with clear advice and a calm clinical approach."
       },
       bio: {
         eyebrow: "About the clinic",
         title: "Clinically minded care, delivered calmly",
         paragraphs: [
-          "Lumi Derm Aesthetics was founded to offer advanced skincare the way it should be: unhurried, personalised and honest. The practitioner has trained across laser, injectable, regenerative and body treatments, and works with technology and products chosen for safety, quality and results.",
-          "Every appointment begins with a real conversation. Your practitioner takes time to understand your skin, your goals and your lifestyle, then recommends what is likely to help and what is worth leaving alone. If a treatment is not right for you, you will be told clearly.",
-          "The aim is not to change your face or chase trends. It is to support healthier-looking skin, soften what bothers you and help you feel more comfortable in your own skin."
+          "Lumi Derm Aesthetics offers advanced skincare in a calm, professional setting. Treatments are planned carefully and delivered with technology and products chosen for safety, quality and results.",
+          "Every appointment begins with a real conversation. We take time to understand your skin, your concerns and your goals, then recommend what is likely to help and what is worth leaving alone.",
+          "The aim is to support healthier-looking skin, soften what bothers you and help you feel more comfortable in your own skin."
         ],
         signature: "the practitioner",
         role: "Founder & Lead Practitioner, Lumi Derm Aesthetics"
@@ -1287,16 +1288,15 @@ const DEFAULT_CONTENT = {
       clinic: {
         eyebrow: "The clinic",
         title: "A quiet Docklands studio for skin, laser and body care",
-        lead: "Lumi Derm Aesthetics is a modern, private treatment space in London Docklands. The menu is broad, but the approach is simple: choose the treatment that fits the concern, explain it clearly, and keep each appointment focused on the client in the room.",
+        lead: "Lumi Derm Aesthetics is a private treatment space in London Docklands. The approach is simple: understand the concern, explain the options clearly, and keep each appointment focused on the client.",
         cards: [
           { title: "What the clinic offers", copy: "Facials, chemical peels, skin boosters, mesotherapy, PRP, laser hair removal, vascular laser treatments, electrolysis for hair and blemish removal, lymphatic drainage and Endospheres therapy." },
-          { title: "How to get here", copy: "South Quay and Crossharbour stations are both about a 4-minute walk away. If you are driving, there is free and paid parking nearby, including ASDA parking around 10 minutes away on foot." },
-          { title: "What matters", copy: "Appointments are one-to-one, treatment plans are tailored, and product choices are considered, with cruelty-free options used where they fit the treatment." }
+          { title: "What matters", copy: "Appointments are one-to-one, treatment plans are tailored, and product choices are considered carefully." }
         ]
       },
       concerns: {
         eyebrow: "How the clinic can help",
-        title: "The concerns your practitioner can help you solve",
+        title: "The concerns we can help with",
         copy: "Most clients come in with something specific they want to improve: hair growth, texture, dullness, redness, thinning hair, puffiness or skin that no longer feels like theirs. These are the concerns treated most often."
       },
       treatments: {
@@ -1305,25 +1305,25 @@ const DEFAULT_CONTENT = {
         copy: "The clinic offers laser, regenerative, skin and body treatments, but the plan stays focused: what is useful, what is safe, and what makes sense for your skin."
       },
       benefits: {
-        eyebrow: "How you benefit",
-        title: "What the appointment is built around",
+        eyebrow: "Advice based on your concern",
+        title: "We only recommend what is right for you",
         copy: ""
       },
       journey: {
         eyebrow: "What to expect",
-        title: "Your journey, step by step",
+        title: "Carefully tailored treatments",
         copy: ""
       },
       cta: {
         title: "Ready when you are",
-        copy: "Book a consultation and we'll build a plan around your skin, your goals and your budget."
+        copy: "Book a consultation and we'll build a plan around your concerns."
       }
     },
     services: {
       hero: {
         eyebrow: "Treatment menu & prices",
         title: "Treatments & prices",
-        lead: "Start with a consultation or patch test when one is required, then book the treatment after suitability is confirmed. The first cards below show those required first-step appointments separately from the treatment menu."
+        lead: "Start with the treatment group that matches your concern. Laser hair removal, skin laser, vascular laser, electrolysis, body sculpting, lashes and brows are separated so each first step is easier to find."
       }
     },
     booking: {
@@ -2151,6 +2151,21 @@ async function ghReadRepoFile(repoPath) {
   return decodeB64((await res.json()).content);
 }
 
+// Save prices / page text straight to Cloudflare D1 (instant, edge-rendered).
+// payload: { content?, prices?, regions?: [...], pages: { repoPath: fullHtml } }
+async function ghPublishContent(payload) {
+  const res = await fetch("/admin/api/content/save", {
+    method: "POST",
+    credentials: "same-origin",
+    cache: "no-store",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || ("Save failed (" + res.status + ")."));
+  return data;
+}
+
 // probe === true does a live GitHub call (button); otherwise it's the cheap
 // page-load check that only reports whether the server secret is set.
 async function checkGithubHealth(probe) {
@@ -2434,38 +2449,37 @@ async function publishServicesHtml(branch, renderedSection) {
 }
 
 async function publishPrices() {
-  if (!ghReady) { toast("Publishing isn't set up on the server yet — ask Dima."); return false; }
   if (typeof window.renderTreatmentLibrary !== "function") { toast("Price template didn’t load — hard-refresh the admin and try again."); return false; }
   if (!state.prices || !(state.prices.groups || []).length) { toast("No prices loaded yet — click “Reload from website” first."); return false; }
 
   if (!(await ldConfirm({
     title: "Publish prices?",
-    body: "This updates the live Treatments & prices page for everyone visiting the website. Continue?",
+    body: "This updates the live Treatments & prices page for everyone visiting the website, straight away. Continue?",
     confirmLabel: "Publish prices"
   }))) return false;
 
   const button = document.querySelector("[data-publish-prices]");
   if (button) { button.disabled = true; button.textContent = "Publishing…"; }
-  setPricesStatus("Publishing to the treatments page…");
+  setPricesStatus("Saving to the treatments page…");
   recordDraftVersion("prices", "Before publishing prices", state.prices);
   try {
-    const branch = "main";
-    // 1) the data file (source of truth the admin reloads from)
-    const json = b64(JSON.stringify(state.prices, null, 2) + "\n");
-    await putFileWithRetry(PRICES_REPO_PATH, json, "Update prices data (via admin)", branch);
-    // 2) the rendered treatments page (what visitors + Google see)
+    // Render the treatments section and drop it into the page template's PRICES
+    // markers; the Worker stores just that region and injects it live (edge-render).
     const rendered = window.renderTreatmentLibrary(state.prices);
-    await publishServicesHtml(branch, rendered);
+    const before = await ghReadRepoFile(SERVICES_REPO_PATH);
+    if (!PRICES_MARKERS.test(before)) throw new Error("The price markers weren’t found in services.html — ask Dima to check the page.");
+    const pageHtml = before.replace(PRICES_MARKERS, (m, s, e) => s + "\n\n" + rendered + "\n\n          " + e);
+
+    await ghPublishContent({ prices: state.prices, regions: ["PRICES"], pages: { [SERVICES_REPO_PATH]: pageHtml } });
 
     state.publishedAt = new Date().toISOString();
     saveDraft(null);
-    setPricesStatus("Published. Tracking the deploy in Settings → Latest publish & deploy.");
-    startDeployWatch();
-    toast("Published — deploying now. You'll get a note when the treatments page is live.");
+    setPricesStatus("Saved — the treatments page is live now. Refresh it to see the changes.");
+    toast("Prices are live now.");
     return true;
   } catch (err) {
-    setPricesStatus("Publish failed: " + ldFriendlyError(err));
-    toast("Publish failed: " + ldFriendlyError(err));
+    setPricesStatus("Save failed: " + ldFriendlyError(err));
+    toast("Save failed: " + ldFriendlyError(err));
     return false;
   } finally {
     if (button) { button.disabled = false; button.textContent = "Publish prices"; }

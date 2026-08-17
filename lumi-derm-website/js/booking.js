@@ -100,11 +100,11 @@
     },
     {
       slug: 'electrolysis',
-      group: 'laser',
+      group: 'electrolysis',
       title: 'Electrolysis permanent hair removal',
       category: 'Apilus',
       summary: 'Precision permanent hair removal for smaller areas using Apilus electrolysis.',
-      price: 'From £10',
+      price: 'From £30',
       duration: '15–60 minute sessions',
       image: '../assets/images/offer-electrolysis-apilus.webp',
       best: ['Small areas', 'Fine detail work', 'Permanent hair removal plans'],
@@ -245,7 +245,7 @@
       slug: 'endospheres',
       group: 'body',
       title: 'Endospheres therapy',
-      category: 'Body therapy',
+      category: 'Body contouring',
       summary: 'Body-focused lymphatic drainage, smoothing and contour support.',
       price: 'From £50',
       duration: '25 min – 1 h 20 min',
@@ -255,24 +255,37 @@
       aftercare: ['Drink water after treatment', 'Keep moving gently', 'Follow course guidance'],
     },
     {
-      slug: 'lashes-brows',
-      group: 'body',
-      title: 'Lashes & brows',
-      category: 'Finishing beauty',
-      summary: 'Finishing beauty treatments for a polished, natural look.',
-      price: 'From £25',
+      slug: 'brow-lamination',
+      group: 'lashes-brows',
+      title: 'Brow lamination & tint',
+      category: 'Lashes & brows',
+      summary: 'Brow lamination, tint and optional waxing for a fuller, groomed brow shape.',
+      price: 'From £45',
       duration: '45 min – 1 h',
       image: '../assets/images/offer-lashes-brows.webp',
-      best: ['Natural definition', 'Low-maintenance finish', 'Lash and brow care'],
+      best: ['Brow lamination', 'Brow tint', 'Low-maintenance brow definition'],
+      prep: ['Arrive makeup-free around eyes', 'Book patch test if needed', 'Share sensitivity history'],
+      aftercare: ['Avoid water initially if advised', 'Avoid rubbing the area', 'Follow product guidance'],
+    },
+    {
+      slug: 'lash-lift',
+      group: 'lashes-brows',
+      title: 'Lash lift & tint',
+      category: 'Lashes & brows',
+      summary: 'Natural lash lifting and optional tinting for longer-looking, more open lashes.',
+      price: 'From £50',
+      duration: '55 min – 1 h',
+      image: '../assets/images/offer-lashes-brows.webp',
+      best: ['Natural lash lift', 'Optional lash tint', 'Low-maintenance definition'],
       prep: ['Arrive makeup-free around eyes', 'Book patch test if needed', 'Share sensitivity history'],
       aftercare: ['Avoid water initially if advised', 'Avoid rubbing the area', 'Follow product guidance'],
     },
     {
       slug: 'lashes-brows-patch-test',
-      group: 'body',
-      title: 'Lash & brow tint patch test',
+      group: 'lashes-brows',
+      title: 'Lash & brow patch test',
       category: 'Patch test',
-      summary: 'A quick sensitivity check required 48 hours before any lift or tint.',
+      summary: 'A quick sensitivity check required 48 hours before lash lift, brow lamination or tint.',
       price: '£1',
       duration: '10 minutes',
       image: '../assets/images/offer-lashes-brows.webp',
@@ -312,7 +325,8 @@
   };
 
   const params = new URLSearchParams(window.location.search);
-  const initialSlug = params.get('service');
+  const requestedSlug = params.get('service');
+  const initialSlug = requestedSlug === 'lashes-brows' ? 'brow-lamination' : requestedSlug;
   const initialService = SERVICES.find((service) => service.slug === initialSlug);
   let activeService = initialService || SERVICES[0];
   let activeFilter = 'all';

@@ -872,12 +872,12 @@ async function initTreatmentIndex() {
   const SERVICES_CATALOG = [
     { slug: 'prp-consultation', name: 'PRP(Platelet rich plasma) Consultation', cat: 'Consultation', kw: 'prp platelet rich plasma consultation cosmetic injectables suitability first appointment' },
     { slug: 'hair-loss-consultation', name: 'Hair Loss Consultation', cat: 'Consultation', kw: 'hair loss consultation cosmetic injectables scalp thinning prp mesotherapy suitability first appointment' },
-    { slug: 'laser-hair-removal', name: 'Laser hair removal', cat: 'Laser', kw: 'hair removal cynosure elite face body' },
-    { slug: 'laser-rejuvenation', name: 'Laser Skin Rejuvenation', cat: 'Facials', kw: 'foto rf skin rejuvenation laser face neck decollete décolleté crow feet fine lines sagging skin' },
+    { slug: 'laser-hair-removal', name: 'Laser hair removal', cat: 'Cynosure Elite hair removal', kw: 'hair removal cynosure elite face body' },
+    { slug: 'laser-rejuvenation', name: 'Laser Skin Rejuvenation', cat: 'Laser skin rejuvenation', kw: 'foto rf skin rejuvenation laser face neck decollete décolleté crow feet fine lines sagging skin' },
     { slug: 'laser-rejuvenation-patch-test', name: 'Laser Skin Rejuvenation Compulsory Patch Test', cat: 'Patch test', kw: 'patch test laser skin rejuvenation compulsory sensitivity assessment hair' },
-    { slug: 'vascular-treatment', name: 'Laser Veins Treatment/Single session(Package available)', cat: 'Laser', kw: 'laser treatment thread veins spider veins nose cheeks legs buttocks package available' },
+    { slug: 'vascular-treatment', name: 'Laser Veins Treatment/Single session(Package available)', cat: 'Vascular laser', kw: 'laser treatment thread veins spider veins nose cheeks legs buttocks package available' },
     { slug: 'laser-veins-patch-test', name: 'Laser Veins Compulsory Patch Test', cat: 'Patch test', kw: 'patch test laser veins compulsory sensitivity assessment allergic reaction' },
-    { slug: 'electrolysis', name: 'Electrolysis permanent hair removal', cat: 'Apilus', kw: 'electrolysis permanent hair apilus small area' },
+    { slug: 'electrolysis', name: 'Electrolysis permanent hair removal', cat: 'Apilus electrolysis', kw: 'electrolysis permanent hair apilus small area' },
     { slug: 'prp', name: 'PRP(Platelet Rich Plasma)', cat: 'Cosmetic Injectables', kw: 'prp platelet rich plasma face body hair loss 1 session 3 sessions 5 sessions skin rejuvenation collagen acne scars micro needled blood collection scalp follicles thicker hair growth' },
     { slug: 'profhilo', name: 'Profhilo', cat: 'Skin boosters', kw: 'profhilo booster bio remodelling hydration' },
     { slug: 'polynucleotides', name: 'Polynucleotides', cat: 'Bio-remodelling', kw: 'polynucleotides pn under eye skin quality' },
@@ -888,9 +888,11 @@ async function initTreatmentIndex() {
     { slug: 'facial-peels', name: 'Peels', cat: 'Skin peels', kw: 'peel glycolic salicylic azelaic exfoliation' },
     { slug: 'microneedling', name: 'Microneedling', cat: 'Skin renewal', kw: 'microneedling needling collagen exosome' },
     { slug: 'exosomes', name: 'Exosomes', cat: 'Skin science', kw: 'exosome regeneration repair' },
-    { slug: 'endospheres', name: 'Endospheres therapy', cat: 'Body therapy', kw: 'endospheres body lymphatic contouring cellulite drainage' },
+    { slug: 'endospheres', name: 'Endospheres therapy', cat: 'Body contouring', kw: 'endospheres body lymphatic contouring cellulite drainage sculpting' },
     { slug: 'lashes-brows-patch-test', name: 'Lash & brow tint patch test', cat: 'Patch test', kw: 'lash brow tint lift lamination patch test sensitivity' },
-    { slug: 'lashes-brows', name: 'Lashes & brows', cat: 'Finishing beauty', kw: 'lash brow lift tint lamination' }
+    { slug: 'brow-lamination', name: 'Brow lamination & tint', cat: 'Lashes & brows', kw: 'brow lamination brow tint brow waxing definition' },
+    { slug: 'lash-lift', name: 'Lash lift & tint', cat: 'Lashes & brows', kw: 'lash lift lash tint natural lashes definition' },
+    { slug: 'lashes-brows', name: 'Lashes & brows', cat: 'Lashes & brows', kw: 'lash brow lift tint lamination' }
   ].map((s) => ({ ...s, hay: (s.name + ' ' + s.cat + ' ' + s.kw).toLowerCase() }));
 
   const searchInput = document.querySelector('[data-oglr-search]');
