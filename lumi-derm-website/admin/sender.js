@@ -773,7 +773,7 @@
           "</a></td></tr></table>"
         : "") +
       '<p style="margin:34px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.7;color:#4a443e;">See you soon,<br>' +
-      '<span style="font-family:Georgia,serif;font-size:17px;color:#1c1a18;">the practitioner</span></p>' +
+      '<span style="font-family:Georgia,serif;font-size:17px;color:#1c1a18;">The practitioner</span></p>' +
       "</td></tr>" +
       // footer
       '<tr><td style="padding:24px 40px 38px;">' +
