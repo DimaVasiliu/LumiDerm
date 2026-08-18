@@ -70,7 +70,7 @@
           "Every appointment begins with a real conversation. We take time to understand your skin, your concerns and your goals, then recommend what is likely to help and what is worth leaving alone.",
           "The aim is to support healthier-looking skin, soften what bothers you and help you feel more comfortable in your own skin."
         ],
-        "signature": "the practitioner",
+        "signature": "The practitioner",
         "role": "Founder & Lead Practitioner, Lumi Derm Aesthetics",
         "image": {
           "src": "../assets/images/lumi-derm-practitioner-about.webp",
@@ -124,7 +124,7 @@
           {
             "chip": "Unwanted hair",
             "title": "Endless shaving, waxing & ingrown hairs",
-            "copy": "Constant regrowth, irritation and ingrowns are exhausting to manage. Treatments reduce hair long-term — and permanently where suitable.",
+            "copy": "Constant regrowth, irritation and ingrown hairs are exhausting to manage. Treatments reduce hair long-term — and permanently where suitable.",
             "helpLabel": "How it helps:",
             "help": "Cynosure Elite laser & Apilus electrolysis"
           },
@@ -152,7 +152,7 @@
           {
             "chip": "Hair loss",
             "title": "Thinning hair & shedding",
-            "copy": "Noticing more scalp or slower growth? Regenerative treatments can nourish the follicles and support stronger, fuller hair.",
+            "copy": "Noticing more scalp showing, or slower regrowth? Regenerative treatments can nourish the follicles and support stronger, fuller hair.",
             "helpLabel": "How it helps:",
             "help": "PRP, mesotherapy & polynucleotides"
           },
