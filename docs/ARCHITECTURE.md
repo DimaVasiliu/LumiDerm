@@ -32,7 +32,7 @@ after the visitor allows external content or selects the one-time booking action
 ## Target architecture
 
 ```text
-Public visitor -> Worker-rendered website content with checked-in fallback
+Public visitor -> Worker-rendered website content
                -> Treatwell booking link or official widget
                -> consent-controlled Google Maps
 
@@ -51,7 +51,7 @@ Treatwell Connect -> appointments, availability, payments, client records,
 | --- | --- | --- |
 | Appointments, availability and payments | Treatwell | Clear booking entry point and accurate explanatory copy |
 | Booking clients, reminders and consultation forms | Treatwell | Do not duplicate client or clinical records |
-| Public treatments, prices, offers and settings | D1 after content phases | Crawlable rendering with a checked-in fallback |
+| Public treatments, prices, offers and settings | D1 after content phases | Crawlable rendering; prices fail closed if D1 content is missing |
 | Admin identity | Cloudflare Access | Verify Access identity server-side and fail closed |
 | Approved website media | R2 after media phase | Validate files, consent evidence and alt text |
 | Google reviews | Google Business Profile | Preserve source content and moderate display separately |
@@ -61,9 +61,11 @@ Treatwell Connect -> appointments, availability, payments, client records,
 
 ## Failure behaviour
 
-Published SEO content must remain available in initial HTML. A D1 failure falls back to checked-in
-content. Treatwell failure leaves telephone and email contact options available. Google Maps
-failure leaves a normal directions link. Admin authentication and writes fail closed.
+Published SEO content must remain available in initial HTML. Page text may fall back to checked-in
+content, but treatment prices are authoritative in D1 and a missing `site_content.prices` or
+`frag:PRICES` row is treated as an outage instead of serving stale prices. Treatwell failure leaves
+telephone and email contact options available. Google Maps failure leaves a normal directions link.
+Admin authentication and writes fail closed.
 
 ## Booking flow
 

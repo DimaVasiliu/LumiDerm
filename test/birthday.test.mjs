@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import worker from '../src/worker.js';
+import { accessEnv, accessHeaders } from './access-token.mjs';
 
-const ownerHeaders = { 'cf-access-authenticated-user-email': 'owner@example.com' };
+const ownerHeaders = accessHeaders('owner@example.com');
 const jsonHeaders = { 'content-type': 'application/json' };
 
 function req(path, options = {}) {
@@ -60,7 +61,7 @@ class MockD1 {
 }
 
 function env() {
-  return { ADMIN_EMAILS: 'owner@example.com', SUBSCRIBERS: new MockD1(), UNSUB_SECRET: 'test_secret' };
+  return accessEnv({ ADMIN_EMAILS: 'owner@example.com', SUBSCRIBERS: new MockD1(), UNSUB_SECRET: 'test_secret' });
 }
 
 async function readJson(res) { return res.json(); }
@@ -124,8 +125,8 @@ test('admin can list and redeem vouchers; assistant cannot', async () => {
 
   const assistant = await worker.fetch(req('/admin/api/birthday/vouchers/resolve', {
     method: 'POST',
-    headers: { 'cf-access-authenticated-user-email': 'help@example.com', ...jsonHeaders },
+    headers: { ...accessHeaders('help@example.com'), ...jsonHeaders },
     body: JSON.stringify({ id: 1, action: 'redeem' }),
-  }), { ADMIN_EMAILS: 'owner@example.com,help@example.com', ADMIN_OWNER_EMAILS: 'owner@example.com', ADMIN_EDITOR_EMAILS: 'help@example.com', SUBSCRIBERS: new MockD1() });
+  }), accessEnv({ ADMIN_EMAILS: 'owner@example.com,help@example.com', ADMIN_OWNER_EMAILS: 'owner@example.com', ADMIN_EDITOR_EMAILS: 'help@example.com', SUBSCRIBERS: new MockD1() }));
   assert.equal(assistant.status, 403);
 });

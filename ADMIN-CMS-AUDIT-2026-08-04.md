@@ -12,7 +12,7 @@ This pass expands the editable page-text model so she can now manage the copy sh
 - Homepage SEO: title and meta description.
 - Contact details: phone, email, address, Instagram and Facebook text/links, applied site-wide when published.
 - Offers: create, edit, reorder, draft/live status, images and publish.
-- Prices: edit treatment prices, price notes and headline prices, then publish to `prices.json` and the rendered Treatments page.
+- Prices: edit treatment prices, price notes and headline prices, then publish live D1 price data and the rendered Treatments page fragment.
 - Reviews: import, moderate, feature and publish homepage reviews.
 - Media: upload/delete reusable images through the Worker/R2 media library.
 - Email marketing: compose, test, send and schedule campaigns from published offers.

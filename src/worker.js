@@ -73,6 +73,8 @@
  *                      auto-suppresses hard bounces + spam complaints.
  *
  * Vars:
+ *   CF_ACCESS_TEAM_NAME — Cloudflare Access team name, e.g. "lumiderm".
+ *   CF_ACCESS_AUD   — Cloudflare Access application audience tag.
  *   ADMIN_EMAILS     — optional comma-separated Access emails allowed for admin API.
  *                      If omitted, any Cloudflare Access-authenticated user is accepted.
  *   ADMIN_OWNER_EMAILS — optional comma-separated owner emails. If set, only owners
@@ -80,8 +82,8 @@
  *   ADMIN_EDITOR_EMAILS — optional comma-separated assistant/editor emails.
  *
  * Vars (in wrangler.jsonc):
- *   FROM_EMAIL       — e.g. "Lumi Derm Aesthetics <hello@lumidermaesthetics.com>"
- *   REPLY_TO         — e.g. "hello@lumidermaesthetics.com"
+ *   FROM_EMAIL       — verified Resend sender, "Lumi Derm Aesthetics <info@lumidermaesthetics.com>"
+ *   REPLY_TO         — e.g. "info@lumidermaesthetics.co.uk"
  *
  * KV:
  *   SUPPRESSION      — stores unsubscribed addresses. Never send to these.
@@ -91,7 +93,13 @@
 
 const MAX_RECIPIENTS = 500;
 const BATCH_SIZE = 100; // Resend's batch endpoint limit
+const SCHEDULED_CAMPAIGN_STALE_MS = 2 * 60 * 60 * 1000;
 const GOOGLE_REVIEW_URL = "https://www.google.com/search?client=mobilesearchapp&sca_esv=89317be53c67f56a&channel=iss&cs=0&hl=en_GB&rlz=1MDAPLA_en-GBGB1173GB1173&v=432.8.954074404&output=search&kgmid=%2Fg%2F11zkv1js2p&q=Lumi%20Derm%20Aesthetics&shem=epsd1%2Cltae%2Crimspwouoe&shndl=30&source=sh%2Fx%2Floc%2Fact%2Fm1%2F5&kgs=0f7f27e36b2d2ca9";
+const DEFAULT_SITE_ORIGIN = "https://lumidermaesthetics.com";
+const DEFAULT_CONTACT_EMAIL = "info@lumidermaesthetics.co.uk";
+const DEFAULT_FROM_EMAIL = "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
+const ACCESS_JWKS_TTL_MS = 5 * 60 * 1000;
+let accessJwksCache = null;
 
 export default {
   async fetch(request, env) {
@@ -118,10 +126,9 @@ export default {
     }
 
     if (!isPublicApi && !isAdminApi) {
-      // Edge-render: inject live prices/page-text from D1 into the static page,
-      // server-side, so edits are instant AND search engines still see the real
-      // content. Fail-safe: if D1 is empty or anything goes wrong, the untouched
-      // static page is served (identical to today).
+      // Edge-render: inject live prices/page-text from D1 into the static page.
+      // Page text can fall back to static HTML, but prices are authoritative in
+      // D1 and must fail visibly instead of serving stale checked-in prices.
       const contentPage = CONTENT_PAGE_BY_PATH[url.pathname];
       if (contentPage && request.method === "GET") {
         return serveEdgeRenderedPage(env, request, contentPage);
@@ -133,7 +140,7 @@ export default {
       // Central admin gate: every /admin/api/* call needs a valid Access user in
       // ADMIN_EMAILS. Log access failures (OWASP) and stop here on denial.
       if (isAdminApi) {
-        const gate = authorised(request, env);
+        const gate = await authorised(request, env);
         if (!gate.ok) {
           await logAudit(env, request, { actor: adminEmail(request), action: "auth.denied", detail: apiPath, status: "denied" });
           return json({ error: gate.reason || "Unauthorised." }, 401);
@@ -142,7 +149,7 @@ export default {
 
       if (apiPath === "/api/health") {
         if (isAdminApi) {
-          const admin = authorised(request, env);
+          const admin = await authorised(request, env);
           if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
           return json({
             ok: true,
@@ -189,7 +196,7 @@ export default {
 
       if (apiPath === "/api/campaign/send" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "send campaigns");
+        const owner = await requireOwner(request, env, "send campaigns");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleSend(request, env, url);
       }
@@ -203,7 +210,7 @@ export default {
       }
       if (apiPath === "/api/campaign/attribution" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "record booking/revenue attribution");
+        const owner = await requireOwner(request, env, "record booking/revenue attribution");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleCampaignAttribution(request, env);
       }
@@ -216,14 +223,14 @@ export default {
 
       if (apiPath === "/api/campaign/drafts/delete" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "delete saved campaigns");
+        const owner = await requireOwner(request, env, "delete saved campaigns");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleDeleteCampaignDraft(request, env);
       }
 
       if (apiPath === "/api/campaign/schedule" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "schedule campaigns");
+        const owner = await requireOwner(request, env, "schedule campaigns");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleScheduleCampaign(request, env);
       }
@@ -234,14 +241,14 @@ export default {
 
       if (apiPath === "/api/campaign/scheduled/cancel" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "cancel scheduled campaigns");
+        const owner = await requireOwner(request, env, "cancel scheduled campaigns");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleCancelScheduled(request, env);
       }
 
       if (apiPath === "/api/settings/birthday" && isAdminApi) {
         if (request.method === "GET") return handleGetBirthday(request, env);
-        const owner = requireOwner(request, env, "change birthday automation");
+        const owner = await requireOwner(request, env, "change birthday automation");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         if (request.method === "POST") return handleSetBirthday(request, env);
         return json({ error: "Use GET or POST." }, 405);
@@ -249,7 +256,7 @@ export default {
 
       if (apiPath === "/api/settings/birthday/test" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "send birthday previews");
+        const owner = await requireOwner(request, env, "send birthday previews");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleTestBirthday(request, env);
       }
@@ -267,7 +274,7 @@ export default {
 
       if (apiPath === "/api/github" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "publish website changes");
+        const owner = await requireOwner(request, env, "publish website changes");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleGithubProxy(request, env);
       }
@@ -276,7 +283,7 @@ export default {
       // CSP JSON-LD hash in sync, so a publish can never half-apply or break CI.
       if (apiPath === "/api/publish" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "publish website changes");
+        const owner = await requireOwner(request, env, "publish website changes");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleAtomicPublish(request, env);
       }
@@ -288,14 +295,14 @@ export default {
       }
       if (apiPath === "/api/content/save" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "publish page text and prices");
+        const owner = await requireOwner(request, env, "publish page text and prices");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleSiteContentSave(request, env);
       }
 
       if (apiPath === "/api/audit" && isAdminApi) {
         if (request.method === "GET") return handleAuditList(request, env);
-        const owner = requireOwner(request, env, "record export actions");
+        const owner = await requireOwner(request, env, "record export actions");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         if (request.method === "POST") return handleAuditLogClient(request, env);
         return json({ error: "Use GET or POST." }, 405);
@@ -303,13 +310,13 @@ export default {
 
       if (apiPath === "/api/reviews/submissions" && isAdminApi) {
         // Submissions carry client names + emails (personal data) → owner only.
-        const owner = requireOwner(request, env, "view client review submissions");
+        const owner = await requireOwner(request, env, "view client review submissions");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleReviewSubmissions(request, env);
       }
       if (apiPath === "/api/reviews/submissions/resolve" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "moderate review submissions");
+        const owner = await requireOwner(request, env, "moderate review submissions");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleReviewResolve(request, env);
       }
@@ -321,7 +328,7 @@ export default {
       if (apiPath === "/api/reviews/save" && isAdminApi) {
         // Saving publishes reviews live on the homepage → owner only.
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "publish reviews");
+        const owner = await requireOwner(request, env, "publish reviews");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleAdminReviewsSave(request, env);
       }
@@ -332,19 +339,19 @@ export default {
       }
       if (apiPath === "/api/offers/save" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "publish offers");
+        const owner = await requireOwner(request, env, "publish offers");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleAdminOffersSave(request, env);
       }
       if (apiPath === "/api/offers/upsert" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "publish offers");
+        const owner = await requireOwner(request, env, "publish offers");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleAdminOfferUpsert(request, env);
       }
       if (apiPath === "/api/offers/delete" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "delete offers");
+        const owner = await requireOwner(request, env, "delete offers");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleAdminOfferDelete(request, env);
       }
@@ -363,30 +370,30 @@ export default {
       }
 
       if (apiPath === "/api/birthdays" && isAdminApi) {
-        const owner = requireOwner(request, env, "view birthday subscriber data");
+        const owner = await requireOwner(request, env, "view birthday subscriber data");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleBirthdaysList(request, env);
       }
       if (apiPath === "/api/birthdays/send" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "send birthday emails");
+        const owner = await requireOwner(request, env, "send birthday emails");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleBirthdaysSend(request, env);
       }
       // Birthday vouchers: list (owner), redeem/cancel (owner), capture campaign.
       if (apiPath === "/api/birthday/vouchers" && isAdminApi) {
-        const owner = requireOwner(request, env, "view birthday vouchers");
+        const owner = await requireOwner(request, env, "view birthday vouchers");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleVoucherList(request, env);
       }
       if (apiPath === "/api/birthday/vouchers/resolve" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "redeem birthday vouchers");
+        const owner = await requireOwner(request, env, "redeem birthday vouchers");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleVoucherResolve(request, env);
       }
       if (apiPath === "/api/birthday/collect-campaign" && isAdminApi) {
-        const owner = requireOwner(request, env, "send the birthday-collection email");
+        const owner = await requireOwner(request, env, "send the birthday-collection email");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleBirthdayCollectCampaign(request, env);
       }
@@ -396,13 +403,13 @@ export default {
       }
       if (apiPath === "/api/media/upload" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "upload media");
+        const owner = await requireOwner(request, env, "upload media");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleMediaUpload(request, env);
       }
       if (apiPath === "/api/media/delete" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "delete media");
+        const owner = await requireOwner(request, env, "delete media");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleMediaDelete(request, env);
       }
@@ -456,21 +463,21 @@ export default {
       }
 
       if (apiPath === "/api/subscribers" && isAdminApi) {
-        const owner = requireOwner(request, env, "view subscriber personal data");
+        const owner = await requireOwner(request, env, "view subscriber personal data");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleListSubscribers(request, env);
       }
 
       if (apiPath === "/api/subscribers/import" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "import subscribers");
+        const owner = await requireOwner(request, env, "import subscribers");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleImportSubscribers(request, env);
       }
 
       if (apiPath === "/api/subscribers/delete" && isAdminApi) {
         if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-        const owner = requireOwner(request, env, "delete subscribers");
+        const owner = await requireOwner(request, env, "delete subscribers");
         if (!owner.ok) return json({ error: owner.reason }, 403);
         return handleDeleteSubscriber(request, env);
       }
@@ -493,7 +500,7 @@ export default {
 /* ------------------------------------------------------------------ */
 
 async function handleSend(request, env, url) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
 
   if (!env.RESEND_API_KEY) {
@@ -563,13 +570,16 @@ async function handleSend(request, env, url) {
 
   // Respect topic opt-ins, pause and the monthly cap (test sends bypass this).
   const pref = await filterByPreferences(env, kept, { topic, isTest });
+  if (pref.failed) {
+    return json({ error: pref.error, sent: 0, suppressed, skipped: { paused: 0, topicOut: 0, capped: 0 } }, 500);
+  }
   const audience = pref.kept;
   if (!audience.length) {
     return json({ error: "No one left after preferences (paused, topic turned off, or once-a-month cap).", sent: 0, suppressed, skipped: { paused: pref.paused, topicOut: pref.topicOut, capped: pref.capped } }, 400);
   }
 
-  const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <hello@lumidermaesthetics.com>";
-  const replyTo = env.REPLY_TO || null;
+  const from = env.FROM_EMAIL || DEFAULT_FROM_EMAIL;
+  const replyTo = env.REPLY_TO || DEFAULT_CONTACT_EMAIL;
   const campaignId = isTest ? "test_" + randomId() : "cmp_" + randomId();
 
   const messages = [];
@@ -595,7 +605,7 @@ async function handleSend(request, env, url) {
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
     };
-    if (replyTo) message.reply_to = replyTo;
+    message.reply_to = replyTo;
     messages.push(message);
   }
 
@@ -702,7 +712,7 @@ async function recordCampaignSend(env, detail) {
 }
 
 async function handleCampaignHistory(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Campaign history isn't set up yet." }, 500);
 
@@ -739,7 +749,7 @@ async function handleCampaignHistory(request, env) {
 
 // Per-campaign detail: which links were clicked, and by how many unique people.
 async function handleCampaignAnalytics(request, env, url) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Analytics aren't set up yet." }, 500);
   const campaignId = String(url.searchParams.get("id") || "").slice(0, 80);
@@ -786,7 +796,7 @@ async function handleCampaignAttribution(request, env) {
 }
 
 async function handleListCampaignDrafts(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Campaign drafts aren't set up yet." }, 500);
 
@@ -817,7 +827,7 @@ async function handleListCampaignDrafts(request, env) {
 }
 
 async function handleSaveCampaignDraft(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Campaign drafts aren't set up yet." }, 500);
 
@@ -853,7 +863,7 @@ async function handleSaveCampaignDraft(request, env) {
 }
 
 async function handleDeleteCampaignDraft(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Campaign drafts aren't set up yet." }, 500);
 
@@ -886,20 +896,19 @@ function topicColumn(topic) {
 // Load preference rows for a set of emails into a Map keyed by lowercase email.
 async function loadPreferenceMap(env, emails) {
   const map = new Map();
-  if (!env.SUBSCRIBERS || !emails.length) return map;
+  if (!emails.length) return { ok: true, map };
+  if (!env.SUBSCRIBERS) return { ok: false, error: "Subscriber preferences are not available; no email was sent." };
   const uniq = [...new Set(emails.map((e) => String(e || "").toLowerCase()).filter(Boolean))];
   for (let i = 0; i < uniq.length; i += 100) {
     const chunk = uniq.slice(i, i + 100);
     const ph = chunk.map((_, j) => "?" + (j + 1)).join(",");
-    try {
-      const { results } = await env.SUBSCRIBERS.prepare(
-        `SELECT email, pref_offers, pref_skintips, pref_news, pref_birthday, pref_frequency, pause_until, last_emailed_at
-           FROM subscribers WHERE email IN (${ph})`
-      ).bind(...chunk).all();
-      (results || []).forEach((r) => map.set(String(r.email).toLowerCase(), r));
-    } catch { /* columns may not exist pre-migration — treat as no preferences */ }
+    const { results } = await env.SUBSCRIBERS.prepare(
+      `SELECT email, pref_offers, pref_skintips, pref_news, pref_birthday, pref_frequency, pause_until, last_emailed_at
+         FROM subscribers WHERE email IN (${ph})`
+    ).bind(...chunk).all();
+    (results || []).forEach((r) => map.set(String(r.email).toLowerCase(), r));
   }
-  return map;
+  return { ok: true, map };
 }
 
 // Filter recipients by their preferences. Test sends bypass everything. Returns
@@ -907,7 +916,14 @@ async function loadPreferenceMap(env, emails) {
 async function filterByPreferences(env, people, opts) {
   opts = opts || {};
   if (opts.isTest) return { kept: people, paused: 0, topicOut: 0, capped: 0 };
-  const map = await loadPreferenceMap(env, people.map((p) => p.email));
+  let loaded;
+  try {
+    loaded = await loadPreferenceMap(env, people.map((p) => p.email));
+  } catch {
+    loaded = { ok: false, error: "Subscriber preferences could not be checked; no email was sent." };
+  }
+  if (!loaded.ok) return { kept: [], paused: 0, topicOut: 0, capped: 0, failed: true, error: loaded.error };
+  const map = loaded.map;
   if (!map.size) return { kept: people, paused: 0, topicOut: 0, capped: 0 };
   const nowMs = Date.now();
   const col = topicColumn(opts.topic);
@@ -950,8 +966,8 @@ async function deliverCampaign(env, origin, opts) {
     ? sanitizeBirthdayEmailHtml(opts && opts.html)
     : String((opts && opts.html) || "");
 
-  if (!subject || !html) return { ok: false, sent: 0, suppressed: 0, invalid: 0, errors: ["Missing subject or body."] };
-  if (!env.RESEND_API_KEY) return { ok: false, sent: 0, suppressed: 0, invalid: 0, errors: ["RESEND_API_KEY missing."] };
+  if (!subject || !html) return { ok: false, sent: 0, sentEmails: [], suppressed: 0, invalid: 0, errors: ["Missing subject or body."] };
+  if (!env.RESEND_API_KEY) return { ok: false, sent: 0, sentEmails: [], suppressed: 0, invalid: 0, errors: ["RESEND_API_KEY missing."] };
 
   const seen = new Set();
   const clean = [];
@@ -963,7 +979,7 @@ async function deliverCampaign(env, origin, opts) {
     seen.add(email);
     clean.push({ email, name: String((row && row.name) || "").trim() });
   }
-  if (!clean.length) return { ok: false, sent: 0, suppressed: 0, invalid, errors: ["No valid recipients."] };
+  if (!clean.length) return { ok: false, sent: 0, sentEmails: [], suppressed: 0, invalid, errors: ["No valid recipients."] };
 
   const kept = [];
   let suppressed = 0;
@@ -974,7 +990,7 @@ async function deliverCampaign(env, origin, opts) {
     }
     kept.push(person);
   }
-  if (!kept.length) return { ok: false, sent: 0, suppressed, invalid, errors: ["All recipients have unsubscribed."] };
+  if (!kept.length) return { ok: false, sent: 0, sentEmails: [], suppressed, invalid, errors: ["All recipients have unsubscribed."] };
 
   // Honour topic opt-ins, pause, and the monthly frequency cap. Birthday sends
   // pass skipPreferenceFilter — their own opt-in + pause is already applied and
@@ -982,11 +998,12 @@ async function deliverCampaign(env, origin, opts) {
   const pref = (opts && opts.skipPreferenceFilter)
     ? { kept, paused: 0, topicOut: 0, capped: 0 }
     : await filterByPreferences(env, kept, { topic: opts && opts.topic, isTest: false });
+  if (pref.failed) return { ok: false, sent: 0, sentEmails: [], suppressed, invalid, errors: [pref.error] };
   const audience = pref.kept;
-  if (!audience.length) return { ok: false, sent: 0, suppressed, invalid, errors: ["No recipients after preferences (paused, topic off, or frequency cap)."] };
+  if (!audience.length) return { ok: false, sent: 0, sentEmails: [], suppressed, invalid, errors: ["No recipients after preferences (paused, topic off, or frequency cap)."] };
 
-  const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
-  const replyTo = env.REPLY_TO || null;
+  const from = env.FROM_EMAIL || DEFAULT_FROM_EMAIL;
+  const replyTo = env.REPLY_TO || DEFAULT_CONTACT_EMAIL;
   const campaignId = "cmp_" + randomId();
   const messages = [];
   for (const person of audience) {
@@ -1021,27 +1038,47 @@ async function deliverCampaign(env, origin, opts) {
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
     };
-    if (replyTo) message.reply_to = replyTo;
-    messages.push(message);
+    message.reply_to = replyTo;
+    messages.push({ email: person.email, message });
   }
 
   let sent = 0;
+  const sentEmails = [];
   const errors = [];
   for (let i = 0; i < messages.length; i += BATCH_SIZE) {
-    const chunk = messages.slice(i, i + BATCH_SIZE);
-    const res = await fetch("https://api.resend.com/emails/batch", {
-      method: "POST",
-      headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
-      body: JSON.stringify(chunk),
-    });
-    if (res.ok) sent += chunk.length;
+    let chunk = messages.slice(i, i + BATCH_SIZE);
+    if (opts.beforeBatch) {
+      const claimed = new Set(await opts.beforeBatch(chunk.map((entry) => entry.email)));
+      chunk = chunk.filter((entry) => claimed.has(entry.email));
+    }
+    if (!chunk.length) continue;
+    let res;
+    try {
+      res = await fetch("https://api.resend.com/emails/batch", {
+        method: "POST",
+        headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+        body: JSON.stringify(chunk.map((entry) => entry.message)),
+      });
+    } catch (err) {
+      errors.push("Delivery outcome unknown: " + cronErrorMessage(err));
+      break;
+    }
+    if (res.ok) {
+      sent += chunk.length;
+      sentEmails.push(...chunk.map((entry) => entry.email));
+      if (opts.onBatchSent) await opts.onBatchSent(chunk.map((entry) => entry.email));
+    }
     else {
+      // A server error or timeout can follow acceptance; keep those claims held.
+      if (opts.onBatchRejected && res.status >= 400 && res.status < 500 && res.status !== 408) {
+        await opts.onBatchRejected(chunk.map((entry) => entry.email));
+      }
       const text = await res.text();
       errors.push(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${res.status} ${text.slice(0, 200)}`);
     }
   }
 
-  if (sent > 0) await markEmailed(env, audience.map((p) => p.email));
+  if (sentEmails.length) await markEmailed(env, sentEmails);
 
   await recordCampaignSend(env, {
     subject, audienceSource, isTest: false,
@@ -1053,7 +1090,7 @@ async function deliverCampaign(env, origin, opts) {
     await recordCampaignEvent(env, { campaignId, eventType: "failed", detail: errors.join(" | ").slice(0, 500) });
   }
 
-  return { ok: errors.length === 0, sent, suppressed, invalid, errors, campaignId, skipped: { paused: pref.paused, topicOut: pref.topicOut, capped: pref.capped } };
+  return { ok: errors.length === 0, sent, sentEmails, suppressed, invalid, errors, campaignId, skipped: { paused: pref.paused, topicOut: pref.topicOut, capped: pref.capped } };
 }
 
 const BIRTHDAY_REQUEST_URL = "https://lumidermaesthetics.com/pages/birthday-treat.html";
@@ -1157,9 +1194,33 @@ function voucherFallbackBlock(v) {
 /* ------------------------------------------------------------------ */
 
 async function runCron(event, env) {
-  const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
-  try { await sendDueScheduledCampaigns(env, origin); } catch (err) { /* keep going */ }
-  try { await runBirthdayEmails(env, origin, event); } catch (err) { /* keep going */ }
+  const origin = env.SITE_ORIGIN || DEFAULT_SITE_ORIGIN;
+  const failures = [];
+
+  try {
+    await completePendingErasures(env);
+  } catch (err) {
+    await recordCronFailure(env, "subscriber_erasure", err);
+    throw err;
+  }
+
+  try {
+    await sendDueScheduledCampaigns(env, origin);
+  } catch (err) {
+    failures.push("scheduled_campaigns: " + cronErrorMessage(err));
+    await recordCronFailure(env, "scheduled_campaigns", err);
+  }
+
+  try {
+    await runBirthdayEmails(env, origin, event);
+  } catch (err) {
+    failures.push("birthday_emails: " + cronErrorMessage(err));
+    await recordCronFailure(env, "birthday_emails", err);
+  }
+
+  if (failures.length) {
+    throw new Error("Cron failed: " + failures.join("; "));
+  }
 }
 
 const LONDON_TIME_ZONE = "Europe/London";
@@ -1180,6 +1241,7 @@ function londonDateParts(date) {
 async function sendDueScheduledCampaigns(env, origin) {
   if (!env.SUBSCRIBERS) return;
   const nowIso = new Date().toISOString();
+  await reapStaleScheduledCampaigns(env, nowIso);
   const { results } = await env.SUBSCRIBERS.prepare(
     `SELECT id, subject, html, audience_source, recipients, topic
        FROM scheduled_campaigns
@@ -1189,26 +1251,91 @@ async function sendDueScheduledCampaigns(env, origin) {
 
   for (const row of results || []) {
     // Claim it first so an overlapping run can't send it twice.
+    const startedAt = new Date().toISOString();
     const claim = await env.SUBSCRIBERS.prepare(
-      "UPDATE scheduled_campaigns SET status='sending' WHERE id=?1 AND status='queued'"
-    ).bind(row.id).run();
+      "UPDATE scheduled_campaigns SET status='sending', result=?2 WHERE id=?1 AND status='queued'"
+    ).bind(row.id, "Started by cron at " + startedAt).run();
     if (!claim.meta || claim.meta.changes === 0) continue;
 
-    let recips = [];
-    try { recips = JSON.parse(row.recipients || "[]"); } catch { recips = []; }
-    const result = await deliverCampaign(env, origin, {
-      subject: row.subject, html: row.html,
-      recipients: recips, audienceSource: row.audience_source || "scheduled",
-      topic: row.topic || "",
-    });
-    const status = result.errors && result.errors.length ? "error" : "sent";
-    const summary = ("Sent " + (result.sent || 0) +
-      (result.suppressed ? " · " + result.suppressed + " suppressed" : "") +
-      (result.errors && result.errors.length ? " · " + result.errors.join(" | ") : "")).slice(0, 300);
-    await env.SUBSCRIBERS.prepare(
-      "UPDATE scheduled_campaigns SET status=?1, sent_at=?2, result=?3 WHERE id=?4"
-    ).bind(status, new Date().toISOString(), summary, row.id).run();
+    try {
+      let recips = [];
+      try { recips = JSON.parse(row.recipients || "[]"); } catch { recips = []; }
+      const result = await deliverCampaign(env, origin, {
+        subject: row.subject, html: row.html,
+        recipients: recips, audienceSource: row.audience_source || "scheduled",
+        topic: row.topic || "",
+      });
+      const status = result.errors && result.errors.length ? "error" : "sent";
+      const summary = ("Sent " + (result.sent || 0) +
+        (result.suppressed ? " · " + result.suppressed + " suppressed" : "") +
+        (result.errors && result.errors.length ? " · " + result.errors.join(" | ") : "")).slice(0, 300);
+      await env.SUBSCRIBERS.prepare(
+        "UPDATE scheduled_campaigns SET status=?1, sent_at=?2, result=?3 WHERE id=?4 AND status='sending'"
+      ).bind(status, new Date().toISOString(), summary, row.id).run();
+    } catch (err) {
+      await markScheduledCampaignError(env, row.id, err);
+    }
   }
+}
+
+async function reapStaleScheduledCampaigns(env, nowIso) {
+  const staleBefore = new Date(Date.parse(nowIso) - SCHEDULED_CAMPAIGN_STALE_MS).toISOString();
+  const res = await env.SUBSCRIBERS.prepare(
+    `UPDATE scheduled_campaigns
+        SET status='error', result=?1
+      WHERE status='sending' AND (
+        (result LIKE 'Started by cron at %' AND substr(result,20,24) <= ?2) OR
+        ((result IS NULL OR result='' OR result NOT LIKE 'Started by cron at %') AND send_at <= ?2)
+      )`
+  ).bind("Delivery outcome unknown after an interrupted send. Check the email provider before resending. Detected at " + nowIso, staleBefore).run();
+  const recovered = res.meta && res.meta.changes ? res.meta.changes : 0;
+  if (recovered) {
+    await logAudit(env, null, {
+      actor: "cron",
+      action: "campaign.schedule.reaper",
+      detail: recovered + " interrupted scheduled campaign" + (recovered === 1 ? "" : "s") + " held for review; not resent",
+      status: "error",
+    });
+  }
+}
+
+async function markScheduledCampaignError(env, id, err) {
+  const summary = ("Cron failed after claiming campaign: " + cronErrorMessage(err)).slice(0, 300);
+  await env.SUBSCRIBERS.prepare(
+    "UPDATE scheduled_campaigns SET status='error', sent_at=?1, result=?2 WHERE id=?3 AND status='sending'"
+  ).bind(new Date().toISOString(), summary, id).run();
+  console.error(JSON.stringify({
+    level: "error",
+    event: "scheduled_campaign.failed",
+    campaignId: id,
+    message: cronErrorMessage(err),
+  }));
+  await logAudit(env, null, {
+    actor: "cron",
+    action: "campaign.schedule.failed",
+    detail: "scheduled campaign id " + id + ": " + cronErrorMessage(err),
+    status: "error",
+  });
+}
+
+async function recordCronFailure(env, job, err) {
+  const message = cronErrorMessage(err);
+  console.error(JSON.stringify({
+    level: "error",
+    event: "cron.failed",
+    job,
+    message,
+  }));
+  await logAudit(env, null, {
+    actor: "cron",
+    action: "cron." + job + ".failed",
+    detail: message,
+    status: "error",
+  });
+}
+
+function cronErrorMessage(err) {
+  return String((err && err.message) || err || "Unknown error").slice(0, 500);
 }
 
 async function runBirthdayEmails(env, origin, event) {
@@ -1219,7 +1346,7 @@ async function runBirthdayEmails(env, origin, event) {
   const now = new Date(event && event.scheduledTime ? event.scheduledTime : Date.now());
   const sendHour = Number.isInteger(cfg.hour) ? cfg.hour : 8;
   const london = londonDateParts(now);
-  if (london.hour !== sendHour) return; // once a day, at the configured UK hour
+  if (london.hour < sendHour) return; // after the configured UK hour, catch up until marked sent
 
   const day = london.day;
   const month = london.month;
@@ -1233,23 +1360,68 @@ async function runBirthdayEmails(env, origin, event) {
         AND (birthday_sent_year IS NULL OR birthday_sent_year < ?3)
         AND pref_birthday=1
         AND (pause_until IS NULL OR pause_until <= ?5)
+        AND NOT EXISTS (SELECT 1 FROM app_settings
+          WHERE key='birthday-delivery:' || ?3 || ':' || lower(subscribers.email))
       LIMIT ?4`
   ).bind(day, month, year, MAX_RECIPIENTS, nowIso).all();
 
   const people = (results || []).map((r) => ({ email: r.email, name: r.first_name || "" }));
   if (!people.length) return;
 
-  await deliverCampaign(env, origin, {
+  const result = await deliverCampaign(env, origin, {
     subject: cfg.subject || "Happy birthday from Lumi Derm",
     html: cfg.html || defaultBirthdayHtml(),
     recipients: people, audienceSource: "birthday", skipPreferenceFilter: true,
+    ...birthdayDeliveryHooks(env, year),
   });
 
-  // Mark everyone matched (even if suppressed) so we never retry them this year.
-  for (const p of people) {
+  if (!result.ok) {
+    throw new Error((result.errors && result.errors.join(" | ")) || "Birthday send failed.");
+  }
+}
+
+function birthdayDeliveryHooks(env, year) {
+  return {
+    beforeBatch: (emails) => claimBirthdayBatch(env, year, emails),
+    onBatchSent: async (emails) => {
+      await markBirthdaySentYear(env, year, emails);
+      await releaseBirthdayClaims(env, year, emails);
+    },
+    onBatchRejected: (emails) => releaseBirthdayClaims(env, year, emails),
+  };
+}
+
+function birthdayDeliveryKey(year, email) {
+  return "birthday-delivery:" + year + ":" + email.toLowerCase();
+}
+
+async function claimBirthdayBatch(env, year, emails) {
+  const claimed = [];
+  for (const email of emails) {
+    const result = await env.SUBSCRIBERS.prepare(
+      `INSERT INTO app_settings (key, value, updated_at) SELECT ?1,?2,?3
+         WHERE EXISTS (SELECT 1 FROM subscribers WHERE email=?4
+           AND (birthday_sent_year IS NULL OR birthday_sent_year < ?5))
+         ON CONFLICT(key) DO NOTHING`
+    ).bind(birthdayDeliveryKey(year, email), "pending", new Date().toISOString(), email, year).run();
+    if (d1Changes(result)) claimed.push(email);
+  }
+  return claimed;
+}
+
+async function releaseBirthdayClaims(env, year, emails) {
+  for (const email of emails) {
+    await env.SUBSCRIBERS.prepare("DELETE FROM app_settings WHERE key=?1")
+      .bind(birthdayDeliveryKey(year, email)).run();
+  }
+}
+
+async function markBirthdaySentYear(env, year, emails) {
+  const uniq = [...new Set((emails || []).map((e) => String(e || "").toLowerCase()).filter(Boolean))];
+  for (const email of uniq) {
     await env.SUBSCRIBERS.prepare(
       "UPDATE subscribers SET birthday_sent_year=?1 WHERE email=?2"
-    ).bind(year, p.email).run();
+    ).bind(year, email).run();
   }
 }
 
@@ -1354,8 +1526,8 @@ async function handleAskQuestion(request, env) {
   }
 
   const admins = csvEmails(env.ADMIN_EMAILS);
-  const clinicTo = env.CONTACT_EMAIL || admins.find((e) => /lumiderm/i.test(e)) || env.REPLY_TO || admins[0] || "info@lumidermaesthetics.co.uk";
-  const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
+  const clinicTo = env.CONTACT_EMAIL || admins.find((e) => /lumiderm/i.test(e)) || env.REPLY_TO || admins[0] || DEFAULT_CONTACT_EMAIL;
+  const from = env.FROM_EMAIL || DEFAULT_FROM_EMAIL;
   const cleanSubject = ("New website question from " + name + (treatment ? " · " + treatment : "")).replace(/[\r\n]+/g, " ").slice(0, 160);
   const message = {
     from,
@@ -1372,7 +1544,7 @@ async function handleAskQuestion(request, env) {
   if (!res.ok) {
     const text = await res.text();
     await logAudit(env, request, { actor: email || name, action: "question.asked", detail: auditDetail, status: "error " + res.status });
-    return json({ error: "Sorry — we couldn't send that just now. Please email info@lumidermaesthetics.co.uk directly. (" + text.slice(0, 120) + ")" }, 502);
+    return json({ error: "Sorry — we couldn't send that just now. Please email " + DEFAULT_CONTACT_EMAIL + " directly. (" + text.slice(0, 120) + ")" }, 502);
   }
   await logAudit(env, request, { actor: email || name, action: "question.asked", detail: auditDetail, status: "ok" });
   return json({ ok: true, message: "Thanks! Your question is on its way to the team — we'll reply by email soon." });
@@ -1474,8 +1646,8 @@ async function handleVoucherRequest(request, env) {
 
   if (env.RESEND_API_KEY) {
     const admins = csvEmails(env.ADMIN_EMAILS);
-    const clinicTo = env.CONTACT_EMAIL || admins.find((e) => /lumiderm/i.test(e)) || env.REPLY_TO || admins[0] || "info@lumidermaesthetics.co.uk";
-    const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
+    const clinicTo = env.CONTACT_EMAIL || admins.find((e) => /lumiderm/i.test(e)) || env.REPLY_TO || admins[0] || DEFAULT_CONTACT_EMAIL;
+    const from = env.FROM_EMAIL || DEFAULT_FROM_EMAIL;
     const msg = {
       from, to: [clinicTo],
       subject: ("Birthday appointment request — " + row.code).replace(/[\r\n]+/g, " ").slice(0, 160),
@@ -1570,7 +1742,7 @@ async function handleBirthdayCollectCampaign(request, env) {
   const people = (results || []).map((r) => ({ email: r.email, name: r.first_name || "" }));
   if (request.method === "GET") return json({ ok: true, count: people.length });
   if (!people.length) return json({ ok: true, sent: 0, message: "Everyone already has a birthday on file." });
-  const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+  const origin = env.SITE_ORIGIN || DEFAULT_SITE_ORIGIN;
   const result = await deliverCampaign(env, origin, {
     subject: "Add your birthday for a yearly treat",
     html: birthdayCollectEmailHtml(),
@@ -1694,7 +1866,7 @@ async function fallbackReviewsFromAssets(env) {
   const fallback = { summary: { rating: "5.0", count: 47, label: "Treatwell reviews" }, reviews: [] };
   if (!env.ASSETS) return fallback;
   try {
-    const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+    const origin = env.SITE_ORIGIN || DEFAULT_SITE_ORIGIN;
     const response = await env.ASSETS.fetch(new Request(origin + "/assets/data/reviews.json"));
     if (!response.ok) return fallback;
     const data = await response.json();
@@ -1711,7 +1883,7 @@ async function fallbackReviewsFromAssets(env) {
 // Places API). Needs GOOGLE_PLACES_API_KEY + GOOGLE_PLACE_ID set as secrets.
 // Returns up to ~5 recent reviews for the team to import into the queue.
 async function handleGoogleReviews(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   const key = env.GOOGLE_PLACES_API_KEY;
   const placeId = env.GOOGLE_PLACE_ID;
@@ -1870,7 +2042,7 @@ function offerToPublic(o) {
 async function fallbackOffersFromAssets(env) {
   if (!env.ASSETS) return { offers: [] };
   try {
-    const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+    const origin = env.SITE_ORIGIN || DEFAULT_SITE_ORIGIN;
     const res = await env.ASSETS.fetch(new Request(origin + "/assets/data/offers.json"));
     if (!res.ok) return { offers: [] };
     const data = await res.json();
@@ -2165,17 +2337,20 @@ async function handleBirthdaysSend(request, env) {
   }
 
   const cfg = await getBirthdayConfig(env);
-  const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+  const origin = env.SITE_ORIGIN || DEFAULT_SITE_ORIGIN;
+  const year = londonDateParts(new Date()).year;
+  const pending = await env.SUBSCRIBERS.prepare("SELECT value FROM app_settings WHERE key=?1")
+    .bind(birthdayDeliveryKey(year, email)).first();
+  if (pending) return json({ error: "A previous birthday delivery has an unknown outcome. Check the email provider before sending again." }, 409);
   const result = await deliverCampaign(env, origin, {
     subject: cfg.subject || "Happy birthday from Lumi Derm",
     html: cfg.html || defaultBirthdayHtml(),
     recipients: [{ email: row.email, name: row.first_name || "" }],
     audienceSource: "birthday-manual", skipPreferenceFilter: true,
+    ...birthdayDeliveryHooks(env, year),
   });
   if (!result.sent) return json({ error: (result.errors && result.errors[0]) || "Could not send." }, 502);
 
-  const year = londonDateParts(new Date()).year;
-  await env.SUBSCRIBERS.prepare("UPDATE subscribers SET birthday_sent_year=?1 WHERE email=?2").bind(year, row.email).run();
   await logAudit(env, request, { action: "birthday.manual_send", detail: email, status: "ok" });
   return json({ ok: true, sentTo: email });
 }
@@ -2236,7 +2411,7 @@ function defaultBirthdayHtml() {
 /* ------------------------------------------------------------------ */
 
 async function handleScheduleCampaign(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Scheduling isn't set up yet." }, 500);
 
@@ -2281,7 +2456,7 @@ async function handleScheduleCampaign(request, env) {
 }
 
 async function handleListScheduled(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Scheduling isn't set up yet." }, 500);
 
@@ -2299,13 +2474,22 @@ async function handleListScheduled(request, env) {
       id: r.id, subject: r.subject, audience_source: r.audience_source,
       send_at: r.send_at, status: r.status, created_at: r.created_at,
       sent_at: r.sent_at, result: r.result, recipient_count: count,
+      can_cancel: r.status === "queued" || r.status === "error" || isStaleScheduledCampaign(r),
     };
   });
   return json({ ok: true, scheduled: list });
 }
 
+function isStaleScheduledCampaign(row) {
+  if (row.status !== "sending") return false;
+  const prefix = "Started by cron at ";
+  const result = String(row.result || "");
+  const started = result.startsWith(prefix) ? result.slice(prefix.length, prefix.length + 24) : row.send_at;
+  return Date.parse(started) <= Date.now() - SCHEDULED_CAMPAIGN_STALE_MS;
+}
+
 async function handleCancelScheduled(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Scheduling isn't set up yet." }, 500);
 
@@ -2314,24 +2498,35 @@ async function handleCancelScheduled(request, env) {
   const id = parseInt(body.id, 10);
   if (!id) return json({ error: "Campaign id is required." }, 400);
 
+  const staleBefore = new Date(Date.now() - SCHEDULED_CAMPAIGN_STALE_MS).toISOString();
   const res = await env.SUBSCRIBERS.prepare(
-    "UPDATE scheduled_campaigns SET status='cancelled' WHERE id=?1 AND status='queued'"
-  ).bind(id).run();
+    `UPDATE scheduled_campaigns
+        SET status='cancelled'
+      WHERE id=?1
+        AND (
+          status='queued' OR status='error' OR (
+            status='sending' AND (
+              (result LIKE 'Started by cron at %' AND substr(result,20,24) <= ?2) OR
+              ((result IS NULL OR result='' OR result NOT LIKE 'Started by cron at %') AND send_at <= ?2)
+            )
+          )
+        )`
+  ).bind(id, staleBefore).run();
   const changed = res.meta && res.meta.changes ? res.meta.changes : 0;
-  if (!changed) return json({ error: "That campaign has already sent or been cancelled." }, 409);
+  if (!changed) return json({ error: "That campaign has already sent, been cancelled, or is currently sending." }, 409);
   await logAudit(env, request, { action: "campaign.cancel", detail: "scheduled campaign id " + id, status: "ok" });
   return json({ ok: true });
 }
 
 async function handleGetBirthday(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   const cfg = await getBirthdayConfig(env);
   return json({ ok: true, birthday: cfg });
 }
 
 async function handleSetBirthday(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Settings aren't set up yet." }, 500);
 
@@ -2368,7 +2563,7 @@ async function handleSetBirthday(request, env) {
 
 // Send the birthday email to one address (the admin, or a supplied one) as a preview.
 async function handleTestBirthday(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.RESEND_API_KEY) return json({ error: "RESEND_API_KEY is missing." }, 500);
 
@@ -2378,7 +2573,7 @@ async function handleTestBirthday(request, env) {
   if (!isEmail(to)) return json({ error: "No valid address to send the test to." }, 400);
 
   const cfg = await getBirthdayConfig(env);
-  const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+  const origin = env.SITE_ORIGIN || DEFAULT_SITE_ORIGIN;
   // Preview the on-screen (possibly unsaved) content if provided, else the saved config.
   const subjectRaw = String(body.subject || "").trim() || cfg.subject || "Happy birthday from Lumi Derm";
   const htmlRaw = String(body.html || "") || cfg.html || defaultBirthdayHtml();
@@ -2388,9 +2583,9 @@ async function handleTestBirthday(request, env) {
   const who = firstName(body.name) || "there";
   let html = htmlSafe.replaceAll("{{name}}", escapeHtml(who)).replaceAll("{{unsubscribe}}", unsubUrl);
   html = applyVoucherTokens(html, sampleVoucher(origin)); // preview shows a sample code + link
-  const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
+  const from = env.FROM_EMAIL || DEFAULT_FROM_EMAIL;
   const message = { from, to: [to], subject: subjectRaw.replaceAll("{{name}}", who), html };
-  if (env.REPLY_TO) message.reply_to = env.REPLY_TO;
+  message.reply_to = env.REPLY_TO || DEFAULT_CONTACT_EMAIL;
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -2405,14 +2600,14 @@ async function handleTestBirthday(request, env) {
 /* ------------------------------------------------------------------ */
 /* Admin: GitHub publishing proxy                                      */
 /* ------------------------------------------------------------------ */
-/* The admin publishes site data (offers/reviews/prices/page text/images)
+/* The admin publishes site data (offers/reviews/page text/images)
    by committing to GitHub. The token is a Cloudflare secret (GITHUB_TOKEN),
    never sent to the browser. The admin calls this proxy (behind Access +
    ADMIN_EMAILS); the Worker injects the token, owns the repo/branch, and
    only allows writes to the site's own data + page files. */
 
 const GITHUB_PATH_ALLOW = [
-  /^lumi-derm-website\/assets\/data\/(offers|reviews|prices|content)\.json$/,
+  /^lumi-derm-website\/assets\/data\/(offers|reviews|content)\.json$/,
   /^lumi-derm-website\/index\.html$/,
   /^lumi-derm-website\/pages\/[a-z0-9-]+\.html$/,
   /^lumi-derm-website\/_headers$/, // FAQ publish updates the CSP JSON-LD hash here
@@ -2423,7 +2618,7 @@ function githubPathAllowed(path) {
 }
 
 async function handleGithubHealth(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
 
   const configured = Boolean(env.GITHUB_TOKEN && env.GITHUB_REPO);
@@ -2461,7 +2656,7 @@ async function handleGithubHealth(request, env) {
 // plus the version Cloudflare is actually running. The admin compares the two to
 // show pending / deployed / delayed. Works from any device (no local state).
 async function handleDeployStatus(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
 
   const deploy = deployInfo(env);
@@ -2501,7 +2696,7 @@ async function handleDeployStatus(request, env) {
 
 // Dashboard alerts: things that need attention, computed from live data.
 async function handleAlerts(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ ok: true, alerts: [] });
   const alerts = [];
@@ -2539,7 +2734,33 @@ async function handleAlerts(request, env) {
     (results || []).forEach((r) => alerts.push({ level: "info", title: "Campaign scheduled today", detail: '"' + (r.subject || "Untitled") + '" at ' + String(r.send_at || "").slice(11, 16), tab: "sender" }));
   } catch { /* ignore */ }
 
+  // Scheduled send failures or stale claims need operator attention.
+  try {
+    const staleBefore = new Date(Date.now() - SCHEDULED_CAMPAIGN_STALE_MS).toISOString();
+    const row = await env.SUBSCRIBERS.prepare(
+      `SELECT COUNT(*) AS c FROM scheduled_campaigns
+        WHERE status='error' OR (
+          status='sending' AND (
+            (result LIKE 'Started by cron at %' AND substr(result,20,24) <= ?1) OR
+            ((result IS NULL OR result='' OR result NOT LIKE 'Started by cron at %') AND send_at <= ?1)
+          )
+        )`
+    ).bind(staleBefore).first();
+    if (row && row.c) alerts.push({ level: "error", title: row.c + " scheduled campaign" + (row.c > 1 ? "s" : "") + " need attention", detail: "A scheduled send failed or was left in progress. Check Send email → scheduled campaigns.", tab: "sender" });
+  } catch { /* ignore */ }
+
   // Birthday automation switched off.
+  try {
+    const row = await env.SUBSCRIBERS.prepare(
+      "SELECT COUNT(*) AS c FROM app_settings WHERE key LIKE 'birthday-delivery:%'"
+    ).first();
+    if (row && row.c) alerts.push({ level: "error", title: row.c + " birthday deliveries need review", detail: "Delivery was interrupted. Check email-provider logs before resending; automatic retries are held to prevent duplicates.", tab: "sender" });
+    const erasures = await env.SUBSCRIBERS.prepare(
+      "SELECT COUNT(*) AS c FROM app_settings WHERE key LIKE 'erasure:%'"
+    ).first();
+    if (erasures && erasures.c) alerts.push({ level: "error", title: erasures.c + " erasures awaiting cleanup", detail: "Database records were erased; remaining suppression cleanup will retry on the next hourly run.", tab: "subscribers" });
+  } catch { /* existing schema-health alerts cover missing tables */ }
+
   try {
     const cfg = await getBirthdayConfig(env);
     if (!cfg.enabled) alerts.push({ level: "warn", title: "Birthday automation is off", detail: "Automatic birthday emails won't send. Turn it on in Send email → Birthdays.", tab: "sender" });
@@ -2555,7 +2776,7 @@ async function handleAlerts(request, env) {
 }
 
 async function handleGithubProxy(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) {
     return json({ error: "GitHub publishing isn't configured on the server yet. Ask Dima to set the GITHUB_TOKEN secret." }, 503);
@@ -2754,10 +2975,7 @@ async function handleAtomicPublish(request, env) {
 /* Live prices + page text: edge-rendered from D1 into the static page  */
 /* ------------------------------------------------------------------ */
 
-// Which served paths are edge-rendered from D1. Only the treatments page (prices)
-// is D1-backed today; page text still deploys via GitHub, so the homepage serving
-// path is deliberately left untouched. Adding page-text pages here later is a
-// one-line change per page once their content lives in D1.
+// Which served paths are edge-rendered from D1.
 const CONTENT_PAGE_BY_PATH = {
   "/": "home", "/index.html": "home",
   "/pages/services.html": "services", "/pages/services": "services",
@@ -2775,6 +2993,9 @@ const PAGE_REGIONS = {
     "ABOUT_JOURNEY", "ABOUT_JOURNEY_STEPS", "ABOUT_CTA",
   ],
   booking: ["BOOKING_HERO", "BOOKING_PICKER", "BOOKING_WIDGET", "BOOKING_SUPPORT"],
+};
+const REQUIRED_CONTENT_FRAGMENTS = {
+  services: ["PRICES"],
 };
 const REPOPATH_REGIONS = {
   "lumi-derm-website/index.html": PAGE_REGIONS.home,
@@ -2811,51 +3032,98 @@ async function loadContentFragments(env, regions) {
   return map;
 }
 
-// Serve a content page with the live fragments injected. Any failure or an empty
-// D1 falls back to the untouched static page.
+function missingRequiredContentFragments(page, fragMap) {
+  const required = REQUIRED_CONTENT_FRAGMENTS[page] || [];
+  return required.filter((region) => fragMap["frag:" + region] == null);
+}
+
+function livePricesUnavailable(reason) {
+  console.error(JSON.stringify({
+    event: "content.prices_unavailable",
+    reason: String(reason || "missing").slice(0, 200),
+  }));
+  const res = htmlPage(
+    "Prices unavailable",
+    "The treatment price list is temporarily unavailable. Please contact the clinic before booking.",
+    503
+  );
+  res.headers.set("retry-after", "300");
+  return res;
+}
+
+// Serve a content page with the live fragments injected. Optional D1 fragments
+// fall back to the untouched static page. Required price fragments fail closed.
 async function serveEdgeRenderedPage(env, request, page) {
-  const assetRes = await env.ASSETS.fetch(request);
+  // Static validators describe the template, not its current D1 fragments.
+  const assetRequest = new Request(request);
+  assetRequest.headers.delete("if-none-match");
+  assetRequest.headers.delete("if-modified-since");
+  const assetRes = await env.ASSETS.fetch(assetRequest);
   const ct = assetRes.headers.get("content-type") || "";
   if (!assetRes.ok || !/text\/html/i.test(ct)) return assetRes;
   let text;
   try { text = await assetRes.text(); } catch { return assetRes; }
   let out = text;
+  const regions = PAGE_REGIONS[page] || [];
+  const required = REQUIRED_CONTENT_FRAGMENTS[page] || [];
   try {
-    if (env.SUBSCRIBERS) {
-      const regions = PAGE_REGIONS[page] || [];
+    if (!env.SUBSCRIBERS) {
+      if (required.length) return livePricesUnavailable("D1 binding missing");
+    } else {
       const fragMap = await loadContentFragments(env, regions);
+      const missing = missingRequiredContentFragments(page, fragMap);
+      if (missing.length) return livePricesUnavailable("Missing D1 fragment(s): " + missing.join(","));
       if (Object.keys(fragMap).length) out = injectContentFragments(text, regions, fragMap);
     }
-  } catch { out = text; }
+  } catch (err) {
+    if (required.length) return livePricesUnavailable((err && err.message) || err || "D1 read failed");
+    out = text;
+  }
   const headers = new Headers(assetRes.headers);
   headers.delete("content-length");
+  headers.delete("etag");
+  headers.delete("last-modified");
+  // Never cache an edge-rendered page: it is assembled from live D1 content, so
+  // a cached copy would show stale text/prices after a publish. Keep it fresh.
+  headers.set("cache-control", "no-store, must-revalidate");
   return new Response(out, { status: 200, headers });
 }
 
 async function readAssetJson(env, path) {
   if (!env.ASSETS) return null;
   try {
-    const origin = env.SITE_ORIGIN || "https://lumidermaesthetics.com";
+    const origin = env.SITE_ORIGIN || DEFAULT_SITE_ORIGIN;
     const res = await env.ASSETS.fetch(new Request(origin + path));
     if (!res.ok) return null;
     return await res.json();
   } catch { return null; }
 }
 
-// Admin: current structured content + prices for the editor (D1, else the file).
+// Admin: current structured content + prices for the editor. Content copy can
+// use checked-in defaults; prices are live D1 data only.
 async function handleSiteContentGet(env) {
   const out = { content: null, prices: null };
+  let pricesError = "";
   if (env.SUBSCRIBERS) {
     try {
       const { results } = await env.SUBSCRIBERS.prepare(
         "SELECT key, value FROM site_content WHERE key IN ('content','prices')"
       ).all();
       (results || []).forEach((r) => { try { out[r.key] = JSON.parse(r.value); } catch { /* ignore */ } });
-    } catch { /* fall back to files */ }
+    } catch (err) {
+      pricesError = (err && err.message) || "D1 content read failed.";
+    }
+  } else {
+    pricesError = "D1 binding is missing.";
   }
   if (!out.content) out.content = await readAssetJson(env, "/assets/data/content.json");
-  if (!out.prices) out.prices = await readAssetJson(env, "/assets/data/prices.json");
-  return json({ ok: true, content: out.content, prices: out.prices });
+  return json({
+    ok: true,
+    content: out.content,
+    prices: out.prices,
+    pricesMissing: !out.prices,
+    error: !out.prices ? (pricesError || "Live prices are missing from D1.") : undefined,
+  });
 }
 
 // Admin: save structured content/prices + the rendered page fragments to D1.
@@ -3000,6 +3268,8 @@ async function lastSuccessfulSend(env) {
 
 const MEDIA_PREFIX = "uploads/";
 const MEDIA_MAX_BYTES = 6 * 1024 * 1024; // 6MB
+const MEDIA_ALLOWED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif", "image/avif"]);
+const MEDIA_CSP = "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'; sandbox";
 
 function extFromType(type) {
   const map = { "image/jpeg": "jpg", "image/jpg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "image/avif": "avif" };
@@ -3024,6 +3294,10 @@ async function handleMediaServe(request, env, url) {
   obj.writeHttpMetadata(headers);
   if (!headers.get("content-type")) headers.set("content-type", "application/octet-stream");
   headers.set("cache-control", "public, max-age=31536000, immutable");
+  headers.set("content-security-policy", MEDIA_CSP);
+  headers.set("x-content-type-options", "nosniff");
+  headers.set("x-frame-options", "DENY");
+  headers.set("referrer-policy", "no-referrer");
   if (obj.httpEtag) headers.set("etag", obj.httpEtag);
   return new Response(obj.body, { headers });
 }
@@ -3038,8 +3312,10 @@ async function handleMediaUpload(request, env) {
   try { form = await request.formData(); } catch { return json({ error: "Could not read the upload." }, 400); }
   const file = form.get("file");
   if (!file || typeof file === "string") return json({ error: "No image file was sent." }, 400);
-  const type = file.type || "";
-  if (!/^image\//i.test(type)) return json({ error: "That file is not an image." }, 400);
+  const type = String(file.type || "").toLowerCase();
+  if (type === "image/svg+xml" || !MEDIA_ALLOWED_TYPES.has(type)) {
+    return json({ error: "Only JPG, PNG, WebP, GIF or AVIF images can be uploaded. SVG is not allowed." }, 400);
+  }
   if (file.size > MEDIA_MAX_BYTES) return json({ error: "That image is larger than 6MB — please use a smaller one." }, 400);
 
   const key = MEDIA_PREFIX + Date.now().toString(36) + "-" + randHex(4) + "." + extFromType(type);
@@ -3142,6 +3418,8 @@ async function handlePreferencesPost(request, env) {
   const prefFrequency = String(form.get("pref_frequency") || "any") === "monthly" ? "monthly" : "any";
   const pauseMonths = clampInt(form.get("pause_months"), 1, 12);
   const pauseUntil = pauseMonths ? new Date(Date.now() + pauseMonths * 30 * 24 * 60 * 60 * 1000).toISOString() : null;
+  const preferenceConsentWording = "Preference centre saved at " + now + ": Keep me subscribed to Lumi Derm marketing emails.";
+  const preferenceConsentSource = "preference centre (/api/preferences) at " + now;
 
   if (subscribed) {
     await env.SUBSCRIBERS.prepare(
@@ -3149,16 +3427,19 @@ async function handlePreferencesPost(request, env) {
          (email, first_name, last_name, birth_day, birth_month, interest, status,
           consent_email, consent_wording, consent_source, confirm_token, created_at, confirmed_at, unsubscribed_at,
           pref_offers, pref_skintips, pref_news, pref_birthday, pref_frequency, pause_until)
-       VALUES (?1,?2,?3,?4,?5,?6,'confirmed',1,'Updated in email preference centre','preference centre',NULL,?7,?7,NULL,
+       VALUES (?1,?2,?3,?4,?5,?6,'confirmed',1,?14,?15,NULL,?7,?7,NULL,
                ?8,?9,?10,?11,?12,?13)
        ON CONFLICT(email) DO UPDATE SET
          first_name=?2, last_name=?3, birth_day=?4, birth_month=?5, interest=?6,
-         status='confirmed', consent_email=1, consent_source='preference centre',
-         consent_wording='Updated in email preference centre', confirmed_at=COALESCE(confirmed_at, ?7),
+         status='confirmed', consent_email=1,
+         consent_wording=CASE WHEN COALESCE(consent_wording,'') = '' THEN ?14 ELSE consent_wording || char(10) || ?14 END,
+         consent_source=CASE WHEN COALESCE(consent_source,'') = '' THEN ?15 ELSE consent_source || char(10) || ?15 END,
+         confirmed_at=COALESCE(confirmed_at, ?7),
          unsubscribed_at=NULL,
          pref_offers=?8, pref_skintips=?9, pref_news=?10, pref_birthday=?11, pref_frequency=?12, pause_until=?13`
     ).bind(email, firstNameVal, lastNameVal, birthDay, birthMonth, interest, now,
-           prefOffers, prefSkintips, prefNews, prefBirthday, prefFrequency, pauseUntil).run();
+           prefOffers, prefSkintips, prefNews, prefBirthday, prefFrequency, pauseUntil,
+           preferenceConsentWording, preferenceConsentSource).run();
     if (env.SUPPRESSION) await env.SUPPRESSION.delete(suppressionKey(email));
     const note = pauseUntil
       ? "Your preferences are saved and emails are paused for now. You can resume any time from this page."
@@ -3199,10 +3480,21 @@ async function handleUnsubscribe(request, env, url) {
     return htmlPage("Invalid link", "This unsubscribe link is not valid.", 400);
   }
 
+  if (request.method === "GET" || request.method === "HEAD") {
+    return unsubscribeConfirmPage(email, url);
+  }
+  if (request.method !== "POST") {
+    return json({ error: "Use GET or POST." }, 405);
+  }
+  if (!(await isOneClickUnsubscribePost(request))) {
+    return htmlPage("Confirm required", "Please use the unsubscribe button from the confirmation page.", 400);
+  }
+
+  const now = new Date().toISOString();
   if (env.SUPPRESSION) {
     await env.SUPPRESSION.put(
       suppressionKey(email),
-      JSON.stringify({ at: new Date().toISOString() })
+      JSON.stringify({ at: now, source: "one-click unsubscribe" })
     );
   }
 
@@ -3211,7 +3503,7 @@ async function handleUnsubscribe(request, env, url) {
     try {
       await env.SUBSCRIBERS.prepare(
         "UPDATE subscribers SET status = 'unsubscribed', unsubscribed_at = ?1 WHERE email = ?2"
-      ).bind(new Date().toISOString(), email).run();
+      ).bind(now, email).run();
     } catch (err) { /* non-fatal */ }
   }
   if (campaignId) await recordCampaignEvent(env, { campaignId, email, eventType: "unsubscribe", detail: "one-click unsubscribe" });
@@ -3223,9 +3515,42 @@ async function handleUnsubscribe(request, env, url) {
   );
 }
 
+function unsubscribeConfirmPage(email, url) {
+  const action = `${url.pathname}${url.search}`;
+  return htmlPage(
+    "Confirm unsubscribe",
+    `Please confirm that you want to remove <strong>${escapeHtml(email)}</strong> from Lumi Derm marketing emails.<form method="post" action="${escapeHtml(action)}" style="margin:24px 0 0;"><input type="hidden" name="List-Unsubscribe" value="One-Click"><button type="submit" style="border:0;padding:14px 30px;background:#1c1a18;color:#fff;font-size:12px;letter-spacing:.16em;text-transform:uppercase;border-radius:2px;cursor:pointer;">Unsubscribe</button></form>`,
+    200
+  );
+}
+
+async function isOneClickUnsubscribePost(request) {
+  const contentType = String(request.headers.get("content-type") || "").toLowerCase();
+  if (contentType.startsWith("multipart/form-data")) {
+    try { return (await request.formData()).get("List-Unsubscribe") === "One-Click"; }
+    catch { return false; }
+  }
+  if (contentType && !contentType.includes("application/x-www-form-urlencoded")) {
+    return false;
+  }
+  let body = "";
+  try {
+    body = await request.text();
+  } catch {
+    return false;
+  }
+  return new URLSearchParams(body).get("List-Unsubscribe") === "One-Click";
+}
+
 async function validEmailToken(env, email, token) {
   if (!isEmail(email) || !token) return false;
-  const expected = await signEmail(env, email);
+  let expected;
+  try {
+    expected = await signEmail(env, email);
+  } catch (err) {
+    if (err && err.message === "UNSUB_SECRET is missing.") return false;
+    throw err;
+  }
   return timingSafeEqual(token, expected);
 }
 
@@ -3310,14 +3635,14 @@ async function handleSubscribe(request, env, url) {
   if (env.RESEND_API_KEY) {
     const confirmUrl = `${url.origin}/api/confirm/${token}`;
     const html = confirmEmailHtml(firstNameVal, confirmUrl);
-    const from = env.FROM_EMAIL || "Lumi Derm Aesthetics <info@lumidermaesthetics.com>";
+    const from = env.FROM_EMAIL || DEFAULT_FROM_EMAIL;
     const message = {
       from,
       to: [email],
       subject: "Confirm your subscription to Lumi Derm",
       html,
     };
-    if (env.REPLY_TO) message.reply_to = env.REPLY_TO;
+    message.reply_to = env.REPLY_TO || DEFAULT_CONTACT_EMAIL;
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -3416,7 +3741,7 @@ async function handleConfirm(request, env, url) {
 }
 
 async function handleListSubscribers(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Signups aren't set up yet." }, 500);
 
@@ -3434,7 +3759,7 @@ async function handleListSubscribers(request, env) {
 }
 
 async function handleImportSubscribers(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Signups aren't set up yet." }, 500);
 
@@ -3509,7 +3834,7 @@ async function handleImportSubscribers(request, env) {
 }
 
 async function handleDeleteSubscriber(request, env) {
-  const admin = authorised(request, env);
+  const admin = await authorised(request, env);
   if (!admin.ok) return json({ error: admin.reason || "Unauthorised." }, 401);
   if (!env.SUBSCRIBERS) return json({ error: "Signups aren't set up yet." }, 500);
 
@@ -3522,21 +3847,106 @@ async function handleDeleteSubscriber(request, env) {
   const email = String(body.email || "").trim().toLowerCase();
   if (!isEmail(email)) return json({ error: "Invalid email." }, 400);
 
-  await env.SUBSCRIBERS.prepare("DELETE FROM subscribers WHERE email = ?1").bind(email).run();
+  const erased = await eraseSubscriberData(env, email);
   await logAudit(env, request, { action: "subscriber.delete", detail: email, status: "ok" });
-  return json({ ok: true });
+  return json({ ok: true, erased });
 }
 
-function authorised(request, env) {
-  const email = adminEmail(request);
-  if (!email) {
-    return { ok: false, reason: "Cloudflare Access sign-in is required." };
+async function eraseSubscriberData(env, email) {
+  const lower = email.toLowerCase();
+  const scheduledRecipients = await eraseScheduledRecipients(env, lower);
+  const jobKey = "erasure:" + lower;
+  // D1 changes commit together; the durable job survives a subsequent KV outage.
+  const results = await env.SUBSCRIBERS.batch([
+    ...["subscribers", "campaign_events", "birthday_vouchers", "review_submissions"].map((table) =>
+      env.SUBSCRIBERS.prepare("DELETE FROM " + table + " WHERE lower(email)=?1").bind(lower)
+    ),
+    ...scheduledRecipients.statements,
+    env.SUBSCRIBERS.prepare(
+      "DELETE FROM app_settings WHERE key LIKE 'birthday-delivery:%' AND substr(key,-length(?1))=?1"
+    ).bind(":" + lower),
+    env.SUBSCRIBERS.prepare(
+      "INSERT INTO app_settings (key, value, updated_at) VALUES (?1,?2,?3) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at"
+    ).bind(jobKey, lower, new Date().toISOString()),
+  ]);
+  await finishErasure(env, jobKey, lower);
+
+  return {
+    subscribers: d1Changes(results[0]),
+    campaignEvents: d1Changes(results[1]),
+    birthdayVouchers: d1Changes(results[2]),
+    reviewSubmissions: d1Changes(results[3]),
+    scheduledCampaigns: { changed: scheduledRecipients.changed, removed: scheduledRecipients.removed },
+    suppression: Boolean(env.SUPPRESSION),
+  };
+}
+
+async function finishErasure(env, jobKey, email) {
+  if (env.SUPPRESSION) await env.SUPPRESSION.delete(suppressionKey(email));
+  await env.SUBSCRIBERS.prepare("DELETE FROM app_settings WHERE key=?1").bind(jobKey).run();
+}
+
+async function completePendingErasures(env) {
+  if (!env.SUBSCRIBERS) return;
+  const { results } = await env.SUBSCRIBERS.prepare(
+    "SELECT key, value FROM app_settings WHERE key LIKE 'erasure:%' LIMIT 100"
+  ).all();
+  for (const row of results || []) {
+    if (!isEmail(row.value) || row.key !== "erasure:" + row.value) throw new Error("Invalid pending erasure job.");
+    await finishErasure(env, row.key, row.value);
   }
+}
+
+async function eraseScheduledRecipients(env, email) {
+  const { results } = await env.SUBSCRIBERS.prepare(
+    "SELECT id, recipients FROM scheduled_campaigns WHERE recipients LIKE ?1"
+  ).bind("%" + email + "%").all();
+  let changed = 0;
+  let removed = 0;
+  const statements = [];
+
+  for (const row of results || []) {
+    let recipients;
+    try {
+      recipients = JSON.parse(row.recipients || "[]");
+    } catch {
+      recipients = [];
+    }
+    if (!Array.isArray(recipients)) recipients = [];
+
+    const filtered = recipients.filter((person) => {
+      const personEmail = String((person && person.email) || "").trim().toLowerCase();
+      return personEmail !== email;
+    });
+    const removedHere = recipients.length - filtered.length;
+    if (!removedHere && !String(row.recipients || "").toLowerCase().includes(email)) continue;
+
+    statements.push(env.SUBSCRIBERS.prepare(
+      `UPDATE scheduled_campaigns SET recipients=CASE
+         WHEN json_valid(recipients) AND json_type(recipients)='array' THEN
+           (SELECT json_group_array(json(value)) FROM json_each(scheduled_campaigns.recipients)
+             WHERE lower(trim(COALESCE(json_extract(value,'$.email'),'')))<>?1)
+         ELSE '[]' END WHERE id=?2`
+    ).bind(email, row.id));
+    changed += 1;
+    removed += removedHere;
+  }
+
+  return { changed, removed, statements };
+}
+
+function d1Changes(result) {
+  return result && result.meta && result.meta.changes ? result.meta.changes : 0;
+}
+
+async function authorised(request, env) {
+  const access = await verifiedAccessIdentity(request, env);
+  if (!access.ok) return access;
 
   const allowed = csvEmails(env.ADMIN_EMAILS);
   const owners = csvEmails(env.ADMIN_OWNER_EMAILS);
   const editors = csvEmails(env.ADMIN_EDITOR_EMAILS);
-  const lower = email.toLowerCase();
+  const lower = access.email.toLowerCase();
 
   if (allowed.length && !allowed.includes(lower)) {
     return { ok: false, reason: "This Access user is not allowed to manage admin data." };
@@ -3550,11 +3960,11 @@ function authorised(request, env) {
     else return { ok: false, reason: "This Access user has no admin role." };
   }
 
-  return { ok: true, email, role };
+  return { ok: true, email: lower, role };
 }
 
-function requireOwner(request, env, action) {
-  const admin = authorised(request, env);
+async function requireOwner(request, env, action) {
+  const admin = await authorised(request, env);
   if (!admin.ok) return admin;
   if (admin.role !== "owner") {
     return {
@@ -3565,6 +3975,101 @@ function requireOwner(request, env, action) {
   return admin;
 }
 
+async function verifiedAccessIdentity(request, env) {
+  const token = String(request.headers.get("Cf-Access-Jwt-Assertion") || "").trim();
+  if (!token) return { ok: false, reason: "Cloudflare Access sign-in is required." };
+
+  const teamHost = accessTeamHost(env);
+  const audience = String(env.CF_ACCESS_AUD || "").trim();
+  if (!teamHost || !audience) {
+    return { ok: false, reason: "Cloudflare Access JWT validation is not configured." };
+  }
+
+  const parts = token.split(".");
+  if (parts.length !== 3) return { ok: false, reason: "Invalid Cloudflare Access token." };
+
+  let header;
+  let payload;
+  try {
+    header = decodeJwtPart(parts[0]);
+    payload = decodeJwtPart(parts[1]);
+  } catch {
+    return { ok: false, reason: "Invalid Cloudflare Access token." };
+  }
+
+  if (header.alg !== "RS256" || !header.kid) return { ok: false, reason: "Invalid Cloudflare Access token." };
+  if (payload.iss !== "https://" + teamHost) return { ok: false, reason: "Invalid Cloudflare Access issuer." };
+  if (!audienceMatches(payload.aud, audience)) return { ok: false, reason: "Invalid Cloudflare Access audience." };
+
+  const now = Math.floor(Date.now() / 1000);
+  if (!Number.isFinite(payload.exp) || payload.exp <= now) return { ok: false, reason: "Cloudflare Access token has expired." };
+  if (Number.isFinite(payload.nbf) && payload.nbf > now + 60) return { ok: false, reason: "Cloudflare Access token is not valid yet." };
+
+  const email = String(payload.email || "").trim().toLowerCase();
+  const subject = String(payload.sub || "").trim();
+  if (!isEmail(email) || !subject) return { ok: false, reason: "Cloudflare Access identity is incomplete." };
+
+  let key;
+  try {
+    key = await accessSigningKey(env, teamHost, header.kid);
+  } catch {
+    return { ok: false, reason: "Cloudflare Access JWT validation failed." };
+  }
+  if (!key) return { ok: false, reason: "Cloudflare Access signing key was not found." };
+
+  let verified = false;
+  try {
+    const cryptoKey = await crypto.subtle.importKey(
+      "jwk",
+      key,
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+    verified = await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      cryptoKey,
+      base64UrlDecode(parts[2]),
+      new TextEncoder().encode(parts[0] + "." + parts[1])
+    );
+  } catch {
+    return { ok: false, reason: "Invalid Cloudflare Access token signature." };
+  }
+
+  if (!verified) return { ok: false, reason: "Invalid Cloudflare Access token signature." };
+  return { ok: true, email, subject };
+}
+
+function accessTeamHost(env) {
+  const value = String(env.CF_ACCESS_TEAM_NAME || "").trim().toLowerCase();
+  if (!/^[a-z0-9-]+(\.cloudflareaccess\.com)?$/.test(value)) return "";
+  return value.endsWith(".cloudflareaccess.com") ? value : value + ".cloudflareaccess.com";
+}
+
+function audienceMatches(actual, expected) {
+  if (Array.isArray(actual)) return actual.some((item) => timingSafeEqual(item, expected));
+  return timingSafeEqual(actual || "", expected);
+}
+
+async function accessSigningKey(env, teamHost, kid) {
+  const now = Date.now();
+  if (accessJwksCache && accessJwksCache.key === teamHost && accessJwksCache.expires > now) {
+    return accessJwksCache.keys.find((key) => key.kid === kid) || null;
+  }
+
+  const jwks = await fetch("https://" + teamHost + "/cdn-cgi/access/certs").then((res) => {
+    if (!res.ok) throw new Error("Cloudflare Access JWKS fetch failed.");
+    return res.json();
+  });
+  const keys = Array.isArray(jwks.keys) ? jwks.keys.filter((key) => key && key.kty === "RSA") : [];
+  accessJwksCache = { key: teamHost, keys, expires: now + ACCESS_JWKS_TTL_MS };
+  return keys.find((key) => key.kid === kid) || null;
+}
+
+function decodeJwtPart(value) {
+  return JSON.parse(new TextDecoder().decode(base64UrlDecode(value)));
+}
+
 function csvEmails(value) {
   return String(value || "")
     .split(",")
@@ -3573,12 +4078,15 @@ function csvEmails(value) {
 }
 
 function adminEmail(request) {
-  return String(
-    request.headers.get("cf-access-authenticated-user-email") ||
-    request.headers.get("CF-Access-Authenticated-User-Email") ||
-    request.headers.get("cf-access-user-email") ||
-    ""
-  ).trim().toLowerCase();
+  const token = String(request.headers.get("Cf-Access-Jwt-Assertion") || "").trim();
+  if (!token) return "";
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return "";
+    return String(decodeJwtPart(parts[1]).email || "").trim().toLowerCase();
+  } catch {
+    return "";
+  }
 }
 
 function clampInt(value, min, max) {
@@ -3780,7 +4288,8 @@ async function handleResendWebhook(request, env) {
 }
 
 async function signEmail(env, email) {
-  const secret = env.UNSUB_SECRET || "lumi-derm-fallback";
+  const secret = String(env.UNSUB_SECRET || "");
+  if (!secret) throw new Error("UNSUB_SECRET is missing.");
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
@@ -3949,6 +4458,15 @@ function base64Url(buffer) {
   let binary = "";
   for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function base64UrlDecode(value) {
+  const normalized = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
 }
 
 function timingSafeEqual(a, b) {

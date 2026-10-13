@@ -24,13 +24,35 @@
   function paint(n) {
     stars.forEach(function (s, i) { s.classList.toggle("is-on", i < n); });
   }
+  function setRating(n, focus) {
+    rating = Math.max(1, Math.min(5, n));
+    paint(rating);
+    stars.forEach(function (s) {
+      var checked = parseInt(s.getAttribute("data-star"), 10) === rating;
+      s.setAttribute("aria-checked", checked ? "true" : "false");
+      s.tabIndex = checked ? 0 : -1;
+      if (checked && focus) s.focus();
+    });
+  }
   stars.forEach(function (s) {
     var val = parseInt(s.getAttribute("data-star"), 10);
     s.addEventListener("mouseenter", function () { paint(val); });
     s.addEventListener("focus", function () { paint(val); });
-    s.addEventListener("click", function () { rating = val; paint(val); s.setAttribute("aria-checked", "true"); });
+    s.addEventListener("click", function () { setRating(val, false); });
   });
   if (starWrap) starWrap.addEventListener("mouseleave", function () { paint(rating); });
+  if (starWrap) starWrap.addEventListener("keydown", function (e) {
+    var current = rating || parseInt((document.activeElement && document.activeElement.getAttribute("data-star")) || "1", 10) || 1;
+    var next = current;
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") next = current >= 5 ? 1 : current + 1;
+    else if (e.key === "ArrowLeft" || e.key === "ArrowDown") next = current <= 1 ? 5 : current - 1;
+    else if (e.key === "Home") next = 1;
+    else if (e.key === "End") next = 5;
+    else if (e.key === " " || e.key === "Enter") next = current;
+    else return;
+    e.preventDefault();
+    setRating(next, true);
+  });
 
   function open() {
     lastFocus = document.activeElement;

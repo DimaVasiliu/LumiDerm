@@ -70,10 +70,61 @@ changes.
 
 ## Backups
 
-At Phase 0, public source/assets are versioned in Git; localStorage admin drafts are not an approved
-backup and must contain no real data. D1 and R2 do not yet exist. Phase 3 must add versioned D1
-export/import and restore tests; Phase 6 adds R2 inventory/media recovery; Phase 14 adds scheduled,
-encrypted backups and evidence of restoration.
+Public source/assets are versioned in Git; localStorage admin drafts are not an approved backup and
+must contain no real data. Production client/subscriber data now lives in Cloudflare D1
+(`lumidermdb`) plus the suppression KV namespace.
+
+Before any migration, destructive data operation, or schema cleanup, export the remote D1 database:
+
+```bash
+npx wrangler d1 export lumidermdb --remote --output .wrangler/d1-backups/lumidermdb-YYYY-MM-DDTHHMMZ.sql
+```
+
+Keep D1 exports out of Git. `.wrangler/` is ignored and is the preferred local holding area because
+exports may contain personal data. Verify the export file exists, record its size and SHA-256 in the
+work report, and do not paste exported rows into tickets, chats, or commit messages.
+
+## Live Price Content
+
+Treatment prices are authoritative in D1. The checked-in `services.html` price marker is only a
+shell for Worker injection, and `assets/data/prices.json` is not a runtime fallback. If
+`site_content.prices` or `site_content` key `frag:PRICES` is missing, the public treatments page
+must show a temporary unavailable response instead of stale prices.
+
+Recovery options:
+
+1. Republish the Prices section from the admin after confirming the current prices.
+2. Restore `site_content.prices` and `frag:PRICES` from a verified D1 export.
+3. If neither exists, keep the treatments page unavailable until the clinic owner confirms the
+   current price list.
+
+## D1 Migration Safety
+
+The current migration sequence is a historical record of what has already been applied to the live
+D1 database. Leave existing filenames and numbering alone.
+
+Known hazards:
+
+- `migrations/0006_preferences_campaign_tracking.sql` and
+  `migrations/0006_review_submissions.sql` intentionally share the `0006` prefix. Both are already
+  recorded in D1's migration table; renaming either file would make Wrangler see a different
+  migration name and may attempt to run it again.
+- `migrations/0011_reset_reviews.sql` contains an unguarded `DELETE FROM reviews;`. It was used to
+  clear the seeded reviews table after reviews moved to the static feed. Do not replay it against a
+  database that may contain new D1-managed reviews.
+- The sequence contains 11 non-idempotent `ALTER TABLE ... ADD COLUMN` statements. Replaying one
+  after its column already exists will abort the migration batch part way through.
+
+Operational rules:
+
+1. Never rename, reorder, squash, or edit already-applied migration files.
+2. New migrations must use the next unused number and must be written to tolerate partial/manual
+   recovery where possible.
+3. Always run a remote D1 export before `npx wrangler d1 migrations apply lumidermdb --remote`.
+4. If a migration apply fails, stop. Do not retry blindly. Inspect the live schema and D1 migration
+   table, then write a forward-only repair migration or restore from the verified export.
+5. For a fresh database, do not assume the legacy sequence is safely replayable. Prefer restoring a
+   known-good export or creating a new consolidated baseline migration for new environments.
 
 ## Incident handling
 

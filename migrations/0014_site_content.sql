@@ -2,8 +2,8 @@
 -- The admin saves structured content here (for editing) plus the rendered HTML
 -- fragments per marker region; the Worker injects those fragments into the
 -- static pages server-side, so edits are instant AND search engines still see
--- the real content. If a fragment is missing, the Worker serves the static page
--- unchanged (fail-safe).
+-- the real content. Page-copy fragments can fall back to static HTML, but the
+-- PRICES fragment is required and must be restored from D1/admin data if missing.
 -- Apply once with:
 --   npx wrangler d1 migrations apply lumidermdb --remote
 

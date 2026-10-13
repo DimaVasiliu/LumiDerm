@@ -25,8 +25,8 @@ const defaultOffers = [
   { title: "Facials & peels", category: "Skin polish", price: "from £70", description: "Deep cleansing, dermaplaning, microdermabrasion and tailored peels.", image: "offer-facials.webp", status: "Draft", priority: 4 }
 ];
 
-// Prices are now data-driven from assets/data/prices.json (loaded at runtime by
-// loadPricesFromJson). The treatments page is regenerated from that file on publish.
+// Prices are live D1 content loaded through /admin/api/content. The checked-in
+// services page only provides marker regions; it is not a price fallback.
 
 const panelTitles = { dashboard: "Overview", guide: "Guide & help", offers: "Offers", prices: "Prices", treatments: "Treatment cards", sender: "Send email", subscribers: "Subscribers", reviews: "Reviews", media: "Media", content: "Pages", faq: "FAQ", birthday: "Birthday", clients: "Treatwell", settings: "Settings" };
 
@@ -108,7 +108,7 @@ function runApp() {
   bindMedia();
   renderAll();
   loadReviews();
-  loadPricesFromJson();
+  loadPricesFromD1(false, false);
   loadContentFromJson();
   loadMedia();
   loadBirthdays();
@@ -667,11 +667,10 @@ function renderOfferPreview() {
 }
 
 /* ---------------- Treatments page cards ----------------
-   The treatments page (pages/services.html) is generated from
-   assets/data/prices.json between the PRICES markers. The clinic owner edits
-   groups, cards, content blocks, prices and CTAs here; publishing rewrites both
-   prices.json and the marked section of services.html. */
-const PRICES_JSON_URL = "../assets/data/prices.json";
+   The treatments page (pages/services.html) is rendered from D1 price content
+   between the PRICES markers. The clinic owner edits groups, cards, content
+   blocks, prices and CTAs here; publishing saves D1 structured prices and the
+   rendered PRICES fragment used by the Worker. */
 
 function bindPrices() {
   document.querySelector("[data-reload-prices]")?.addEventListener("click", async () => {
@@ -682,7 +681,7 @@ function bindPrices() {
     });
     if (!ok) return;
     recordDraftVersion("prices", "Before reloading live prices", state.prices);
-    loadPricesFromJson(true, true);
+    loadPricesFromD1(true, true);
   });
 }
 
@@ -705,11 +704,11 @@ function bindTreatmentCards() {
     });
     if (!ok) return;
     recordDraftVersion("prices", "Before reloading live treatment cards", state.prices);
-    loadPricesFromJson(true, true);
+    loadPricesFromD1(true, true);
   });
 }
 
-async function loadPricesFromJson(announce, force) {
+async function loadPricesFromD1(announce, force) {
   if (!force && state.prices && Array.isArray(state.prices.groups) && state.prices.groups.length) {
     renderPrices();
     renderTreatmentCards();
@@ -719,16 +718,22 @@ async function loadPricesFromJson(announce, force) {
     const r = await fetch("/admin/api/content", { cache: "no-store", credentials: "same-origin" });
     if (!r.ok) throw new Error("unavailable");
     const data = await r.json();
-    const p = (data && data.prices) || {};
-    state.prices = { groups: Array.isArray(p.groups) ? p.groups : [] };
+    const p = data && data.prices;
+    if (!p || !Array.isArray(p.groups)) {
+      throw new Error((data && data.error) || "Live prices are missing from D1.");
+    }
+    state.prices = { groups: p.groups };
     selectedTx = { gi: 0, ti: 0 };
     renderPrices();
     renderTreatmentCards();
     saveDraft(announce ? "Loaded the treatments currently on the website." : null);
     setPricesStatus("In sync with the website.");
     setTreatmentStatus("In sync with the website.");
-  } catch {
-    if (announce) toast("Could not read the current treatments.");
+  } catch (err) {
+    const message = ldFriendlyError(err);
+    if (announce) toast(message);
+    setPricesStatus("Could not load live prices from D1. Republish prices before editing.");
+    setTreatmentStatus("Could not load live treatment cards from D1.");
     renderPrices();
     renderTreatmentCards();
   }
@@ -751,7 +756,10 @@ function ensurePricesData() {
   if (!state.prices || !Array.isArray(state.prices.groups)) state.prices = { groups: [] };
   state.prices.groups.forEach((g) => {
     if (!Array.isArray(g.treatments)) g.treatments = [];
-    g.treatments.forEach((t) => { if (!Array.isArray(t.detail)) t.detail = []; });
+    g.treatments.forEach((t) => {
+      if (!Array.isArray(t.detail)) t.detail = [];
+      t.detail = t.detail.filter((b) => b.type !== "pill" || !window.isTreatmentDiscountBadge(b.text));
+    });
   });
 }
 
@@ -927,7 +935,7 @@ function renderPriceEditor(editor) {
       });
       html += `</div>`;
     } else if (b.type === "pill") {
-      html += `<label class="price-pill-edit">Highlight line <small>e.g. package discounts, trial price</small><input type="text" value="${escapeAttr(decodeHtml(b.text || ""))}" data-tx-pill="${bi}"></label>`;
+      html += `<label class="price-pill-edit">Highlight line <small>e.g. consultation included, trial price</small><input type="text" value="${escapeAttr(decodeHtml(b.text || ""))}" data-tx-pill="${bi}"></label>`;
     } else if (b.type === "note") {
       html += `<label class="price-note-edit">Note<input type="text" value="${escapeAttr(decodeHtml(b.text || ""))}" data-tx-note="${bi}"></label>`;
     }
@@ -2209,7 +2217,8 @@ function bindContent() {
 async function loadContentFromJson(announce, force) {
   try {
     // Read the live page text from D1 (what publishes now write to), falling back
-    // to the static content.json file when D1 is empty. Mirrors how prices load.
+    // to the static content.json file when D1 is empty. Prices are stricter and
+    // never fall back to checked-in JSON.
     const r = await fetch("/admin/api/content", { cache: "no-store", credentials: "same-origin" });
     if (r.ok) {
       const data = await r.json();
@@ -2652,7 +2661,7 @@ function bindSettings() {
     recordDraftVersion("content", "Before resetting admin drafts", state.content);
     localStorage.removeItem(STORAGE_KEY);
     state = loadDraft(); selectedOfferIndex = 0; selectedTx = { gi: 0, ti: 0 };
-    renderAll(); loadPricesFromJson(false, true); loadContentFromJson(false, true); toast("Admin reset to defaults.");
+    renderAll(); loadPricesFromD1(false, true); loadContentFromJson(false, true); toast("Admin reset to defaults.");
   });
 }
 
@@ -2965,8 +2974,7 @@ window.ldConfirm = ldConfirm;
    Offers save to Cloudflare D1 via the Worker (/admin/api/offers/save) — no
    GitHub commit and no deploy; a homepage refresh shows them.
    ===================================================================== */
-const PRICES_REPO_PATH = "lumi-derm-website/assets/data/prices.json";    // treatments-page prices data
-const SERVICES_REPO_PATH = "lumi-derm-website/pages/services.html";      // treatments page (rendered from prices.json)
+const SERVICES_REPO_PATH = "lumi-derm-website/pages/services.html";      // marker shell for rendered D1 prices
 const PRICES_MARKERS = /(<!-- PRICES:START[\s\S]*?-->)[\s\S]*?(<!-- PRICES:END -->)/; // section rewritten on publish
 const CONTENT_REPO_PATH = "lumi-derm-website/assets/data/content.json";  // hero copy + contact details
 const HERO_MARKERS = /(<!-- HERO:START[\s\S]*?-->)[\s\S]*?(<!-- HERO:END -->)/; // homepage hero block
@@ -3044,8 +3052,11 @@ async function ghPublishContent(payload) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload),
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || ("Save failed (" + res.status + ")."));
+  // ldReadJson throws a friendly "sign-in may have expired" error if the response
+  // is an HTML page (e.g. the Cloudflare Access login) instead of real JSON —
+  // so an expired session can no longer look like a successful publish.
+  const data = await ldReadJson(res);
+  if (data && data.ok === false) throw new Error(data.error || "The save didn't go through — please try again.");
   return data;
 }
 
@@ -3289,7 +3300,7 @@ function findDuplicateVisibleOffer(offers) {
   return null;
 }
 
-/* ---------- Publish prices: rewrite prices.json AND the treatments page ---------- */
+/* ---------- Publish prices: save D1 prices and rendered treatment fragment ---------- */
 function decodeB64(str) {
   const bin = atob(String(str || "").replace(/\s/g, ""));
   const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));

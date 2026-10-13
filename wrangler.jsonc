@@ -11,13 +11,14 @@
 	"account_id": "31f4dd95e52a8ca9deba2fd43f5a7f43",
 	"main": "src/worker.js",
 	"compatibility_date": "2026-06-28",
+	"workers_dev": false,
 	"assets": {
 		"directory": "./lumi-derm-website",
 		"not_found_handling": "404-page",
 		"binding": "ASSETS",
 		// Run the Worker first for API routes so requests return JSON instead of
 		// the static admin HTML page.
-		"run_worker_first": ["/api/*", "/admin/api/*", "/media/*"]
+		"run_worker_first": ["/api/*", "/admin/api/*", "/media/*", "/pages/services", "/pages/services.html"]
 	},
 	// Unsubscribed addresses. Created with:
 	//   npx wrangler kv namespace create SUPPRESSION
@@ -52,7 +53,14 @@
 	// wired to Namecheap forwarding and named in the DMARC record.
 	"vars": {
 		"FROM_EMAIL": "Lumi Derm Aesthetics <info@lumidermaesthetics.com>",
-		"REPLY_TO": "info@lumidermaesthetics.com",
+		"REPLY_TO": "info@lumidermaesthetics.co.uk",
+		"CONTACT_EMAIL": "info@lumidermaesthetics.co.uk",
+		// Cloudflare Access JWT validation for /admin/api/*.
+		// Team name comes from https://lumiderm.cloudflareaccess.com.
+		// Audience is the non-secret Access application aud tag seen in the
+		// live /admin/ Access redirect metadata.
+		"CF_ACCESS_TEAM_NAME": "lumiderm",
+		"CF_ACCESS_AUD": "1aa529e102c259a25d5171f4f8c4650d757249febec24a27ddb269debe71381d",
 		// Used by the scheduled (cron) sender to build unsubscribe links,
 		// since a cron run has no incoming request URL.
 		"SITE_ORIGIN": "https://lumidermaesthetics.com",

@@ -69,7 +69,8 @@ bodies, tokens, complete customer records, and unnecessary personal identifiers.
 - Uploaded files can be hostile; validate type, size, dimensions and content, strip metadata where
   appropriate, and serve approved objects through controlled routes.
 - Content editors can make stale changes; use version checks and immutable audit records.
-- D1/R2/provider outages must not expose drafts, weaken auth, or silently publish stale offers.
+- D1/R2/provider outages must not expose drafts, weaken auth, or silently publish stale offers or
+  prices.
 
 ## Security headers target
 

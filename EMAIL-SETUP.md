@@ -26,14 +26,14 @@ The real job is turning those 70 into opted-in clients. the clinic owner asks at
 ## 1. Resend account
 
 1. Sign up at [resend.com](https://resend.com). Free tier is far more than enough for 15–200 recipients.
-2. **Domains → Add Domain** → `lumidermaesthetics.com`.
+2. **Domains**: `lumidermaesthetics.com` is verified (checked 13 October 2026). Keep using it for `FROM_EMAIL`.
 3. Resend shows you DNS records to add (an MX or TXT for verification, plus DKIM `CNAME`/`TXT` records).
 
 ## 2. DNS in Cloudflare
 
 ### What is already there (checked 14 July 2026 — do not break it)
 
-The root domain already carries Namecheap email-forwarding records:
+The `.com` domain already carried Namecheap email-forwarding records at that check:
 
 ```
 MX    (root)     eforward1–5.registrar-servers.com
@@ -53,7 +53,7 @@ Resend sidesteps this by putting its records on a **`send.` subdomain**, so the 
 
 ### What to add
 
-In Cloudflare → `lumidermaesthetics.com` → **DNS → Records → Add record**, enter exactly what Resend generates for you. It will look like this (the DKIM key is unique to your account):
+For the verified sender, use Cloudflare → `lumidermaesthetics.com` → **DNS → Records**. Keep the existing verified records. For a future `.co.uk` sender, first add that domain in Resend and enter its generated records at the DNS provider that controls `.co.uk`. Records look like this (the DKIM key is unique to your account):
 
 | Type | Name — type exactly this | Content | Proxy |
 |---|---|---|---|
@@ -64,13 +64,13 @@ In Cloudflare → `lumidermaesthetics.com` → **DNS → Records → Add record*
 Two traps:
 
 - **Grey cloud (DNS only), never orange (Proxied).** Proxying breaks DKIM.
-- **Cloudflare appends the domain for you.** Type `send`, not `send.lumidermaesthetics.com`, or you'll create `send.lumidermaesthetics.com.lumidermaesthetics.com`.
+- **DNS dashboards append the domain for you.** Type `send`, not `send.lumidermaesthetics.com`, or you'll create `send.lumidermaesthetics.com.lumidermaesthetics.com`.
 
 Then hit **Verify** in Resend. Usually a few minutes.
 
 ### Why this matters
 
-Without DKIM + aligned SPF, the emails go to spam. With the `send.` subdomain, the bounce address aligns with the root under relaxed SPF, DKIM signs as `d=lumidermaesthetics.com`, and the existing DMARC record passes — so mail from `info@lumidermaesthetics.com` authenticates properly.
+The sender domain must be authenticated. Resend currently verifies `.com`, so keep that From address. Reply-To may use the separate `.co.uk` mailbox; replies then reach the contact address published on the website without changing the authenticated sender.
 
 ### Not a bug
 
@@ -106,7 +106,9 @@ Secrets live on the Worker, not in the repo. They survive deploys.
 
 ## 5. Check `FROM_EMAIL`
 
-In `wrangler.jsonc` both are set to `info@lumidermaesthetics.com` — the mailbox already wired to Namecheap forwarding and named in the DMARC record, so replies actually reach her.
+In `wrangler.jsonc`, `FROM_EMAIL` uses the verified `info@lumidermaesthetics.com` sender. `REPLY_TO` and `CONTACT_EMAIL` use the published `info@lumidermaesthetics.co.uk` mailbox. The website and canonical URLs remain `.com`.
+
+Only change `FROM_EMAIL` to `.co.uk` after Resend shows that domain as Verified and its sending records are in place. No sender-domain change is required for this release.
 
 `FROM_EMAIL` must be **on the domain verified in step 2**. It does not need its own mailbox (DKIM is what authorises it), but `REPLY_TO` **must** be an address she genuinely reads. Don't point it at an address nobody checks.
 
