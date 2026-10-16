@@ -27,7 +27,7 @@ function newCard() {
     detail: [
       { type: "p", html: "A gentle exfoliating facial that removes dead skin and fine vellus hair." },
       { type: "pricelist", rows: [{ name: "Dermaplaning", cost: "£70", costSmall: "45 min" }] },
-      { type: "pill", text: "Up to 15% off off-peak" },
+      { type: "pill", text: "Consultation included" },
       { type: "note", text: "Consultation confirms suitability before treatment." }
     ]
   };
@@ -42,9 +42,25 @@ test("new card renders valid tx-card markup", () => {
   assert.match(html, /<span class="tx-price">from &pound;70<\/span>/);
   assert.match(html, /<div class="tx-pricelist">/);
   assert.match(html, /<span class="tx-cost">£70<small>45 min<\/small><\/span>/);
-  assert.match(html, /<span class="tx-pill">Up to 15% off off-peak<\/span>/);
+  assert.match(html, /<span class="tx-pill">Consultation included<\/span>/);
   assert.match(html, /<p class="tx-note">Consultation confirms suitability before treatment.<\/p>/);
   // No service slug => generic booking link, never a broken deep-link.
+  assert.match(html, /href="booking.html">Book now<\/a>/);
+});
+
+test("percentage-off treatment badges are omitted without changing prices or notes", () => {
+  const card = newCard();
+  card.detail.push(
+    { type: "pill", text: "PRP: up to 20% off last-minute &amp; off-peak bookings" },
+    { type: "pill", text: "Up to 10% off last-minute &amp; off-peak bookings" },
+    { type: "pill", text: "Up to <strong>15%</strong>&nbsp;off last-minute &amp; off-peak bookings" }
+  );
+  const html = renderTreatmentLibrary({ groups: [{ title: "Facials", treatments: [card] }] });
+  assert.doesNotMatch(html, /last-minute|off-peak/);
+  assert.equal((html.match(/class="tx-pill"/g) || []).length, 1);
+  assert.match(html, /Consultation included/);
+  assert.match(html, /£70<small>45 min<\/small>/);
+  assert.match(html, /Consultation confirms suitability before treatment/);
   assert.match(html, /href="booking.html">Book now<\/a>/);
 });
 

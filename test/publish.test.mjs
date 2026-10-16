@@ -3,16 +3,17 @@ import { createHash } from 'node:crypto';
 import test from 'node:test';
 
 import worker from '../src/worker.js';
+import { accessEnv, accessHeaders, testJwks } from './access-token.mjs';
 
-const ownerHeaders = { 'cf-access-authenticated-user-email': 'owner@example.com' };
+const ownerHeaders = accessHeaders('owner@example.com');
 
 function env() {
-  return {
+  return accessEnv({
     ADMIN_EMAILS: 'owner@example.com',
     GITHUB_TOKEN: 'test_token',
     GITHUB_REPO: 'lumi/site',
     GITHUB_BRANCH: 'main',
-  };
+  });
 }
 
 function req(body) {
@@ -36,6 +37,7 @@ function mockGitHub({ currentIndex, currentHeaders }) {
     const ok = (obj, status = 200) =>
       new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json' } });
 
+    if (u === 'https://test-team.cloudflareaccess.com/cdn-cgi/access/certs') return ok(testJwks);
     if (u.includes('/contents/lumi-derm-website/index.html')) return ok({ content: b64(currentIndex) });
     if (u.includes('/contents/lumi-derm-website/_headers')) return ok({ content: b64(currentHeaders) });
     if (u.includes('/git/ref/heads/main')) return ok({ object: { sha: 'BASE_SHA' } });

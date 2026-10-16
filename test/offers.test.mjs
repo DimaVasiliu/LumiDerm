@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import worker from '../src/worker.js';
+import { accessEnv, accessHeaders } from './access-token.mjs';
 
-const ownerHeaders = { 'cf-access-authenticated-user-email': 'owner@example.com' };
+const ownerHeaders = accessHeaders('owner@example.com');
 const jsonHeaders = { 'content-type': 'application/json' };
 
 function req(path, options = {}) {
@@ -79,7 +80,7 @@ class MockD1 {
   }
 }
 
-const ownerEnv = (seed) => ({ ADMIN_EMAILS: 'owner@example.com', SUBSCRIBERS: new MockD1(seed) });
+const ownerEnv = (seed) => accessEnv({ ADMIN_EMAILS: 'owner@example.com', SUBSCRIBERS: new MockD1(seed) });
 
 test('public offers: hides drafts + expired, featured first', async () => {
   const env = ownerEnv([
@@ -152,6 +153,7 @@ test('admin save requires a title on every offer', async () => {
 
 test('assistant cannot publish offers', async () => {
   const env = {
+    ...accessEnv(),
     ADMIN_EMAILS: 'owner@example.com,help@example.com',
     ADMIN_OWNER_EMAILS: 'owner@example.com',
     ADMIN_EDITOR_EMAILS: 'help@example.com',
@@ -159,7 +161,7 @@ test('assistant cannot publish offers', async () => {
   };
   const res = await worker.fetch(req('/admin/api/offers/save', {
     method: 'POST',
-    headers: { 'cf-access-authenticated-user-email': 'help@example.com', ...jsonHeaders },
+    headers: { ...accessHeaders('help@example.com'), ...jsonHeaders },
     body: JSON.stringify({ offers: [{ title: 'X', status: 'live' }] }),
   }), env);
   assert.equal(res.status, 403);

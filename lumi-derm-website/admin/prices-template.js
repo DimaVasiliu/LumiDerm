@@ -1,13 +1,13 @@
 /**
  * Lumi Derm — treatment-library renderer
  * ------------------------------------------------------------------
- * Turns the structured prices.json into the exact HTML markup used on
+ * Turns the structured D1 price data into the exact HTML markup used on
  * the Treatments & prices page (pages/services.html), between the
  * <!-- PRICES:START --> / <!-- PRICES:END --> markers.
  *
- * This is the single source of truth for that markup. The admin calls
- * renderTreatmentLibrary(data) at publish time to regenerate the static
- * section, so Google always sees real prices in the page source.
+ * This is the single renderer for that markup. The admin calls
+ * renderTreatmentLibrary(data) at publish time and stores the rendered
+ * fragment in D1, so the Worker can inject live prices server-side.
  *
  * Dependency-free. Runs in the browser (window.renderTreatmentLibrary)
  * and in Node (module.exports) so it can be unit-tested.
@@ -17,7 +17,14 @@
 
   function s(v) { return v == null ? "" : String(v); }
 
-  // Values in prices.json are stored as verbatim inner-HTML (already
+  function isTreatmentDiscountBadge(text) {
+    var plain = s(text).replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;|&#0*160;|&#x0*a0;/gi, " ")
+      .replace(/&percnt;|&#0*37;|&#x0*25;/gi, "%");
+    return /%\s*off\b/i.test(plain);
+  }
+
+  // Values in D1 are stored as verbatim inner-HTML (already
   // escaped, e.g. "Face &amp; body"), so they are emitted as-is.
   function renderBlock(b) {
     switch (b.type) {
@@ -28,6 +35,7 @@
       case "note":
         return '<p class="tx-note">' + s(b.text) + "</p>";
       case "pill":
+        if (isTreatmentDiscountBadge(b.text)) return "";
         return '<span class="tx-pill">' + s(b.text) + "</span>";
       case "table": {
         var head = "<thead><tr>" +
@@ -83,7 +91,10 @@
     return groups.map(renderGroup).join("");
   }
 
-  var api = { renderTreatmentLibrary: renderTreatmentLibrary };
+  var api = { renderTreatmentLibrary: renderTreatmentLibrary, isTreatmentDiscountBadge: isTreatmentDiscountBadge };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
-  if (root) root.renderTreatmentLibrary = renderTreatmentLibrary;
+  if (root) {
+    root.renderTreatmentLibrary = renderTreatmentLibrary;
+    root.isTreatmentDiscountBadge = isTreatmentDiscountBadge;
+  }
 })(typeof window !== "undefined" ? window : null);

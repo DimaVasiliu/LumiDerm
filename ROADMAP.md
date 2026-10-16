@@ -22,7 +22,7 @@ Working list of what's left, in priority order. Tick items off as they ship.
 ## 🟠 Next — make the rest of the admin actually publish
 
 - [x] **Make Prices publishable (like Offers).** ✅ Done & verified.
-  The treatments page now carries `<!-- PRICES:START/END -->` markers and is generated from `assets/data/prices.json`. In **Admin → Prices**, the clinic owner picks a treatment and edits its price cells, instalment notes, highlight lines and the "from £X" headline (descriptions + table layout stay fixed). **Publish prices** rewrites both `prices.json` and the marked section of `services.html` via GitHub (same machinery as Offers/Reviews, with 409-retry). Because the HTML is written into the static page, Google still sees every price — SEO preserved.
+  The treatments page carries `<!-- PRICES:START/END -->` markers and the Worker injects the rendered D1 price fragment server-side. In **Admin → Prices**, the clinic owner picks a treatment and edits its price cells, instalment notes, highlight lines and the "from £X" headline. **Publish prices** saves structured D1 price data plus the rendered `frag:PRICES` fragment. If live D1 price content is missing, the public page fails visibly instead of serving stale checked-in prices.
   Verified in a Node harness: parser → renderer is byte-identical to the original page; a simulated edit (price, note, headline, ampersands) round-trips to valid HTML with markers, 16 cards, booking deep-links, modal and footnote all intact.
 
 - [x] **Make Pages text publishable (like Offers).** ✅ Done & verified.
@@ -63,7 +63,7 @@ Working list of what's left, in priority order. Tick items off as they ship.
 - Offers publish to GitHub from admin (with image upload, true delete, 409 retry).
 - **Reviews** publish to GitHub from admin (approved-only, featured first).
 - **Reviews manager** — full editor modal (name, rating, treatment, source, text, featured), delete with confirm, status toggles (approve/pending/hide/unhide), filters (status, rating≥, source, search) with live counts, editable homepage rating badge (rating/count/label), and the `featured` flag round-trips through `reviews.json`. Approved reviews publish to the homepage as before.
-- **Prices** publish to GitHub from admin — the treatments page is data-driven from `prices.json` and regenerated between markers on publish (SEO-safe, prices/notes/headline editable).
+- **Prices** publish to D1 from admin — the treatments page is data-driven from live D1 price content and rendered between markers at the Worker edge (SEO-safe, prices/notes/headline editable).
 - **Pages** publish to GitHub from admin — homepage hero copy (markers) + contact details (site-wide exact-string replace) editable from `content.json`, SEO-safe.
 - Website signup pop-up + double opt-in + D1 subscribers + admin Subscribers tab (with search).
 - Email campaigns: one-click subscriber audience, interest + birthday-month segments with live count, named saved drafts, per-recipient name personalisation (subject + body).

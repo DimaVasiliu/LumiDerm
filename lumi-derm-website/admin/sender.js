@@ -1087,7 +1087,7 @@
     if (!list.length) { box.innerHTML = '<p class="admin-help">Nothing scheduled.</p>'; return; }
     box.innerHTML = list.map(function (r) {
       var when = formatDate(r.send_at);
-      var cancel = r.status === "queued"
+      var cancel = r.can_cancel || r.status === "queued"
         ? '<button class="tiny-button danger" type="button" data-cancel-scheduled="' + r.id + '">Cancel</button>' : "";
       var detail = r.status === "queued"
         ? (r.recipient_count + " recipient" + (r.recipient_count === 1 ? "" : "s"))

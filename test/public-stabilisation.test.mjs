@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const site = 'lumi-derm-website';
@@ -16,6 +16,16 @@ const publicPages = [
   'pages/services.html',
   'pages/terms.html',
 ];
+
+async function allHtmlPages() {
+  const pages = ['index.html', '404.html'];
+  const entries = await readdir(`${site}/pages`);
+  entries
+    .filter((name) => name.endsWith('.html'))
+    .sort()
+    .forEach((name) => pages.push(`pages/${name}`));
+  return pages;
+}
 
 test('public pages expose consistent keyboard navigation landmarks', async () => {
   for (const page of publicPages) {
@@ -47,6 +57,31 @@ test('Treatwell and Google embeds wait for consent and retain external fallbacks
     booking,
     /href="https:\/\/www\.treatwell\.co\.uk\/place\/lumi-derm-aesthetics\/"/,
   );
+});
+
+test('public pages use one style.css cache key and defer main.js', async () => {
+  const versions = new Set();
+  for (const page of await allHtmlPages()) {
+    const html = await readFile(`${site}/${page}`, 'utf8');
+    for (const match of html.matchAll(/href="(?:\.\.\/)?css\/style\.css\?v=([^"]+)"/g)) {
+      versions.add(match[1]);
+    }
+    for (const match of html.matchAll(/<script\b[^>]*src="(?:\.\.\/)?js\/main\.js\?v=[^"]+"[^>]*><\/script>/g)) {
+      assert.match(match[0], /\bdefer\b/, `${page} must defer main.js`);
+    }
+  }
+  assert.deepEqual([...versions], ['20260909-frontfix1']);
+});
+
+test('review star picker exposes valid radio semantics', async () => {
+  const home = await readFile(`${site}/index.html`, 'utf8');
+  const group = home.match(/<div class="review-stars-input"[^>]*role="radiogroup"[\s\S]*?<\/div>/)?.[0] || '';
+  assert.ok(group, 'review stars radiogroup must exist');
+  const radios = [...group.matchAll(/<button\b[^>]*class="review-star"[^>]*>/g)].map((m) => m[0]);
+  assert.equal(radios.length, 5);
+  assert.equal(radios.filter((tag) => /\brole="radio"/.test(tag)).length, 5);
+  assert.equal(radios.filter((tag) => /\baria-checked="false"/.test(tag)).length, 5);
+  assert.equal(radios.filter((tag) => /\btabindex="0"/.test(tag)).length, 1);
 });
 
 test('review summary is derived from the records in the feed', async () => {
@@ -93,4 +128,13 @@ test('custom 404 and cache policy are configured for Workers static assets', asy
   assert.match(wrangler, /"not_found_handling": "404-page"/);
   assert.match(headers, /\/css\/\*[\s\S]*max-age=31536000, immutable/);
   assert.match(headers, /\/assets\/data\/\*[\s\S]*max-age=0, must-revalidate/);
+});
+
+test('deployment config keeps website and email domains intentionally split', async () => {
+  const wrangler = await readFile('wrangler.jsonc', 'utf8');
+  assert.match(wrangler, /"SITE_ORIGIN": "https:\/\/lumidermaesthetics\.com"/);
+  assert.match(wrangler, /"FROM_EMAIL": "Lumi Derm Aesthetics <info@lumidermaesthetics\.com>"/);
+  assert.match(wrangler, /"REPLY_TO": "info@lumidermaesthetics\.co\.uk"/);
+  assert.match(wrangler, /"CONTACT_EMAIL": "info@lumidermaesthetics\.co\.uk"/);
+  assert.doesNotMatch(wrangler, /hello@lumidermaesthetics\.com/);
 });

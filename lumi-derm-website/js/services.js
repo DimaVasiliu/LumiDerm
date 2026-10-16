@@ -4,6 +4,13 @@
   const modal = document.querySelector('[data-tx-modal]');
   if (!modal || !cards.length) return;
 
+  // Older D1 fragments may still contain percentage-off badges.
+  cards.forEach((card) => {
+    card.querySelectorAll('.tx-pill').forEach((badge) => {
+      if (/%\s*off\b/i.test(badge.textContent)) badge.remove();
+    });
+  });
+
   const titleEl = modal.querySelector('[data-tx-title]');
   const subEl = modal.querySelector('[data-tx-sub]');
   const priceEl = modal.querySelector('[data-tx-price]');
