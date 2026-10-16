@@ -2016,8 +2016,10 @@ const DEFAULT_CONTENT = {
           { title: "What matters", copy: "Appointments are one-to-one, treatment plans are tailored, and product choices are considered carefully." }
         ],
         image: {
-          src: "../assets/images/about-lumi-derm-studio.webp",
-          alt: "Lumi Derm Aesthetics treatment studio in London Docklands"
+          src: "../assets/images/about-lumi-derm-studio.webp?v=20261016",
+          alt: "Lumi Derm Aesthetics treatment studio in London Docklands",
+          width: "1086",
+          height: "1448"
         }
       },
       stats: [
